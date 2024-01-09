@@ -1,5 +1,7 @@
 # Stroad Hero
 
-## Notes
+![StroadHero](stroad_hero.png)
 
-ModernExteriors
+## Attribution
+
+- Art from [limezu.itch.io](https://limezu.itch.io/modernexteriors)
