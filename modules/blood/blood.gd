@@ -4,6 +4,7 @@ extends Node2D
 var stain: Sprite2D
 var COUNT_DOWN = 0.9
 
+
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	stain = $BloodStainAlt
@@ -17,5 +18,3 @@ func _on_vanish_timeout():
 	if COUNT_DOWN < 0:
 		queue_free()
 	stain.modulate = Color(0.9, 0.9, 0.9, COUNT_DOWN)
-
-	
