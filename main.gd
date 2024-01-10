@@ -19,7 +19,7 @@ func _ready():
 
 
 func game_over():
-	$ScoreTimer.stop()
+	$Timers/ScoreTimer.stop()
 	#$MobTimer.stop()
 
 	# add blood stain
@@ -35,15 +35,15 @@ func game_over():
 func new_game():
 	score = 0
 	$ySort/Player.start($StartPosition.position)
-	$StartTimer.start()
+	$Timers/StartTimer.start()
 
 
 func _on_start_timer_timeout():
-	$MobTimer.start()
-	$MobTimer2.start()
-	$MobTimer3.start()
-	$MobTimer4.start()
-	$ScoreTimer.start()
+	$Timers/MobTimer.start()
+	$Timers/MobTimer2.start()
+	$Timers/MobTimer3.start()
+	$Timers/MobTimer4.start()
+	$Timers/ScoreTimer.start()
 
 
 func _on_score_timer_timeout():

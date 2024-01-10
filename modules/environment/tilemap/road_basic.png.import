@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://u6rmfi2kj0ni"
-path="res://.godot/imported/pixil-frame-0(1).png-c021478431370e756d715d6d1416e1c1.ctex"
+uid="uid://cbpmm1073jx1j"
+path="res://.godot/imported/road_basic.png-0ef95bd1868110f4daf2107aaa85baab.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://modules/environment/tilemap/pixil-frame-0(1).png"
-dest_files=["res://.godot/imported/pixil-frame-0(1).png-c021478431370e756d715d6d1416e1c1.ctex"]
+source_file="res://modules/environment/tilemap/road_basic.png"
+dest_files=["res://.godot/imported/road_basic.png-0ef95bd1868110f4daf2107aaa85baab.ctex"]
 
 [params]
 

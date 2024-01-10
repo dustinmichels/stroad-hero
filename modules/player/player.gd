@@ -60,5 +60,6 @@ func _on_body_entered(body):
 
 func start(pos):
 	position = pos
+	$AnimatedSprite2D.animation = "down"
 	show()
 	$CollisionShape2D.disabled = false

@@ -171,12 +171,12 @@ position = Vector2(24, 40)
 script = ExtResource("1_148iy")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, -2.5)
 sprite_frames = SubResource("SpriteFrames_so081")
-animation = &"walk"
-frame_progress = 0.895834
+animation = &"down"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(0, 16)
+position = Vector2(0, 13.5)
 shape = SubResource("CapsuleShape2D_ho63t")
 
 [connection signal="body_entered" from="." to="." method="_on_body_entered"]
