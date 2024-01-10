@@ -8,6 +8,7 @@ var screen_size  # Size of the game window.
 var curr_direction = "down"
 var is_idle = true
 
+
 func _ready():
 	screen_size = get_viewport_rect().size
 	#position = screen_size/2
@@ -20,8 +21,8 @@ func lay():
 func _process(delta):
 	move_player(delta)
 	animate_player()
-	
-	
+
+
 func move_player(delta):
 	var velocity = Vector2.ZERO  # The player's movement vector.
 	if Input.is_action_pressed("move_right"):
@@ -40,7 +41,7 @@ func move_player(delta):
 		curr_direction = "up"
 		velocity.x = 0
 		velocity.y -= 1
-	
+
 	if velocity.length() > 0:
 		is_idle = false
 		velocity = velocity.normalized() * speed
@@ -53,7 +54,7 @@ func move_player(delta):
 
 func animate_player():
 	var anim: AnimatedSprite2D = $AnimatedSprite2D
-	
+
 	if is_idle:
 		if curr_direction == "up":
 			anim.play("idle_up")
@@ -76,8 +77,6 @@ func animate_player():
 		elif curr_direction == "right":
 			anim.flip_h = false
 			anim.play("walk_side")
-			
-
 
 
 func _on_body_entered(body):
