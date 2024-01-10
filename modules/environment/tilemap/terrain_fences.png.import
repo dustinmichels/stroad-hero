@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b2qy0724gqi5d"
-path="res://.godot/imported/5_Floor_Modular_Buildings_48x48.png-261991974191095255cea675de3125da.ctex"
+uid="uid://c8r1tgt4cjgfw"
+path="res://.godot/imported/terrain_fences.png-92417b5c0ef39b8e8518fce2c095bb7f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://modules/environment/tilemap/5_Floor_Modular_Buildings_48x48.png"
-dest_files=["res://.godot/imported/5_Floor_Modular_Buildings_48x48.png-261991974191095255cea675de3125da.ctex"]
+source_file="res://modules/environment/tilemap/terrain_fences.png"
+dest_files=["res://.godot/imported/terrain_fences.png-92417b5c0ef39b8e8518fce2c095bb7f.ctex"]
 
 [params]
 
