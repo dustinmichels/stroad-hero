@@ -7302,6 +7302,7 @@ frame_progress = 0.107893
 y_sort_enabled = true
 
 [node name="Player" parent="ySort" instance=ExtResource("8_o0mmv")]
+visible = false
 position = Vector2(800, 168)
 
 [node name="tree" type="Sprite2D" parent="ySort"]

@@ -2,25 +2,23 @@ extends CharacterBody2D
 
 signal hit
 
-@export var speed = 100  # How fast the player will move (pixels/sec).
+@export var speed = 300  # How fast the player will move (pixels/sec).
 var screen_size  # Size of the game window.
 
 var curr_direction = "down"
 var is_idle = true
+
 
 func _ready():
 	screen_size = get_viewport_rect().size
 	#position = screen_size/2
 
 
-#func lay():
-	#$AnimatedSprite2D.rotation = 270
-
-
 func _process(delta):
 	player_movement()
 	player_animation()
-	
+
+
 func player_movement():
 	if Input.is_action_pressed("move_right"):
 		curr_direction = "right"
@@ -46,8 +44,10 @@ func player_movement():
 		is_idle = true
 		velocity.x = 0
 		velocity.y = 0
-		
+
 	move_and_slide()
+	position = position.clamp(Vector2.ZERO, screen_size * 2)
+
 
 func player_animation():
 	var anim: AnimatedSprite2D = $AnimatedSprite2D
@@ -73,7 +73,7 @@ func player_animation():
 		elif curr_direction == "right":
 			anim.flip_h = false
 			anim.play("walk_side")
-		
+
 
 func _on_body_entered(body):
 	hide()  # Player disappears after being hit.
