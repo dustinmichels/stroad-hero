@@ -1,0 +1,55 @@
+[gd_scene load_steps=5 format=3 uid="uid://gv0o5kelgu2m"]
+
+[ext_resource type="Script" path="res://modules/ui/counter/counter.gd" id="1_wvbdo"]
+[ext_resource type="Texture2D" uid="uid://cq603nqxqufse" path="res://modules/ui/assets/cart_icon.png" id="2_0ndhc"]
+[ext_resource type="Theme" uid="uid://bv71gc5gmvh78" path="res://modules/ui/main_theme.tres" id="2_12vx7"]
+[ext_resource type="Texture2D" uid="uid://b7v0l2nnfgliw" path="res://modules/ui/assets/x_icon.png" id="3_yk5un"]
+
+[node name="Counter" type="Node2D"]
+script = ExtResource("1_wvbdo")
+
+[node name="PanelContainer" type="PanelContainer" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -165.0
+offset_bottom = 125.0
+grow_horizontal = 0
+theme = ExtResource("2_12vx7")
+
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="GridContainer" type="GridContainer" parent="PanelContainer/MarginContainer"]
+layout_mode = 2
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 20
+columns = 3
+
+[node name="DeathIcon" type="TextureRect" parent="PanelContainer/MarginContainer/GridContainer"]
+layout_mode = 2
+texture = ExtResource("2_0ndhc")
+
+[node name="DeathsLabel" type="Label" parent="PanelContainer/MarginContainer/GridContainer"]
+layout_mode = 2
+text = "SPD:"
+
+[node name="DeathsCountLabel" type="Label" parent="PanelContainer/MarginContainer/GridContainer"]
+layout_mode = 2
+text = "0"
+
+[node name="ShoppingIcon" type="TextureRect" parent="PanelContainer/MarginContainer/GridContainer"]
+layout_mode = 2
+texture = ExtResource("3_yk5un")
+
+[node name="ErrandsLabel" type="Label" parent="PanelContainer/MarginContainer/GridContainer"]
+layout_mode = 2
+text = "Errands:"
+
+[node name="ErrandsCountLabel" type="Label" parent="PanelContainer/MarginContainer/GridContainer"]
+layout_mode = 2
+text = "0"

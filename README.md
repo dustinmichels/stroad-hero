@@ -5,3 +5,4 @@
 ## Attribution
 
 - Art from [limezu.itch.io](https://limezu.itch.io/modernexteriors)
+- Art from [pixelfrog-assets.itch.io](https://pixelfrog-assets.itch.io/pixel-adventure-1)

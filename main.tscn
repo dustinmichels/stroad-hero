@@ -1,4 +1,4 @@
-[gd_scene load_steps=38 format=3 uid="uid://cymirg3u82p12"]
+[gd_scene load_steps=40 format=3 uid="uid://cymirg3u82p12"]
 
 [ext_resource type="Script" path="res://main.gd" id="1_br2up"]
 [ext_resource type="PackedScene" uid="uid://km0vyfhwyp1b" path="res://modules/blood/blood.tscn" id="3_barjk"]
@@ -17,6 +17,8 @@
 [ext_resource type="Texture2D" uid="uid://ddhqrgdd3sso" path="res://modules/environment/ME_Singles_City_Props_48x48_Shrub_10.png" id="9_nbubs"]
 [ext_resource type="Texture2D" uid="uid://clu2qlgplk5lt" path="res://modules/environment/ME_Singles_City_Props_48x48_Tree_13.png" id="10_3nc57"]
 [ext_resource type="Texture2D" uid="uid://c7ieh04g2bn7p" path="res://modules/environment/tilemap/road_stripe_lower-sheet.png" id="10_sulmx"]
+[ext_resource type="PackedScene" uid="uid://gv0o5kelgu2m" path="res://modules/ui/counter/counter.tscn" id="18_jf1jf"]
+[ext_resource type="PackedScene" uid="uid://b3jtagsysfydb" path="res://modules/target/target.tscn" id="19_0oile"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_wytds"]
 texture = ExtResource("8_wefpx")
@@ -7272,20 +7274,20 @@ offset_bottom = 1080.0
 [node name="Decoration" type="Node" parent="."]
 
 [node name="bush" type="Sprite2D" parent="Decoration"]
-position = Vector2(1760, 240)
+position = Vector2(1429, 250)
 texture = ExtResource("3_nsc1e")
 
 [node name="circle" type="Sprite2D" parent="Decoration"]
-position = Vector2(1022, 212)
+position = Vector2(895, 173)
 scale = Vector2(0.541667, 0.541667)
 texture = ExtResource("3_rflvs")
 
 [node name="vine" type="Sprite2D" parent="Decoration"]
-position = Vector2(1064, 196)
+position = Vector2(937, 157)
 texture = ExtResource("9_nbubs")
 
 [node name="vine2" type="Sprite2D" parent="Decoration"]
-position = Vector2(1084, 172)
+position = Vector2(957, 133)
 scale = Vector2(0.75, 0.75)
 texture = ExtResource("9_nbubs")
 
@@ -7297,6 +7299,12 @@ position = Vector2(664, 208)
 sprite_frames = SubResource("SpriteFrames_5sdpf")
 frame = 7
 frame_progress = 0.107893
+
+[node name="Target" parent="." instance=ExtResource("19_0oile")]
+position = Vector2(848, 903)
+
+[node name="Target2" parent="." instance=ExtResource("19_0oile")]
+position = Vector2(466, 164)
 
 [node name="ySort" type="Node2D" parent="."]
 y_sort_enabled = true
@@ -7311,22 +7319,29 @@ position = Vector2(872, 32)
 texture = ExtResource("10_3nc57")
 
 [node name="Billboard" type="Sprite2D" parent="ySort"]
-position = Vector2(1728, 168)
+position = Vector2(1397, 178)
 texture = ExtResource("8_ysrdg")
 
-[node name="StartPosition" type="Marker2D" parent="."]
-position = Vector2(1024, 192)
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
 
-[node name="CarStart_Left1" type="Marker2D" parent="."]
+[node name="Counter" parent="CanvasLayer" instance=ExtResource("18_jf1jf")]
+position = Vector2(1878, 39)
+
+[node name="Markers" type="Node" parent="."]
+
+[node name="StartPosition" type="Marker2D" parent="Markers"]
+position = Vector2(897, 153)
+
+[node name="CarStart_Left1" type="Marker2D" parent="Markers"]
 position = Vector2(-128, 384)
 
-[node name="CarStart_Left2" type="Marker2D" parent="."]
+[node name="CarStart_Left2" type="Marker2D" parent="Markers"]
 position = Vector2(-254, 496)
 
-[node name="CarStart_Right1" type="Marker2D" parent="."]
+[node name="CarStart_Right1" type="Marker2D" parent="Markers"]
 position = Vector2(2048, 624)
 
-[node name="CarStart_Right2" type="Marker2D" parent="."]
+[node name="CarStart_Right2" type="Marker2D" parent="Markers"]
 position = Vector2(2216, 741)
 
 [connection signal="timeout" from="Timers/MobTimer" to="." method="_on_mob_timer_timeout"]

@@ -6,16 +6,17 @@ extends Node
 @export var car_speed = 750.0
 
 var score
-var bloodLayer
-var yLayer
+@onready var bloodLayer = $BloodLayer
+@onready var yLayer = $ySort
+
+var DEATHS = 0
 
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	#randomize()
 	new_game()
-	bloodLayer = $BloodLayer
-	yLayer = $ySort
+	$CanvasLayer/Counter.update_deaths(DEATHS)
 
 
 func game_over():
@@ -26,6 +27,10 @@ func game_over():
 	var blood = blood_scene.instantiate()
 	blood.position = $ySort/Player.position
 	bloodLayer.add_child(blood)  # Spawn the mob by adding it to the Main scene.
+	
+	# update deaths
+	DEATHS += 1
+	$CanvasLayer/Counter.update_deaths(DEATHS)
 
 	# start new game, after pause
 	await get_tree().create_timer(1.0).timeout
@@ -34,7 +39,7 @@ func game_over():
 
 func new_game():
 	score = 0
-	$ySort/Player.start($StartPosition.position)
+	$ySort/Player.start($Markers/StartPosition.position)
 	$Timers/StartTimer.start()
 
 
@@ -51,7 +56,7 @@ func _on_score_timer_timeout():
 
 
 func _on_mob_timer_timeout():
-	var startPos = $CarStart_Left1.position
+	var startPos = $Markers/CarStart_Left1.position
 	var car = car_scene.instantiate()
 	car.position = Vector2(startPos.x + randf_range(-100, 100), startPos.y + randf_range(-5, 5))
 	car.linear_velocity = Vector2(car_speed + randf_range(-60, 60), 0.0)
@@ -59,7 +64,7 @@ func _on_mob_timer_timeout():
 
 
 func _on_mob_timer_2_timeout():
-	var startPos = $CarStart_Left2.position
+	var startPos = $Markers/CarStart_Left2.position
 	var car = car_scene.instantiate()
 	car.position = Vector2(startPos.x + randf_range(-100, 100), startPos.y + randf_range(-5, 5))
 	car.linear_velocity = Vector2(car_speed + randf_range(-60, 60), 0.0)
@@ -67,7 +72,7 @@ func _on_mob_timer_2_timeout():
 
 
 func _on_mob_timer_3_timeout():
-	var startPos = $CarStart_Right1.position
+	var startPos = $Markers/CarStart_Right1.position
 	var car = car_scene.instantiate()
 	car.flip()
 	car.position = Vector2(startPos.x + randf_range(-100, 100), startPos.y + randf_range(-5, 5))
@@ -76,7 +81,7 @@ func _on_mob_timer_3_timeout():
 
 
 func _on_mob_timer_4_timeout():
-	var startPos = $CarStart_Right2.position
+	var startPos = $Markers/CarStart_Right2.position
 	var car = car_scene.instantiate()
 	car.flip()
 	car.position = Vector2(startPos.x + randf_range(-100, 100), startPos.y + randf_range(-5, 5))
