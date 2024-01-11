@@ -27,7 +27,7 @@ func game_over():
 	var blood = blood_scene.instantiate()
 	blood.position = $ySort/Player.position
 	bloodLayer.add_child(blood)  # Spawn the mob by adding it to the Main scene.
-	
+
 	# update deaths
 	DEATHS += 1
 	$CanvasLayer/Counter.update_deaths(DEATHS)
