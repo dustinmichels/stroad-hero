@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dto26r3rqoby8"
-path="res://.godot/imported/not_blood.png-32a2422c59010f1277e2c8cbd3898771.ctex"
+uid="uid://brptnfuweqfbj"
+path="res://.godot/imported/blood_stain_alt.png-27c017098a5a6b07cca48fa40e3d77ef.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://modules/blood/not_blood.png"
-dest_files=["res://.godot/imported/not_blood.png-32a2422c59010f1277e2c8cbd3898771.ctex"]
+source_file="res://modules/blood/assets/blood_stain_alt.png"
+dest_files=["res://.godot/imported/blood_stain_alt.png-27c017098a5a6b07cca48fa40e3d77ef.ctex"]
 
 [params]
 

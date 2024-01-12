@@ -4,6 +4,7 @@ extends Node2D
 var stain: AnimatedSprite2D
 var COUNT_DOWN = 0.9
 
+@onready var audio_player: AudioStreamPlayer2D = $AudioStreamPlayer2D
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -18,3 +19,8 @@ func _on_vanish_timeout():
 	if COUNT_DOWN < 0:
 		queue_free()
 	stain.modulate = Color(0.9, 0.9, 0.9, COUNT_DOWN)
+
+
+func play_sound():
+	audio_player.play()
+	

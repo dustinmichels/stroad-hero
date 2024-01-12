@@ -5,85 +5,74 @@ extends Node
 
 @export var car_speed = 750.0
 
-var score
 @onready var bloodLayer = $BloodLayer
 @onready var yLayer = $ySort
+@onready var player: Area2D = $ySort/Player
 
-var DEATHS = 0
+@onready var target2 = $Target2
+
+var DEATH_COUNT = 0
+var ERRANDS_COUNT = 0
 
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	#randomize()
 	new_game()
-	$CanvasLayer/Counter.update_deaths(DEATHS)
+	$CanvasLayer/Counter.update_deaths(DEATH_COUNT)
+	
+	$Target.collected.connect(_on_target_collected)
+	$Target2.collected.connect(_on_target_collected)
 
 
-func game_over():
-	$Timers/ScoreTimer.stop()
-	#$MobTimer.stop()
+
+func _on_target_collected():
+	ERRANDS_COUNT += 1
+	$CanvasLayer/Counter.update_errands(ERRANDS_COUNT)
+	
+	
+
+func _on_player_hit():
 
 	# add blood stain
 	var blood = blood_scene.instantiate()
-	blood.position = $ySort/Player.position
+	blood.position = player.position
 	bloodLayer.add_child(blood)  # Spawn the mob by adding it to the Main scene.
+	blood.play_sound()
 
 	# update deaths
-	DEATHS += 1
-	$CanvasLayer/Counter.update_deaths(DEATHS)
+	DEATH_COUNT += 1
+	$CanvasLayer/Counter.update_deaths(DEATH_COUNT)
 
 	# start new game, after pause
 	await get_tree().create_timer(1.0).timeout
-	new_game()
+	reset()
 
 
 func new_game():
-	score = 0
-	$ySort/Player.start($Markers/StartPosition.position)
+	player.start($Markers/StartPosition.position)
 	$Timers/StartTimer.start()
-
+	
+func reset():
+	player.start($Markers/StartPosition.position)
+	
 
 func _on_start_timer_timeout():
 	$Timers/MobTimer.start()
-	$Timers/MobTimer2.start()
-	$Timers/MobTimer3.start()
-	$Timers/MobTimer4.start()
-	$Timers/ScoreTimer.start()
-
-
-func _on_score_timer_timeout():
-	score += 1
 
 
 func _on_mob_timer_timeout():
-	var startPos = $Markers/CarStart_Left1.position
+	_add_car_to_scene($Markers/CarStart_Left1.position, false)
+	_add_car_to_scene($Markers/CarStart_Left2.position, false)
+	_add_car_to_scene($Markers/CarStart_Right1.position, true)
+	_add_car_to_scene($Markers/CarStart_Right2.position, true)
+
+func _add_car_to_scene(pos: Vector2, flip: bool):
 	var car = car_scene.instantiate()
-	car.position = Vector2(startPos.x + randf_range(-100, 100), startPos.y + randf_range(-5, 5))
-	car.linear_velocity = Vector2(car_speed + randf_range(-60, 60), 0.0)
-	yLayer.add_child(car)  # Spawn the mob by adding it to the Main scene.
-
-
-func _on_mob_timer_2_timeout():
-	var startPos = $Markers/CarStart_Left2.position
-	var car = car_scene.instantiate()
-	car.position = Vector2(startPos.x + randf_range(-100, 100), startPos.y + randf_range(-5, 5))
-	car.linear_velocity = Vector2(car_speed + randf_range(-60, 60), 0.0)
-	yLayer.add_child(car)  # Spawn the mob by adding it to the Main scene.
-
-
-func _on_mob_timer_3_timeout():
-	var startPos = $Markers/CarStart_Right1.position
-	var car = car_scene.instantiate()
-	car.flip()
-	car.position = Vector2(startPos.x + randf_range(-100, 100), startPos.y + randf_range(-5, 5))
-	car.linear_velocity = Vector2((-1 * car_speed) + randf_range(-60, 60), 0.0)
-	yLayer.add_child(car)  # Spawn the mob by adding it to the Main scene.
-
-
-func _on_mob_timer_4_timeout():
-	var startPos = $Markers/CarStart_Right2.position
-	var car = car_scene.instantiate()
-	car.flip()
-	car.position = Vector2(startPos.x + randf_range(-100, 100), startPos.y + randf_range(-5, 5))
-	car.linear_velocity = Vector2((-1 * car_speed) + randf_range(-60, 60), 0.0)
+	var speed = car_speed
+	if flip:
+		speed = -1 * car_speed
+		car.flip()
+	car.position = Vector2(pos.x + randf_range(-100, 100), pos.y + randf_range(-5, 5))
+	car.linear_velocity = Vector2(speed + randf_range(-60, 60), 0.0)
 	yLayer.add_child(car)  # Spawn the mob by adding it to the Main scene.

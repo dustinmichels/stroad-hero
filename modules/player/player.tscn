@@ -306,4 +306,6 @@ animation = &"walk_down"
 position = Vector2(0, 16)
 shape = SubResource("CapsuleShape2D_ho63t")
 
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
+
 [connection signal="body_entered" from="." to="." method="_on_body_entered"]

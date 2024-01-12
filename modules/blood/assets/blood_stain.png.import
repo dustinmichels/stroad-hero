@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c4fiqryibt8l6"
-path="res://.godot/imported/blood_stain.png-f5d50d096025971ff5735372aec033ff.ctex"
+path="res://.godot/imported/blood_stain.png-133841d61885d921736fd03f7c2d6fdc.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://modules/blood/blood_stain.png"
-dest_files=["res://.godot/imported/blood_stain.png-f5d50d096025971ff5735372aec033ff.ctex"]
+source_file="res://modules/blood/assets/blood_stain.png"
+dest_files=["res://.godot/imported/blood_stain.png-133841d61885d921736fd03f7c2d6fdc.ctex"]
 
 [params]
 

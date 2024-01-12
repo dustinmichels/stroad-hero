@@ -7244,18 +7244,8 @@ color = Color(1, 0.517647, 1, 1)
 [node name="MobTimer" type="Timer" parent="Timers"]
 wait_time = 0.8
 
-[node name="MobTimer2" type="Timer" parent="Timers"]
-wait_time = 0.8
-
-[node name="MobTimer3" type="Timer" parent="Timers"]
-wait_time = 0.8
-
-[node name="MobTimer4" type="Timer" parent="Timers"]
-wait_time = 0.8
-
-[node name="ScoreTimer" type="Timer" parent="Timers"]
-
 [node name="StartTimer" type="Timer" parent="Timers"]
+wait_time = 0.5
 one_shot = true
 
 [node name="Tiles" type="Node2D" parent="."]
@@ -7301,10 +7291,10 @@ frame = 7
 frame_progress = 0.107893
 
 [node name="Target" parent="." instance=ExtResource("19_0oile")]
-position = Vector2(848, 903)
+position = Vector2(1091, 949)
 
 [node name="Target2" parent="." instance=ExtResource("19_0oile")]
-position = Vector2(466, 164)
+position = Vector2(425, 201)
 
 [node name="ySort" type="Node2D" parent="."]
 y_sort_enabled = true
@@ -7345,9 +7335,5 @@ position = Vector2(2048, 624)
 position = Vector2(2216, 741)
 
 [connection signal="timeout" from="Timers/MobTimer" to="." method="_on_mob_timer_timeout"]
-[connection signal="timeout" from="Timers/MobTimer2" to="." method="_on_mob_timer_2_timeout"]
-[connection signal="timeout" from="Timers/MobTimer3" to="." method="_on_mob_timer_3_timeout"]
-[connection signal="timeout" from="Timers/MobTimer4" to="." method="_on_mob_timer_4_timeout"]
-[connection signal="timeout" from="Timers/ScoreTimer" to="." method="_on_score_timer_timeout"]
 [connection signal="timeout" from="Timers/StartTimer" to="." method="_on_start_timer_timeout"]
-[connection signal="hit" from="ySort/Player" to="." method="game_over"]
+[connection signal="hit" from="ySort/Player" to="." method="_on_player_hit"]

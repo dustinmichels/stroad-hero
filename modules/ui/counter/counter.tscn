@@ -39,6 +39,7 @@ layout_mode = 2
 text = "SPD:"
 
 [node name="DeathsCountLabel" type="Label" parent="PanelContainer/MarginContainer/GridContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "0"
 
@@ -51,5 +52,6 @@ layout_mode = 2
 text = "Errands:"
 
 [node name="ErrandsCountLabel" type="Label" parent="PanelContainer/MarginContainer/GridContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "0"
