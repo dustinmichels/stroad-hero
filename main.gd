@@ -91,10 +91,10 @@ func spawn_flag():
 
 	flag.collected.connect(_on_target_collected)
 	yLayer.call_deferred("add_child", flag)
-	
+
 	curr_flags.append(flag)
-	
-	
+
+
 func pick_flag_location():
 	var r1: ReferenceRect = $SpawnRect1
 	var r2: ReferenceRect = $SpawnRect2
@@ -103,11 +103,11 @@ func pick_flag_location():
 	#var rects = [r1, r2, r3]
 	var rects = [r1, r2]
 	var r = rects.pick_random()
-	
+
 	#var pos = curr_flags[0].position
-	
+
 	# TODO: make sure flag is not too close to existing flag
-	
+
 	var pos = r.position + Vector2(randf() * r.size.x, randf() * r.size.y)
-	
+
 	return pos
