@@ -23,7 +23,7 @@ func _ready():
 	new_game()
 	#$Counter.update_deaths(0)
 	#$Counter.update_errands(0)
-	
+
 
 func _on_target_collected():
 	ERRANDS_COUNT += 1
@@ -82,29 +82,23 @@ func _add_car_to_scene(pos: Vector2, flip: bool):
 
 func _get_variation(val: int):
 	return randf_range(-val, val)
-	
-	
+
+
 func spawn_flag():
 	var r1: ReferenceRect = $SpawnRect1
 	var r2: ReferenceRect = $SpawnRect2
 	#var r3: ReferenceRect = $SpawnRect3
-	
+
 	#var rects = [r1, r2, r3]
 	var rects = [r1, r2]
 	var r = rects.pick_random()
-	
-	var pos = r.position + Vector2(
-		randf() * r.size.x,
-		randf() * r.size.y
-	)
-	
+
+	var pos = r.position + Vector2(randf() * r.size.x, randf() * r.size.y)
+
 	var flag = flag_scene.instantiate()
 	flag.position = pos
-	
+
 	flag.collected.connect(_on_target_collected)
-	
+
 	#flag_layer.add_child(flag)
 	yLayer.add_child(flag)
-	
-	
-

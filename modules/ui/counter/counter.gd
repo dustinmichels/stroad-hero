@@ -12,8 +12,8 @@ func update_deaths(num: int):
 
 func update_errands(num: int):
 	update_text(%ErrandsCountLabel, num, Color.FOREST_GREEN)
-	
-	
+
+
 func update_text(label: Label, num: int, color: Color):
 	label.add_theme_color_override("font_color", color)
 	label.text = "%3d" % num
