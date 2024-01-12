@@ -21,20 +21,17 @@ func _ready():
 	new_game()
 	$Counter.update_deaths(0)
 	$Counter.update_errands(0)
-	
+
 	$Target.collected.connect(_on_target_collected)
 	$Target2.collected.connect(_on_target_collected)
-
 
 
 func _on_target_collected():
 	ERRANDS_COUNT += 1
 	$Counter.update_errands(ERRANDS_COUNT)
-	
-	
+
 
 func _on_player_hit():
-
 	# add blood stain
 	var blood = blood_scene.instantiate()
 	blood.position = player.position
@@ -53,10 +50,11 @@ func _on_player_hit():
 func new_game():
 	player.start($Markers/StartPosition.position)
 	$Timers/StartTimer.start()
-	
+
+
 func reset():
 	player.start($Markers/StartPosition.position)
-	
+
 
 func _on_start_timer_timeout():
 	$Timers/MobTimer.start()
@@ -68,20 +66,19 @@ func _on_mob_timer_timeout():
 	_add_car_to_scene($Markers/CarStart_Right1.position, true)
 	_add_car_to_scene($Markers/CarStart_Right2.position, true)
 
+
 func _add_car_to_scene(pos: Vector2, flip: bool):
 	var car = car_scene.instantiate()
 	var speed = car_speed
 	if flip:
 		speed = -1 * car_speed
 		car.flip()
-	
+
 	#car.position = Vector2(pos.x + randf_range(-100, 100), pos.y + randf_range(-5, 5))
 	car.position = Vector2(pos.x + get_variation(100), pos.y)
-	car.linear_velocity = Vector2(speed + get_variation(car_speed/15), 0.0)
+	car.linear_velocity = Vector2(speed + get_variation(car_speed / 15), 0.0)
 	yLayer.add_child(car)  # Spawn the mob by adding it to the Main scene.
 
 
 func get_variation(val: int):
 	return randf_range(-val, val)
-	
-	

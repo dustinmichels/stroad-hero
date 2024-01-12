@@ -57,10 +57,11 @@ func move_player(delta):
 
 
 func play_audio():
-		# if the footstep audio isn't playing, play the audio
+	# if the footstep audio isn't playing, play the audio
 	if !footstep_audio.playing:
 		footstep_audio.pitch_scale = randf_range(.8, 1.2)
 		footstep_audio.play()
+
 
 func animate_player():
 	var anim: AnimatedSprite2D = $AnimatedSprite2D

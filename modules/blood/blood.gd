@@ -6,6 +6,7 @@ var COUNT_DOWN = 0.9
 
 @onready var audio_player: AudioStreamPlayer2D = $AudioStreamPlayer2D
 
+
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	stain = $AnimatedSprite2D
@@ -23,4 +24,3 @@ func _on_vanish_timeout():
 
 func play_sound():
 	audio_player.play()
-	
