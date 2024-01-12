@@ -11,52 +11,59 @@ script = ExtResource("1_wvbdo")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
-[node name="PanelContainer" type="PanelContainer" parent="CanvasLayer"]
+[node name="MarginContainer" type="MarginContainer" parent="CanvasLayer"]
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
 offset_left = -258.0
 offset_bottom = 177.0
 grow_horizontal = 0
+theme_override_constants/margin_left = 15
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_right = 15
+theme_override_constants/margin_bottom = 15
+
+[node name="PanelContainer" type="PanelContainer" parent="CanvasLayer/MarginContainer"]
+layout_mode = 2
 theme = ExtResource("2_12vx7")
 metadata/_edit_use_anchors_ = true
 
-[node name="MarginContainer" type="MarginContainer" parent="CanvasLayer/PanelContainer"]
+[node name="MarginContainer" type="MarginContainer" parent="CanvasLayer/MarginContainer/PanelContainer"]
 layout_mode = 2
 theme_override_constants/margin_left = 20
 theme_override_constants/margin_top = 20
 theme_override_constants/margin_right = 20
 theme_override_constants/margin_bottom = 20
 
-[node name="GridContainer" type="GridContainer" parent="CanvasLayer/PanelContainer/MarginContainer"]
+[node name="GridContainer" type="GridContainer" parent="CanvasLayer/MarginContainer/PanelContainer/MarginContainer"]
 layout_mode = 2
 theme_override_constants/h_separation = 10
 theme_override_constants/v_separation = 20
 columns = 3
 
-[node name="DeathIcon" type="TextureRect" parent="CanvasLayer/PanelContainer/MarginContainer/GridContainer"]
+[node name="DeathIcon" type="TextureRect" parent="CanvasLayer/MarginContainer/PanelContainer/MarginContainer/GridContainer"]
 layout_mode = 2
 texture = ExtResource("2_0ndhc")
 
-[node name="DeathsLabel" type="Label" parent="CanvasLayer/PanelContainer/MarginContainer/GridContainer"]
+[node name="DeathsLabel" type="Label" parent="CanvasLayer/MarginContainer/PanelContainer/MarginContainer/GridContainer"]
 layout_mode = 2
 text = "SPD:"
 
-[node name="DeathsCountLabel" type="Label" parent="CanvasLayer/PanelContainer/MarginContainer/GridContainer"]
+[node name="DeathsCountLabel" type="Label" parent="CanvasLayer/MarginContainer/PanelContainer/MarginContainer/GridContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_fonts/font = ExtResource("4_7e8ae")
 text = "0"
 
-[node name="ShoppingIcon" type="TextureRect" parent="CanvasLayer/PanelContainer/MarginContainer/GridContainer"]
+[node name="ShoppingIcon" type="TextureRect" parent="CanvasLayer/MarginContainer/PanelContainer/MarginContainer/GridContainer"]
 layout_mode = 2
 texture = ExtResource("3_yk5un")
 
-[node name="ErrandsLabel" type="Label" parent="CanvasLayer/PanelContainer/MarginContainer/GridContainer"]
+[node name="ErrandsLabel" type="Label" parent="CanvasLayer/MarginContainer/PanelContainer/MarginContainer/GridContainer"]
 layout_mode = 2
 text = "Errands:"
 
-[node name="ErrandsCountLabel" type="Label" parent="CanvasLayer/PanelContainer/MarginContainer/GridContainer"]
+[node name="ErrandsCountLabel" type="Label" parent="CanvasLayer/MarginContainer/PanelContainer/MarginContainer/GridContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_fonts/font = ExtResource("4_7e8ae")

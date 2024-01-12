@@ -2,12 +2,14 @@ extends Node
 
 @export var car_scene: PackedScene
 @export var blood_scene: PackedScene
+@export var flag_scene: PackedScene
 
 @export var car_speed = 600.0
 
 @onready var bloodLayer = $BloodLayer
 @onready var yLayer = $ySort
 @onready var player: Area2D = $ySort/Player
+@onready var flag_layer = $FlagLayer
 
 @onready var target2 = $Target2
 
@@ -19,16 +21,14 @@ var ERRANDS_COUNT = 0
 func _ready():
 	#randomize()
 	new_game()
-	$Counter.update_deaths(0)
-	$Counter.update_errands(0)
-
-	$Target.collected.connect(_on_target_collected)
-	$Target2.collected.connect(_on_target_collected)
-
+	#$Counter.update_deaths(0)
+	#$Counter.update_errands(0)
+	
 
 func _on_target_collected():
 	ERRANDS_COUNT += 1
 	$Counter.update_errands(ERRANDS_COUNT)
+	spawn_flag()
 
 
 func _on_player_hit():
@@ -42,22 +42,22 @@ func _on_player_hit():
 	DEATH_COUNT += 1
 	$Counter.update_deaths(DEATH_COUNT)
 
-	# start new game, after pause
+	# reset game, after pause
 	await get_tree().create_timer(1.0).timeout
 	reset()
 
 
 func new_game():
+	$MobTimer.start()
 	player.start($Markers/StartPosition.position)
-	$Timers/StartTimer.start()
+	spawn_flag()
+	spawn_flag()
+	#spawn_flag()
+	#$Timers/StartTimer.start()
 
 
 func reset():
 	player.start($Markers/StartPosition.position)
-
-
-func _on_start_timer_timeout():
-	$Timers/MobTimer.start()
 
 
 func _on_mob_timer_timeout():
@@ -75,10 +75,36 @@ func _add_car_to_scene(pos: Vector2, flip: bool):
 		car.flip()
 
 	#car.position = Vector2(pos.x + randf_range(-100, 100), pos.y + randf_range(-5, 5))
-	car.position = Vector2(pos.x + get_variation(100), pos.y)
-	car.linear_velocity = Vector2(speed + get_variation(car_speed / 15), 0.0)
+	car.position = Vector2(pos.x + _get_variation(100), pos.y)
+	car.linear_velocity = Vector2(speed + _get_variation(car_speed / 15), 0.0)
 	yLayer.add_child(car)  # Spawn the mob by adding it to the Main scene.
 
 
-func get_variation(val: int):
+func _get_variation(val: int):
 	return randf_range(-val, val)
+	
+	
+func spawn_flag():
+	var r1: ReferenceRect = $SpawnRect1
+	var r2: ReferenceRect = $SpawnRect2
+	#var r3: ReferenceRect = $SpawnRect3
+	
+	#var rects = [r1, r2, r3]
+	var rects = [r1, r2]
+	var r = rects.pick_random()
+	
+	var pos = r.position + Vector2(
+		randf() * r.size.x,
+		randf() * r.size.y
+	)
+	
+	var flag = flag_scene.instantiate()
+	flag.position = pos
+	
+	flag.collected.connect(_on_target_collected)
+	
+	#flag_layer.add_child(flag)
+	yLayer.add_child(flag)
+	
+	
+

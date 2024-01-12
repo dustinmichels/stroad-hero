@@ -292,23 +292,23 @@ animations = [{
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_ho63t"]
 radius = 8.0
-height = 32.0
 
 [node name="Player" type="Area2D"]
-position = Vector2(0, -15)
+position = Vector2(2.08165e-12, 2.08165e-12)
 script = ExtResource("1_148iy")
 metadata/_edit_group_ = true
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(-2.08165e-12, -24.5)
 sprite_frames = SubResource("SpriteFrames_t3tjf")
 animation = &"walk_down"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(0, 16)
+position = Vector2(-2.08165e-12, -11.5)
 shape = SubResource("CapsuleShape2D_ho63t")
 
 [node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
 stream = ExtResource("4_22k0u")
-volume_db = 5.0
+volume_db = 20.0
 
 [connection signal="body_entered" from="." to="." method="_on_body_entered"]
