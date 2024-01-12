@@ -11,8 +11,6 @@ extends Node
 @onready var player: Area2D = $ySort/Player
 @onready var flag_layer = $FlagLayer
 
-@onready var target2 = $Target2
-
 var DEATH_COUNT = 0
 var ERRANDS_COUNT = 0
 
@@ -101,4 +99,5 @@ func spawn_flag():
 	flag.collected.connect(_on_target_collected)
 
 	#flag_layer.add_child(flag)
-	yLayer.add_child(flag)
+	#yLayer.add_child(flag)
+	yLayer.call_deferred("add_child", flag)
