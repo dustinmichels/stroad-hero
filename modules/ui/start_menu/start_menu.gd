@@ -11,6 +11,11 @@ func _ready():
 	quit_button.button_down.connect(on_quit_button_pressed)
 
 
+func _gui_input(event: InputEvent):
+	if event.is_action_pressed("move_down"):
+		print("down pressed")
+
+
 func on_start_button_pressed():
 	get_tree().change_scene_to_packed(main_game)
 

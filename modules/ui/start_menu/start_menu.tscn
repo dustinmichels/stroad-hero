@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://dsgicxy41kr0o"]
+[gd_scene load_steps=4 format=3 uid="uid://dsgicxy41kr0o"]
 
-[ext_resource type="Script" path="res://modules/start_menu/start_menu.gd" id="1_dv08f"]
+[ext_resource type="Script" path="res://modules/ui/start_menu/start_menu.gd" id="1_dv08f"]
 [ext_resource type="Texture2D" uid="uid://hfgojqoyfj1t" path="res://mats.png" id="2_3loap"]
+[ext_resource type="Script" path="res://modules/ui/start_menu/StartButton.gd" id="3_shdse"]
 
 [node name="StartMenu" type="Control"]
 layout_mode = 3
@@ -70,6 +71,7 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 60
 text = "Start Game"
+script = ExtResource("3_shdse")
 
 [node name="QuitButton" type="Button" parent="MarginContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
 unique_name_in_owner = true
