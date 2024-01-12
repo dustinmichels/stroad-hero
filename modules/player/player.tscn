@@ -1,8 +1,9 @@
-[gd_scene load_steps=42 format=3 uid="uid://cjqmojapmac2q"]
+[gd_scene load_steps=43 format=3 uid="uid://cjqmojapmac2q"]
 
 [ext_resource type="Script" path="res://modules/player/player.gd" id="1_148iy"]
 [ext_resource type="Texture2D" uid="uid://hw2vpl5vuvbw" path="res://modules/player2/scout_idle.png" id="2_1k03r"]
 [ext_resource type="Texture2D" uid="uid://cqllokbuyfrab" path="res://modules/player2/scout_walk.png" id="3_hu64t"]
+[ext_resource type="AudioStream" uid="uid://1ik2bsaqt22x" path="res://modules/player/assets/running.mp3" id="4_22k0u"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_kr1g5"]
 atlas = ExtResource("2_1k03r")
@@ -307,5 +308,7 @@ position = Vector2(0, 16)
 shape = SubResource("CapsuleShape2D_ho63t")
 
 [node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("4_22k0u")
+volume_db = 5.0
 
 [connection signal="body_entered" from="." to="." method="_on_body_entered"]

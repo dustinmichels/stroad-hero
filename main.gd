@@ -3,7 +3,7 @@ extends Node
 @export var car_scene: PackedScene
 @export var blood_scene: PackedScene
 
-@export var car_speed = 750.0
+@export var car_speed = 600.0
 
 @onready var bloodLayer = $BloodLayer
 @onready var yLayer = $ySort
@@ -19,7 +19,8 @@ var ERRANDS_COUNT = 0
 func _ready():
 	#randomize()
 	new_game()
-	$CanvasLayer/Counter.update_deaths(DEATH_COUNT)
+	$Counter.update_deaths(0)
+	$Counter.update_errands(0)
 	
 	$Target.collected.connect(_on_target_collected)
 	$Target2.collected.connect(_on_target_collected)
@@ -28,7 +29,7 @@ func _ready():
 
 func _on_target_collected():
 	ERRANDS_COUNT += 1
-	$CanvasLayer/Counter.update_errands(ERRANDS_COUNT)
+	$Counter.update_errands(ERRANDS_COUNT)
 	
 	
 
@@ -42,7 +43,7 @@ func _on_player_hit():
 
 	# update deaths
 	DEATH_COUNT += 1
-	$CanvasLayer/Counter.update_deaths(DEATH_COUNT)
+	$Counter.update_deaths(DEATH_COUNT)
 
 	# start new game, after pause
 	await get_tree().create_timer(1.0).timeout
@@ -73,6 +74,14 @@ func _add_car_to_scene(pos: Vector2, flip: bool):
 	if flip:
 		speed = -1 * car_speed
 		car.flip()
-	car.position = Vector2(pos.x + randf_range(-100, 100), pos.y + randf_range(-5, 5))
-	car.linear_velocity = Vector2(speed + randf_range(-60, 60), 0.0)
+	
+	#car.position = Vector2(pos.x + randf_range(-100, 100), pos.y + randf_range(-5, 5))
+	car.position = Vector2(pos.x + get_variation(100), pos.y)
+	car.linear_velocity = Vector2(speed + get_variation(car_speed/15), 0.0)
 	yLayer.add_child(car)  # Spawn the mob by adding it to the Main scene.
+
+
+func get_variation(val: int):
+	return randf_range(-val, val)
+	
+	

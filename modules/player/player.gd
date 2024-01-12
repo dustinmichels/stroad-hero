@@ -8,6 +8,8 @@ var screen_size  # Size of the game window.
 var curr_direction = "down"
 var is_idle = true
 
+@onready var footstep_audio = $AudioStreamPlayer2D
+
 
 func _ready():
 	screen_size = get_viewport_rect().size
@@ -43,14 +45,22 @@ func move_player(delta):
 		velocity.y -= 1
 
 	if velocity.length() > 0:
+		play_audio()
 		is_idle = false
 		velocity = velocity.normalized() * speed
 	else:
+		$AudioStreamPlayer2D.stop()
 		is_idle = true
 
 	position += velocity * delta
 	position = position.clamp(Vector2.ZERO, screen_size)
 
+
+func play_audio():
+		# if the footstep audio isn't playing, play the audio
+	if !footstep_audio.playing:
+		footstep_audio.pitch_scale = randf_range(.8, 1.2)
+		footstep_audio.play()
 
 func animate_player():
 	var anim: AnimatedSprite2D = $AnimatedSprite2D

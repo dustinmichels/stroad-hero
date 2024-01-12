@@ -1,4 +1,4 @@
-[gd_scene load_steps=40 format=3 uid="uid://cymirg3u82p12"]
+[gd_scene load_steps=41 format=3 uid="uid://cymirg3u82p12"]
 
 [ext_resource type="Script" path="res://main.gd" id="1_br2up"]
 [ext_resource type="PackedScene" uid="uid://km0vyfhwyp1b" path="res://modules/blood/blood.tscn" id="3_barjk"]
@@ -19,6 +19,7 @@
 [ext_resource type="Texture2D" uid="uid://c7ieh04g2bn7p" path="res://modules/environment/tilemap/road_stripe_lower-sheet.png" id="10_sulmx"]
 [ext_resource type="PackedScene" uid="uid://gv0o5kelgu2m" path="res://modules/ui/counter/counter.tscn" id="18_jf1jf"]
 [ext_resource type="PackedScene" uid="uid://b3jtagsysfydb" path="res://modules/target/target.tscn" id="19_0oile"]
+[ext_resource type="AudioStream" uid="uid://c10ehyyiloppx" path="res://modules/environment/highway.mp3" id="20_bod7h"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_wytds"]
 texture = ExtResource("8_wefpx")
@@ -7242,7 +7243,6 @@ color = Color(1, 0.517647, 1, 1)
 [node name="Timers" type="Node" parent="."]
 
 [node name="MobTimer" type="Timer" parent="Timers"]
-wait_time = 0.8
 
 [node name="StartTimer" type="Timer" parent="Timers"]
 wait_time = 0.5
@@ -7312,10 +7312,8 @@ texture = ExtResource("10_3nc57")
 position = Vector2(1397, 178)
 texture = ExtResource("8_ysrdg")
 
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
-
-[node name="Counter" parent="CanvasLayer" instance=ExtResource("18_jf1jf")]
-position = Vector2(1878, 39)
+[node name="Counter" parent="." instance=ExtResource("18_jf1jf")]
+position = Vector2(1653, 11)
 
 [node name="Markers" type="Node" parent="."]
 
@@ -7333,6 +7331,10 @@ position = Vector2(2048, 624)
 
 [node name="CarStart_Right2" type="Marker2D" parent="Markers"]
 position = Vector2(2216, 741)
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("20_bod7h")
+autoplay = true
 
 [connection signal="timeout" from="Timers/MobTimer" to="." method="_on_mob_timer_timeout"]
 [connection signal="timeout" from="Timers/StartTimer" to="." method="_on_start_timer_timeout"]
