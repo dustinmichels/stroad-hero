@@ -11,6 +11,8 @@ extends Node
 @onready var player: Area2D = $ySort/Player
 @onready var flag_layer = $FlagLayer
 
+var curr_flags: Array
+
 var DEATH_COUNT = 0
 var ERRANDS_COUNT = 0
 
@@ -83,6 +85,17 @@ func _get_variation(val: int):
 
 
 func spawn_flag():
+	var pos = pick_flag_location()
+	var flag = flag_scene.instantiate()
+	flag.position = pos
+
+	flag.collected.connect(_on_target_collected)
+	yLayer.call_deferred("add_child", flag)
+	
+	curr_flags.append(flag)
+	
+	
+func pick_flag_location():
 	var r1: ReferenceRect = $SpawnRect1
 	var r2: ReferenceRect = $SpawnRect2
 	#var r3: ReferenceRect = $SpawnRect3
@@ -90,14 +103,11 @@ func spawn_flag():
 	#var rects = [r1, r2, r3]
 	var rects = [r1, r2]
 	var r = rects.pick_random()
-
+	
+	#var pos = curr_flags[0].position
+	
+	# TODO: make sure flag is not too close to existing flag
+	
 	var pos = r.position + Vector2(randf() * r.size.x, randf() * r.size.y)
-
-	var flag = flag_scene.instantiate()
-	flag.position = pos
-
-	flag.collected.connect(_on_target_collected)
-
-	#flag_layer.add_child(flag)
-	#yLayer.add_child(flag)
-	yLayer.call_deferred("add_child", flag)
+	
+	return pos

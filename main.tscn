@@ -7204,8 +7204,6 @@ texture = ExtResource("9_nbubs")
 
 [node name="BloodLayer" type="Node" parent="."]
 
-[node name="FlagLayer" type="Node" parent="."]
-
 [node name="ySort" type="Node2D" parent="."]
 y_sort_enabled = true
 

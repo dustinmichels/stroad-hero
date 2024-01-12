@@ -1,6 +1,6 @@
 [gd_resource type="Theme" load_steps=4 format=3 uid="uid://bv71gc5gmvh78"]
 
-[ext_resource type="FontFile" uid="uid://bm5iiwuno57s3" path="res://modules/ui/assets/MarkerFelt.ttc" id="1_x6iwp"]
+[ext_resource type="FontFile" uid="uid://bg2hldejegcrq" path="res://modules/ui/assets/Acme-Regular.ttf" id="1_fpmdj"]
 [ext_resource type="Texture2D" uid="uid://qne2meuuf3ce" path="res://modules/ui/assets/frame.png" id="2_s3enf"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_liu2x"]
@@ -12,6 +12,7 @@ texture_margin_bottom = 18.0
 modulate_color = Color(1, 1, 1, 0.588235)
 
 [resource]
+Button/fonts/font = ExtResource("1_fpmdj")
 Label/font_sizes/font_size = 30
-Label/fonts/font = ExtResource("1_x6iwp")
+Label/fonts/font = ExtResource("1_fpmdj")
 PanelContainer/styles/panel = SubResource("StyleBoxTexture_liu2x")
