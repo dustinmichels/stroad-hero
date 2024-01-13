@@ -9,7 +9,6 @@ extends Node
 @onready var bloodLayer = $BloodLayer
 @onready var yLayer = $ySort
 @onready var player: Area2D = $ySort/Player
-@onready var flag_layer = $FlagLayer
 
 var curr_flags: Array
 
