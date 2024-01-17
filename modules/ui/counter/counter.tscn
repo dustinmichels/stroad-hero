@@ -61,7 +61,7 @@ texture = ExtResource("3_yk5un")
 
 [node name="ErrandsLabel" type="Label" parent="CanvasLayer/MarginContainer/PanelContainer/MarginContainer/GridContainer"]
 layout_mode = 2
-text = "Errands:"
+text = "Flags:"
 
 [node name="ErrandsCountLabel" type="Label" parent="CanvasLayer/MarginContainer/PanelContainer/MarginContainer/GridContainer"]
 unique_name_in_owner = true

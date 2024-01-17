@@ -350,29 +350,29 @@ radius = 24.0
 height = 144.0
 
 [node name="Car" type="RigidBody2D"]
-position = Vector2(-8, 0)
 collision_mask = 3
 gravity_scale = 1.66533e-16
 script = ExtResource("1_ld6fs")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(-8.5, -26)
 sprite_frames = SubResource("SpriteFrames_l335s")
 animation = &"green"
 frame = 5
 frame_progress = 0.911069
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(96, 16)
+position = Vector2(87.5, -10)
 scale = Vector2(9.41939, 3.14011)
 shape = SubResource("CapsuleShape2D_wk43f")
 
 [node name="CollisionShape2D2" type="CollisionShape2D" parent="."]
 visibility_layer = 2
-position = Vector2(-16, 16)
+position = Vector2(-24.5, -10)
 rotation = 1.5708
 shape = SubResource("CapsuleShape2D_jvla8")
 
 [node name="VisibleOnScreenNotifier2D" type="VisibleOnScreenNotifier2D" parent="."]
-position = Vector2(-72, -16)
+position = Vector2(-80.5, -42)
 
 [connection signal="screen_exited" from="VisibleOnScreenNotifier2D" to="." method="_on_visible_on_screen_notifier_2d_screen_exited"]

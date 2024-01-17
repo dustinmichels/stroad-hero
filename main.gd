@@ -13,7 +13,7 @@ extends Node
 var curr_flags: Array
 
 var DEATH_COUNT = 0
-var ERRANDS_COUNT = 0
+var ERRANDS_COUNT = 20
 
 
 # Called when the node enters the scene tree for the first time.
@@ -24,10 +24,10 @@ func _ready():
 	#$Counter.update_errands(0)
 
 
-func _on_target_collected():
-	ERRANDS_COUNT += 1
+func _on_target_collected(target):
+	ERRANDS_COUNT -= 1
 	$Counter.update_errands(ERRANDS_COUNT)
-	spawn_flag()
+	#spawn_flag()
 
 
 func _on_player_hit():
@@ -40,6 +40,14 @@ func _on_player_hit():
 	# update deaths
 	DEATH_COUNT += 1
 	$Counter.update_deaths(DEATH_COUNT)
+	
+	# DROP FLAG
+	if ERRANDS_COUNT < 20:
+		var flag = spawn_flag(player.position)
+		flag.make_ghost()
+		ERRANDS_COUNT += 1
+		$Counter.update_errands(ERRANDS_COUNT)
+		
 
 	# reset game, after pause
 	await get_tree().create_timer(1.0).timeout
@@ -48,11 +56,11 @@ func _on_player_hit():
 
 func new_game():
 	$MobTimer.start()
+	$Counter.update_errands(ERRANDS_COUNT)
 	player.start($Markers/StartPosition.position)
-	spawn_flag()
-	spawn_flag()
-	#spawn_flag()
-	#$Timers/StartTimer.start()
+	
+	for i in range(20):
+		spawn_flag()
 
 
 func reset():
@@ -75,7 +83,7 @@ func _add_car_to_scene(pos: Vector2, flip: bool):
 
 	#car.position = Vector2(pos.x + randf_range(-100, 100), pos.y + randf_range(-5, 5))
 	car.position = Vector2(pos.x + _get_variation(100), pos.y)
-	car.linear_velocity = Vector2(speed + _get_variation(car_speed / 15), 0.0)
+	car.linear_velocity = Vector2(speed + _get_variation(car_speed / 50), 0.0)
 	yLayer.add_child(car)  # Spawn the mob by adding it to the Main scene.
 
 
@@ -83,30 +91,38 @@ func _get_variation(val: int):
 	return randf_range(-val, val)
 
 
-func spawn_flag():
-	var pos = pick_flag_location()
+func spawn_flag(pos = null):
+	if pos == null:
+		pos = pick_flag_location()
 	var flag = flag_scene.instantiate()
 	flag.position = pos
 
+	#flag.collected.connect(_on_target_collected, self)
 	flag.collected.connect(_on_target_collected)
+	
 	yLayer.call_deferred("add_child", flag)
 
 	curr_flags.append(flag)
+	
+	return flag
 
 
 func pick_flag_location():
-	var r1: ReferenceRect = $SpawnRect1
-	var r2: ReferenceRect = $SpawnRect2
+	#var r1: ReferenceRect = $SpawnRect1
+	#var r2: ReferenceRect = $SpawnRect2
 	#var r3: ReferenceRect = $SpawnRect3
 
 	#var rects = [r1, r2, r3]
-	var rects = [r1, r2]
-	var r = rects.pick_random()
+	#var rects = [r1, r2]
+	#var r = rects.pick_random()
 
 	#var pos = curr_flags[0].position
 
 	# TODO: make sure flag is not too close to existing flag
+	
+	var r: ReferenceRect = $SpawnRect
 
 	var pos = r.position + Vector2(randf() * r.size.x, randf() * r.size.y)
 
 	return pos
+

@@ -1,9 +1,21 @@
-[gd_scene load_steps=2 format=3 uid="uid://c220evn022j1f"]
+[gd_scene load_steps=4 format=3 uid="uid://c220evn022j1f"]
 
 [ext_resource type="Texture2D" uid="uid://ceoi26kdpxgre" path="res://modules/billboard/billboard.png" id="1_k4kov"]
+[ext_resource type="Script" path="res://modules/billboard/billboard.gd" id="1_ns0ar"]
 
-[node name="Billboard" type="Node2D"]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_7mxy8"]
+size = Vector2(221, 177)
+
+[node name="Billboard" type="Area2D"]
+script = ExtResource("1_ns0ar")
 
 [node name="Billboard" type="Sprite2D" parent="."]
 position = Vector2(0, -101)
 texture = ExtResource("1_k4kov")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(-2.5, -147.5)
+shape = SubResource("RectangleShape2D_7mxy8")
+
+[connection signal="area_entered" from="." to="." method="_on_area_entered"]
+[connection signal="area_exited" from="." to="." method="_on_area_exited"]

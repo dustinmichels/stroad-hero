@@ -311,4 +311,13 @@ shape = SubResource("CapsuleShape2D_ho63t")
 stream = ExtResource("4_22k0u")
 volume_db = 20.0
 
+[node name="Camera2D" type="Camera2D" parent="."]
+limit_left = -300
+limit_top = -100
+limit_right = 2500
+limit_bottom = 1000
+position_smoothing_enabled = true
+drag_horizontal_enabled = true
+drag_vertical_enabled = true
+
 [connection signal="body_entered" from="." to="." method="_on_body_entered"]
