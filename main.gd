@@ -13,7 +13,7 @@ extends Node
 var curr_flags: Array
 
 var DEATH_COUNT = 0
-var ERRANDS_COUNT = 20
+var ERRANDS_COUNT = 10
 
 
 # Called when the node enters the scene tree for the first time.
@@ -42,7 +42,7 @@ func _on_player_hit():
 	$Counter.update_deaths(DEATH_COUNT)
 	
 	# DROP FLAG
-	if ERRANDS_COUNT < 20:
+	if ERRANDS_COUNT < 10:
 		var flag = spawn_flag(player.position)
 		flag.make_ghost()
 		ERRANDS_COUNT += 1
@@ -59,7 +59,7 @@ func new_game():
 	$Counter.update_errands(ERRANDS_COUNT)
 	player.start($Markers/StartPosition.position)
 	
-	for i in range(20):
+	for i in range(10):
 		spawn_flag()
 
 
