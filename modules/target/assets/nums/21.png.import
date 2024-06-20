@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://l3uxsue4rjl2"
-path="res://.godot/imported/mats2.png-8518751ab3cf01b900f7d54ee39a8356.ctex"
+uid="uid://mbuhrd37emjw"
+path="res://.godot/imported/21.png-894a575493cfc6e1075ad699a268a9c0.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://mats2.png"
-dest_files=["res://.godot/imported/mats2.png-8518751ab3cf01b900f7d54ee39a8356.ctex"]
+source_file="res://modules/target/assets/nums/21.png"
+dest_files=["res://.godot/imported/21.png-894a575493cfc6e1075ad699a268a9c0.ctex"]
 
 [params]
 

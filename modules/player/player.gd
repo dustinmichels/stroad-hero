@@ -13,6 +13,7 @@ var is_idle = true
 
 func _ready():
 	screen_size = get_viewport_rect().size
+	print(screen_size)
 	#position = screen_size/2
 
 
@@ -53,7 +54,7 @@ func move_player(delta):
 		is_idle = true
 
 	position += velocity * delta
-	position = position.clamp(Vector2.ZERO, screen_size)
+	position = position.clamp(Vector2(-300, -100), Vector2(2500, 1000))
 
 
 func play_audio():
@@ -90,10 +91,11 @@ func animate_player():
 			anim.play("walk_side")
 
 
-func _on_body_entered(_body):
-	hide()  # Player disappears after being hit.
-	hit.emit()
-	$CollisionShape2D.set_deferred("disabled", true)
+func _on_body_entered(body):
+	if body is Car:
+		hide()  # Player disappears after being hit.
+		hit.emit()
+		$CollisionShape2D.set_deferred("disabled", true)
 
 
 func start(pos):

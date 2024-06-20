@@ -1,5 +1,5 @@
 extends RigidBody2D
-
+class_name Car
 
 func _ready():
 	var car_types = $AnimatedSprite2D.sprite_frames.get_animation_names()

@@ -1,0 +1,22 @@
+[gd_scene load_steps=5 format=3 uid="uid://bavds5dmojbhq"]
+
+[ext_resource type="Script" path="res://test.gd" id="1_21pvf"]
+[ext_resource type="PackedScene" uid="uid://h3kicwjfthmr" path="res://modules/car/car.tscn" id="1_avm63"]
+[ext_resource type="PackedScene" uid="uid://b3jtagsysfydb" path="res://modules/target/target.tscn" id="2_4mxba"]
+[ext_resource type="PackedScene" uid="uid://cjqmojapmac2q" path="res://modules/player/player.tscn" id="3_t8161"]
+
+[node name="Test" type="Node2D"]
+y_sort_enabled = true
+position = Vector2(0, 12)
+script = ExtResource("1_21pvf")
+
+[node name="Car" parent="." instance=ExtResource("1_avm63")]
+position = Vector2(473, 402)
+
+[node name="Target" parent="." instance=ExtResource("2_4mxba")]
+position = Vector2(560, 435)
+
+[node name="Player" parent="." instance=ExtResource("3_t8161")]
+position = Vector2(465, 476)
+
+[connection signal="collected" from="Target" to="." method="_on_target_collected"]

@@ -13,6 +13,6 @@ modulate_color = Color(1, 1, 1, 0.588235)
 
 [resource]
 Button/fonts/font = ExtResource("1_fpmdj")
-Label/font_sizes/font_size = 30
+Label/font_sizes/font_size = 60
 Label/fonts/font = ExtResource("1_fpmdj")
 PanelContainer/styles/panel = SubResource("StyleBoxTexture_liu2x")
