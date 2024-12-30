@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3 uid="uid://5ioelgeerfnr"]
+
+[ext_resource type="Texture2D" uid="uid://buetx20l2t1kx" path="res://modules/navcar/assets/Car_classic_blue_complete_48x48.png" id="1_6k7wu"]
+
+[node name="Navcar" type="Node2D"]
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_6k7wu")
+region_enabled = true
+region_rect = Rect2(9, 81, 183, 111)

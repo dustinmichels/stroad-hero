@@ -2,8 +2,8 @@ extends Area2D
 
 signal hit
 
-@export var speed = 400  # How fast the player will move (pixels/sec).
-var screen_size  # Size of the game window.
+@export var speed = 400 # How fast the player will move (pixels/sec).
+var screen_size # Size of the game window.
 
 var curr_direction = "down"
 var is_idle = true
@@ -27,7 +27,7 @@ func _process(delta):
 
 
 func move_player(delta):
-	var velocity = Vector2.ZERO  # The player's movement vector.
+	var velocity = Vector2.ZERO # The player's movement vector.
 	if Input.is_action_pressed("move_right"):
 		curr_direction = "right"
 		velocity.y = 0
@@ -93,7 +93,7 @@ func animate_player():
 
 func _on_body_entered(body):
 	if body is Car:
-		hide()  # Player disappears after being hit.
+		hide() # Player disappears after being hit.
 		hit.emit()
 		$CollisionShape2D.set_deferred("disabled", true)
 

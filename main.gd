@@ -125,4 +125,3 @@ func pick_flag_location():
 	var pos = r.position + Vector2(randf() * r.size.x, randf() * r.size.y)
 
 	return pos
-
