@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cvgfqv010llng"
-path="res://.godot/imported/Screenshot 2026-10-16 at 2.18.18 PM.png-217ebb54287494f287d40a98fda23455.ctex"
+uid="uid://blxkt5jqxt0cw"
+path="res://.godot/imported/walgreens3.jpg-af10bda5750f1fd4a2aaeb86b7f008a1.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://samples/taco-bell/Screenshot 2026-10-16 at 2.18.18 PM.png"
-dest_files=["res://.godot/imported/Screenshot 2026-10-16 at 2.18.18 PM.png-217ebb54287494f287d40a98fda23455.ctex"]
+source_file="res://samples/walgreens/walgreens3.jpg"
+dest_files=["res://.godot/imported/walgreens3.jpg-af10bda5750f1fd4a2aaeb86b7f008a1.ctex"]
 
 [params]
 
