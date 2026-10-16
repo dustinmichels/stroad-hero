@@ -18,8 +18,8 @@ var desired_speed: float = 14.0
 var car_length: float = 4.5
 var direction: float = 1.0 # +1.0 for Eastbound (+X), -1.0 for Westbound (-X)
 var lane_z: float = 0.0
-var lane_length: float = 90.0
-var start_x: float = -45.0
+var lane_length: float = 140.0
+var start_x: float = -70.0
 
 @onready var _sedan: Node3D = $Visuals/Sedan
 @onready var _suv: Node3D = $Visuals/SUV

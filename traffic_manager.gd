@@ -43,21 +43,21 @@ func _ready() -> void:
 
 
 func _setup_lanes() -> void:
-	# 4 lanes matching the stroad markings
+	# 4 lanes matching the stroad markings; lanes run 10m past each road end (road spans x = ±60)
 	# Lane 0: Eastbound outer
-	lanes.append(Lane.new(0, -5.6, 1.0, -45.0, 90.0, 11.0, 14.0, 3.0, 6.0))
+	lanes.append(Lane.new(0, -5.6, 1.0, -70.0, 140.0, 11.0, 14.0, 3.0, 6.0))
 	# Lane 1: Eastbound inner (faster)
-	lanes.append(Lane.new(1, -1.9, 1.0, -45.0, 90.0, 14.0, 18.0, 2.5, 5.0))
+	lanes.append(Lane.new(1, -1.9, 1.0, -70.0, 140.0, 14.0, 18.0, 2.5, 5.0))
 	# Lane 2: Westbound inner (faster)
-	lanes.append(Lane.new(2, 1.9, -1.0, 45.0, 90.0, 14.0, 18.0, 2.5, 5.0))
+	lanes.append(Lane.new(2, 1.9, -1.0, 70.0, 140.0, 14.0, 18.0, 2.5, 5.0))
 	# Lane 3: Westbound outer
-	lanes.append(Lane.new(3, 5.6, -1.0, 45.0, 90.0, 11.0, 14.0, 3.0, 6.0))
+	lanes.append(Lane.new(3, 5.6, -1.0, 70.0, 140.0, 11.0, 14.0, 3.0, 6.0))
 
 
 func _pre_populate_traffic() -> void:
 	# Seed 1-2 cars per lane at start
 	for lane in lanes:
-		var dist1 := randf_range(18.0, 35.0)
+		var dist1 := randf_range(43.0, 60.0)
 		_spawn_car_at(lane, dist1)
 		if randf() > 0.3:
 			var dist2 := dist1 + randf_range(20.0, 35.0)
