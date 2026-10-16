@@ -18,7 +18,7 @@ signal died(death_position: Vector3)
 
 enum Headwear { HAIR, HAT }
 
-@export_enum("Hair", "Hat") var headwear: int = Headwear.HAT
+@export_enum("Hair", "Red ball cap") var headwear: int = Headwear.HAIR
 @export var backpack_color := Color(0.2, 0.55, 0.3, 1.0)
 @export var preview_mode := false
 
@@ -46,8 +46,7 @@ const IDLE_SWAY_ANGLE := 0.02
 @onready var _left_arm: Node3D = $Visual/LeftArmPivot
 @onready var _right_arm: Node3D = $Visual/RightArmPivot
 @onready var _head: Node3D = $Visual/Head
-@onready var _hair: MeshInstance3D = $Visual/Head/Hair
-@onready var _hat: MeshInstance3D = $Visual/Head/Hat
+@onready var _hat: Node3D = $Visual/Head/Hat
 @onready var _backpack: MeshInstance3D = $Visual/Backpack
 
 var _stride_phase := 0.0
@@ -126,10 +125,10 @@ func _rustle_collided_trees(impact_direction: Vector3) -> void:
 			collider.rustle(impact_direction)
 
 
+## Hair always shows; the cap sits over it with a tuft peeking out below.
 func set_headwear(value: int) -> void:
 	headwear = clampi(value, Headwear.HAIR, Headwear.HAT)
 	if is_node_ready():
-		_hair.visible = headwear == Headwear.HAIR
 		_hat.visible = headwear == Headwear.HAT
 
 

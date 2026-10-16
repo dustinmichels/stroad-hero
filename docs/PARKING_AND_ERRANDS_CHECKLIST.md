@@ -290,79 +290,108 @@ _Handoff notes:_ In section 3.9, verification of Phase 3 was completed:
 
 _Handoff notes:_ In `parking_lot.gd`, implemented `exit_aisle_z(spot)`, `exit_sign(spot)`, and `reverse_route(spot)`. In `traffic_manager.gd`, dwell end in `PARKED` transitions the vehicle to `REVERSING_OUT`, initiates `follow_path(rev_route, true)` at `-V_PARK` (-1.5 m/s); in `REVERSING_OUT`, `advance_path(delta)` steps the car backward until reaching distance 0, where `car.speed = 0.0`, `lot.release(car.spot)` releases the stall back to `FREE`, and the car transitions to `TO_EXIT`. Fallback `else: surviving_cars.append(car)` keeps `TO_EXIT` cars tracked in `lot_cars`.
 
-### 4.2 Exit route
+### 4.2 Exit route and sidewalk wait point
 
-- [ ] `exit_route(spot)`: reverse-route start → `(9, exit_aisle_z)` → wait point (9, −9.6)
-- [ ] Follow it at `V_LOT`, and slow to 0 at the wait point
-- [ ] At the end: state `WAITING_TO_MERGE`
-- [ ] Remove the temporary in-place despawn from 1.7 and 3.8
+[Plan section](PARKING_AND_ERRANDS.md#routes-built-by-parkinglot)
 
-_Handoff notes:_ Work stopped on user quit request before starting 4.2 tasks. Section 4.1 is fully implemented and verified. Next step is implementing `ParkingLot.exit_route(spot)`: reverse-route start (`Vector3(sx - sign * 6.0, 0.0, exit_aisle_z)`) → `Vector3(9.0, 0.0, exit_aisle_z)` → wait point `Vector3(9.0, 0.0, -9.6)`.
+- [x] `ParkingLot.exit_route(spot) -> Curve3D`: reverse-route start `Vector3(sx - sign * 6.0, 0.0, exit_aisle_z)` → `Vector3(9.0, 0.0, exit_aisle_z)` → wait point `Vector3(9.0, 0.0, -9.6)`
+- [x] In `TrafficManager._update_lot_cars()`:
+  - When reverse path reaches distance 0, set state `TO_EXIT` and start `follow_path(lot.exit_route(car.spot))`
+  - Advance along exit route at `V_LOT` (4.5 m/s), slowing smoothly toward 0 at the wait point
+  - Upon reaching wait point: set `speed = 0.0` and transition to `WAITING_TO_MERGE`
+- [x] Car blocker automatically activates on layer 3 when stopped (`speed <= STOP_SPEED`), physically blocking Mats across the sidewalk
+- [x] Remove the temporary in-place despawn from 1.7 and 3.8
+- [x] Verify: car reverses out, drives along exit route to (9, -9.6), and stops cleanly at sidewalk without despawning; Mats cannot walk through the stopped car
 
-### 4.3 Merge gap acceptance
+_Handoff notes:_ In `traffic_manager.gd`, removed the temporary in-place despawn (`car.queue_free()`) when dwell expires in `PARKED`; cars now transition to `REVERSING_OUT`, reverse along `reverse_route`, transition to `TO_EXIT`, drive along `exit_route` to the wait point `Vector3(9.0, 0.0, -9.6)`, stop at `speed = 0.0`, and transition to `WAITING_TO_MERGE` where they remain tracked in `lot_cars`. When stopped (`speed <= STOP_SPEED`), `Car._update_blocker_layer()` activates the blocker on Layer 3 (collision_layer 4). In `main.gd`, fixed the blocker test heading (`rotation.y = -PI / 2.0` facing +Z) and added `--test-exit-route` which verified end-to-end that a parked car reverses out, follows the exit route, stops cleanly at `(9.0, 0.0, -9.6)`, remains alive without despawning, and stops Mats from crossing the sidewalk without killing him. All tasks in section 4.2 are complete. Next section is "4.3 Merge route and lane re-entry".
+### 4.3 Merge route and lane re-entry
+
+[Plan section](PARKING_AND_ERRANDS.md#two-motion-modes-in-car) & [Plan section](PARKING_AND_ERRANDS.md#lane-ghosts-one-rule-for-both-turning-in-and-merging)
+
+- [x] `ParkingLot.merge_route() -> Curve3D`: waypoints `Vector3(9.0, 0.0, -9.6)` → `Vector3(9.0, 0.0, -5.6)` → `Vector3(5.0, 0.0, -5.6)` filleted with radius 4.0
+- [x] In `TrafficManager`:
+  - Transition car from `WAITING_TO_MERGE` to `MERGING`, `follow_path(lot.merge_route())`, accelerating toward `V_TURN` (5.0 m/s)
+  - Lane ghost rule (from 3.7) registers the car in lane 0 as soon as its footprint overlaps the lane band
+- [x] At the end of the merge arc:
+  - Switch `motion = Motion.LANE`, `lane_id = 0`, `lane_distance = lane.distance_at(car.global_position.x)`
+  - Set `desired_speed` from lane 0 outer speed band (11–14 m/s)
+  - Set `errand = null`, `state = State.CRUISING`
+  - Remove car from `lot_cars`
+- [x] In `_update_lane_traffic()`: increment `stats["errands_completed"]` when an errand car reaches the end of lane 0 and despawns
+- [ ] Verify: seamless handoff into lane 0 with position delta < 0.05 m and rotation delta < 1°; ghost ensures lane-0 followers brake; car cruises to lane end and despawns cleanly
+
+### 4.4 Merge gap acceptance and timing
 
 [Plan section](PARKING_AND_ERRANDS.md#merge-gap-acceptance-waitingtomerge)
 
-- [ ] Constant `T_MERGE_GAP = 3.0`
-- [ ] Window check: no lane-0 car with `d` in `[61 − car_length − 2, 71]`
-- [ ] Upstream check: every lane-0 car with `d < 61` has `(61 − d) / max(lane_speed, 0.1) > T_MERGE_GAP`
-- [ ] The overlay shows the merge window on lane 0 while a car waits
-- [ ] Stats: `max_merge_wait`
+- [ ] Constant `T_MERGE_GAP := 3.0`
+- [ ] Add `_can_merge(car: Car) -> bool` in `TrafficManager`:
+  - Merge window check: no lane-0 car currently within `[61 - car_length - 2, 71]`
+  - Upstream check: every upstream lane-0 car (`d < 61`) has `(61 - d) / max(lane_speed, 0.1) > T_MERGE_GAP`
+- [ ] Gate the `WAITING_TO_MERGE → MERGING` transition on `_can_merge()`
+- [ ] Track merge wait duration per car and update `stats["max_merge_wait"]`
+- [ ] In `TrafficDebug`: draw the merge window on lane 0 while any car is in `WAITING_TO_MERGE`
+- [ ] Verify: waiting cars hold position while lane-0 cars pass, merge only when a valid gap opens, and upstream traffic yields appropriately
 
-### 4.4 Merge
+### 4.5 Phase 4 verification and soak
 
-- [ ] When the gap is accepted: `follow_path(lot.merge_route())`, state `MERGING`, accelerating toward `V_TURN`
-- [ ] The ghost rule from 3.7 registers the car in lane 0 as soon as it overlaps
-- [ ] At the end of the arc: `motion = LANE`, `lane_id = 0`, `lane_distance = lane.distance_at(x)`, `desired_speed` set from the lane's speed band, `errand = null`, state `CRUISING`, and remove it from `lot_cars`
-- [ ] Confirm there is no visible jump at the switch (position delta < 0.05 m)
-- [ ] Stats: `errands_completed` (counted at the lane-end despawn for cars that parked)
-
-### 4.5 Verify
-
-- [ ] Soak run: `errands_completed` ≈ `errands_assigned − dropped − still active`; `leaked = 0`
-- [ ] In the game: cars back out with the rear swinging away from the exit, wait across the sidewalk, and merge without overlapping a lane car
-- [ ] Mats is blocked by a car waiting to merge, and dies if he is in front of it when it pulls out
+- [ ] 10-minute soak run: `/Applications/Godot.app/Contents/MacOS/Godot --headless --path . --fixed-fps 60 --quit-after 36000 -- --seed=42`
+  - `errands_completed ≈ errands_assigned - errands_dropped_lot_full - active_errands`
+  - `leaked = 0` (zero reservation leaks)
+  - `max_merge_wait` is tracked and finite
+- [ ] In-game behavior: observe full vehicle lifecycle (lane cruising → decision → approach braking → driveway turn → stall park → dwell → reverse out → exit aisle → sidewalk wait → gap merge → lane cruising → despawn)
+- [ ] Mats interaction: Mats is stopped by car waiting across sidewalk, and dies if hit by car pulling out into merge
 
 ## Phase 5: lot conflicts
 
 [Plan section](PARKING_AND_ERRANDS.md#lot-traffic-conflicts)
 
-### 5.1 Forward check
+### 5.1 Aisle conflict detection and priority yielding
 
-- [ ] `find_blocker(car) -> Car`: scan `lot_cars` and the lane-0 ghosts; `0 < forward < lookahead` and `|lateral| < (wA + wB)/2 + 0.3` in the car's frame, with the heading signed by the speed
-- [ ] `lookahead = max(4, v²/(2·BRAKE_ACCELERATION) + 3)`
-- [ ] A blocker sets the target speed to 0
+- [ ] `find_blocker(car: Car) -> Car` in `TrafficManager`:
+  - Scan other `lot_cars` and lane-0 ghosts
+  - Transform positions into `car` frame (heading signed by speed direction to handle reversing)
+  - `lookahead = max(4.0, (speed * speed) / (2.0 * BRAKE_ACCELERATION) + 3.0)`
+  - Blocker condition: `0.0 < forward < lookahead` and `abs(lateral) < (width_A + width_B) / 2.0 + 0.3`
+- [ ] Reverse-start safety check:
+  - A `PARKED` car with dwell expired delays transitioning to `REVERSING_OUT` while any moving lot car is within 8.0 m along the aisle (`abs(car.global_position.x - spot.x) < 8.0`)
+- [ ] Priority arbitration:
+  - Priority order: `TO_SPOT > TO_EXIT > REVERSING_OUT`
+  - When car A and car B mutually block each other, only the lower-priority car yields (sets target speed to 0.0)
+- [ ] Verify: lower-priority car stops for higher-priority car in the aisle and resumes once cleared; parked car does not reverse into passing aisle traffic
 
-### 5.2 Reverse-start check
+### 5.2 Deadlock watchdog and debug HUD
 
-- [ ] A `PARKED` car with no dwell left waits while any moving lot car is within 8 m of `spot.x` along the aisle
+[Plan section](PARKING_AND_ERRANDS.md#debug-overlay-build-in-phase-1-toggle-f3)
 
-### 5.3 Priority
+- [ ] Deadlock watchdog in `TrafficManager`:
+  - Track `blocked_time` and current blocker for each waiting lot car
+  - If mutual blocking occurs at equal priority for > 4.0 s: car with higher `get_instance_id()` ignores the other for 1.5 s
+  - Print each firing with car IDs, states, and coordinates; track `stats["watchdog_fires"]` and `stats["max_stuck_time"]`
+- [ ] Debug overlay HUD in `TrafficDebug`:
+  - When F3 overlay is active, show HUD line with free/reserved/occupied stall counts, `errands_dropped_lot_full`, `watchdog_fires`, and `max_stuck_time`
+- [ ] Verify: staged equal-priority conflict triggers watchdog at 4.0s, tiebreaker cleanly resolves deadlock, stats increment; HUD line reflects live counts
 
-- [ ] Priority order `TO_SPOT > TO_EXIT > REVERSING_OUT`
-- [ ] If A and B block each other, only the lower-priority car stops
+### 5.3 Phase 5 verification and high-load soak
 
-### 5.4 Watchdog
-
-- [ ] Track how long each car has been blocked and by whom
-- [ ] If blocking is mutual, at equal priority, for more than 4 s: the car with the higher instance id ignores the other for 1.5 s
-- [ ] `print` each firing with both car ids, states, and positions; stats `watchdog_fires` and `max_stuck_time`
-
-### 5.5 HUD counts
-
-- [ ] When the overlay is on, show one HUD line with free/reserved/occupied counts, `errands_dropped_lot_full`, and `watchdog_fires`
-
-### 5.6 Verify
-
-- [ ] Soak with `P_ERRAND = 0.6` (temporarily, or as a user arg): `max_stuck_time < 30`, `watchdog_fires` small, `leaked = 0`
-- [ ] Repeat with 3 different seeds
-- [ ] Set `P_ERRAND` back to 0.3
+- [ ] Run 10-minute stress soak with elevated errand volume (`P_ERRAND = 0.6`):
+  - Test with seed 42, seed 101, and seed 999
+  - `max_stuck_time < 30.0`
+  - `watchdog_fires` stays low (rare and logged, no unhandled deadlocks)
+  - `leaked = 0`
+  - `errands_completed` steadily advances
+- [ ] Reset `P_ERRAND` back to 0.3
 
 ## Wrap-up
 
-- [ ] Remove the throwaway `/tmp` scripts
-- [ ] Update `PARKING_AND_ERRANDS.md` wherever the implementation differs from the plan
-- [ ] README: mention that cars now visit Walgroins and Taco Hell, and add the F3/F4 debug keys under Controls
+### 6.1 Documentation and cleanup
+
+- [ ] Remove any temporary `/tmp` test scripts
+- [ ] Update `docs/PARKING_AND_ERRANDS.md` where implementation differs from original draft (blocker `sync_to_physics = false`, jump height/roof clearance notes, filleted corner radius clamping)
+- [ ] Update `README.md`: document vehicle visits to Walgroins & Taco Hell, and list debug controls (F3 overlay, F4 debug car spawn)
+- [ ] Smoke validation:
+  - `/Applications/Godot.app/Contents/MacOS/Godot --headless --path . --check-only` on all scripts
+  - `/Applications/Godot.app/Contents/MacOS/Godot --headless --path . --quit` exits cleanly
 
 ## Deferred (not in this checklist)
 

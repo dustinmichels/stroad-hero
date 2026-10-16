@@ -7,8 +7,14 @@ const BACKPACK_COLORS := [
 	Color(0.95, 0.72, 0.12, 1.0),
 ]
 const BACKPACK_NAMES := ["Pine", "Blue", "Red", "Yellow"]
+const HEADWEAR_NAMES := ["Natural", "Red ball cap"]
+
+const PREVIEW_TURN_PERIOD := 8.0
+const UNSELECTED_MODULATE := Color(0.7, 0.72, 0.74, 1.0)
 
 @export var player_path: NodePath
+@export var row_style: StyleBox
+@export var row_selected_style: StyleBox
 
 @onready var _preview: CharacterBody3D = %PreviewMats
 @onready var _camera: Camera3D = %PreviewCamera
@@ -16,8 +22,9 @@ const BACKPACK_NAMES := ["Pine", "Blue", "Red", "Yellow"]
 
 var _was_paused := false
 var _selected_row := 0
-var _headwear_index := 1
+var _headwear_index := 0
 var _backpack_index := 0
+var _preview_turn_time := 0.0
 
 
 func _ready() -> void:
@@ -28,6 +35,14 @@ func _ready() -> void:
 	%BackpackNext.pressed.connect(_on_backpack_step.bind(1))
 	%CloseButton.pressed.connect(close_editor)
 	visible = false
+
+
+func _process(delta: float) -> void:
+	if not visible:
+		return
+	_preview_turn_time = fmod(_preview_turn_time + delta, PREVIEW_TURN_PERIOD)
+	var turn_progress := 0.5 - 0.5 * cos(_preview_turn_time * TAU / PREVIEW_TURN_PERIOD)
+	_preview.rotation.y = turn_progress * PI
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -59,6 +74,8 @@ func open_editor() -> void:
 	get_tree().paused = true
 	_selected_row = 0
 	_sync_from_player()
+	_preview_turn_time = 0.0
+	_preview.rotation.y = 0.0
 	visible = true
 
 
@@ -139,15 +156,13 @@ func _closest_backpack_color(color: Color) -> int:
 func _refresh_selection() -> void:
 	if not is_node_ready():
 		return
-	%HeadwearValue.text = "Hair" if _headwear_index == 0 else "Hat"
+	%HeadwearValue.text = HEADWEAR_NAMES[_headwear_index]
 	%BackpackValue.text = BACKPACK_NAMES[_backpack_index]
 	%BackpackSwatch.color = BACKPACK_COLORS[_backpack_index]
-	var head_modulate := Color.WHITE if _selected_row == 0 else Color(0.55, 0.58, 0.6, 1.0)
-	var backpack_modulate := Color.WHITE if _selected_row == 1 else Color(0.55, 0.58, 0.6, 1.0)
-	%HeadPrevious.modulate = head_modulate
-	%HeadNext.modulate = head_modulate
-	%HeadwearValue.modulate = head_modulate
-	%BackpackPrevious.modulate = backpack_modulate
-	%BackpackNext.modulate = backpack_modulate
-	%BackpackValue.modulate = backpack_modulate
-	%BackpackSwatch.modulate = backpack_modulate
+	_style_row(%HairRow, _selected_row == 0)
+	_style_row(%BackpackRow, _selected_row == 1)
+
+
+func _style_row(row: PanelContainer, selected: bool) -> void:
+	row.add_theme_stylebox_override("panel", row_selected_style if selected else row_style)
+	row.modulate = Color.WHITE if selected else UNSELECTED_MODULATE

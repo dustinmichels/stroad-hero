@@ -261,30 +261,129 @@ func _update_lot_cars(delta: float) -> void:
 					car.speed = -V_PARK
 					car.desired_speed = -V_PARK
 				else:
-					if car.spot != null:
-						if lot != null:
-							lot.release(car.spot)
-						elif car.spot.lot != null:
-							car.spot.lot.release(car.spot)
-					car.queue_free()
-					continue
+					push_error("TrafficManager: Missing reverse route for parked car %s" % car.name)
 			surviving_cars.append(car)
 		elif car.state == CarScript.State.REVERSING_OUT:
 			var arrived := car.advance_path(delta)
 			if arrived:
 				car.speed = 0.0
 				car.desired_speed = 0.0
+				var exit_path: Curve3D = null
+				if lot != null and car.spot != null:
+					exit_path = lot.exit_route(car.spot)
+				elif car.spot != null and car.spot.lot != null:
+					exit_path = car.spot.lot.exit_route(car.spot)
 				if car.spot != null:
 					if lot != null:
 						lot.release(car.spot)
 					elif car.spot.lot != null:
 						car.spot.lot.release(car.spot)
 				car.state = CarScript.State.TO_EXIT
+				if exit_path != null:
+					car.follow_path(exit_path)
+					car.desired_speed = V_LOT
+				else:
+					push_error("TrafficManager: Missing exit route for reversing car")
 				car.update_presentation()
 				car._update_blocker_layer()
 			surviving_cars.append(car)
-		else:
+		elif car.state == CarScript.State.TO_EXIT:
+			var target_speed := V_LOT
+			if car.path != null:
+				var length := car.path.get_baked_length()
+				var remaining := maxf(0.0, length - car.path_distance)
+				var smooth_target := sqrt(2.0 * A_COMFORT * remaining)
+				target_speed = minf(target_speed, smooth_target)
+			car.desired_speed = target_speed
+			var accel: float = (
+				BRAKE_ACCELERATION if car.speed > target_speed else MOTOR_ACCELERATION
+			)
+			car.speed = move_toward(car.speed, target_speed, accel * delta)
+			var arrived := car.advance_path(delta)
+			if (
+				arrived
+				or (
+					car.path != null
+					and car.path.get_baked_length() - car.path_distance <= 0.02
+					and car.speed <= CarScript.STOP_SPEED
+				)
+			):
+				if car.path != null:
+					car.path_distance = car.path.get_baked_length()
+				car.speed = 0.0
+				car.desired_speed = 0.0
+				car.state = CarScript.State.WAITING_TO_MERGE
+				car.update_presentation()
+				car._update_blocker_layer()
 			surviving_cars.append(car)
+		elif car.state == CarScript.State.WAITING_TO_MERGE:
+			if "--test-exit-route" in OS.get_cmdline_user_args():
+				car.speed = 0.0
+				car.desired_speed = 0.0
+				car.update_presentation()
+				car._update_blocker_layer()
+				surviving_cars.append(car)
+			elif not has_method("_can_merge") or call("_can_merge", car):
+				car.state = CarScript.State.MERGING
+				car.lane_id = 0
+				var m_route: Curve3D = null
+				if lot != null:
+					m_route = lot.merge_route()
+				else:
+					m_route = ParkingLot.merge_route()
+				car.follow_path(m_route)
+				car.desired_speed = V_TURN
+				car.update_presentation()
+				car._update_blocker_layer()
+				surviving_cars.append(car)
+			else:
+				car.speed = 0.0
+				car.desired_speed = 0.0
+				car.update_presentation()
+				car._update_blocker_layer()
+				surviving_cars.append(car)
+		elif car.state == CarScript.State.MERGING:
+			var target_speed := V_TURN
+			car.desired_speed = target_speed
+			var accel: float = (
+				BRAKE_ACCELERATION if car.speed > target_speed else MOTOR_ACCELERATION
+			)
+			car.speed = move_toward(car.speed, target_speed, accel * delta)
+			var arrived := car.advance_path(delta)
+			if (
+				arrived
+				or (
+					car.path != null
+					and car.path_distance >= car.path.get_baked_length() - 0.05
+				)
+			):
+				var lane0: Lane = lanes[0] if lanes.size() > 0 else null
+				car.motion = CarScript.Motion.LANE
+				car.lane_id = 0
+				if lane0 != null:
+					car.lane_z = lane0.z
+					car.direction = lane0.direction
+					car.start_x = lane0.start_x
+					car.lane_length = lane0.length
+					car.lane_distance = lane0.distance_at(car.global_position.x)
+					car.desired_speed = randf_range(lane0.min_speed, lane0.max_speed)
+					if not lane0.cars.has(car):
+						lane0.cars.append(car)
+				else:
+					car.lane_z = -5.6
+					car.direction = -1.0
+					car.start_x = 70.0
+					car.lane_length = 140.0
+					car.lane_distance = (70.0 - car.global_position.x)
+					car.desired_speed = 12.0
+				car.errand = null
+				car.state = CarScript.State.CRUISING
+				car.path = null
+				car.update_presentation()
+				car._update_blocker_layer()
+				# Removed from lot_cars by omitting from surviving_cars
+			else:
+				surviving_cars.append(car)
 	lot_cars = surviving_cars
 
 
@@ -349,6 +448,7 @@ func _spawn_car_at(lane: Lane, initial_distance: float) -> Node:
 	car.update_presentation()
 	if lane.id == 0 and car.can_park() and initial_distance < DECISION_D and randf() < P_ERRAND:
 		car.errand = Errand.random()
+		car.had_errand = true
 		stats["errands_assigned"] += 1
 	lane.cars.append(car)
 	stats["cars_spawned"] += 1
@@ -397,8 +497,8 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 					car.state = Car.State.APPROACHING
 				else:
 					car.errand = null
+					car.had_errand = false
 					stats["errands_dropped_lot_full"] += 1
-
 		# Simple car-following (safe distance to lead car)
 		var following_target: float = car.desired_speed
 		if i > 0:
@@ -435,6 +535,8 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 
 		# Check if reached end of lane
 		if car.lane_distance >= lane.length:
+			if car.lane_id == 0 and car.had_errand:
+				stats["errands_completed"] += 1
 			car.queue_free()
 		else:
 			surviving_cars.append(car)

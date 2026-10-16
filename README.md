@@ -20,4 +20,4 @@ I think the underlying model should perhaps be 3D, so I can simulate real traffi
 
 - Arrow keys: walk (Mats steps up curbs on his own)
 - Space: small hop
-- C: open the paused character editor; use Up/Down to choose a row and Left/Right to change it
+- C: open the paused character editor; use Up/Down to choose a row and Left/Right to change it. The preview slowly turns to show the backpack.

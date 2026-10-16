@@ -150,6 +150,43 @@ static func reverse_route(spot, radius := 4.0) -> Curve3D:
 	return PathBuilder.build(pts, radius)
 
 
+static func exit_route(spot, radius := 4.0) -> Curve3D:
+	var sx: float = 0.0
+	if spot is ParkingSpot:
+		sx = spot.transform.origin.x
+	elif spot is Transform3D:
+		sx = spot.origin.x
+	elif spot is Vector3 or spot is Vector2:
+		sx = spot.x
+	elif "x" in spot:
+		sx = spot.x
+	else:
+		push_error("ParkingLot.exit_route: unsupported spot argument %s" % str(spot))
+		return Curve3D.new()
+
+	var aisle_z := exit_aisle_z(spot)
+	var sign_val := exit_sign(spot)
+	var pts := PackedVector3Array(
+		[
+			Vector3(sx - sign_val * 6.0, 0.0, aisle_z),
+			Vector3(EXIT_X, 0.0, aisle_z),
+			WAIT_POINT,
+		]
+	)
+	return PathBuilder.build(pts, radius)
+
+
+static func merge_route(radius := 4.0) -> Curve3D:
+	var pts := PackedVector3Array(
+		[
+			WAIT_POINT,
+			Vector3(EXIT_X, 0.0, -5.6),
+			MERGE_END,
+		]
+	)
+	return PathBuilder.build(pts, radius)
+
+
 func _init() -> void:
 	_build_spots()
 

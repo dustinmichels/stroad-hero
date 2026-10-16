@@ -75,6 +75,7 @@ var start_x: float = -70.0
 var spot: ParkingSpot = null
 var dwell_left: float = 0.0
 var errand: Errand = null
+var had_errand: bool = false
 
 const WHEEL_RADIUS := 0.35
 const BASE_WHEEL_BASIS := Basis(Vector3(1, 0, 0), Vector3(0, 0, 1), Vector3(0, -1, 0))

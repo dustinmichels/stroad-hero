@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=17 format=3]
 
 [ext_resource type="Script" path="res://character_editor.gd" id="1_editor"]
 [ext_resource type="PackedScene" path="res://mats.tscn" id="2_mats"]
@@ -7,60 +7,93 @@
 
 [sub_resource type="StyleBoxFlat" id="StylePane"]
 bg_color = Color(0.075, 0.09, 0.11, 0.98)
-border_width_left = 4
-border_width_top = 4
-border_width_right = 4
-border_width_bottom = 4
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
 border_color = Color(0.94, 0.75, 0.12, 1)
-corner_radius_top_left = 18
-corner_radius_top_right = 18
-corner_radius_bottom_right = 18
-corner_radius_bottom_left = 18
+corner_radius_top_left = 22
+corner_radius_top_right = 22
+corner_radius_bottom_right = 22
+corner_radius_bottom_left = 22
 shadow_color = Color(0, 0, 0, 0.55)
-shadow_size = 18
+shadow_size = 24
 
-[sub_resource type="StyleBoxFlat" id="StyleChoice"]
-content_margin_left = 20.0
-content_margin_top = 12.0
-content_margin_right = 20.0
-content_margin_bottom = 12.0
-bg_color = Color(0.16, 0.19, 0.22, 1)
+[sub_resource type="StyleBoxFlat" id="StylePreviewFrame"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.11, 0.14, 0.16, 1)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.36, 0.4, 0.43, 1)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
+border_color = Color(0.22, 0.26, 0.29, 1)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
 
-[sub_resource type="StyleBoxFlat" id="StyleChoiceActive"]
-content_margin_left = 20.0
-content_margin_top = 12.0
-content_margin_right = 20.0
-content_margin_bottom = 12.0
+[sub_resource type="StyleBoxFlat" id="StyleRow"]
+content_margin_left = 22.0
+content_margin_top = 18.0
+content_margin_right = 22.0
+content_margin_bottom = 20.0
+bg_color = Color(0.11, 0.135, 0.155, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.2, 0.24, 0.27, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
+[sub_resource type="StyleBoxFlat" id="StyleRowSelected"]
+content_margin_left = 22.0
+content_margin_top = 18.0
+content_margin_right = 22.0
+content_margin_bottom = 20.0
+bg_color = Color(0.15, 0.17, 0.17, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.94, 0.75, 0.12, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
+[sub_resource type="StyleBoxFlat" id="StyleArrow"]
+bg_color = Color(0.2, 0.23, 0.26, 1)
+corner_radius_top_left = 24
+corner_radius_top_right = 24
+corner_radius_bottom_right = 24
+corner_radius_bottom_left = 24
+
+[sub_resource type="StyleBoxFlat" id="StyleArrowHover"]
 bg_color = Color(0.94, 0.75, 0.12, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(1, 0.88, 0.38, 1)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
+corner_radius_top_left = 24
+corner_radius_top_right = 24
+corner_radius_bottom_right = 24
+corner_radius_bottom_left = 24
 
 [sub_resource type="StyleBoxFlat" id="StyleClose"]
-content_margin_left = 14.0
-content_margin_top = 8.0
-content_margin_right = 14.0
-content_margin_bottom = 8.0
-bg_color = Color(0.72, 0.19, 0.17, 1)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
+bg_color = Color(0.2, 0.23, 0.26, 1)
+corner_radius_top_left = 26
+corner_radius_top_right = 26
+corner_radius_bottom_right = 26
+corner_radius_bottom_left = 26
+
+[sub_resource type="StyleBoxFlat" id="StyleCloseHover"]
+bg_color = Color(0.78, 0.22, 0.18, 1)
+corner_radius_top_left = 26
+corner_radius_top_right = 26
+corner_radius_bottom_right = 26
+corner_radius_bottom_left = 26
 
 [sub_resource type="Environment" id="PreviewEnvironment"]
 background_mode = 1
@@ -83,6 +116,8 @@ height = 0.18
 process_mode = 3
 layer = 20
 script = ExtResource("1_editor")
+row_style = SubResource("StyleRow")
+row_selected_style = SubResource("StyleRowSelected")
 
 [node name="Scrim" type="ColorRect" parent="."]
 anchors_preset = 15
@@ -91,35 +126,49 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.025, 0.035, 0.045, 0.74)
-mouse_filter = 0
 
 [node name="Pane" type="PanelContainer" parent="."]
-anchors_preset = 0
-anchor_left = 0.57
-anchor_top = 0.045
-anchor_right = 0.97
-anchor_bottom = 0.955
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -580.0
+offset_top = -400.0
+offset_right = 580.0
+offset_bottom = 400.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StylePane")
 
 [node name="Margin" type="MarginContainer" parent="Pane"]
 layout_mode = 2
-theme_override_constants/margin_left = 34
-theme_override_constants/margin_top = 26
-theme_override_constants/margin_right = 34
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_top = 30
+theme_override_constants/margin_right = 30
 theme_override_constants/margin_bottom = 28
 
 [node name="Content" type="VBoxContainer" parent="Pane/Margin"]
 layout_mode = 2
-theme_override_constants/separation = 14
+theme_override_constants/separation = 20
 
 [node name="Header" type="HBoxContainer" parent="Pane/Margin/Content"]
 layout_mode = 2
 
-[node name="Title" type="Label" parent="Pane/Margin/Content/Header"]
+[node name="Titles" type="VBoxContainer" parent="Pane/Margin/Content/Header"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_constants/separation = 0
+
+[node name="Eyebrow" type="Label" parent="Pane/Margin/Content/Header/Titles"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.75, 0.12, 1)
+theme_override_fonts/font = ExtResource("4_body")
+theme_override_font_sizes/font_size = 16
+text = "CUSTOMIZE"
+
+[node name="Title" type="Label" parent="Pane/Margin/Content/Header/Titles"]
+layout_mode = 2
 theme_override_colors/font_color = Color(0.96, 0.94, 0.86, 1)
 theme_override_fonts/font = ExtResource("3_heading")
 theme_override_font_sizes/font_size = 38
@@ -127,165 +176,206 @@ text = "Mats' look"
 
 [node name="CloseButton" type="Button" parent="Pane/Margin/Content/Header"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(52, 52)
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.96, 0.9, 1)
+size_flags_vertical = 0
+focus_mode = 0
+tooltip_text = "Close"
+theme_override_colors/font_color = Color(0.85, 0.87, 0.88, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
 theme_override_fonts/font = ExtResource("4_body")
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("StyleClose")
-theme_override_styles/hover = SubResource("StyleClose")
-theme_override_styles/pressed = SubResource("StyleClose")
-text = "Done"
+theme_override_styles/hover = SubResource("StyleCloseHover")
+theme_override_styles/pressed = SubResource("StyleCloseHover")
+text = "×"
 
-[node name="Rule" type="HSeparator" parent="Pane/Margin/Content"]
-layout_mode = 2
-theme_override_colors/separator = Color(0.94, 0.75, 0.12, 0.7)
-
-[node name="Preview" type="SubViewportContainer" parent="Pane/Margin/Content"]
-custom_minimum_size = Vector2(0, 570)
+[node name="Body" type="HBoxContainer" parent="Pane/Margin/Content"]
 layout_mode = 2
 size_flags_vertical = 3
+theme_override_constants/separation = 32
+
+[node name="PreviewFrame" type="PanelContainer" parent="Pane/Margin/Content/Body"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StylePreviewFrame")
+
+[node name="Preview" type="SubViewportContainer" parent="Pane/Margin/Content/Body/PreviewFrame"]
+custom_minimum_size = Vector2(540, 540)
+layout_mode = 2
 stretch = true
 
-[node name="SubViewport" type="SubViewport" parent="Pane/Margin/Content/Preview"]
+[node name="SubViewport" type="SubViewport" parent="Pane/Margin/Content/Body/PreviewFrame/Preview"]
 own_world_3d = true
-transparent_bg = true
 handle_input_locally = false
-size = Vector2i(640, 570)
+size = Vector2i(540, 540)
 render_target_update_mode = 4
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="Pane/Margin/Content/Preview/SubViewport"]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="Pane/Margin/Content/Body/PreviewFrame/Preview/SubViewport"]
 environment = SubResource("PreviewEnvironment")
 
-[node name="KeyLight" type="DirectionalLight3D" parent="Pane/Margin/Content/Preview/SubViewport"]
+[node name="KeyLight" type="DirectionalLight3D" parent="Pane/Margin/Content/Body/PreviewFrame/Preview/SubViewport"]
 rotation_degrees = Vector3(-35, 164, 0)
 light_color = Color(1, 0.96, 0.88, 1)
 light_energy = 1.4
 shadow_enabled = true
 
-[node name="PreviewCamera" type="Camera3D" parent="Pane/Margin/Content/Preview/SubViewport"]
+[node name="PreviewCamera" type="Camera3D" parent="Pane/Margin/Content/Body/PreviewFrame/Preview/SubViewport"]
 unique_name_in_owner = true
 position = Vector3(1.25, 1.2, -4.2)
 fov = 31.0
 
-[node name="Ground" type="MeshInstance3D" parent="Pane/Margin/Content/Preview/SubViewport"]
+[node name="Ground" type="MeshInstance3D" parent="Pane/Margin/Content/Body/PreviewFrame/Preview/SubViewport"]
 position = Vector3(0, -0.1, 0)
 mesh = SubResource("GroundMesh")
 
-[node name="PreviewMats" parent="Pane/Margin/Content/Preview/SubViewport" instance=ExtResource("2_mats")]
+[node name="PreviewMats" parent="Pane/Margin/Content/Body/PreviewFrame/Preview/SubViewport" instance=ExtResource("2_mats")]
 unique_name_in_owner = true
 preview_mode = true
 
-[node name="HeadPrevious" type="Button" parent="Pane/Margin/Content/Preview"]
+[node name="Options" type="VBoxContainer" parent="Pane/Margin/Content/Body"]
+custom_minimum_size = Vector2(440, 0)
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 20
+
+[node name="HairRow" type="PanelContainer" parent="Pane/Margin/Content/Body/Options"]
 unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 0
-anchor_left = 0.04
-anchor_top = 0.18
-anchor_right = 0.16
-anchor_bottom = 0.32
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleRowSelected")
+
+[node name="Stack" type="VBoxContainer" parent="Pane/Margin/Content/Body/Options/HairRow"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Pane/Margin/Content/Body/Options/HairRow/Stack"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.75, 0.12, 1)
+theme_override_fonts/font = ExtResource("3_heading")
+theme_override_font_sizes/font_size = 18
+text = "Hair"
+
+[node name="Picker" type="HBoxContainer" parent="Pane/Margin/Content/Body/Options/HairRow/Stack"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="HeadPrevious" type="Button" parent="Pane/Margin/Content/Body/Options/HairRow/Stack/Picker"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
 focus_mode = 0
-theme_override_colors/font_color = Color(0.08, 0.09, 0.1, 1)
+theme_override_colors/font_color = Color(0.96, 0.94, 0.86, 1)
+theme_override_colors/font_hover_color = Color(0.08, 0.09, 0.1, 1)
+theme_override_colors/font_pressed_color = Color(0.08, 0.09, 0.1, 1)
 theme_override_fonts/font = ExtResource("4_body")
-theme_override_font_sizes/font_size = 28
-theme_override_styles/normal = SubResource("StyleChoiceActive")
-theme_override_styles/hover = SubResource("StyleChoiceActive")
-theme_override_styles/pressed = SubResource("StyleChoice")
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("StyleArrow")
+theme_override_styles/hover = SubResource("StyleArrowHover")
+theme_override_styles/pressed = SubResource("StyleArrowHover")
 text = "◀"
 
-[node name="HeadNext" type="Button" parent="Pane/Margin/Content/Preview"]
+[node name="HeadwearValue" type="Label" parent="Pane/Margin/Content/Body/Options/HairRow/Stack/Picker"]
 unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 0
-anchor_left = 0.84
-anchor_top = 0.18
-anchor_right = 0.96
-anchor_bottom = 0.32
-focus_mode = 0
-theme_override_colors/font_color = Color(0.08, 0.09, 0.1, 1)
-theme_override_fonts/font = ExtResource("4_body")
-theme_override_font_sizes/font_size = 28
-theme_override_styles/normal = SubResource("StyleChoiceActive")
-theme_override_styles/hover = SubResource("StyleChoiceActive")
-theme_override_styles/pressed = SubResource("StyleChoice")
-text = "▶"
-
-[node name="HeadwearValue" type="Label" parent="Pane/Margin/Content/Preview"]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 0
-anchor_left = 0.72
-anchor_top = 0.1
-anchor_right = 0.96
-anchor_bottom = 0.17
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.96, 0.94, 0.86, 1)
 theme_override_fonts/font = ExtResource("4_body")
-theme_override_font_sizes/font_size = 18
-text = "Hat"
+theme_override_font_sizes/font_size = 26
+text = "Natural"
 horizontal_alignment = 1
 
-[node name="BackpackPrevious" type="Button" parent="Pane/Margin/Content/Preview"]
+[node name="HeadNext" type="Button" parent="Pane/Margin/Content/Body/Options/HairRow/Stack/Picker"]
 unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 0
-anchor_left = 0.04
-anchor_top = 0.5
-anchor_right = 0.16
-anchor_bottom = 0.64
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
 focus_mode = 0
-theme_override_colors/font_color = Color(0.08, 0.09, 0.1, 1)
+theme_override_colors/font_color = Color(0.96, 0.94, 0.86, 1)
+theme_override_colors/font_hover_color = Color(0.08, 0.09, 0.1, 1)
+theme_override_colors/font_pressed_color = Color(0.08, 0.09, 0.1, 1)
 theme_override_fonts/font = ExtResource("4_body")
-theme_override_font_sizes/font_size = 28
-theme_override_styles/normal = SubResource("StyleChoiceActive")
-theme_override_styles/hover = SubResource("StyleChoiceActive")
-theme_override_styles/pressed = SubResource("StyleChoice")
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("StyleArrow")
+theme_override_styles/hover = SubResource("StyleArrowHover")
+theme_override_styles/pressed = SubResource("StyleArrowHover")
+text = "▶"
+
+[node name="BackpackRow" type="PanelContainer" parent="Pane/Margin/Content/Body/Options"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleRow")
+
+[node name="Stack" type="VBoxContainer" parent="Pane/Margin/Content/Body/Options/BackpackRow"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Pane/Margin/Content/Body/Options/BackpackRow/Stack"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.75, 0.12, 1)
+theme_override_fonts/font = ExtResource("3_heading")
+theme_override_font_sizes/font_size = 18
+text = "Backpack"
+
+[node name="Picker" type="HBoxContainer" parent="Pane/Margin/Content/Body/Options/BackpackRow/Stack"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BackpackPrevious" type="Button" parent="Pane/Margin/Content/Body/Options/BackpackRow/Stack/Picker"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+focus_mode = 0
+theme_override_colors/font_color = Color(0.96, 0.94, 0.86, 1)
+theme_override_colors/font_hover_color = Color(0.08, 0.09, 0.1, 1)
+theme_override_colors/font_pressed_color = Color(0.08, 0.09, 0.1, 1)
+theme_override_fonts/font = ExtResource("4_body")
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("StyleArrow")
+theme_override_styles/hover = SubResource("StyleArrowHover")
+theme_override_styles/pressed = SubResource("StyleArrowHover")
 text = "◀"
 
-[node name="BackpackNext" type="Button" parent="Pane/Margin/Content/Preview"]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 0
-anchor_left = 0.84
-anchor_top = 0.5
-anchor_right = 0.96
-anchor_bottom = 0.64
-focus_mode = 0
-theme_override_colors/font_color = Color(0.08, 0.09, 0.1, 1)
-theme_override_fonts/font = ExtResource("4_body")
-theme_override_font_sizes/font_size = 28
-theme_override_styles/normal = SubResource("StyleChoiceActive")
-theme_override_styles/hover = SubResource("StyleChoiceActive")
-theme_override_styles/pressed = SubResource("StyleChoice")
-text = "▶"
+[node name="Value" type="HBoxContainer" parent="Pane/Margin/Content/Body/Options/BackpackRow/Stack/Picker"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+alignment = 1
 
-[node name="BackpackValue" type="Label" parent="Pane/Margin/Content/Preview"]
+[node name="BackpackSwatch" type="ColorRect" parent="Pane/Margin/Content/Body/Options/BackpackRow/Stack/Picker/Value"]
 unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 0
-anchor_left = 0.72
-anchor_top = 0.65
-anchor_right = 0.96
-anchor_bottom = 0.72
-theme_override_colors/font_color = Color(0.96, 0.94, 0.86, 1)
-theme_override_fonts/font = ExtResource("4_body")
-theme_override_font_sizes/font_size = 18
-text = "Pine"
-horizontal_alignment = 1
-
-[node name="BackpackSwatch" type="ColorRect" parent="Pane/Margin/Content/Preview"]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 0
-anchor_left = 0.88
-anchor_top = 0.66
-anchor_right = 0.92
-anchor_bottom = 0.705
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 2
+size_flags_vertical = 4
 mouse_filter = 2
 color = Color(0.2, 0.55, 0.3, 1)
 
+[node name="BackpackValue" type="Label" parent="Pane/Margin/Content/Body/Options/BackpackRow/Stack/Picker/Value"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.94, 0.86, 1)
+theme_override_fonts/font = ExtResource("4_body")
+theme_override_font_sizes/font_size = 26
+text = "Pine"
+
+[node name="BackpackNext" type="Button" parent="Pane/Margin/Content/Body/Options/BackpackRow/Stack/Picker"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+focus_mode = 0
+theme_override_colors/font_color = Color(0.96, 0.94, 0.86, 1)
+theme_override_colors/font_hover_color = Color(0.08, 0.09, 0.1, 1)
+theme_override_colors/font_pressed_color = Color(0.08, 0.09, 0.1, 1)
+theme_override_fonts/font = ExtResource("4_body")
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("StyleArrow")
+theme_override_styles/hover = SubResource("StyleArrowHover")
+theme_override_styles/pressed = SubResource("StyleArrowHover")
+text = "▶"
+
 [node name="Shortcut" type="Label" parent="Pane/Margin/Content"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.65, 0.68, 0.7, 1)
+theme_override_colors/font_color = Color(0.55, 0.59, 0.62, 1)
 theme_override_fonts/font = ExtResource("4_body")
 theme_override_font_sizes/font_size = 15
-text = "↑ ↓ choose     ← → change     C or Esc close"
+text = "↑ ↓  choose     ← →  change     C / Esc  close"
 horizontal_alignment = 1
