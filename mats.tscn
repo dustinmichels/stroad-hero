@@ -1,0 +1,117 @@
+[gd_scene load_steps=15 format=3]
+
+[ext_resource type="Script" path="res://mats.gd" id="1_mats"]
+
+[sub_resource type="CapsuleShape3D" id="Shape_Mats"]
+radius = 0.3
+height = 1.95
+
+[sub_resource type="StandardMaterial3D" id="Mat_MatsPants"]
+albedo_color = Color(0.18, 0.28, 0.5, 1)
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="Mesh_MatsLeg"]
+material = SubResource("Mat_MatsPants")
+size = Vector3(0.3, 0.65, 0.45)
+
+[sub_resource type="StandardMaterial3D" id="Mat_MatsJacket"]
+albedo_color = Color(0.96, 0.48, 0.1, 1)
+roughness = 0.7
+
+[sub_resource type="BoxMesh" id="Mesh_MatsTorso"]
+material = SubResource("Mat_MatsJacket")
+size = Vector3(0.75, 0.75, 0.55)
+
+[sub_resource type="BoxMesh" id="Mesh_MatsSleeve"]
+material = SubResource("Mat_MatsJacket")
+size = Vector3(0.2, 0.6, 0.24)
+
+[sub_resource type="StandardMaterial3D" id="Mat_MatsSkin"]
+albedo_color = Color(0.94, 0.75, 0.62, 1)
+roughness = 0.6
+
+[sub_resource type="BoxMesh" id="Mesh_MatsHead"]
+material = SubResource("Mat_MatsSkin")
+size = Vector3(0.48, 0.48, 0.48)
+
+[sub_resource type="BoxMesh" id="Mesh_MatsHand"]
+material = SubResource("Mat_MatsSkin")
+size = Vector3(0.17, 0.15, 0.19)
+
+[sub_resource type="StandardMaterial3D" id="Mat_MatsBeanie"]
+albedo_color = Color(0.95, 0.8, 0.1, 1)
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="Mesh_MatsBeanie"]
+material = SubResource("Mat_MatsBeanie")
+size = Vector3(0.52, 0.25, 0.52)
+
+[sub_resource type="StandardMaterial3D" id="Mat_MatsBackpack"]
+albedo_color = Color(0.2, 0.55, 0.3, 1)
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="Mesh_MatsBackpack"]
+material = SubResource("Mat_MatsBackpack")
+size = Vector3(0.5, 0.6, 0.25)
+
+[node name="Mats" type="CharacterBody3D"]
+script = ExtResource("1_mats")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.975, 0)
+shape = SubResource("Shape_Mats")
+
+[node name="Visual" type="Node3D" parent="."]
+transform = Transform3D(-1, 0, 1.22465e-16, 0, 1, 0, -1.22465e-16, 0, -1, 0, 0, 0)
+
+[node name="LeftLegPivot" type="Node3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.175, 0.65, 0)
+
+[node name="Leg" type="MeshInstance3D" parent="Visual/LeftLegPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.325, 0)
+mesh = SubResource("Mesh_MatsLeg")
+
+[node name="RightLegPivot" type="Node3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.175, 0.65, 0)
+
+[node name="Leg" type="MeshInstance3D" parent="Visual/RightLegPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.325, 0)
+mesh = SubResource("Mesh_MatsLeg")
+
+[node name="Torso" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+mesh = SubResource("Mesh_MatsTorso")
+
+[node name="LeftArmPivot" type="Node3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.48, 1.32, 0)
+
+[node name="Sleeve" type="MeshInstance3D" parent="Visual/LeftArmPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.27, 0)
+mesh = SubResource("Mesh_MatsSleeve")
+
+[node name="Hand" type="MeshInstance3D" parent="Visual/LeftArmPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.64, 0)
+mesh = SubResource("Mesh_MatsHand")
+
+[node name="RightArmPivot" type="Node3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.48, 1.32, 0)
+
+[node name="Sleeve" type="MeshInstance3D" parent="Visual/RightArmPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.27, 0)
+mesh = SubResource("Mesh_MatsSleeve")
+
+[node name="Hand" type="MeshInstance3D" parent="Visual/RightArmPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.64, 0)
+mesh = SubResource("Mesh_MatsHand")
+
+[node name="Head" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.55, 0)
+mesh = SubResource("Mesh_MatsHead")
+
+[node name="Beanie" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.82, 0)
+mesh = SubResource("Mesh_MatsBeanie")
+
+[node name="Backpack" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -0.38)
+mesh = SubResource("Mesh_MatsBackpack")

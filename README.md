@@ -15,3 +15,8 @@ It also has a satire element, showing the sprawing urban landscape. There are pa
 I am picturing something with pixel art graphics, but not married to this idea.
 
 I think the underlying model should perhaps be 3D, so I can simulate real traffic patterns (cars drive to their destinations, park, person gets out, gets back in, drives somewhere else.)
+
+## Controls
+
+- Arrow keys: walk (Mats steps up curbs on his own)
+- Space: small hop
