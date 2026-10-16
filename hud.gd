@@ -33,6 +33,16 @@ func _animate_increment() -> void:
 	var tween := create_tween()
 	spd_label.pivot_offset = spd_label.size * 0.5
 	spd_label.modulate = Color(1.0, 0.2, 0.2, 1.0)
-	tween.tween_property(spd_label, "scale", Vector2(1.35, 1.35), 0.08).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tween.tween_property(spd_label, "scale", Vector2(1.0, 1.0), 0.15).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	(
+		tween
+		. tween_property(spd_label, "scale", Vector2(1.35, 1.35), 0.08)
+		. set_trans(Tween.TRANS_QUAD)
+		. set_ease(Tween.EASE_OUT)
+	)
+	(
+		tween
+		. tween_property(spd_label, "scale", Vector2(1.0, 1.0), 0.15)
+		. set_trans(Tween.TRANS_QUAD)
+		. set_ease(Tween.EASE_IN)
+	)
 	tween.parallel().tween_property(spd_label, "modulate", Color.WHITE, 0.25)

@@ -1,6 +1,7 @@
 class_name PathBuilder
 extends RefCounted
 
+
 static func build(points: PackedVector3Array, radius := 4.0) -> Curve3D:
 	var curve := Curve3D.new()
 	curve.bake_interval = 0.25
@@ -27,8 +28,8 @@ static func build(points: PackedVector3Array, radius := 4.0) -> Curve3D:
 		var p_corner := pts[i]
 		var p_next := pts[i + 1]
 
-		var v_in := (p_corner - p_prev)
-		var v_out := (p_next - p_corner)
+		var v_in := p_corner - p_prev
+		var v_out := p_next - p_corner
 
 		var len_in := v_in.length()
 		var len_out := v_out.length()
@@ -83,6 +84,7 @@ static func build(points: PackedVector3Array, radius := 4.0) -> Curve3D:
 	curve.add_point(pts[pts.size() - 1])
 
 	return curve
+
 
 static func _merge_waypoints(points: PackedVector3Array, radius: float) -> PackedVector3Array:
 	if points.size() <= 2:

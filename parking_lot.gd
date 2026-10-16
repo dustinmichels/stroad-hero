@@ -3,11 +3,11 @@ extends Node3D
 
 const STALL_SPACING := 4.0
 const ROWS := [
-	{ "z": -28.5, "x0": -18.0, "count": 9, "nose": -1.0, "serves": &"walgroins" },  # N row, nose -Z
-	{ "z": -14.5, "x0": -18.0, "count": 6, "nose":  1.0, "serves": &"walgroins" },  # S row, nose +Z
-	{ "z": -14.5, "x0":  28.0, "count": 4, "nose":  1.0, "serves": &"taco_hell" },  # Taco row, nose +Z
+	{"z": -28.5, "x0": -18.0, "count": 9, "nose": -1.0, "serves": &"walgroins"},  # N row, nose -Z
+	{"z": -14.5, "x0": -18.0, "count": 6, "nose": 1.0, "serves": &"walgroins"},  # S row, nose +Z
+	{"z": -14.5, "x0": 28.0, "count": 4, "nose": 1.0, "serves": &"taco_hell"},  # Taco row, nose +Z
 ]
-const ENTRANCES := { &"walgroins": Vector3(-3, 0, -32), &"taco_hell": Vector3(31.5, 0, -27.8) }
+const ENTRANCES := {&"walgroins": Vector3(-3, 0, -32), &"taco_hell": Vector3(31.5, 0, -27.8)}
 const TURN_IN_START := Vector3(17.0, 0.0, -5.6)
 const ENTRY_X := 13.0
 const EXIT_X := 9.0
@@ -44,6 +44,7 @@ static func aisle_z_for_entry(spot) -> float:
 		return AISLE_Z_WB
 	return AISLE_Z_WB if sx < ENTRY_X else AISLE_Z_EB
 
+
 static func entry_route(spot, radius := 4.0) -> Curve3D:
 	var sx: float = 0.0
 	var spot_pos := Vector3.ZERO
@@ -69,14 +70,17 @@ static func entry_route(spot, radius := 4.0) -> Curve3D:
 		return Curve3D.new()
 
 	var aisle_z := aisle_z_for_entry(spot)
-	var pts := PackedVector3Array([
-		TURN_IN_START,
-		Vector3(ENTRY_X, 0.0, -5.6 - radius),
-		Vector3(ENTRY_X, 0.0, aisle_z),
-		Vector3(sx, 0.0, aisle_z),
-		spot_pos,
-	])
+	var pts := PackedVector3Array(
+		[
+			TURN_IN_START,
+			Vector3(ENTRY_X, 0.0, -5.6 - radius),
+			Vector3(ENTRY_X, 0.0, aisle_z),
+			Vector3(sx, 0.0, aisle_z),
+			spot_pos,
+		]
+	)
 	return PathBuilder.build(pts, radius)
+
 
 func _init() -> void:
 	_build_spots()
@@ -85,6 +89,7 @@ func _init() -> void:
 func _ready() -> void:
 	if spots.is_empty():
 		_build_spots()
+
 
 func _build_spots() -> void:
 	spots.clear()
@@ -116,6 +121,7 @@ func get_free_spots() -> Array[ParkingSpot]:
 		if s.is_free():
 			free_spots.append(s)
 	return free_spots
+
 
 func request_spot(car: Car, errand) -> ParkingSpot:
 	if car == null or errand == null:

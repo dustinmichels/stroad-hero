@@ -61,6 +61,7 @@ func _ready() -> void:
 	if _head and _beanie:
 		_beanie_offset = _beanie.position - _head.position
 
+
 func _physics_process(delta: float) -> void:
 	if _is_dead:
 		return
@@ -93,7 +94,9 @@ func _physics_process(delta: float) -> void:
 
 	if direction != Vector3.ZERO:
 		var target_yaw := atan2(direction.x, direction.z)
-		_visual.rotation.y = lerp_angle(_visual.rotation.y, target_yaw, 1.0 - exp(-turn_speed * delta))
+		_visual.rotation.y = lerp_angle(
+			_visual.rotation.y, target_yaw, 1.0 - exp(-turn_speed * delta)
+		)
 
 	_animate(delta)
 
@@ -104,11 +107,11 @@ func die() -> void:
 	_is_dead = true
 	velocity = Vector3.ZERO
 	died.emit(global_position)
-	
+
 	_visual.visible = false
-	
+
 	await get_tree().create_timer(respawn_delay).timeout
-	
+
 	global_transform = _spawn_transform
 	velocity = Vector3.ZERO
 	_stride_phase = 0.0
@@ -123,6 +126,7 @@ func die() -> void:
 		_beanie.position = _head.position + _beanie_offset
 	_visual.visible = true
 	_is_dead = false
+
 
 ## Lifts the body onto a low ledge blocking `motion`; floor snap settles it on top.
 func _try_step_up(motion: Vector3) -> void:

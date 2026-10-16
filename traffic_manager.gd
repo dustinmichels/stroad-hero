@@ -6,10 +6,11 @@ const CAR_SCENE = preload("res://car.tscn")
 const TrafficDebugScript = preload("res://traffic_debug.gd")
 const Errand = preload("res://errand.gd")
 
+
 class Lane:
 	var id: int
 	var z: float
-	var direction: float # +1.0 for Eastbound, -1.0 for Westbound
+	var direction: float  # +1.0 for Eastbound, -1.0 for Westbound
 	var start_x: float
 	var length: float
 	var min_speed: float
@@ -19,7 +20,17 @@ class Lane:
 	var spawn_timer: float = 0.0
 	var cars: Array = []
 
-	func _init(p_id: int, p_z: float, p_dir: float, p_start_x: float, p_len: float, p_min_spd: float, p_max_spd: float, p_int_min: float, p_int_max: float) -> void:
+	func _init(
+		p_id: int,
+		p_z: float,
+		p_dir: float,
+		p_start_x: float,
+		p_len: float,
+		p_min_spd: float,
+		p_max_spd: float,
+		p_int_min: float,
+		p_int_max: float
+	) -> void:
 		id = p_id
 		z = p_z
 		direction = p_dir
@@ -36,6 +47,7 @@ class Lane:
 
 	func forward() -> Vector3:
 		return Vector3(direction, 0, 0)
+
 
 var lanes: Array[Lane] = []
 var lot: ParkingLot = null
@@ -60,8 +72,8 @@ var stats: Dictionary = {
 const P_ERRAND := 0.3
 const DECISION_D := 18.0
 const TURN_D := 53.0
-const MIN_SPAWN_HEADWAY := 18.0 # meters needed before spawning another car in lane
-const SAFE_FOLLOWING_GAP := 8.0 # meters
+const MIN_SPAWN_HEADWAY := 18.0  # meters needed before spawning another car in lane
+const SAFE_FOLLOWING_GAP := 8.0  # meters
 const BRAKE_ACCELERATION := 25.0
 const MOTOR_ACCELERATION := 15.0
 const V_LOT := 4.5
@@ -133,6 +145,8 @@ func _seed_parked_cars() -> void:
 		car.dwell_left = randf_range(5.0, 40.0)
 		lot_cars.append(car)
 		stats["cars_spawned"] += 1
+
+
 func _physics_process(delta: float) -> void:
 	for lane in lanes:
 		_update_lane_traffic(lane, delta)
@@ -180,6 +194,7 @@ func _update_lot_cars(delta: float) -> void:
 			surviving_cars.append(car)
 	lot_cars = surviving_cars
 
+
 func spawn_debug_car() -> Car:
 	if lot == null:
 		return null
@@ -202,23 +217,25 @@ func spawn_debug_car() -> Car:
 	stats["cars_spawned"] += 1
 	return car
 
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_F4 or event.physical_keycode == KEY_F4:
 			spawn_debug_car()
 
+
 func _update_lane_spawning(lane: Lane, delta: float) -> void:
 	lane.spawn_timer -= delta
 	if lane.spawn_timer > 0.0:
 		return
-	
+
 	# Check headway: ensure no car is too close to spawn point
 	var can_spawn := true
 	for car in lane.cars:
 		if is_instance_valid(car) and car.lane_distance < MIN_SPAWN_HEADWAY:
 			can_spawn = false
 			break
-	
+
 	if can_spawn:
 		_spawn_car_at(lane, 0.0)
 		lane.spawn_timer = randf_range(lane.spawn_interval_min, lane.spawn_interval_max)
@@ -232,7 +249,7 @@ func _spawn_car_at(lane: Lane, initial_distance: float) -> Node:
 	var car_type: int = randi() % CarScript.CarType.size()
 	if car_type == CarScript.CarType.BUS:
 		spd *= 0.9
-	
+
 	add_child(car)
 	car.setup(lane.id, lane.z, lane.direction, lane.start_x, lane.length, spd, car_type)
 	car.lane_distance = initial_distance
@@ -251,17 +268,19 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 	for car in lane.cars:
 		if is_instance_valid(car):
 			valid_cars.append(car)
-	
+
 	# Sort cars by distance descending (farthest ahead first)
-	valid_cars.sort_custom(func(a, b) -> bool:
-		return a.lane_distance > b.lane_distance
-	)
-	
+	valid_cars.sort_custom(func(a, b) -> bool: return a.lane_distance > b.lane_distance)
+
 	var surviving_cars: Array = []
 	for i in range(valid_cars.size()):
 		var car = valid_cars[i]
 		# Decision point for errand cars
-		if car.state == Car.State.CRUISING and car.errand != null and car.lane_distance >= DECISION_D:
+		if (
+			car.state == Car.State.CRUISING
+			and car.errand != null
+			and car.lane_distance >= DECISION_D
+		):
 			if lot != null:
 				var spot = lot.request_spot(car, car.errand)
 				if spot != null:
@@ -269,27 +288,33 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 				else:
 					car.errand = null
 					stats["errands_dropped_lot_full"] += 1
-		
+
 		# Simple car-following (safe distance to lead car)
 		if i > 0:
 			var lead_car = valid_cars[i - 1]
-			var gap: float = lead_car.lane_distance - car.lane_distance - (0.5 * (lead_car.car_length + car.car_length))
+			var gap: float = (
+				lead_car.lane_distance
+				- car.lane_distance
+				- (0.5 * (lead_car.car_length + car.car_length))
+			)
 			if gap < SAFE_FOLLOWING_GAP:
-				var target_speed := minf(car.desired_speed, lead_car.speed * clampf(gap / SAFE_FOLLOWING_GAP, 0.1, 1.0))
+				var target_speed := minf(
+					car.desired_speed, lead_car.speed * clampf(gap / SAFE_FOLLOWING_GAP, 0.1, 1.0)
+				)
 				car.speed = move_toward(car.speed, target_speed, BRAKE_ACCELERATION * delta)
 			else:
 				car.speed = move_toward(car.speed, car.desired_speed, MOTOR_ACCELERATION * delta)
 		else:
 			car.speed = move_toward(car.speed, car.desired_speed, MOTOR_ACCELERATION * delta)
-		
+
 		car.advance_simulation(delta)
-		
+
 		# Check if reached end of lane
 		if car.lane_distance >= lane.length:
 			car.queue_free()
 		else:
 			surviving_cars.append(car)
-	
+
 	lane.cars = surviving_cars
 
 

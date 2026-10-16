@@ -219,7 +219,7 @@ Ground rules for every section:
 - [x] If a spot comes back, switch to `APPROACHING`
 - [x] If not, set `errand = null` and increment `errands_dropped_lot_full`
 
-*Handoff notes:* `DECISION_D = 18.0` and `TURN_D = 53.0` are defined in `traffic_manager.gd`. `_update_lane_traffic()` checks cruising cars with errands at `lane_distance >= DECISION_D`: on success, switches state to `APPROACHING`; on failure (lot full), sets `errand = null` and increments `stats["errands_dropped_lot_full"]`. Next section to implement: "3.5 Approach braking".
+_Handoff notes:_ `DECISION_D = 18.0` and `TURN_D = 53.0` are defined in `traffic_manager.gd`. `_update_lane_traffic()` checks cruising cars with errands at `lane_distance >= DECISION_D`: on success, switches state to `APPROACHING`; on failure (lot full), sets `errand = null` and increments `stats["errands_dropped_lot_full"]`. Next section to implement: "3.5 Approach braking".
 
 ### 3.5 Approach braking
 

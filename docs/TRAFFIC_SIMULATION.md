@@ -183,16 +183,16 @@ A purely 2D simulation works when all roads are flat and never overlap. It becom
 
 The lane graph avoids this ambiguity because connectivity is explicit. Two splines can cross visually without being connected.
 
-| Concern | Representation |
-|---|---|
-| Route connectivity | Directed lane graph |
-| Route cost and traffic laws | Graph metadata |
-| Vehicle progress | Lane ID plus scalar distance |
-| Collision ordering | One-dimensional order within each lane |
-| Intersections | Connections and conflict zones |
-| Elevation and banking | 3D lane spline |
-| Vehicle visuals | Sampled 3D transform |
-| Exceptional collisions | 3D physics |
+| Concern                     | Representation                         |
+| --------------------------- | -------------------------------------- |
+| Route connectivity          | Directed lane graph                    |
+| Route cost and traffic laws | Graph metadata                         |
+| Vehicle progress            | Lane ID plus scalar distance           |
+| Collision ordering          | One-dimensional order within each lane |
+| Intersections               | Connections and conflict zones         |
+| Elevation and banking       | 3D lane spline                         |
+| Vehicle visuals             | Sampled 3D transform                   |
+| Exceptional collisions      | 3D physics                             |
 
 An XZ projection can still provide broad-phase spatial searches, but lane identity should determine whether two vehicles interact.
 
@@ -374,11 +374,11 @@ At lane boundaries, include vehicles on the next connection or lane in the looka
 
 Use multiple simulation fidelities if the world contains many vehicles.
 
-| Distance or relevance | Simulation fidelity |
-|---|---|
-| Near the player | Full tactical driving and 3D collision awareness |
-| Visible middle range | Lane following, signals, following, and lane changes |
-| Far away | Coarse graph progress and intersection capacity |
+| Distance or relevance | Simulation fidelity                                   |
+| --------------------- | ----------------------------------------------------- |
+| Near the player       | Full tactical driving and 3D collision awareness      |
+| Visible middle range  | Lane following, signals, following, and lane changes  |
+| Far away              | Coarse graph progress and intersection capacity       |
 | Irrelevant or off-map | Scheduled trip progress or despawned population state |
 
 Promoting a vehicle to higher fidelity means reconstructing a valid lane position and local traffic context. Demotion stores route progress rather than relying on the vehicle's 3D transform.

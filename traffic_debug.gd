@@ -58,12 +58,14 @@ func _ready() -> void:
 	_path_mesh_instance.mesh = _path_mesh
 	add_child(_path_mesh_instance)
 
+
 func _setup_spots() -> void:
 	for spot in lot.spots:
 		_create_spot_disc(spot)
 		_create_spot_label(spot)
 	if not lot.spot_changed.is_connected(_on_spot_changed):
 		lot.spot_changed.connect(_on_spot_changed)
+
 
 func _create_spot_label(spot: ParkingSpot) -> void:
 	var label := Label3D.new()
@@ -105,7 +107,6 @@ func _get_material_for_state(state: ParkingSpot.State) -> StandardMaterial3D:
 	return _mat_free
 
 
-
 func _on_spot_changed(spot: ParkingSpot) -> void:
 	if spot == null:
 		return
@@ -120,10 +121,11 @@ func _process(_delta: float) -> void:
 	_update_path_curves()
 	_update_car_labels()
 
+
 func _update_car_labels() -> void:
 	if traffic_manager == null:
 		return
-	
+
 	var active_ids := {}
 	var all_cars: Array[Car] = []
 	for car in traffic_manager.lot_cars:
@@ -133,11 +135,11 @@ func _update_car_labels() -> void:
 		for car in lane.cars:
 			if is_instance_valid(car) and not all_cars.has(car):
 				all_cars.append(car)
-	
+
 	for car in all_cars:
 		var cid := car.get_instance_id()
 		active_ids[cid] = true
-		
+
 		var label: Label3D = _car_labels.get(cid)
 		if label == null:
 			label = Label3D.new()
@@ -149,12 +151,14 @@ func _update_car_labels() -> void:
 			label.outline_modulate = Color.BLACK
 			add_child(label)
 			_car_labels[cid] = label
-		
+
 		label.global_position = car.global_position + Vector3(0.0, 2.2, 0.0)
 		var spot_str := str(car.spot.id) if car.spot != null else "-"
-		var state_str := car.get_state_name() if car.has_method("get_state_name") else str(car.state)
+		var state_str := (
+			car.get_state_name() if car.has_method("get_state_name") else str(car.state)
+		)
 		label.text = "%s\n%.1f m/s\nspot: %s" % [state_str, car.speed, spot_str]
-	
+
 	var to_remove: Array = []
 	for cid in _car_labels.keys():
 		if not active_ids.has(cid):
@@ -164,13 +168,15 @@ func _update_car_labels() -> void:
 			to_remove.append(cid)
 	for cid in to_remove:
 		_car_labels.erase(cid)
+
+
 func _update_path_curves() -> void:
 	if _path_mesh == null:
 		return
 	_path_mesh.clear_surfaces()
 	if traffic_manager == null:
 		return
-	
+
 	var path_cars: Array[Car] = []
 	for car in traffic_manager.lot_cars:
 		if is_instance_valid(car) and car.motion == Car.Motion.PATH and car.path != null:
@@ -180,7 +186,7 @@ func _update_path_curves() -> void:
 			if is_instance_valid(car) and car.motion == Car.Motion.PATH and car.path != null:
 				if not path_cars.has(car):
 					path_cars.append(car)
-	
+
 	for car in path_cars:
 		var pts := car.path.get_baked_points()
 		if pts.size() >= 2:
@@ -188,6 +194,8 @@ func _update_path_curves() -> void:
 			for pt in pts:
 				_path_mesh.surface_add_vertex(pt + Vector3(0.0, 0.15, 0.0))
 			_path_mesh.surface_end()
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_F3 or event.physical_keycode == KEY_F3:

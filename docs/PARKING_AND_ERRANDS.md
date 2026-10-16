@@ -299,10 +299,10 @@ There are only a few lot cars, so O(n²) checks are fine.
 
 Whether a car kills or blocks Mats depends only on its speed, with one shared cutoff, so every car is exactly one of the two. The rule applies to every car, not just parked ones:
 
-| Car | Kills Mats | Blocks Mats |
-|---|---|---|
-| Moving: `abs(speed) > 0.1` m/s | yes | no |
-| Stopped: `abs(speed) <= 0.1` m/s (parked, waiting to merge, stuck in a queue) | no | yes |
+| Car                                                                           | Kills Mats | Blocks Mats |
+| ----------------------------------------------------------------------------- | ---------- | ----------- |
+| Moving: `abs(speed) > 0.1` m/s                                                | yes        | no          |
+| Stopped: `abs(speed) <= 0.1` m/s (parked, waiting to merge, stuck in a queue) | no         | yes         |
 
 There is deliberately no in-between band. A band would allow a car that moves slowly while solid but not lethal, and a body teleported by its parent's transform would clip into Mats instead of pushing him.
 
