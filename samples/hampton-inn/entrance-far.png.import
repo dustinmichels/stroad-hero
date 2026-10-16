@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bxithpjchwm0a"
-path="res://.godot/imported/Screenshot 2026-10-16 at 2.26.33 PM.png-1ea89a6770f4d333870cc1bb8fb9f422.ctex"
+uid="uid://c3e2lyimve5as"
+path="res://.godot/imported/entrance-far.png-794ce24211557f202a8915ce9c4f0220.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://samples/hampton-inn/Screenshot 2026-10-16 at 2.26.33 PM.png"
-dest_files=["res://.godot/imported/Screenshot 2026-10-16 at 2.26.33 PM.png-1ea89a6770f4d333870cc1bb8fb9f422.ctex"]
+source_file="res://samples/hampton-inn/entrance-far.png"
+dest_files=["res://.godot/imported/entrance-far.png-794ce24211557f202a8915ce9c4f0220.ctex"]
 
 [params]
 

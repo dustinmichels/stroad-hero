@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dgugn1u3goopi"
-path="res://.godot/imported/Screenshot 2026-10-16 at 2.26.44 PM.png-c306ff750be9936e952f1bad4f553489.ctex"
+uid="uid://dicen3ax234w3"
+path="res://.godot/imported/entrance.png-247f2b54bd55c56be5e5d839980fc804.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://samples/hampton-inn/Screenshot 2026-10-16 at 2.26.44 PM.png"
-dest_files=["res://.godot/imported/Screenshot 2026-10-16 at 2.26.44 PM.png-c306ff750be9936e952f1bad4f553489.ctex"]
+source_file="res://samples/hampton-inn/entrance.png"
+dest_files=["res://.godot/imported/entrance.png-247f2b54bd55c56be5e5d839980fc804.ctex"]
 
 [params]
 
