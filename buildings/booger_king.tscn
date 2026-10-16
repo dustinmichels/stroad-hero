@@ -1,0 +1,495 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://buildings/booger_king_sign.tscn" id="1_sign"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_BKStucco"]
+albedo_color = Color(0.85, 0.82, 0.76, 1)
+roughness = 0.85
+
+[sub_resource type="StandardMaterial3D" id="Mat_BKSlateBase"]
+albedo_color = Color(0.42, 0.40, 0.38, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Mat_BKWoodTower"]
+albedo_color = Color(0.48, 0.30, 0.16, 1)
+roughness = 0.75
+
+[sub_resource type="StandardMaterial3D" id="Mat_BKRedStripe"]
+albedo_color = Color(0.85, 0.10, 0.10, 1)
+emission_enabled = true
+emission = Color(0.75, 0.08, 0.08, 1)
+emission_energy_multiplier = 0.25
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_BKParapetWhite"]
+albedo_color = Color(0.92, 0.92, 0.90, 1)
+roughness = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Mat_BKRoofGravel"]
+albedo_color = Color(0.30, 0.29, 0.28, 1)
+roughness = 0.95
+
+[sub_resource type="StandardMaterial3D" id="Mat_BKGlass"]
+transparency = 1
+albedo_color = Color(0.12, 0.18, 0.24, 0.9)
+metallic = 0.4
+roughness = 0.1
+
+[sub_resource type="StandardMaterial3D" id="Mat_BKDarkFrame"]
+albedo_color = Color(0.18, 0.18, 0.20, 1)
+metallic = 0.6
+roughness = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Mat_BKAwningMetal"]
+albedo_color = Color(0.82, 0.84, 0.86, 1)
+metallic = 0.7
+roughness = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Mat_BKHvacMetal"]
+albedo_color = Color(0.55, 0.58, 0.60, 1)
+metallic = 0.5
+roughness = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Mat_BKLogoBun"]
+albedo_color = Color(0.96, 0.64, 0.14, 1)
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_BKLogoBlue"]
+albedo_color = Color(0.08, 0.35, 0.72, 1)
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_BKLogoWhite"]
+albedo_color = Color(0.96, 0.96, 0.96, 1)
+roughness = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Mat_BKBoogerGreen"]
+albedo_color = Color(0.35, 0.85, 0.12, 1)
+emission_enabled = true
+emission = Color(0.30, 0.80, 0.10, 1)
+emission_energy_multiplier = 0.5
+roughness = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Mat_BKHedge"]
+albedo_color = Color(0.22, 0.45, 0.18, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Mat_BKSidewalk"]
+albedo_color = Color(0.76, 0.75, 0.73, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Mat_BKReaderWhite"]
+albedo_color = Color(0.95, 0.95, 0.92, 1)
+roughness = 0.3
+
+[sub_resource type="BoxShape3D" id="Shape_BKBuilding"]
+size = Vector3(18.8, 6.1, 12.7)
+
+[sub_resource type="BoxMesh" id="Mesh_BKSlateBase"]
+material = SubResource("Mat_BKSlateBase")
+size = Vector3(18.6, 0.5, 12.1)
+
+[sub_resource type="BoxMesh" id="Mesh_BKMainWall"]
+material = SubResource("Mat_BKStucco")
+size = Vector3(18.5, 3.5, 12.0)
+
+[sub_resource type="BoxMesh" id="Mesh_BKRedStripe"]
+material = SubResource("Mat_BKRedStripe")
+size = Vector3(18.6, 0.38, 12.1)
+
+[sub_resource type="BoxMesh" id="Mesh_BKParapetCap"]
+material = SubResource("Mat_BKParapetWhite")
+size = Vector3(18.7, 0.14, 12.2)
+
+[sub_resource type="BoxMesh" id="Mesh_BKRoof"]
+material = SubResource("Mat_BKRoofGravel")
+size = Vector3(18.2, 0.02, 11.7)
+
+[sub_resource type="BoxMesh" id="Mesh_BKTowerBody"]
+material = SubResource("Mat_BKWoodTower")
+size = Vector3(6.0, 6.0, 4.8)
+
+[sub_resource type="BoxMesh" id="Mesh_BKTowerCap"]
+material = SubResource("Mat_BKParapetWhite")
+size = Vector3(6.2, 0.14, 5.0)
+
+[sub_resource type="BoxMesh" id="Mesh_BKDoors"]
+material = SubResource("Mat_BKGlass")
+size = Vector3(2.2, 2.6, 0.15)
+
+[sub_resource type="BoxMesh" id="Mesh_BKDoorFrame"]
+material = SubResource("Mat_BKDarkFrame")
+size = Vector3(2.35, 2.75, 0.12)
+
+[sub_resource type="BoxMesh" id="Mesh_BKDoorHandle"]
+material = SubResource("Mat_BKAwningMetal")
+size = Vector3(0.06, 0.8, 0.08)
+
+[sub_resource type="BoxMesh" id="Mesh_BKDoorCanopy"]
+material = SubResource("Mat_BKAwningMetal")
+size = Vector3(2.8, 0.1, 1.1)
+
+[sub_resource type="BoxMesh" id="Mesh_BKWindow"]
+material = SubResource("Mat_BKGlass")
+size = Vector3(3.4, 1.9, 0.15)
+
+[sub_resource type="BoxMesh" id="Mesh_BKWindowFrame"]
+material = SubResource("Mat_BKDarkFrame")
+size = Vector3(3.55, 2.05, 0.12)
+
+[sub_resource type="BoxMesh" id="Mesh_BKWindowCanopy"]
+material = SubResource("Mat_BKAwningMetal")
+size = Vector3(3.8, 0.08, 0.9)
+
+[sub_resource type="BoxMesh" id="Mesh_BKDriveThruWin"]
+material = SubResource("Mat_BKGlass")
+size = Vector3(0.15, 1.4, 1.3)
+
+[sub_resource type="BoxMesh" id="Mesh_BKDriveThruFrame"]
+material = SubResource("Mat_BKDarkFrame")
+size = Vector3(0.12, 1.5, 1.42)
+
+[sub_resource type="BoxMesh" id="Mesh_BKDriveThruSill"]
+material = SubResource("Mat_BKAwningMetal")
+size = Vector3(0.4, 0.08, 1.5)
+
+[sub_resource type="BoxMesh" id="Mesh_BKDriveThruCanopy"]
+material = SubResource("Mat_BKAwningMetal")
+size = Vector3(0.9, 0.08, 1.7)
+
+[sub_resource type="BoxMesh" id="Mesh_BKMenuPedestal"]
+material = SubResource("Mat_BKDarkFrame")
+size = Vector3(0.25, 1.2, 0.4)
+
+[sub_resource type="BoxMesh" id="Mesh_BKMenuBoard"]
+material = SubResource("Mat_BKDarkFrame")
+size = Vector3(0.2, 1.4, 1.6)
+
+[sub_resource type="BoxMesh" id="Mesh_BKMenuFace"]
+material = SubResource("Mat_BKReaderWhite")
+size = Vector3(0.05, 1.3, 1.5)
+
+[sub_resource type="BoxMesh" id="Mesh_BKHvacLarge"]
+material = SubResource("Mat_BKHvacMetal")
+size = Vector3(2.5, 1.2, 1.8)
+
+[sub_resource type="BoxMesh" id="Mesh_BKHvacMed"]
+material = SubResource("Mat_BKHvacMetal")
+size = Vector3(1.8, 1.0, 1.5)
+
+[sub_resource type="CylinderMesh" id="Mesh_BKHvacFan"]
+material = SubResource("Mat_BKHvacMetal")
+top_radius = 0.45
+bottom_radius = 0.45
+height = 0.22
+radial_segments = 16
+
+[sub_resource type="CylinderMesh" id="Mesh_BKExhaustPipe"]
+material = SubResource("Mat_BKHvacMetal")
+top_radius = 0.3
+bottom_radius = 0.3
+height = 1.1
+radial_segments = 16
+
+[sub_resource type="CylinderMesh" id="Mesh_BKExhaustCap"]
+material = SubResource("Mat_BKHvacMetal")
+top_radius = 0.05
+bottom_radius = 0.45
+height = 0.25
+radial_segments = 16
+
+[sub_resource type="BoxMesh" id="Mesh_BKSidewalkFront"]
+material = SubResource("Mat_BKSidewalk")
+size = Vector3(18.0, 0.16, 2.2)
+
+[sub_resource type="BoxMesh" id="Mesh_BKHedgeFront"]
+material = SubResource("Mat_BKHedge")
+size = Vector3(9.6, 0.7, 0.8)
+
+[sub_resource type="BoxMesh" id="Mesh_BKHedgeCorner"]
+material = SubResource("Mat_BKHedge")
+size = Vector3(0.8, 0.7, 1.6)
+
+[sub_resource type="CylinderMesh" id="Mesh_BKLogoWhiteDisc"]
+material = SubResource("Mat_BKLogoWhite")
+top_radius = 1.15
+bottom_radius = 1.15
+height = 0.06
+radial_segments = 32
+
+[sub_resource type="CylinderMesh" id="Mesh_BKLogoBlueRing"]
+material = SubResource("Mat_BKLogoBlue")
+top_radius = 1.22
+bottom_radius = 1.22
+height = 0.04
+radial_segments = 32
+
+[sub_resource type="BoxMesh" id="Mesh_BKLogoBunTop"]
+material = SubResource("Mat_BKLogoBun")
+size = Vector3(1.3, 0.3, 0.06)
+
+[sub_resource type="BoxMesh" id="Mesh_BKLogoBunBtm"]
+material = SubResource("Mat_BKLogoBun")
+size = Vector3(1.2, 0.22, 0.06)
+
+[sub_resource type="SphereMesh" id="Mesh_BKBoogerDrop"]
+material = SubResource("Mat_BKBoogerGreen")
+radius = 0.14
+height = 0.28
+
+[node name="BoogerKing" type="Node3D"]
+
+[node name="Building" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1, 3.05, 0.3)
+shape = SubResource("Shape_BKBuilding")
+
+[node name="SlateBase" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 0)
+mesh = SubResource("Mesh_BKSlateBase")
+
+[node name="MainWall" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.25, 0)
+mesh = SubResource("Mesh_BKMainWall")
+
+[node name="RedStripe" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.7, 0)
+mesh = SubResource("Mesh_BKRedStripe")
+
+[node name="ParapetCap" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.07, 0)
+mesh = SubResource("Mesh_BKParapetCap")
+
+[node name="Roof" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.15, 0)
+mesh = SubResource("Mesh_BKRoof")
+
+[node name="Tower" type="Node3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5, 0, 4.2)
+
+[node name="TowerBody" type="MeshInstance3D" parent="Building/Tower"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.0, 0)
+mesh = SubResource("Mesh_BKTowerBody")
+
+[node name="TowerCap" type="MeshInstance3D" parent="Building/Tower"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.07, 0)
+mesh = SubResource("Mesh_BKTowerCap")
+
+[node name="DoorFrame" type="MeshInstance3D" parent="Building/Tower"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, 1.375, 2.42)
+mesh = SubResource("Mesh_BKDoorFrame")
+
+[node name="Doors" type="MeshInstance3D" parent="Building/Tower"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, 1.3, 2.45)
+mesh = SubResource("Mesh_BKDoors")
+
+[node name="DoorHandleL" type="MeshInstance3D" parent="Building/Tower"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.35, 1.25, 2.55)
+mesh = SubResource("Mesh_BKDoorHandle")
+
+[node name="DoorHandleR" type="MeshInstance3D" parent="Building/Tower"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.05, 1.25, 2.55)
+mesh = SubResource("Mesh_BKDoorHandle")
+
+[node name="DoorCanopy" type="MeshInstance3D" parent="Building/Tower"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, 2.85, 2.9)
+mesh = SubResource("Mesh_BKDoorCanopy")
+
+[node name="FrontLogo" type="Node3D" parent="Building/Tower"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3, 4.5, 2.4)
+
+[node name="Disc" type="MeshInstance3D" parent="Building/Tower/FrontLogo"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0.04)
+mesh = SubResource("Mesh_BKLogoWhiteDisc")
+
+[node name="Ring" type="MeshInstance3D" parent="Building/Tower/FrontLogo"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0.02)
+mesh = SubResource("Mesh_BKLogoBlueRing")
+
+[node name="BunTop" type="MeshInstance3D" parent="Building/Tower/FrontLogo"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.76, 0.08)
+mesh = SubResource("Mesh_BKLogoBunTop")
+
+[node name="BunBtm" type="MeshInstance3D" parent="Building/Tower/FrontLogo"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.74, 0.08)
+mesh = SubResource("Mesh_BKLogoBunBtm")
+
+[node name="BoogerDrop" type="MeshInstance3D" parent="Building/Tower/FrontLogo"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, -0.93, 0.1)
+mesh = SubResource("Mesh_BKBoogerDrop")
+
+[node name="Text" type="Label3D" parent="Building/Tower/FrontLogo"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.12)
+pixel_size = 0.012
+modulate = Color(0.85, 0.1, 0.1, 1)
+outline_modulate = Color(1, 1, 1, 1)
+text = "BOOGER
+KING"
+font_size = 32
+outline_size = 8
+
+[node name="SideLogo" type="Node3D" parent="Building/Tower"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 3.0, 4.5, 0)
+
+[node name="Disc" type="MeshInstance3D" parent="Building/Tower/SideLogo"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0.04)
+mesh = SubResource("Mesh_BKLogoWhiteDisc")
+
+[node name="Ring" type="MeshInstance3D" parent="Building/Tower/SideLogo"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0.02)
+mesh = SubResource("Mesh_BKLogoBlueRing")
+
+[node name="BunTop" type="MeshInstance3D" parent="Building/Tower/SideLogo"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.76, 0.08)
+mesh = SubResource("Mesh_BKLogoBunTop")
+
+[node name="BunBtm" type="MeshInstance3D" parent="Building/Tower/SideLogo"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.74, 0.08)
+mesh = SubResource("Mesh_BKLogoBunBtm")
+
+[node name="BoogerDrop" type="MeshInstance3D" parent="Building/Tower/SideLogo"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, -0.93, 0.1)
+mesh = SubResource("Mesh_BKBoogerDrop")
+
+[node name="Text" type="Label3D" parent="Building/Tower/SideLogo"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.12)
+pixel_size = 0.012
+modulate = Color(0.85, 0.1, 0.1, 1)
+outline_modulate = Color(1, 1, 1, 1)
+text = "BOOGER
+KING"
+font_size = 32
+outline_size = 8
+
+[node name="WindowFrameL" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.0, 2.1, 6.02)
+mesh = SubResource("Mesh_BKWindowFrame")
+
+[node name="WindowL" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.0, 2.1, 6.06)
+mesh = SubResource("Mesh_BKWindow")
+
+[node name="WindowCanopyL" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.0, 3.25, 6.45)
+mesh = SubResource("Mesh_BKWindowCanopy")
+
+[node name="WindowFrameR" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.0, 2.1, 6.02)
+mesh = SubResource("Mesh_BKWindowFrame")
+
+[node name="WindowR" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.0, 2.1, 6.06)
+mesh = SubResource("Mesh_BKWindow")
+
+[node name="WindowCanopyR" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.0, 3.25, 6.45)
+mesh = SubResource("Mesh_BKWindowCanopy")
+
+[node name="NeonOpen" type="Label3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.0, 2.0, 6.15)
+pixel_size = 0.014
+modulate = Color(0.25, 0.95, 0.25, 1)
+outline_modulate = Color(0.05, 0.35, 0.05, 1)
+text = "OPEN"
+font_size = 38
+outline_size = 8
+
+[node name="DriveThruFrame" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.28, 2.0, 0)
+mesh = SubResource("Mesh_BKDriveThruFrame")
+
+[node name="DriveThruWin" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.28, 2.0, 0)
+mesh = SubResource("Mesh_BKDriveThruWin")
+
+[node name="DriveThruSill" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.45, 1.25, 0)
+mesh = SubResource("Mesh_BKDriveThruSill")
+
+[node name="DriveThruCanopy" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.65, 2.85, 0)
+mesh = SubResource("Mesh_BKDriveThruCanopy")
+
+[node name="DriveThruLabel" type="Label3D" parent="Building"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -9.27, 3.2, 0)
+pixel_size = 0.012
+modulate = Color(0.85, 0.1, 0.1, 1)
+outline_modulate = Color(1, 1, 1, 1)
+text = "PICK UP"
+font_size = 28
+outline_size = 6
+
+[node name="MenuPedestal" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.2, 0.6, -1.5)
+mesh = SubResource("Mesh_BKMenuPedestal")
+
+[node name="MenuBoard" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.2, 1.7, -1.5)
+mesh = SubResource("Mesh_BKMenuBoard")
+
+[node name="MenuFace" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.08, 1.7, -1.5)
+mesh = SubResource("Mesh_BKMenuFace")
+
+[node name="MenuHeader" type="Label3D" parent="Building"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -11.04, 2.15, -1.5)
+pixel_size = 0.008
+modulate = Color(0.85, 0.1, 0.1, 1)
+outline_modulate = Color(0.95, 0.65, 0.1, 1)
+text = "BOOGER KING"
+font_size = 24
+outline_size = 6
+
+[node name="MenuItems" type="Label3D" parent="Building"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -11.04, 1.55, -1.5)
+pixel_size = 0.009
+modulate = Color(0.1, 0.1, 0.1, 1)
+outline_modulate = Color(1, 1, 1, 1)
+text = "THE BOOGER
+SNOT FRIES
+SLIME SHAKE"
+font_size = 20
+outline_size = 4
+
+[node name="HvacLarge" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.5, 4.76, -1.5)
+mesh = SubResource("Mesh_BKHvacLarge")
+
+[node name="HvacFan1" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.1, 5.47, -1.5)
+mesh = SubResource("Mesh_BKHvacFan")
+
+[node name="HvacFan2" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.9, 5.47, -1.5)
+mesh = SubResource("Mesh_BKHvacFan")
+
+[node name="HvacMed" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 4.66, -2.5)
+mesh = SubResource("Mesh_BKHvacMed")
+
+[node name="HvacFan3" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 5.27, -2.5)
+mesh = SubResource("Mesh_BKHvacFan")
+
+[node name="ExhaustPipe" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 4.71, 1.0)
+mesh = SubResource("Mesh_BKExhaustPipe")
+
+[node name="ExhaustCap" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 5.38, 1.0)
+mesh = SubResource("Mesh_BKExhaustCap")
+
+[node name="SidewalkFront" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 0.08, 7.1)
+mesh = SubResource("Mesh_BKSidewalkFront")
+
+[node name="HedgeFront" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.8, 0.45, 7.8)
+mesh = SubResource("Mesh_BKHedgeFront")
+
+[node name="HedgeCorner" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.2, 0.45, 7.0)
+mesh = SubResource("Mesh_BKHedgeCorner")
+
+[node name="RoadsideSign" parent="." instance=ExtResource("1_sign")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 22)
