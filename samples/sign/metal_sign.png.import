@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d3r7k7criiyrj"
-path="res://.godot/imported/Screenshot 2026-10-16 at 2.34.59 PM.png-fe13489f8233ddc2a50efe7747f2eb96.ctex"
+uid="uid://b3w4bcddibwfc"
+path="res://.godot/imported/metal_sign.png-b1725847e14b6105d3ad93bbb6271dda.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://samples/sign/Screenshot 2026-10-16 at 2.34.59 PM.png"
-dest_files=["res://.godot/imported/Screenshot 2026-10-16 at 2.34.59 PM.png-fe13489f8233ddc2a50efe7747f2eb96.ctex"]
+source_file="res://samples/sign/metal_sign.png"
+dest_files=["res://.godot/imported/metal_sign.png-b1725847e14b6105d3ad93bbb6271dda.ctex"]
 
 [params]
 
