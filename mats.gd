@@ -5,7 +5,7 @@ extends CharacterBody3D
 
 signal died(death_position: Vector3)
 
-@export var walk_speed := 4.0
+@export var walk_speed := 5.5
 @export var acceleration := 30.0
 @export var deceleration := 40.0
 @export var jump_height := 0.5
@@ -13,6 +13,8 @@ signal died(death_position: Vector3)
 @export var turn_speed := 14.0
 ## Tallest ledge (curb) Mats walks onto without jumping.
 @export var step_height := 0.3
+## Seconds to pause at death position before respawning and flying camera back.
+@export var respawn_delay := 1.25
 
 ## Leg-swing radians per meter walked.
 const STRIDE_RATE := 2.6
@@ -22,16 +24,30 @@ const BOB_HEIGHT := 0.08
 const POSE_SHARPNESS := 15.0
 const STEP_SMOOTHING := 18.0
 
+## Idle animation tuning.
+const IDLE_BREATH_RATE := 2.4
+const IDLE_BOB_HEIGHT := 0.018
+const IDLE_SCALE_BREATH := 0.015
+const IDLE_ARM_REST_Z := 0.06
+const IDLE_ARM_BREATH_Z := 0.02
+const IDLE_ARM_BREATH_X := 0.025
+const IDLE_SWAY_RATE := 0.8
+const IDLE_SWAY_ANGLE := 0.02
+
 @onready var _visual: Node3D = $Visual
 @onready var _left_leg: Node3D = $Visual/LeftLegPivot
 @onready var _right_leg: Node3D = $Visual/RightLegPivot
 @onready var _left_arm: Node3D = $Visual/LeftArmPivot
 @onready var _right_arm: Node3D = $Visual/RightArmPivot
+@onready var _head: Node3D = $Visual/Head
+@onready var _beanie: Node3D = $Visual/Beanie
+var _beanie_offset := Vector3.ZERO
 
 var _stride_phase := 0.0
 var _squash := 0.0
 ## Vertical offset that eases the model over instant height changes (curbs).
 var _step_offset := 0.0
+var _idle_time := 0.0
 
 var _spawn_transform: Transform3D
 var _is_dead := false
@@ -41,6 +57,8 @@ func _ready() -> void:
 	floor_snap_length = step_height + 0.05
 	_spawn_transform = global_transform
 	add_to_group("player")
+	if _head and _beanie:
+		_beanie_offset = _beanie.position - _head.position
 
 func _physics_process(delta: float) -> void:
 	if _is_dead:
@@ -88,14 +106,20 @@ func die() -> void:
 	
 	_visual.visible = false
 	
-	await get_tree().create_timer(0.45).timeout
+	await get_tree().create_timer(respawn_delay).timeout
 	
 	global_transform = _spawn_transform
 	velocity = Vector3.ZERO
 	_stride_phase = 0.0
 	_squash = 0.0
 	_step_offset = 0.0
+	_idle_time = 0.0
 	_visual.rotation.y = PI
+	_visual.rotation.z = 0.0
+	if _head and _beanie:
+		_head.rotation = Vector3.ZERO
+		_beanie.rotation = Vector3.ZERO
+		_beanie.position = _head.position + _beanie_offset
 	_visual.visible = true
 	_is_dead = false
 
@@ -119,28 +143,85 @@ func _try_step_up(motion: Vector3) -> void:
 func _animate(delta: float) -> void:
 	var speed := Vector2(velocity.x, velocity.z).length()
 	var walk_blend := clampf(speed / walk_speed, 0.0, 1.0)
+	var on_floor := is_on_floor()
+	var idle_blend := (1.0 - walk_blend) if on_floor else 0.0
+
+	_idle_time += delta
 	_stride_phase = fmod(_stride_phase + speed * STRIDE_RATE * delta, TAU)
 	var swing := sin(_stride_phase)
+	var breath := sin(_idle_time * IDLE_BREATH_RATE)
+	var sway := sin(_idle_time * IDLE_SWAY_RATE)
 
+	# Leg targets
 	var leg_x := swing * LEG_SWING * walk_blend
-	var arm_x := -swing * ARM_SWING * walk_blend
-	var arm_z := 0.0
-	var bob := absf(swing) * BOB_HEIGHT * walk_blend
-	if not is_on_floor():
+	var idle_leg_l := maxf(0.0, sway) * 0.04 * idle_blend
+	var idle_leg_r := maxf(0.0, -sway) * 0.04 * idle_blend
+	var target_left_leg_x := leg_x + idle_leg_l
+	var target_right_leg_x := -leg_x + idle_leg_r
+
+	# Arm targets
+	var walk_arm_x := -swing * ARM_SWING * walk_blend
+	var idle_arm_x := (0.02 + cos(_idle_time * IDLE_BREATH_RATE) * IDLE_ARM_BREATH_X) * idle_blend
+	var idle_arm_z := (IDLE_ARM_REST_Z + breath * IDLE_ARM_BREATH_Z) * idle_blend
+	var target_left_arm_x := walk_arm_x + idle_arm_x
+	var target_right_arm_x := -walk_arm_x + idle_arm_x
+	var target_left_arm_z := idle_arm_z
+	var target_right_arm_z := -idle_arm_z
+
+	# Vertical bob
+	var walk_bob := absf(swing) * BOB_HEIGHT * walk_blend
+	var idle_bob := breath * IDLE_BOB_HEIGHT * idle_blend
+	var total_bob := walk_bob + idle_bob
+
+	if not on_floor:
 		# Mid-hop: legs split, arms flung out.
-		leg_x = 0.45
-		arm_x = 0.0
-		arm_z = 0.7
-		bob = 0.0
+		target_left_leg_x = 0.45
+		target_right_leg_x = -0.45
+		target_left_arm_x = 0.0
+		target_right_arm_x = 0.0
+		target_left_arm_z = 0.7
+		target_right_arm_z = -0.7
+		total_bob = 0.0
 
 	var weight := 1.0 - exp(-POSE_SHARPNESS * delta)
-	_left_leg.rotation.x = lerpf(_left_leg.rotation.x, leg_x, weight)
-	_right_leg.rotation.x = lerpf(_right_leg.rotation.x, -leg_x, weight)
-	_left_arm.rotation.x = lerpf(_left_arm.rotation.x, arm_x, weight)
-	_right_arm.rotation.x = lerpf(_right_arm.rotation.x, -arm_x, weight)
-	_left_arm.rotation.z = lerpf(_left_arm.rotation.z, arm_z, weight)
-	_right_arm.rotation.z = lerpf(_right_arm.rotation.z, -arm_z, weight)
+	_left_leg.rotation.x = lerpf(_left_leg.rotation.x, target_left_leg_x, weight)
+	_right_leg.rotation.x = lerpf(_right_leg.rotation.x, target_right_leg_x, weight)
+	_left_arm.rotation.x = lerpf(_left_arm.rotation.x, target_left_arm_x, weight)
+	_right_arm.rotation.x = lerpf(_right_arm.rotation.x, target_right_arm_x, weight)
+	_left_arm.rotation.z = lerpf(_left_arm.rotation.z, target_left_arm_z, weight)
+	_right_arm.rotation.z = lerpf(_right_arm.rotation.z, target_right_arm_z, weight)
 
+	# Body lateral sway (subtle weight shift)
+	var target_sway_z := sway * IDLE_SWAY_ANGLE * idle_blend
+	_visual.rotation.z = lerpf(_visual.rotation.z, target_sway_z, weight)
+
+	# Head glance and breathing nod
+	if _head and _beanie:
+		var look_cycle := fmod(_idle_time, 9.0)
+		var head_yaw := 0.0
+		if look_cycle > 2.5 and look_cycle < 4.5:
+			var p := (look_cycle - 2.5) / 2.0
+			head_yaw = sin(p * PI) * 0.35
+		elif look_cycle > 6.0 and look_cycle < 8.0:
+			var p := (look_cycle - 6.0) / 2.0
+			head_yaw = -sin(p * PI) * 0.35
+		head_yaw *= idle_blend
+
+		var head_pitch := (breath * 0.02) * idle_blend
+		var head_roll := head_yaw * 0.15
+
+		_head.rotation.y = lerpf(_head.rotation.y, head_yaw, weight)
+		_head.rotation.x = lerpf(_head.rotation.x, head_pitch, weight)
+		_head.rotation.z = lerpf(_head.rotation.z, head_roll, weight)
+		_beanie.transform.basis = _head.transform.basis
+		_beanie.position = _head.position + _head.transform.basis * _beanie_offset
+
+	# Breathing scale + landing squash
 	_squash = move_toward(_squash, 0.0, 6.0 * delta)
-	_visual.scale = Vector3(1.0 + 0.15 * _squash, 1.0 - 0.2 * _squash, 1.0 + 0.15 * _squash)
-	_visual.position.y = bob + _step_offset
+	var breath_scale_y := 1.0 + IDLE_SCALE_BREATH * breath * idle_blend
+	var breath_scale_xz := 1.0 - (IDLE_SCALE_BREATH * 0.5) * breath * idle_blend
+	var sx := (1.0 + 0.15 * _squash) * breath_scale_xz
+	var sy := (1.0 - 0.2 * _squash) * breath_scale_y
+	var sz := (1.0 + 0.15 * _squash) * breath_scale_xz
+	_visual.scale = Vector3(sx, sy, sz)
+	_visual.position.y = total_bob + _step_offset

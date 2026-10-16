@@ -223,19 +223,19 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2, 1.25, 0)
 mesh = SubResource("Mesh_SedanCabin")
 
 [node name="Wheel_-1.3_0.95" type="MeshInstance3D" parent="Visuals/Sedan"]
-transform = Transform3D(6.12323e-17, -1, 0, 1, 6.12323e-17, 0, 0, 0, 1, -1.3, 0.35, 0.95)
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -1.3, 0.35, 0.95)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="Wheel_-1.3_-0.95" type="MeshInstance3D" parent="Visuals/Sedan"]
-transform = Transform3D(6.12323e-17, -1, 0, 1, 6.12323e-17, 0, 0, 0, 1, -1.3, 0.35, -0.95)
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -1.3, 0.35, -0.95)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="Wheel_1.3_0.95" type="MeshInstance3D" parent="Visuals/Sedan"]
-transform = Transform3D(6.12323e-17, -1, 0, 1, 6.12323e-17, 0, 0, 0, 1, 1.3, 0.35, 0.95)
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1.3, 0.35, 0.95)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="Wheel_1.3_-0.95" type="MeshInstance3D" parent="Visuals/Sedan"]
-transform = Transform3D(6.12323e-17, -1, 0, 1, 6.12323e-17, 0, 0, 0, 1, 1.3, 0.35, -0.95)
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1.3, 0.35, -0.95)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="HeadlightL" type="MeshInstance3D" parent="Visuals/Sedan"]
@@ -266,19 +266,19 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.1, 1.55, 0)
 mesh = SubResource("Mesh_SUVCabin")
 
 [node name="Wheel_-1.3_0.95" type="MeshInstance3D" parent="Visuals/SUV"]
-transform = Transform3D(6.12323e-17, -1, 0, 1, 6.12323e-17, 0, 0, 0, 1, -1.3, 0.35, 0.95)
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -1.3, 0.35, 0.95)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="Wheel_-1.3_-0.95" type="MeshInstance3D" parent="Visuals/SUV"]
-transform = Transform3D(6.12323e-17, -1, 0, 1, 6.12323e-17, 0, 0, 0, 1, -1.3, 0.35, -0.95)
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -1.3, 0.35, -0.95)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="Wheel_1.3_0.95" type="MeshInstance3D" parent="Visuals/SUV"]
-transform = Transform3D(6.12323e-17, -1, 0, 1, 6.12323e-17, 0, 0, 0, 1, 1.3, 0.35, 0.95)
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1.3, 0.35, 0.95)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="Wheel_1.3_-0.95" type="MeshInstance3D" parent="Visuals/SUV"]
-transform = Transform3D(6.12323e-17, -1, 0, 1, 6.12323e-17, 0, 0, 0, 1, 1.3, 0.35, -0.95)
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1.3, 0.35, -0.95)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="HeadlightL" type="MeshInstance3D" parent="Visuals/SUV"]
@@ -313,19 +313,19 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2, 1.68, 0)
 mesh = SubResource("Mesh_TaxiSign")
 
 [node name="Wheel_-1.3_0.95" type="MeshInstance3D" parent="Visuals/Taxi"]
-transform = Transform3D(6.12323e-17, -1, 0, 1, 6.12323e-17, 0, 0, 0, 1, -1.3, 0.35, 0.95)
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -1.3, 0.35, 0.95)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="Wheel_-1.3_-0.95" type="MeshInstance3D" parent="Visuals/Taxi"]
-transform = Transform3D(6.12323e-17, -1, 0, 1, 6.12323e-17, 0, 0, 0, 1, -1.3, 0.35, -0.95)
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -1.3, 0.35, -0.95)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="Wheel_1.3_0.95" type="MeshInstance3D" parent="Visuals/Taxi"]
-transform = Transform3D(6.12323e-17, -1, 0, 1, 6.12323e-17, 0, 0, 0, 1, 1.3, 0.35, 0.95)
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1.3, 0.35, 0.95)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="Wheel_1.3_-0.95" type="MeshInstance3D" parent="Visuals/Taxi"]
-transform = Transform3D(6.12323e-17, -1, 0, 1, 6.12323e-17, 0, 0, 0, 1, 1.3, 0.35, -0.95)
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1.3, 0.35, -0.95)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="HeadlightL" type="MeshInstance3D" parent="Visuals/Taxi"]
@@ -356,19 +356,19 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4, 1.5, 0)
 mesh = SubResource("Mesh_TruckCabin")
 
 [node name="Wheel_-1.3_0.95" type="MeshInstance3D" parent="Visuals/Truck"]
-transform = Transform3D(6.12323e-17, -1, 0, 1, 6.12323e-17, 0, 0, 0, 1, -1.3, 0.35, 0.95)
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -1.3, 0.35, 0.95)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="Wheel_-1.3_-0.95" type="MeshInstance3D" parent="Visuals/Truck"]
-transform = Transform3D(6.12323e-17, -1, 0, 1, 6.12323e-17, 0, 0, 0, 1, -1.3, 0.35, -0.95)
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -1.3, 0.35, -0.95)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="Wheel_1.3_0.95" type="MeshInstance3D" parent="Visuals/Truck"]
-transform = Transform3D(6.12323e-17, -1, 0, 1, 6.12323e-17, 0, 0, 0, 1, 1.3, 0.35, 0.95)
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1.3, 0.35, 0.95)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="Wheel_1.3_-0.95" type="MeshInstance3D" parent="Visuals/Truck"]
-transform = Transform3D(6.12323e-17, -1, 0, 1, 6.12323e-17, 0, 0, 0, 1, 1.3, 0.35, -0.95)
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1.3, 0.35, -0.95)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="HeadlightL" type="MeshInstance3D" parent="Visuals/Truck"]
@@ -435,19 +435,19 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.46, 0.6, 0)
 mesh = SubResource("Mesh_PickupBumper")
 
 [node name="Wheel_-1.4_1.0" type="MeshInstance3D" parent="Visuals/Pickup"]
-transform = Transform3D(6.12323e-17, -1, 0, 1, 6.12323e-17, 0, 0, 0, 1, -1.4, 0.38, 1)
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -1.4, 0.38, 1)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="Wheel_-1.4_-1.0" type="MeshInstance3D" parent="Visuals/Pickup"]
-transform = Transform3D(6.12323e-17, -1, 0, 1, 6.12323e-17, 0, 0, 0, 1, -1.4, 0.38, -1)
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -1.4, 0.38, -1)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="Wheel_1.4_1.0" type="MeshInstance3D" parent="Visuals/Pickup"]
-transform = Transform3D(6.12323e-17, -1, 0, 1, 6.12323e-17, 0, 0, 0, 1, 1.4, 0.38, 1)
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1.4, 0.38, 1)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="Wheel_1.4_-1.0" type="MeshInstance3D" parent="Visuals/Pickup"]
-transform = Transform3D(6.12323e-17, -1, 0, 1, 6.12323e-17, 0, 0, 0, 1, 1.4, 0.38, -1)
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1.4, 0.38, -1)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="HeadlightL" type="MeshInstance3D" parent="Visuals/Pickup"]
@@ -510,19 +510,19 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.41, 2.05, 0)
 mesh = SubResource("Mesh_BusRearWindow")
 
 [node name="Wheel_FrontL" type="MeshInstance3D" parent="Visuals/Bus"]
-transform = Transform3D(6.12323e-17, -1, 0, 1, 6.12323e-17, 0, 0, 0, 1, 2.6, 0.42, 1.15)
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 2.6, 0.42, 1.15)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="Wheel_FrontR" type="MeshInstance3D" parent="Visuals/Bus"]
-transform = Transform3D(6.12323e-17, -1, 0, 1, 6.12323e-17, 0, 0, 0, 1, 2.6, 0.42, -1.15)
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 2.6, 0.42, -1.15)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="Wheel_RearL" type="MeshInstance3D" parent="Visuals/Bus"]
-transform = Transform3D(6.12323e-17, -1, 0, 1, 6.12323e-17, 0, 0, 0, 1, -2.4, 0.42, 1.15)
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -2.4, 0.42, 1.15)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="Wheel_RearR" type="MeshInstance3D" parent="Visuals/Bus"]
-transform = Transform3D(6.12323e-17, -1, 0, 1, 6.12323e-17, 0, 0, 0, 1, -2.4, 0.42, -1.15)
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -2.4, 0.42, -1.15)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="HeadlightL" type="MeshInstance3D" parent="Visuals/Bus"]

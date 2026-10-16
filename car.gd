@@ -23,6 +23,17 @@ var lane_z: float = 0.0
 var lane_length: float = 140.0
 var start_x: float = -70.0
 
+const WHEEL_RADIUS := 0.35
+const BASE_WHEEL_BASIS := Basis(Vector3(1, 0, 0), Vector3(0, 0, 1), Vector3(0, -1, 0))
+
+static var _spoke_mesh: BoxMesh
+static var _hub_mesh: CylinderMesh
+static var _chrome_mat: StandardMaterial3D
+
+var wheel_rotation: float = 0.0
+var _wheels_initialized: bool = false
+var _active_wheels: Array[Node3D] = []
+
 @onready var _sedan: Node3D = $Visuals/Sedan
 @onready var _suv: Node3D = $Visuals/SUV
 @onready var _taxi: Node3D = $Visuals/Taxi
@@ -33,7 +44,51 @@ var start_x: float = -70.0
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
+	_setup_wheels()
 	_apply_visual_type()
+
+
+static func _init_wheel_resources() -> void:
+	if _spoke_mesh != null:
+		return
+	
+	_chrome_mat = StandardMaterial3D.new()
+	_chrome_mat.albedo_color = Color(0.85, 0.86, 0.88, 1.0)
+	_chrome_mat.metallic = 0.85
+	_chrome_mat.roughness = 0.25
+	
+	_spoke_mesh = BoxMesh.new()
+	_spoke_mesh.size = Vector3(0.50, 0.32, 0.08)
+	_spoke_mesh.material = _chrome_mat
+	
+	_hub_mesh = CylinderMesh.new()
+	_hub_mesh.top_radius = 0.12
+	_hub_mesh.bottom_radius = 0.12
+	_hub_mesh.height = 0.33
+	_hub_mesh.material = _chrome_mat
+
+
+func _setup_wheels() -> void:
+	if _wheels_initialized:
+		return
+	_wheels_initialized = true
+	_init_wheel_resources()
+	
+	var visuals := get_node_or_null("Visuals")
+	if not visuals:
+		return
+	for car_model in visuals.get_children():
+		for child in car_model.get_children():
+			if child is Node3D and child.name.begins_with("Wheel"):
+				var spoke := MeshInstance3D.new()
+				spoke.mesh = _spoke_mesh
+				spoke.name = "Spoke"
+				child.add_child(spoke)
+				
+				var hub := MeshInstance3D.new()
+				hub.mesh = _hub_mesh
+				hub.name = "Hub"
+				child.add_child(hub)
 
 
 func setup(p_lane_id: int, p_lane_z: float, p_dir: float, p_start_x: float, p_lane_len: float, p_speed: float, p_type: CarType) -> void:
@@ -73,6 +128,27 @@ func _apply_visual_type() -> void:
 		bus.visible = (car_type == CarType.BUS)
 	
 	_update_dimensions()
+	
+	_setup_wheels()
+	_active_wheels.clear()
+	var active_node: Node3D = null
+	match car_type:
+		CarType.SEDAN:
+			active_node = sedan
+		CarType.SUV:
+			active_node = suv
+		CarType.TAXI:
+			active_node = taxi
+		CarType.TRUCK:
+			active_node = truck
+		CarType.PICKUP:
+			active_node = pickup
+		CarType.BUS:
+			active_node = bus
+	if active_node:
+		for child in active_node.get_children():
+			if child is Node3D and child.name.begins_with("Wheel"):
+				_active_wheels.append(child)
 
 
 func _update_dimensions() -> void:
@@ -122,7 +198,12 @@ func update_presentation() -> void:
 	var current_x := start_x + (direction * lane_distance)
 	global_position = Vector3(current_x, 0.05, lane_z)
 	rotation.y = 0.0 if direction > 0.0 else PI
-
+	
+	wheel_rotation = fmod(-lane_distance / WHEEL_RADIUS, TAU)
+	var wheel_rot := Basis(Vector3.UP, wheel_rotation)
+	var wheel_basis := BASE_WHEEL_BASIS * wheel_rot
+	for wheel in _active_wheels:
+		wheel.transform.basis = wheel_basis
 
 func _on_body_entered(body: Node3D) -> void:
 	_check_hit(body)
