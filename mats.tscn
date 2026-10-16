@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene load_steps=22 format=3]
 
 [ext_resource type="Script" path="res://mats.gd" id="1_mats"]
 
@@ -34,6 +34,32 @@ roughness = 0.6
 material = SubResource("Mat_MatsSkin")
 size = Vector3(0.48, 0.48, 0.48)
 
+[sub_resource type="StandardMaterial3D" id="Mat_MatsFeatures"]
+albedo_color = Color(0.12, 0.07, 0.06, 1)
+roughness = 0.75
+
+[sub_resource type="SphereMesh" id="Mesh_MatsEye"]
+material = SubResource("Mat_MatsFeatures")
+radius = 0.045
+height = 0.11
+radial_segments = 16
+rings = 8
+
+[sub_resource type="StandardMaterial3D" id="Mat_MatsEyeHighlight"]
+albedo_color = Color(1, 0.97, 0.9, 1)
+roughness = 0.45
+
+[sub_resource type="SphereMesh" id="Mesh_MatsEyeHighlight"]
+material = SubResource("Mat_MatsEyeHighlight")
+radius = 0.012
+height = 0.024
+radial_segments = 12
+rings = 6
+
+[sub_resource type="BoxMesh" id="Mesh_MatsSmile"]
+material = SubResource("Mat_MatsFeatures")
+size = Vector3(0.075, 0.018, 0.02)
+
 [sub_resource type="BoxMesh" id="Mesh_MatsHand"]
 material = SubResource("Mat_MatsSkin")
 size = Vector3(0.17, 0.15, 0.19)
@@ -42,6 +68,14 @@ size = Vector3(0.17, 0.15, 0.19)
 albedo_color = Color(0.95, 0.8, 0.1, 1)
 roughness = 0.8
 
+
+[sub_resource type="StandardMaterial3D" id="Mat_MatsHair"]
+albedo_color = Color(0.29, 0.16, 0.08, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="Mesh_MatsHair"]
+material = SubResource("Mat_MatsHair")
+size = Vector3(0.54, 0.16, 0.54)
 [sub_resource type="BoxMesh" id="Mesh_MatsBeanie"]
 material = SubResource("Mat_MatsBeanie")
 size = Vector3(0.52, 0.25, 0.52)
@@ -104,12 +138,44 @@ mesh = SubResource("Mesh_MatsSleeve")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.64, 0)
 mesh = SubResource("Mesh_MatsHand")
 
-[node name="Head" type="MeshInstance3D" parent="Visual"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.55, 0)
+[node name="Head" type="Node3D" parent="Visual"]
+position = Vector3(0, 1.65, 0)
+
+[node name="Face" type="MeshInstance3D" parent="Visual/Head"]
 mesh = SubResource("Mesh_MatsHead")
 
-[node name="Beanie" type="MeshInstance3D" parent="Visual"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.82, 0)
+[node name="LeftEye" type="MeshInstance3D" parent="Visual/Head"]
+position = Vector3(0.11, 0.055, 0.235)
+mesh = SubResource("Mesh_MatsEye")
+
+[node name="Highlight" type="MeshInstance3D" parent="Visual/Head/LeftEye"]
+position = Vector3(-0.014, 0.018, 0.043)
+mesh = SubResource("Mesh_MatsEyeHighlight")
+
+[node name="RightEye" type="MeshInstance3D" parent="Visual/Head"]
+position = Vector3(-0.11, 0.055, 0.235)
+mesh = SubResource("Mesh_MatsEye")
+
+[node name="Highlight" type="MeshInstance3D" parent="Visual/Head/RightEye"]
+position = Vector3(-0.014, 0.018, 0.043)
+mesh = SubResource("Mesh_MatsEyeHighlight")
+
+[node name="LeftSmile" type="MeshInstance3D" parent="Visual/Head"]
+position = Vector3(-0.033, -0.105, 0.251)
+rotation = Vector3(0, 0, -0.35)
+mesh = SubResource("Mesh_MatsSmile")
+
+[node name="RightSmile" type="MeshInstance3D" parent="Visual/Head"]
+position = Vector3(0.033, -0.105, 0.251)
+rotation = Vector3(0, 0, 0.35)
+mesh = SubResource("Mesh_MatsSmile")
+
+[node name="Hair" type="MeshInstance3D" parent="Visual/Head"]
+position = Vector3(0, 0.27, 0)
+mesh = SubResource("Mesh_MatsHair")
+
+[node name="Hat" type="MeshInstance3D" parent="Visual/Head"]
+position = Vector3(0, 0.27, 0)
 mesh = SubResource("Mesh_MatsBeanie")
 
 [node name="Backpack" type="MeshInstance3D" parent="Visual"]

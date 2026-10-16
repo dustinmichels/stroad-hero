@@ -1,5 +1,7 @@
 [gd_scene format=3]
 
+[ext_resource type="FontFile" path="res://fonts/ArchivoBlack-Regular.ttf" id="1_archivo"]
+
 [sub_resource type="StandardMaterial3D" id="Mat_TacoWallTan"]
 albedo_color = Color(0.83, 0.70, 0.56, 1)
 roughness = 0.85
@@ -268,10 +270,11 @@ mesh = SubResource("Mesh_ArchSignPlaque")
 [node name="SignName" type="Label3D" parent="Building/MainArchPortico"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.0, 0.74)
 pixel_size = 0.012
-modulate = Color(0.26, 0.08, 0.38, 1)
-outline_modulate = Color(0.9, 0.15, 0.15, 1)
+modulate = Color(0.22, 0.1, 0.45, 1)
+outline_modulate = Color(1, 1, 1, 1)
 text = "TACO HELL"
-font_size = 36
+font = ExtResource("1_archivo")
+font_size = 32
 outline_size = 6
 
 [node name="BellIcon" type="Label3D" parent="Building/MainArchPortico"]
@@ -317,11 +320,12 @@ mesh = SubResource("Mesh_Arch2Crown")
 [node name="Arch2Label" type="Label3D" parent="Building/SecondaryArch"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.6, 0.48)
 pixel_size = 0.011
-modulate = Color(0.26, 0.08, 0.38, 1)
+modulate = Color(0.22, 0.1, 0.45, 1)
 outline_modulate = Color(1, 1, 1, 1)
 text = "TACO HELL"
+font = ExtResource("1_archivo")
 font_size = 26
-outline_size = 5
+outline_size = 6
 
 [node name="Arch2Window" type="MeshInstance3D" parent="Building/SecondaryArch"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3, 0)
@@ -345,6 +349,7 @@ pixel_size = 0.012
 modulate = Color(1, 0.2, 0.1, 1)
 outline_modulate = Color(0.4, 0, 0, 1)
 text = "OPEN"
+font = ExtResource("1_archivo")
 font_size = 36
 outline_size = 8
 
@@ -375,9 +380,10 @@ outline_size = 7
 [node name="SignTaco" type="Label3D" parent="RoadsideSign"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.9, 0.35)
 pixel_size = 0.015
-modulate = Color(0.26, 0.08, 0.38, 1)
+modulate = Color(0.22, 0.1, 0.45, 1)
 outline_modulate = Color(1, 1, 1, 1)
 text = "TACO"
+font = ExtResource("1_archivo")
 font_size = 46
 outline_size = 7
 
@@ -387,6 +393,7 @@ pixel_size = 0.016
 modulate = Color(0.9, 0.12, 0.12, 1)
 outline_modulate = Color(0.26, 0.08, 0.38, 1)
 text = "HELL"
+font = ExtResource("1_archivo")
 font_size = 50
 outline_size = 8
 
@@ -400,5 +407,6 @@ pixel_size = 0.011
 modulate = Color(1, 1, 1, 1)
 outline_modulate = Color(0.26, 0.08, 0.38, 1)
 text = "Drive Thru ➔"
-font_size = 32
+font = ExtResource("1_archivo")
+font_size = 28
 outline_size = 6

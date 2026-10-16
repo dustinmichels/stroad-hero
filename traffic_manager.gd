@@ -48,11 +48,50 @@ class Lane:
 	func forward() -> Vector3:
 		return Vector3(direction, 0, 0)
 
+	const LANE_WIDTH := 3.75
+	const MARGIN := 1.0
+
+	func overlaps(car) -> bool:
+		if car == null or not is_instance_valid(car):
+			return false
+		var pos: Vector3 = car.global_position
+		var half_l: float = car.car_length * 0.5
+		var half_w: float = car.car_width * 0.5
+		var h: Vector3 = (
+			car.get_heading() if car.has_method("get_heading") else Vector3(car.direction, 0, 0)
+		)
+		var w := Vector3(-h.z, 0.0, h.x)
+
+		var c1 := pos + h * half_l + w * half_w
+		var c2 := pos + h * half_l - w * half_w
+		var c3 := pos - h * half_l + w * half_w
+		var c4 := pos - h * half_l - w * half_w
+
+		var min_cz := minf(minf(c1.z, c2.z), minf(c3.z, c4.z))
+		var max_cz := maxf(maxf(c1.z, c2.z), maxf(c3.z, c4.z))
+
+		var lane_half_w := LANE_WIDTH * 0.5 + MARGIN
+		if max_cz < (z - lane_half_w) or min_cz > (z + lane_half_w):
+			return false
+
+		var min_cx := minf(minf(c1.x, c2.x), minf(c3.x, c4.x))
+		var max_cx := maxf(maxf(c1.x, c2.x), maxf(c3.x, c4.x))
+
+		var x_end := start_x + direction * length
+		var lane_min_x := minf(start_x, x_end) - MARGIN
+		var lane_max_x := maxf(start_x, x_end) + MARGIN
+
+		if max_cx < lane_min_x or min_cx > lane_max_x:
+			return false
+
+		return true
+
 
 var lanes: Array[Lane] = []
 var lot: ParkingLot = null
 var lot_cars: Array[Car] = []
 var debug_overlay: Node3D = null
+var _physics_tick_count: int = 0
 
 var stats: Dictionary = {
 	"cars_spawned": 0,
@@ -72,6 +111,8 @@ var stats: Dictionary = {
 const P_ERRAND := 0.3
 const DECISION_D := 18.0
 const TURN_D := 53.0
+const V_TURN := 5.0
+const A_COMFORT := 3.0
 const MIN_SPAWN_HEADWAY := 18.0  # meters needed before spawning another car in lane
 const SAFE_FOLLOWING_GAP := 8.0  # meters
 const BRAKE_ACCELERATION := 25.0
@@ -153,6 +194,24 @@ func _physics_process(delta: float) -> void:
 		_update_lane_spawning(lane, delta)
 	_update_lot_cars(delta)
 
+	_physics_tick_count += 1
+	if _physics_tick_count % 60 == 0 and lot != null:
+		var free_count := 0
+		var reserved_count := 0
+		var occupied_count := 0
+		for spot in lot.spots:
+			match spot.state:
+				ParkingSpot.State.FREE:
+					free_count += 1
+				ParkingSpot.State.RESERVED:
+					reserved_count += 1
+				ParkingSpot.State.OCCUPIED:
+					occupied_count += 1
+		stats["spots_free"] = free_count
+		stats["spots_reserved"] = max(stats["spots_reserved"], reserved_count)
+		stats["spots_occupied"] = max(stats["spots_occupied"], occupied_count)
+		stats["leaked"] = max(stats["leaked"], lot.check_invariants())
+
 
 func _update_lot_cars(delta: float) -> void:
 	var surviving_cars: Array[Car] = []
@@ -167,21 +226,41 @@ func _update_lot_cars(delta: float) -> void:
 				if remaining <= 4.0:
 					target_speed = V_PARK
 			car.desired_speed = target_speed
-			car.speed = move_toward(car.speed, target_speed, BRAKE_ACCELERATION * delta)
+			var accel: float = (
+				BRAKE_ACCELERATION if car.speed > target_speed else MOTOR_ACCELERATION
+			)
+			car.speed = move_toward(car.speed, target_speed, accel * delta)
 			var arrived := car.advance_path(delta)
 			if arrived:
 				car.speed = 0.0
 				car.desired_speed = 0.0
+				if car.spot != null:
+					if lot != null:
+						lot.occupy(car.spot)
+					elif car.spot.lot != null:
+						car.spot.lot.occupy(car.spot)
 				car.state = CarScript.State.PARKED
+				if car.errand != null:
+					car.dwell_left = car.errand.dwell_time
+				else:
+					car.dwell_left = randf_range(5.0, 40.0)
 				car.update_presentation()
 				car._update_blocker_layer()
-				if car.spot != null and lot != null:
-					lot.occupy(car.spot)
 			surviving_cars.append(car)
 		elif car.state == CarScript.State.PARKED:
-			if car.dwell_left > 0.0:
-				car.dwell_left -= delta
-				if car.dwell_left <= 0.0:
+			car.dwell_left -= delta
+			if car.dwell_left <= 0.0:
+				var rev_route: Curve3D = null
+				if lot != null and car.spot != null:
+					rev_route = lot.reverse_route(car.spot)
+				elif car.spot != null and car.spot.lot != null:
+					rev_route = car.spot.lot.reverse_route(car.spot)
+				if rev_route != null:
+					car.state = CarScript.State.REVERSING_OUT
+					car.follow_path(rev_route, true)
+					car.speed = -V_PARK
+					car.desired_speed = -V_PARK
+				else:
 					if car.spot != null:
 						if lot != null:
 							lot.release(car.spot)
@@ -189,6 +268,20 @@ func _update_lot_cars(delta: float) -> void:
 							car.spot.lot.release(car.spot)
 					car.queue_free()
 					continue
+			surviving_cars.append(car)
+		elif car.state == CarScript.State.REVERSING_OUT:
+			var arrived := car.advance_path(delta)
+			if arrived:
+				car.speed = 0.0
+				car.desired_speed = 0.0
+				if car.spot != null:
+					if lot != null:
+						lot.release(car.spot)
+					elif car.spot.lot != null:
+						car.spot.lot.release(car.spot)
+				car.state = CarScript.State.TO_EXIT
+				car.update_presentation()
+				car._update_blocker_layer()
 			surviving_cars.append(car)
 		else:
 			surviving_cars.append(car)
@@ -263,11 +356,25 @@ func _spawn_car_at(lane: Lane, initial_distance: float) -> Node:
 
 
 func _update_lane_traffic(lane: Lane, delta: float) -> void:
-	# Clean up despawned / invalid cars
+	# Register any overlapping PATH cars from lot_cars
+	for car in lot_cars:
+		if is_instance_valid(car) and car.motion == Car.Motion.PATH and car.lane_id == lane.id:
+			if lane.overlaps(car) and not lane.cars.has(car):
+				lane.cars.append(car)
+
+	# Clean up despawned / invalid cars and PATH cars that no longer overlap
 	var valid_cars: Array = []
 	for car in lane.cars:
-		if is_instance_valid(car):
-			valid_cars.append(car)
+		if not is_instance_valid(car):
+			continue
+		if car.motion == Car.Motion.PATH:
+			if not lane.overlaps(car):
+				continue
+			car.lane_distance = lane.distance_at(car.global_position.x)
+			car.lane_speed = maxf(0.0, car.speed * car.get_heading().dot(lane.forward()))
+		else:
+			car.lane_speed = car.speed
+		valid_cars.append(car)
 
 	# Sort cars by distance descending (farthest ahead first)
 	valid_cars.sort_custom(func(a, b) -> bool: return a.lane_distance > b.lane_distance)
@@ -275,6 +382,9 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 	var surviving_cars: Array = []
 	for i in range(valid_cars.size()):
 		var car = valid_cars[i]
+		if car.motion == Car.Motion.PATH:
+			surviving_cars.append(car)
+			continue
 		# Decision point for errand cars
 		if (
 			car.state == Car.State.CRUISING
@@ -290,6 +400,7 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 					stats["errands_dropped_lot_full"] += 1
 
 		# Simple car-following (safe distance to lead car)
+		var following_target: float = car.desired_speed
 		if i > 0:
 			var lead_car = valid_cars[i - 1]
 			var gap: float = (
@@ -298,16 +409,29 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 				- (0.5 * (lead_car.car_length + car.car_length))
 			)
 			if gap < SAFE_FOLLOWING_GAP:
-				var target_speed := minf(
-					car.desired_speed, lead_car.speed * clampf(gap / SAFE_FOLLOWING_GAP, 0.1, 1.0)
-				)
-				car.speed = move_toward(car.speed, target_speed, BRAKE_ACCELERATION * delta)
-			else:
-				car.speed = move_toward(car.speed, car.desired_speed, MOTOR_ACCELERATION * delta)
-		else:
-			car.speed = move_toward(car.speed, car.desired_speed, MOTOR_ACCELERATION * delta)
+				following_target = lead_car.lane_speed * clampf(gap / SAFE_FOLLOWING_GAP, 0.1, 1.0)
+		var target_speed: float = maxf(0.0, minf(car.desired_speed, following_target))
+		if car.state == Car.State.APPROACHING:
+			var approach_dist: float = maxf(0.0, TURN_D - car.lane_distance)
+			var approach_target: float = sqrt(V_TURN * V_TURN + 2.0 * A_COMFORT * approach_dist)
+			target_speed = minf(target_speed, approach_target)
 
+		var accel: float = BRAKE_ACCELERATION if car.speed > target_speed else MOTOR_ACCELERATION
+		car.speed = move_toward(car.speed, target_speed, accel * delta)
 		car.advance_simulation(delta)
+
+		if car.state == Car.State.APPROACHING and car.lane_distance >= TURN_D:
+			car.motion = Car.Motion.PATH
+			if lot != null and car.spot != null:
+				car.follow_path(lot.entry_route(car.spot))
+			car.state = Car.State.TO_SPOT
+			if not lot_cars.has(car):
+				lot_cars.append(car)
+			if lane.overlaps(car):
+				car.lane_distance = lane.distance_at(car.global_position.x)
+				car.lane_speed = maxf(0.0, car.speed * car.get_heading().dot(lane.forward()))
+				surviving_cars.append(car)
+			continue
 
 		# Check if reached end of lane
 		if car.lane_distance >= lane.length:
@@ -319,28 +443,15 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 
 
 func _exit_tree() -> void:
-	var total_live: int = 0
+	var counted := {}
 	for lane in lanes:
-		total_live += lane.cars.size()
+		for car in lane.cars:
+			if is_instance_valid(car):
+				counted[car.get_instance_id()] = true
 	for car in lot_cars:
 		if is_instance_valid(car):
-			total_live += 1
-	stats["live_cars"] = total_live
+			counted[car.get_instance_id()] = true
+	stats["live_cars"] = counted.size()
 	if lot != null:
 		stats["spots_total"] = lot.spots.size()
-		var free_count := 0
-		var reserved_count := 0
-		var occupied_count := 0
-		for spot in lot.spots:
-			match spot.state:
-				ParkingSpot.State.FREE:
-					free_count += 1
-				ParkingSpot.State.RESERVED:
-					reserved_count += 1
-				ParkingSpot.State.OCCUPIED:
-					occupied_count += 1
-		stats["spots_free"] = free_count
-		stats["spots_reserved"] = reserved_count
-		stats["spots_occupied"] = occupied_count
-		stats["leaked"] = lot.check_invariants()
 	print("TRAFFIC STATS: %s" % JSON.stringify(stats))

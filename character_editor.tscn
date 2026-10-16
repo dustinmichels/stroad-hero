@@ -1,0 +1,291 @@
+[gd_scene load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://character_editor.gd" id="1_editor"]
+[ext_resource type="PackedScene" path="res://mats.tscn" id="2_mats"]
+[ext_resource type="FontFile" path="res://fonts/ArchivoBlack-Regular.ttf" id="3_heading"]
+[ext_resource type="FontFile" path="res://fonts/Fredoka.ttf" id="4_body"]
+
+[sub_resource type="StyleBoxFlat" id="StylePane"]
+bg_color = Color(0.075, 0.09, 0.11, 0.98)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.94, 0.75, 0.12, 1)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+shadow_color = Color(0, 0, 0, 0.55)
+shadow_size = 18
+
+[sub_resource type="StyleBoxFlat" id="StyleChoice"]
+content_margin_left = 20.0
+content_margin_top = 12.0
+content_margin_right = 20.0
+content_margin_bottom = 12.0
+bg_color = Color(0.16, 0.19, 0.22, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.36, 0.4, 0.43, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleChoiceActive"]
+content_margin_left = 20.0
+content_margin_top = 12.0
+content_margin_right = 20.0
+content_margin_bottom = 12.0
+bg_color = Color(0.94, 0.75, 0.12, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.88, 0.38, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleClose"]
+content_margin_left = 14.0
+content_margin_top = 8.0
+content_margin_right = 14.0
+content_margin_bottom = 8.0
+bg_color = Color(0.72, 0.19, 0.17, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="Environment" id="PreviewEnvironment"]
+background_mode = 1
+background_color = Color(0.11, 0.14, 0.16, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.82, 0.86, 0.92, 1)
+ambient_light_energy = 0.9
+
+[sub_resource type="StandardMaterial3D" id="GroundMaterial"]
+albedo_color = Color(0.24, 0.27, 0.28, 1)
+roughness = 0.95
+
+[sub_resource type="CylinderMesh" id="GroundMesh"]
+material = SubResource("GroundMaterial")
+top_radius = 1.25
+bottom_radius = 1.4
+height = 0.18
+
+[node name="CharacterEditor" type="CanvasLayer"]
+process_mode = 3
+layer = 20
+script = ExtResource("1_editor")
+
+[node name="Scrim" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.025, 0.035, 0.045, 0.74)
+mouse_filter = 0
+
+[node name="Pane" type="PanelContainer" parent="."]
+anchors_preset = 0
+anchor_left = 0.57
+anchor_top = 0.045
+anchor_right = 0.97
+anchor_bottom = 0.955
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StylePane")
+
+[node name="Margin" type="MarginContainer" parent="Pane"]
+layout_mode = 2
+theme_override_constants/margin_left = 34
+theme_override_constants/margin_top = 26
+theme_override_constants/margin_right = 34
+theme_override_constants/margin_bottom = 28
+
+[node name="Content" type="VBoxContainer" parent="Pane/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Header" type="HBoxContainer" parent="Pane/Margin/Content"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Pane/Margin/Content/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.96, 0.94, 0.86, 1)
+theme_override_fonts/font = ExtResource("3_heading")
+theme_override_font_sizes/font_size = 38
+text = "Mats' look"
+
+[node name="CloseButton" type="Button" parent="Pane/Margin/Content/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.96, 0.9, 1)
+theme_override_fonts/font = ExtResource("4_body")
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleClose")
+theme_override_styles/hover = SubResource("StyleClose")
+theme_override_styles/pressed = SubResource("StyleClose")
+text = "Done"
+
+[node name="Rule" type="HSeparator" parent="Pane/Margin/Content"]
+layout_mode = 2
+theme_override_colors/separator = Color(0.94, 0.75, 0.12, 0.7)
+
+[node name="Preview" type="SubViewportContainer" parent="Pane/Margin/Content"]
+custom_minimum_size = Vector2(0, 570)
+layout_mode = 2
+size_flags_vertical = 3
+stretch = true
+
+[node name="SubViewport" type="SubViewport" parent="Pane/Margin/Content/Preview"]
+own_world_3d = true
+transparent_bg = true
+handle_input_locally = false
+size = Vector2i(640, 570)
+render_target_update_mode = 4
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="Pane/Margin/Content/Preview/SubViewport"]
+environment = SubResource("PreviewEnvironment")
+
+[node name="KeyLight" type="DirectionalLight3D" parent="Pane/Margin/Content/Preview/SubViewport"]
+rotation_degrees = Vector3(-35, 164, 0)
+light_color = Color(1, 0.96, 0.88, 1)
+light_energy = 1.4
+shadow_enabled = true
+
+[node name="PreviewCamera" type="Camera3D" parent="Pane/Margin/Content/Preview/SubViewport"]
+unique_name_in_owner = true
+position = Vector3(1.25, 1.2, -4.2)
+fov = 31.0
+
+[node name="Ground" type="MeshInstance3D" parent="Pane/Margin/Content/Preview/SubViewport"]
+position = Vector3(0, -0.1, 0)
+mesh = SubResource("GroundMesh")
+
+[node name="PreviewMats" parent="Pane/Margin/Content/Preview/SubViewport" instance=ExtResource("2_mats")]
+unique_name_in_owner = true
+preview_mode = true
+
+[node name="HeadPrevious" type="Button" parent="Pane/Margin/Content/Preview"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 0
+anchor_left = 0.04
+anchor_top = 0.18
+anchor_right = 0.16
+anchor_bottom = 0.32
+focus_mode = 0
+theme_override_colors/font_color = Color(0.08, 0.09, 0.1, 1)
+theme_override_fonts/font = ExtResource("4_body")
+theme_override_font_sizes/font_size = 28
+theme_override_styles/normal = SubResource("StyleChoiceActive")
+theme_override_styles/hover = SubResource("StyleChoiceActive")
+theme_override_styles/pressed = SubResource("StyleChoice")
+text = "◀"
+
+[node name="HeadNext" type="Button" parent="Pane/Margin/Content/Preview"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 0
+anchor_left = 0.84
+anchor_top = 0.18
+anchor_right = 0.96
+anchor_bottom = 0.32
+focus_mode = 0
+theme_override_colors/font_color = Color(0.08, 0.09, 0.1, 1)
+theme_override_fonts/font = ExtResource("4_body")
+theme_override_font_sizes/font_size = 28
+theme_override_styles/normal = SubResource("StyleChoiceActive")
+theme_override_styles/hover = SubResource("StyleChoiceActive")
+theme_override_styles/pressed = SubResource("StyleChoice")
+text = "▶"
+
+[node name="HeadwearValue" type="Label" parent="Pane/Margin/Content/Preview"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 0
+anchor_left = 0.72
+anchor_top = 0.1
+anchor_right = 0.96
+anchor_bottom = 0.17
+theme_override_colors/font_color = Color(0.96, 0.94, 0.86, 1)
+theme_override_fonts/font = ExtResource("4_body")
+theme_override_font_sizes/font_size = 18
+text = "Hat"
+horizontal_alignment = 1
+
+[node name="BackpackPrevious" type="Button" parent="Pane/Margin/Content/Preview"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 0
+anchor_left = 0.04
+anchor_top = 0.5
+anchor_right = 0.16
+anchor_bottom = 0.64
+focus_mode = 0
+theme_override_colors/font_color = Color(0.08, 0.09, 0.1, 1)
+theme_override_fonts/font = ExtResource("4_body")
+theme_override_font_sizes/font_size = 28
+theme_override_styles/normal = SubResource("StyleChoiceActive")
+theme_override_styles/hover = SubResource("StyleChoiceActive")
+theme_override_styles/pressed = SubResource("StyleChoice")
+text = "◀"
+
+[node name="BackpackNext" type="Button" parent="Pane/Margin/Content/Preview"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 0
+anchor_left = 0.84
+anchor_top = 0.5
+anchor_right = 0.96
+anchor_bottom = 0.64
+focus_mode = 0
+theme_override_colors/font_color = Color(0.08, 0.09, 0.1, 1)
+theme_override_fonts/font = ExtResource("4_body")
+theme_override_font_sizes/font_size = 28
+theme_override_styles/normal = SubResource("StyleChoiceActive")
+theme_override_styles/hover = SubResource("StyleChoiceActive")
+theme_override_styles/pressed = SubResource("StyleChoice")
+text = "▶"
+
+[node name="BackpackValue" type="Label" parent="Pane/Margin/Content/Preview"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 0
+anchor_left = 0.72
+anchor_top = 0.65
+anchor_right = 0.96
+anchor_bottom = 0.72
+theme_override_colors/font_color = Color(0.96, 0.94, 0.86, 1)
+theme_override_fonts/font = ExtResource("4_body")
+theme_override_font_sizes/font_size = 18
+text = "Pine"
+horizontal_alignment = 1
+
+[node name="BackpackSwatch" type="ColorRect" parent="Pane/Margin/Content/Preview"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 0
+anchor_left = 0.88
+anchor_top = 0.66
+anchor_right = 0.92
+anchor_bottom = 0.705
+mouse_filter = 2
+color = Color(0.2, 0.55, 0.3, 1)
+
+[node name="Shortcut" type="Label" parent="Pane/Margin/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.68, 0.7, 1)
+theme_override_fonts/font = ExtResource("4_body")
+theme_override_font_sizes/font_size = 15
+text = "↑ ↓ choose     ← → change     C or Esc close"
+horizontal_alignment = 1

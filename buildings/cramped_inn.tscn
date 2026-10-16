@@ -1,0 +1,476 @@
+[gd_scene format=3]
+
+[ext_resource type="FontFile" path="res://fonts/Lobster-Regular.ttf" id="1_lobster"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_Stucco"]
+albedo_color = Color(0.76, 0.68, 0.57, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Mat_StuccoLight"]
+albedo_color = Color(0.9, 0.84, 0.74, 1)
+roughness = 0.85
+
+[sub_resource type="StandardMaterial3D" id="Mat_Trim"]
+albedo_color = Color(0.95, 0.92, 0.84, 1)
+roughness = 0.75
+
+[sub_resource type="StandardMaterial3D" id="Mat_Base"]
+albedo_color = Color(0.42, 0.28, 0.2, 1)
+roughness = 0.95
+
+[sub_resource type="StandardMaterial3D" id="Mat_Glass"]
+albedo_color = Color(0.1, 0.2, 0.28, 1)
+metallic = 0.25
+roughness = 0.12
+
+[sub_resource type="StandardMaterial3D" id="Mat_Frame"]
+albedo_color = Color(0.25, 0.22, 0.2, 1)
+metallic = 0.35
+roughness = 0.45
+
+[sub_resource type="StandardMaterial3D" id="Mat_Roof"]
+albedo_color = Color(0.35, 0.33, 0.3, 1)
+roughness = 1.0
+
+[sub_resource type="StandardMaterial3D" id="Mat_SignBlue"]
+albedo_color = Color(0.05, 0.16, 0.36, 1)
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_Hedge"]
+albedo_color = Color(0.16, 0.36, 0.12, 1)
+roughness = 1.0
+
+[sub_resource type="BoxShape3D" id="Shape_Building"]
+size = Vector3(24, 13.5, 14)
+
+[sub_resource type="BoxShape3D" id="Shape_CanopyRoof"]
+size = Vector3(11, 0.7, 8)
+
+[sub_resource type="BoxShape3D" id="Shape_CanopyColumn"]
+size = Vector3(0.9, 4.2, 0.9)
+
+[sub_resource type="BoxMesh" id="Mesh_MainBuilding"]
+material = SubResource("Mat_Stucco")
+size = Vector3(24, 13, 14)
+
+[sub_resource type="BoxMesh" id="Mesh_BaseBand"]
+material = SubResource("Mat_Base")
+size = Vector3(24.2, 3.1, 14.2)
+
+[sub_resource type="BoxMesh" id="Mesh_FloorBandFront"]
+material = SubResource("Mat_Trim")
+size = Vector3(24.3, 0.22, 0.3)
+
+[sub_resource type="BoxMesh" id="Mesh_FloorBandSide"]
+material = SubResource("Mat_Trim")
+size = Vector3(0.3, 0.22, 14.3)
+
+[sub_resource type="BoxMesh" id="Mesh_Cornice"]
+material = SubResource("Mat_Trim")
+size = Vector3(24.8, 0.42, 14.8)
+
+[sub_resource type="BoxMesh" id="Mesh_Roof"]
+material = SubResource("Mat_Roof")
+size = Vector3(23.8, 0.12, 13.8)
+
+[sub_resource type="BoxMesh" id="Mesh_Tower"]
+material = SubResource("Mat_StuccoLight")
+size = Vector3(5.6, 14.8, 1.5)
+
+[sub_resource type="BoxMesh" id="Mesh_TowerCap"]
+material = SubResource("Mat_Trim")
+size = Vector3(6.3, 0.55, 2.1)
+
+[sub_resource type="BoxMesh" id="Mesh_TowerCrown"]
+material = SubResource("Mat_StuccoLight")
+size = Vector3(5.9, 1.0, 1.8)
+
+[sub_resource type="BoxMesh" id="Mesh_Pilaster"]
+material = SubResource("Mat_StuccoLight")
+size = Vector3(0.75, 13.2, 0.75)
+
+[sub_resource type="BoxMesh" id="Mesh_WindowFrame"]
+material = SubResource("Mat_Frame")
+size = Vector3(1.75, 2.2, 0.16)
+
+[sub_resource type="BoxMesh" id="Mesh_Window"]
+material = SubResource("Mat_Glass")
+size = Vector3(1.52, 1.96, 0.12)
+
+[sub_resource type="BoxMesh" id="Mesh_SideWindowFrame"]
+material = SubResource("Mat_Frame")
+size = Vector3(0.16, 2.2, 1.75)
+
+[sub_resource type="BoxMesh" id="Mesh_SideWindow"]
+material = SubResource("Mat_Glass")
+size = Vector3(0.12, 1.96, 1.52)
+
+[sub_resource type="BoxMesh" id="Mesh_GroundWindowFrame"]
+material = SubResource("Mat_Frame")
+size = Vector3(3.2, 2.5, 0.16)
+
+[sub_resource type="BoxMesh" id="Mesh_GroundWindow"]
+material = SubResource("Mat_Glass")
+size = Vector3(2.95, 2.26, 0.12)
+
+[sub_resource type="BoxMesh" id="Mesh_DoorFrame"]
+material = SubResource("Mat_Frame")
+size = Vector3(3.2, 2.9, 0.18)
+
+[sub_resource type="BoxMesh" id="Mesh_Doors"]
+material = SubResource("Mat_Glass")
+size = Vector3(2.92, 2.66, 0.12)
+
+[sub_resource type="BoxMesh" id="Mesh_CanopyRoof"]
+material = SubResource("Mat_StuccoLight")
+size = Vector3(11, 0.7, 8)
+
+[sub_resource type="BoxMesh" id="Mesh_CanopyCap"]
+material = SubResource("Mat_Trim")
+size = Vector3(11.4, 0.22, 8.4)
+
+[sub_resource type="BoxMesh" id="Mesh_CanopyColumn"]
+material = SubResource("Mat_StuccoLight")
+size = Vector3(0.9, 4.2, 0.9)
+
+[sub_resource type="BoxMesh" id="Mesh_ColumnBase"]
+material = SubResource("Mat_Base")
+size = Vector3(1.05, 0.9, 1.05)
+
+[sub_resource type="BoxMesh" id="Mesh_HedgeLong"]
+material = SubResource("Mat_Hedge")
+size = Vector3(8, 0.8, 0.9)
+
+[sub_resource type="BoxMesh" id="Mesh_HedgeShort"]
+material = SubResource("Mat_Hedge")
+size = Vector3(3, 0.8, 0.9)
+
+[sub_resource type="BoxMesh" id="Mesh_SignPillar"]
+material = SubResource("Mat_StuccoLight")
+size = Vector3(2.1, 5.6, 0.85)
+
+[sub_resource type="BoxMesh" id="Mesh_SignBoard"]
+material = SubResource("Mat_SignBlue")
+size = Vector3(4.6, 2.2, 0.5)
+
+[sub_resource type="BoxMesh" id="Mesh_SignInset"]
+material = SubResource("Mat_Trim")
+size = Vector3(4.15, 1.75, 0.12)
+
+[node name="CrampedInn" type="Node3D"]
+
+[node name="Building" type="StaticBody3D" parent="."]
+
+[node name="BuildingCollision" type="CollisionShape3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.75, 0)
+shape = SubResource("Shape_Building")
+
+[node name="MainBuilding" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.5, 0)
+mesh = SubResource("Mesh_MainBuilding")
+
+[node name="BaseBand" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.55, 0)
+mesh = SubResource("Mesh_BaseBand")
+
+[node name="FloorBand2Front" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.15, 7.08)
+mesh = SubResource("Mesh_FloorBandFront")
+
+[node name="FloorBand3Front" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.2, 7.08)
+mesh = SubResource("Mesh_FloorBandFront")
+
+[node name="FloorBand2Left" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.08, 4.15, 0)
+mesh = SubResource("Mesh_FloorBandSide")
+
+[node name="FloorBand3Left" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.08, 7.2, 0)
+mesh = SubResource("Mesh_FloorBandSide")
+
+[node name="Cornice" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 13.15, 0)
+mesh = SubResource("Mesh_Cornice")
+
+[node name="Roof" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 13.38, 0)
+mesh = SubResource("Mesh_Roof")
+
+[node name="EntranceTower" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.7, 7.4, 7.45)
+mesh = SubResource("Mesh_Tower")
+
+[node name="EntranceTowerCrown" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.7, 14.2, 7.55)
+mesh = SubResource("Mesh_TowerCrown")
+
+[node name="EntranceTowerCap" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.7, 14.76, 7.55)
+mesh = SubResource("Mesh_TowerCap")
+
+[node name="FrontPilasterL" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.6, 6.6, 7.28)
+mesh = SubResource("Mesh_Pilaster")
+
+[node name="FrontPilasterR" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.4, 6.6, 7.28)
+mesh = SubResource("Mesh_Pilaster")
+
+[node name="DoorFrame" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.7, 1.45, 8.25)
+mesh = SubResource("Mesh_DoorFrame")
+
+[node name="Doors" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.7, 1.35, 8.36)
+mesh = SubResource("Mesh_Doors")
+
+[node name="LobbyWindowLFrame" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2, 1.45, 7.14)
+mesh = SubResource("Mesh_GroundWindowFrame")
+
+[node name="LobbyWindowL" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2, 1.45, 7.24)
+mesh = SubResource("Mesh_GroundWindow")
+
+[node name="LobbyWindowRFrame" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.4, 1.45, 7.14)
+mesh = SubResource("Mesh_GroundWindowFrame")
+
+[node name="LobbyWindowR" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.4, 1.45, 7.24)
+mesh = SubResource("Mesh_GroundWindow")
+
+[node name="FrontWindows" type="Node3D" parent="Building"]
+
+[node name="F2LFrame" type="MeshInstance3D" parent="Building/FrontWindows"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5, 5.55, 7.14)
+mesh = SubResource("Mesh_WindowFrame")
+
+[node name="F2L" type="MeshInstance3D" parent="Building/FrontWindows"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5, 5.55, 7.24)
+mesh = SubResource("Mesh_Window")
+
+[node name="F2CFrame" type="MeshInstance3D" parent="Building/FrontWindows"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 5.55, 7.14)
+mesh = SubResource("Mesh_WindowFrame")
+
+[node name="F2C" type="MeshInstance3D" parent="Building/FrontWindows"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 5.55, 7.24)
+mesh = SubResource("Mesh_Window")
+
+[node name="F2RFrame" type="MeshInstance3D" parent="Building/FrontWindows"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 5.55, 7.14)
+mesh = SubResource("Mesh_WindowFrame")
+
+[node name="F2R" type="MeshInstance3D" parent="Building/FrontWindows"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 5.55, 7.24)
+mesh = SubResource("Mesh_Window")
+
+[node name="F2RRFrame" type="MeshInstance3D" parent="Building/FrontWindows"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.2, 5.55, 7.14)
+mesh = SubResource("Mesh_WindowFrame")
+
+[node name="F2RR" type="MeshInstance3D" parent="Building/FrontWindows"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.2, 5.55, 7.24)
+mesh = SubResource("Mesh_Window")
+
+[node name="F3LFrame" type="MeshInstance3D" parent="Building/FrontWindows"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5, 8.65, 7.14)
+mesh = SubResource("Mesh_WindowFrame")
+
+[node name="F3L" type="MeshInstance3D" parent="Building/FrontWindows"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5, 8.65, 7.24)
+mesh = SubResource("Mesh_Window")
+
+[node name="F3CFrame" type="MeshInstance3D" parent="Building/FrontWindows"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 8.65, 7.14)
+mesh = SubResource("Mesh_WindowFrame")
+
+[node name="F3C" type="MeshInstance3D" parent="Building/FrontWindows"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 8.65, 7.24)
+mesh = SubResource("Mesh_Window")
+
+[node name="F3RFrame" type="MeshInstance3D" parent="Building/FrontWindows"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 8.65, 7.14)
+mesh = SubResource("Mesh_WindowFrame")
+
+[node name="F3R" type="MeshInstance3D" parent="Building/FrontWindows"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 8.65, 7.24)
+mesh = SubResource("Mesh_Window")
+
+[node name="F3RRFrame" type="MeshInstance3D" parent="Building/FrontWindows"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.2, 8.65, 7.14)
+mesh = SubResource("Mesh_WindowFrame")
+
+[node name="F3RR" type="MeshInstance3D" parent="Building/FrontWindows"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.2, 8.65, 7.24)
+mesh = SubResource("Mesh_Window")
+
+[node name="F4LFrame" type="MeshInstance3D" parent="Building/FrontWindows"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5, 11.65, 7.14)
+mesh = SubResource("Mesh_WindowFrame")
+
+[node name="F4L" type="MeshInstance3D" parent="Building/FrontWindows"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5, 11.65, 7.24)
+mesh = SubResource("Mesh_Window")
+
+[node name="F4CFrame" type="MeshInstance3D" parent="Building/FrontWindows"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 11.65, 7.14)
+mesh = SubResource("Mesh_WindowFrame")
+
+[node name="F4C" type="MeshInstance3D" parent="Building/FrontWindows"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 11.65, 7.24)
+mesh = SubResource("Mesh_Window")
+
+[node name="F4RFrame" type="MeshInstance3D" parent="Building/FrontWindows"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 11.65, 7.14)
+mesh = SubResource("Mesh_WindowFrame")
+
+[node name="F4R" type="MeshInstance3D" parent="Building/FrontWindows"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 11.65, 7.24)
+mesh = SubResource("Mesh_Window")
+
+[node name="F4RRFrame" type="MeshInstance3D" parent="Building/FrontWindows"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.2, 11.65, 7.14)
+mesh = SubResource("Mesh_WindowFrame")
+
+[node name="F4RR" type="MeshInstance3D" parent="Building/FrontWindows"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.2, 11.65, 7.24)
+mesh = SubResource("Mesh_Window")
+
+[node name="SideWindows" type="Node3D" parent="Building"]
+
+[node name="S2FrontFrame" type="MeshInstance3D" parent="Building/SideWindows"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.14, 5.55, 3.8)
+mesh = SubResource("Mesh_SideWindowFrame")
+
+[node name="S2Front" type="MeshInstance3D" parent="Building/SideWindows"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.24, 5.55, 3.8)
+mesh = SubResource("Mesh_SideWindow")
+
+[node name="S2BackFrame" type="MeshInstance3D" parent="Building/SideWindows"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.14, 5.55, -3.8)
+mesh = SubResource("Mesh_SideWindowFrame")
+
+[node name="S2Back" type="MeshInstance3D" parent="Building/SideWindows"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.24, 5.55, -3.8)
+mesh = SubResource("Mesh_SideWindow")
+
+[node name="S3FrontFrame" type="MeshInstance3D" parent="Building/SideWindows"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.14, 8.65, 3.8)
+mesh = SubResource("Mesh_SideWindowFrame")
+
+[node name="S3Front" type="MeshInstance3D" parent="Building/SideWindows"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.24, 8.65, 3.8)
+mesh = SubResource("Mesh_SideWindow")
+
+[node name="S3BackFrame" type="MeshInstance3D" parent="Building/SideWindows"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.14, 8.65, -3.8)
+mesh = SubResource("Mesh_SideWindowFrame")
+
+[node name="S3Back" type="MeshInstance3D" parent="Building/SideWindows"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.24, 8.65, -3.8)
+mesh = SubResource("Mesh_SideWindow")
+
+[node name="S4FrontFrame" type="MeshInstance3D" parent="Building/SideWindows"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.14, 11.65, 3.8)
+mesh = SubResource("Mesh_SideWindowFrame")
+
+[node name="S4Front" type="MeshInstance3D" parent="Building/SideWindows"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.24, 11.65, 3.8)
+mesh = SubResource("Mesh_SideWindow")
+
+[node name="S4BackFrame" type="MeshInstance3D" parent="Building/SideWindows"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.14, 11.65, -3.8)
+mesh = SubResource("Mesh_SideWindowFrame")
+
+[node name="S4Back" type="MeshInstance3D" parent="Building/SideWindows"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.24, 11.65, -3.8)
+mesh = SubResource("Mesh_SideWindow")
+
+[node name="FrontLogo" type="Label3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.7, 12.4, 8.28)
+pixel_size = 0.014
+modulate = Color(0.48, 0.05, 0.09, 1)
+outline_modulate = Color(0.95, 0.82, 0.68, 1)
+text = "Cramped\nInn"
+font = ExtResource("1_lobster")
+font_size = 64
+outline_size = 8
+
+[node name="CanopyRoofCollision" type="CollisionShape3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.5, 4.5, 11.5)
+shape = SubResource("Shape_CanopyRoof")
+
+[node name="CanopyRoof" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.5, 4.5, 11.5)
+mesh = SubResource("Mesh_CanopyRoof")
+
+[node name="CanopyCap" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.5, 4.96, 11.5)
+mesh = SubResource("Mesh_CanopyCap")
+
+[node name="CanopyColumnLCollision" type="CollisionShape3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.35, 2.1, 14.8)
+shape = SubResource("Shape_CanopyColumn")
+
+[node name="CanopyColumnL" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.35, 2.1, 14.8)
+mesh = SubResource("Mesh_CanopyColumn")
+
+[node name="CanopyColumnLBase" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.35, 0.45, 14.8)
+mesh = SubResource("Mesh_ColumnBase")
+
+[node name="CanopyColumnRCollision" type="CollisionShape3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.65, 2.1, 14.8)
+shape = SubResource("Shape_CanopyColumn")
+
+[node name="CanopyColumnR" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.65, 2.1, 14.8)
+mesh = SubResource("Mesh_CanopyColumn")
+
+[node name="CanopyColumnRBase" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.65, 0.45, 14.8)
+mesh = SubResource("Mesh_ColumnBase")
+
+[node name="CanopyClearance" type="Label3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.5, 4.42, 15.53)
+pixel_size = 0.01
+modulate = Color(0.3, 0.22, 0.17, 1)
+text = "Clearance 9' 2\""
+font_size = 22
+
+[node name="HedgeLeft" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2, 0.45, 8.15)
+mesh = SubResource("Mesh_HedgeShort")
+
+[node name="HedgeRight" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.0, 0.45, 8.15)
+mesh = SubResource("Mesh_HedgeLong")
+
+[node name="RoadsideSign" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 20)
+
+[node name="Pillar" type="MeshInstance3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.8, 0)
+mesh = SubResource("Mesh_SignPillar")
+
+[node name="Board" type="MeshInstance3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.0, 0)
+mesh = SubResource("Mesh_SignBoard")
+
+[node name="Inset" type="MeshInstance3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.0, 0.31)
+mesh = SubResource("Mesh_SignInset")
+
+[node name="Name" type="Label3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.0, 0.4)
+pixel_size = 0.012
+modulate = Color(0.48, 0.05, 0.09, 1)
+outline_modulate = Color(0.05, 0.16, 0.36, 1)
+text = "Cramped Inn"
+font = ExtResource("1_lobster")
+font_size = 52
+outline_size = 7

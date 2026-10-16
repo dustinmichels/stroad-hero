@@ -12,8 +12,11 @@ var _mat_reserved: StandardMaterial3D
 var _mat_occupied: StandardMaterial3D
 var _disc_mesh: CylinderMesh
 var _path_mesh_instance: MeshInstance3D = null
-var _path_mesh: ImmediateMesh = null
+var _path_mesh: ImmediateMesh = ImmediateMesh.new()
 var _mat_path: StandardMaterial3D = null
+var _ghost_mesh_instance: MeshInstance3D = null
+var _ghost_mesh: ImmediateMesh = ImmediateMesh.new()
+var _mat_ghost: StandardMaterial3D = null
 
 
 func _init(p_manager: TrafficManager = null) -> void:
@@ -39,6 +42,10 @@ func _init_materials() -> void:
 	_mat_path.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	_mat_path.albedo_color = Color(0.2, 0.7, 1.0)
 
+	_mat_ghost = StandardMaterial3D.new()
+	_mat_ghost.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_mat_ghost.albedo_color = Color(1.0, 0.55, 0.1)
+
 	_disc_mesh = CylinderMesh.new()
 	_disc_mesh.top_radius = 1.0
 	_disc_mesh.bottom_radius = 1.0
@@ -52,11 +59,14 @@ func _ready() -> void:
 	if lot != null:
 		_setup_spots()
 
-	_path_mesh = ImmediateMesh.new()
 	_path_mesh_instance = MeshInstance3D.new()
 	_path_mesh_instance.name = "PathLines"
 	_path_mesh_instance.mesh = _path_mesh
 	add_child(_path_mesh_instance)
+	_ghost_mesh_instance = MeshInstance3D.new()
+	_ghost_mesh_instance.name = "GhostLines"
+	_ghost_mesh_instance.mesh = _ghost_mesh
+	add_child(_ghost_mesh_instance)
 
 
 func _setup_spots() -> void:
@@ -119,6 +129,7 @@ func _process(_delta: float) -> void:
 	if not visible or traffic_manager == null:
 		return
 	_update_path_curves()
+	_update_ghost_lines()
 	_update_car_labels()
 
 
@@ -194,6 +205,30 @@ func _update_path_curves() -> void:
 			for pt in pts:
 				_path_mesh.surface_add_vertex(pt + Vector3(0.0, 0.15, 0.0))
 			_path_mesh.surface_end()
+
+
+func _update_ghost_lines() -> void:
+	if _ghost_mesh == null:
+		return
+	_ghost_mesh.clear_surfaces()
+	if traffic_manager == null:
+		return
+
+	var lines: Array = []
+	for lane in traffic_manager.lanes:
+		for car in lane.cars:
+			if is_instance_valid(car) and car.motion == Car.Motion.PATH:
+				var car_pos: Vector3 = car.global_position
+				var car_pt := car_pos + Vector3(0.0, 0.2, 0.0)
+				var lane_pt := Vector3(car_pos.x, car_pos.y + 0.2, lane.z)
+				lines.append([car_pt, lane_pt])
+
+	if not lines.is_empty():
+		_ghost_mesh.surface_begin(Mesh.PRIMITIVE_LINES, _mat_ghost)
+		for pair in lines:
+			_ghost_mesh.surface_add_vertex(pair[0])
+			_ghost_mesh.surface_add_vertex(pair[1])
+		_ghost_mesh.surface_end()
 
 
 func _unhandled_input(event: InputEvent) -> void:

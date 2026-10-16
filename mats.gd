@@ -16,6 +16,12 @@ signal died(death_position: Vector3)
 ## Seconds to pause at death position before respawning and flying camera back.
 @export var respawn_delay := 1.25
 
+enum Headwear { HAIR, HAT }
+
+@export_enum("Hair", "Hat") var headwear: int = Headwear.HAT
+@export var backpack_color := Color(0.2, 0.55, 0.3, 1.0)
+@export var preview_mode := false
+
 ## Leg-swing radians per meter walked.
 const STRIDE_RATE := 2.6
 const LEG_SWING := 0.6
@@ -40,8 +46,9 @@ const IDLE_SWAY_ANGLE := 0.02
 @onready var _left_arm: Node3D = $Visual/LeftArmPivot
 @onready var _right_arm: Node3D = $Visual/RightArmPivot
 @onready var _head: Node3D = $Visual/Head
-@onready var _beanie: Node3D = $Visual/Beanie
-var _beanie_offset := Vector3.ZERO
+@onready var _hair: MeshInstance3D = $Visual/Head/Hair
+@onready var _hat: MeshInstance3D = $Visual/Head/Hat
+@onready var _backpack: MeshInstance3D = $Visual/Backpack
 
 var _stride_phase := 0.0
 var _squash := 0.0
@@ -57,12 +64,20 @@ func _ready() -> void:
 	set_collision_mask_value(3, true)
 	floor_snap_length = step_height + 0.05
 	_spawn_transform = global_transform
-	add_to_group("player")
-	if _head and _beanie:
-		_beanie_offset = _beanie.position - _head.position
+	if not preview_mode:
+		add_to_group("player")
+	var material := StandardMaterial3D.new()
+	material.roughness = 0.8
+	_backpack.material_override = material
+	set_headwear(headwear)
+	set_backpack_color(backpack_color)
 
 
 func _physics_process(delta: float) -> void:
+	if preview_mode:
+		velocity = Vector3.ZERO
+		_animate(delta, true)
+		return
 	if _is_dead:
 		return
 	var input := Input.get_vector("move_left", "move_right", "move_up", "move_down")
@@ -85,6 +100,7 @@ func _physics_process(delta: float) -> void:
 	if was_on_floor:
 		_try_step_up(horizontal * delta)
 	move_and_slide()
+	_rustle_collided_trees(horizontal)
 	if was_on_floor and is_on_floor():
 		_step_offset += y_before - global_position.y
 	_step_offset = lerpf(_step_offset, 0.0, 1.0 - exp(-STEP_SMOOTHING * delta))
@@ -99,6 +115,31 @@ func _physics_process(delta: float) -> void:
 		)
 
 	_animate(delta)
+
+
+func _rustle_collided_trees(impact_direction: Vector3) -> void:
+	if impact_direction.is_zero_approx():
+		return
+	for index in get_slide_collision_count():
+		var collider := get_slide_collision(index).get_collider()
+		if collider is StreetTree:
+			collider.rustle(impact_direction)
+
+
+func set_headwear(value: int) -> void:
+	headwear = clampi(value, Headwear.HAIR, Headwear.HAT)
+	if is_node_ready():
+		_hair.visible = headwear == Headwear.HAIR
+		_hat.visible = headwear == Headwear.HAT
+
+
+func set_backpack_color(color: Color) -> void:
+	backpack_color = color
+	if not is_node_ready():
+		return
+	var material := _backpack.material_override as StandardMaterial3D
+	if material:
+		material.albedo_color = backpack_color
 
 
 func die() -> void:
@@ -120,10 +161,7 @@ func die() -> void:
 	_idle_time = 0.0
 	_visual.rotation.y = PI
 	_visual.rotation.z = 0.0
-	if _head and _beanie:
-		_head.rotation = Vector3.ZERO
-		_beanie.rotation = Vector3.ZERO
-		_beanie.position = _head.position + _beanie_offset
+	_head.rotation = Vector3.ZERO
 	_visual.visible = true
 	_is_dead = false
 
@@ -145,10 +183,10 @@ func _try_step_up(motion: Vector3) -> void:
 	global_position += lift
 
 
-func _animate(delta: float) -> void:
-	var speed := Vector2(velocity.x, velocity.z).length()
+func _animate(delta: float, force_idle := false) -> void:
+	var speed := 0.0 if force_idle else Vector2(velocity.x, velocity.z).length()
 	var walk_blend := clampf(speed / walk_speed, 0.0, 1.0)
-	var on_floor := is_on_floor()
+	var on_floor := true if force_idle else is_on_floor()
 	var idle_blend := (1.0 - walk_blend) if on_floor else 0.0
 
 	_idle_time += delta
@@ -201,7 +239,7 @@ func _animate(delta: float) -> void:
 	_visual.rotation.z = lerpf(_visual.rotation.z, target_sway_z, weight)
 
 	# Head glance and breathing nod
-	if _head and _beanie:
+	if _head:
 		var look_cycle := fmod(_idle_time, 9.0)
 		var head_yaw := 0.0
 		if look_cycle > 2.5 and look_cycle < 4.5:
@@ -218,8 +256,6 @@ func _animate(delta: float) -> void:
 		_head.rotation.y = lerpf(_head.rotation.y, head_yaw, weight)
 		_head.rotation.x = lerpf(_head.rotation.x, head_pitch, weight)
 		_head.rotation.z = lerpf(_head.rotation.z, head_roll, weight)
-		_beanie.transform.basis = _head.transform.basis
-		_beanie.position = _head.position + _head.transform.basis * _beanie_offset
 
 	# Breathing scale + landing squash
 	_squash = move_toward(_squash, 0.0, 6.0 * delta)

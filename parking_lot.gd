@@ -45,6 +45,38 @@ static func aisle_z_for_entry(spot) -> float:
 	return AISLE_Z_WB if sx < ENTRY_X else AISLE_Z_EB
 
 
+static func exit_aisle_z(spot) -> float:
+	var sx: float = 0.0
+	if spot is ParkingSpot:
+		sx = spot.transform.origin.x
+	elif spot is Transform3D:
+		sx = spot.origin.x
+	elif spot is Vector3 or spot is Vector2:
+		sx = spot.x
+	elif "x" in spot:
+		sx = spot.x
+	else:
+		push_error("ParkingLot.exit_aisle_z: unsupported spot argument %s" % str(spot))
+		return AISLE_Z_EB
+	return AISLE_Z_EB if sx < ENTRY_X else AISLE_Z_WB
+
+
+static func exit_sign(spot) -> float:
+	var sx: float = 0.0
+	if spot is ParkingSpot:
+		sx = spot.transform.origin.x
+	elif spot is Transform3D:
+		sx = spot.origin.x
+	elif spot is Vector3 or spot is Vector2:
+		sx = spot.x
+	elif "x" in spot:
+		sx = spot.x
+	else:
+		push_error("ParkingLot.exit_sign: unsupported spot argument %s" % str(spot))
+		return 1.0
+	return 1.0 if sx < EXIT_X else -1.0
+
+
 static func entry_route(spot, radius := 4.0) -> Curve3D:
 	var sx: float = 0.0
 	var spot_pos := Vector3.ZERO
@@ -75,6 +107,42 @@ static func entry_route(spot, radius := 4.0) -> Curve3D:
 			TURN_IN_START,
 			Vector3(ENTRY_X, 0.0, -5.6 - radius),
 			Vector3(ENTRY_X, 0.0, aisle_z),
+			Vector3(sx, 0.0, aisle_z),
+			spot_pos,
+		]
+	)
+	return PathBuilder.build(pts, radius)
+
+
+static func reverse_route(spot, radius := 4.0) -> Curve3D:
+	var sx: float = 0.0
+	var spot_pos := Vector3.ZERO
+	if spot is ParkingSpot:
+		spot_pos = spot.transform.origin
+		sx = spot_pos.x
+	elif spot is Transform3D:
+		spot_pos = spot.origin
+		sx = spot_pos.x
+	elif spot is Vector3:
+		spot_pos = spot
+		sx = spot.x
+	elif spot is Vector2:
+		spot_pos = Vector3(spot.x, 0.05, spot.y)
+		sx = spot.x
+	elif "x" in spot:
+		sx = spot.x
+		var sy: float = spot.get("y") if "y" in spot else 0.05
+		var sz: float = spot.get("z") if "z" in spot else 0.0
+		spot_pos = Vector3(sx, sy, sz)
+	else:
+		push_error("ParkingLot.reverse_route: unsupported spot argument %s" % str(spot))
+		return Curve3D.new()
+
+	var aisle_z := exit_aisle_z(spot)
+	var sign_val := exit_sign(spot)
+	var pts := PackedVector3Array(
+		[
+			Vector3(sx - sign_val * 6.0, 0.0, aisle_z),
 			Vector3(sx, 0.0, aisle_z),
 			spot_pos,
 		]

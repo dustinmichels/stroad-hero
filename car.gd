@@ -63,9 +63,11 @@ func get_state_name() -> String:
 var path: Curve3D = null
 var path_distance: float = 0.0
 var lane_distance: float = 0.0
+var lane_speed: float = 14.0
 var speed: float = 14.0
 var desired_speed: float = 14.0
 var car_length: float = 4.5
+var car_width: float = 2.0
 var direction: float = 1.0  # +1.0 for Eastbound (+X), -1.0 for Westbound (-X)
 var lane_z: float = 0.0
 var lane_length: float = 140.0
@@ -190,6 +192,7 @@ func setup(
 	lane_distance = 0.0
 	speed = p_speed
 	desired_speed = p_speed
+	lane_speed = p_speed
 	car_type = p_type
 
 	_apply_visual_type()
@@ -258,26 +261,32 @@ func _update_dimensions() -> void:
 	match car_type:
 		CarType.SEDAN:
 			car_length = 4.2
+			car_width = 1.9
 			shape_size = Vector3(4.0, 1.4, 1.9)
 			shape_y = 0.7
 		CarType.SUV:
 			car_length = 4.6
+			car_width = 2.0
 			shape_size = Vector3(4.5, 1.7, 2.0)
 			shape_y = 0.85
 		CarType.TAXI:
 			car_length = 4.2
+			car_width = 1.9
 			shape_size = Vector3(4.0, 1.5, 1.9)
 			shape_y = 0.75
 		CarType.TRUCK:
 			car_length = 5.2
+			car_width = 2.1
 			shape_size = Vector3(5.0, 2.2, 2.1)
 			shape_y = 1.1
 		CarType.PICKUP:
 			car_length = 5.0
+			car_width = 2.1
 			shape_size = Vector3(5.0, 1.8, 2.1)
 			shape_y = 0.9
 		CarType.BUS:
 			car_length = 9.0
+			car_width = 2.4
 			shape_size = Vector3(8.8, 2.7, 2.4)
 			shape_y = 1.35
 	var col = _collision_shape if _collision_shape else get_node_or_null("CollisionShape3D")
@@ -297,6 +306,14 @@ func _update_dimensions() -> void:
 		blocker_box.size = shape_size + Vector3(0.2, 0.2, 0.2)
 		b_col.shape = blocker_box
 		b_col.position = Vector3(0.0, shape_y, 0.0)
+
+
+func get_heading() -> Vector3:
+	var h := global_transform.basis.x
+	var h_2d := Vector3(h.x, 0.0, h.z)
+	if h_2d.length_squared() < 0.0001:
+		return Vector3(direction, 0.0, 0.0)
+	return h_2d.normalized()
 
 
 ## Advance vehicle along lane (kinematic state) and update 3D transform

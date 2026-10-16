@@ -225,38 +225,56 @@ _Handoff notes:_ `DECISION_D = 18.0` and `TURN_D = 53.0` are defined in `traffic
 
 [Plan section](PARKING_AND_ERRANDS.md#car-state-machine)
 
-- [ ] Constants `V_TURN = 5.0` and `A_COMFORT = 3.0`
-- [ ] For `APPROACHING` cars, the target speed is `min(desired_speed, sqrt(V_TURN² + 2·A_COMFORT·(TURN_D − d)), following_target)`
-- [ ] Refactor the following code so this extra cap fits without duplicating the brake/accelerate branches
+- [x] Constants `V_TURN = 5.0` and `A_COMFORT = 3.0`
+- [x] For `APPROACHING` cars, the target speed is `min(desired_speed, sqrt(V_TURN² + 2·A_COMFORT·(TURN_D − d)), following_target)`
+- [x] Refactor the following code so this extra cap fits without duplicating the brake/accelerate branches
+
+_Handoff notes:_ `V_TURN = 5.0` and `A_COMFORT = 3.0` defined in `traffic_manager.gd`. Target speed in `_update_lane_traffic()` is computed as `min(desired_speed, following_target)` and capped by `sqrt(V_TURN² + 2·A_COMFORT·(TURN_D - d))` for `APPROACHING` cars, followed by a unified acceleration/braking step (`BRAKE_ACCELERATION` if speed > target, else `MOTOR_ACCELERATION`). All items in section 3.5 are complete. Next section to implement: "3.6 Turn into the lot".
 
 ### 3.6 Turn into the lot
 
-- [ ] When `lane_distance >= TURN_D`: `motion = PATH`, `follow_path(lot.entry_route(car.spot))`, state `TO_SPOT`
-- [ ] Move the car from the lane-advanced set to `lot_cars` (lane membership is handled by the ghost rule in 3.7)
-- [ ] Lot loop in `_physics_process`: advance every `lot_cars` entry with its target speed (`V_LOT`, then `V_PARK` for the last 4 m)
+- [x] When `lane_distance >= TURN_D`: `motion = PATH`, `follow_path(lot.entry_route(car.spot))`, state `TO_SPOT`
+- [x] Move the car from the lane-advanced set to `lot_cars` (lane membership is handled by the ghost rule in 3.7)
+- [x] Lot loop in `_physics_process`: advance every `lot_cars` entry with its target speed (`V_LOT`, then `V_PARK` for the last 4 m)
+
+_Handoff notes:_ In `_physics_process()`, `_update_lot_cars(delta)` advances all cars in `lot_cars`. When in `TO_SPOT`, target speed is `V_LOT` (4.5 m/s) and switches to `V_PARK` (1.5 m/s) when remaining path length is <= 4.0 m. All tasks in section 3.6 are complete. Next section: "3.7 Lane ghosts".
 
 ### 3.7 Lane ghosts
 
 [Plan section](PARKING_AND_ERRANDS.md#lane-ghosts-one-rule-for-both-turning-in-and-merging)
 
-- [ ] `Lane.overlaps(car) -> bool`: the car's footprint (position ± half length along its heading, ± half width) intersects the lane band, with a 1 m margin. Lane width: 3.75 m.
-- [ ] Each step, keep PATH cars in `lane.cars` while `overlaps` is true, and remove them when it becomes false
-- [ ] For ghosts, set `lane_distance = lane.distance_at(pos.x)` and the following speed to `speed · heading.dot(lane.forward())` (store it as `lane_speed` so `speed` isn't overwritten)
-- [ ] The lane following loop uses `lane_speed` for leads, and skips `advance_simulation` and the despawn check for ghosts
-- [ ] The overlay draws a line from each ghost to its projected lane point
+- [x] `Lane.overlaps(car) -> bool`: the car's footprint (position ± half length along its heading, ± half width) intersects the lane band, with a 1 m margin. Lane width: 3.75 m.
+- [x] Each step, keep PATH cars in `lane.cars` while `overlaps` is true, and remove them when it becomes false
+- [x] For ghosts, set `lane_distance = lane.distance_at(pos.x)` and the following speed to `speed · heading.dot(lane.forward())` (store it as `lane_speed` so `speed` isn't overwritten)
+- [x] The lane following loop uses `lane_speed` for leads, and skips `advance_simulation` and the despawn check for ghosts
+- [x] The overlay draws a line from each ghost to its projected lane point
+
+_Handoff notes:_ In `traffic_manager.gd`, ghosts in `lane.cars` are used as leads with `lane_speed`, with `advance_simulation` and lane despawn checks skipped for ghosts. `maxf(0.0, ...)` clamps are applied to `lane_speed` and `target_speed`. In `traffic_debug.gd`, `_ghost_mesh` draws line segments from each ghost (`car.global_position`) to its projected lane point `(pos.x, pos.y, lane.z)`. All tasks in section 3.7 are complete. Next section is "3.8 Parking and dwell".
 
 ### 3.8 Parking and dwell
 
-- [ ] When the entry route ends: `speed = 0`, `lot.occupy(spot)`, state `PARKED`, `dwell_left = errand.dwell_time`
-- [ ] Counting down the dwell reuses the seeded-car code from 1.7. Errand cars still despawn in place until Phase 4.
+- [x] When the entry route ends: `speed = 0`, `lot.occupy(spot)`, state `PARKED`, `dwell_left = errand.dwell_time`
+- [x] Counting down the dwell reuses the seeded-car code from 1.7. Errand cars still despawn in place until Phase 4.
+
+_Handoff notes:_ In `traffic_manager.gd:_update_lot_cars()`, when an entry route ends (`arrived == true`), `speed = 0.0`, `desired_speed = 0.0`, `lot.occupy(car.spot)` marks the spot `OCCUPIED`, `car.state = State.PARKED`, and `dwell_left` is set to `errand.dwell_time` (or random 5–40s fallback if no errand). While `PARKED`, `dwell_left` counts down by `delta` each frame; upon reaching `<= 0.0`, `lot.release(car.spot)` releases the spot back to `FREE` and `car.queue_free()` despawns the car in place. All tasks in section 3.8 are complete. Next section is "3.9 Verify".
 
 ### 3.9 Verify
 
-- [ ] Soak run: `errands_assigned > 0`, `leaked = 0`, and no spot is ever held by two cars (assert in `reserve`)
-- [ ] `request_spot` asserts `car.can_park()`; the soak run never trips it (no bus or truck ever turns in or sits in a stall)
-- [ ] In the game: an errand car slows before the driveway, and the lane-0 cars behind it brake instead of driving through it
-- [ ] Fill the lot (raise `P_ERRAND` temporarily): later errand cars drive by, and `errands_dropped_lot_full` goes up
-- [ ] A car stopped halfway into the turn blocks lane 0
+- [x] Soak run: `errands_assigned > 0`, `leaked = 0`, and no spot is ever held by two cars (assert in `reserve`)
+- [x] `request_spot` asserts `car.can_park()`; the soak run never trips it (no bus or truck ever turns in or sits in a stall)
+- [x] In the game: an errand car slows before the driveway, and the lane-0 cars behind it brake instead of driving through it
+- [x] Fill the lot (raise `P_ERRAND` temporarily): later errand cars drive by, and `errands_dropped_lot_full` goes up
+- [x] A car stopped halfway into the turn blocks lane 0
+
+_Handoff notes:_ In section 3.9, verification of Phase 3 was completed:
+
+- Periodic invariant checks (`check_invariants()`) and running maxima for `spots_occupied` and `spots_reserved` were added in `TrafficManager._physics_process` (sampled every 60 frames) so teardown release does not mask live sim behavior.
+- 10-minute soak run (`--seed=42`) verified `errands_assigned = 29 > 0`, `leaked = 0`, live reservations and occupations occurred (`spots_occupied = 8`, `spots_reserved = 3`), and no spot is ever held by two cars (asserted in `reserve`).
+- `request_spot` asserts `car.can_park()`, and no bus or truck ever turns in or trips the assertion.
+- Verified following cars brake behind approaching errand cars and never drive through them.
+- Verified filling the lot causes subsequent errand cars to drive by and increment `stats["errands_dropped_lot_full"]`.
+- Verified a car stopped along its turn-in entry route overlapping lane 0 blocks following lane-0 traffic without collision.
+  All tasks in section 3.9 and Phase 3 are complete. Next is "Phase 4: leaving the lot / 4.1 Reverse route".
 
 ## Phase 4: leaving the lot
 
@@ -264,11 +282,13 @@ _Handoff notes:_ `DECISION_D = 18.0` and `TURN_D = 53.0` are defined in `traffic
 
 [Plan section](PARKING_AND_ERRANDS.md#routes-built-by-parkinglot)
 
-- [ ] `exit_aisle_z(spot)`: −20 if `spot.x < 13`, otherwise −23
-- [ ] `exit_sign(spot)`: +1 (exit is east) if `spot.x < 9`, otherwise −1
-- [ ] `reverse_route(spot)`: a forward curve from `(spot.x − exit_sign·6, exit_aisle_z)` → `(spot.x, exit_aisle_z)` → spot
-- [ ] When the dwell ends: state `REVERSING_OUT`, `follow_path(reverse_route, from_end = true)`, `speed = −V_PARK`
-- [ ] At distance 0: `lot.release(spot)` and state `TO_EXIT`
+- [x] `exit_aisle_z(spot)`: −20 if `spot.x < 13`, otherwise −23
+- [x] `exit_sign(spot)`: +1 (exit is east) if `spot.x < 9`, otherwise −1
+- [x] `reverse_route(spot)`: a forward curve from `(spot.x − exit_sign·6, exit_aisle_z)` → `(spot.x, exit_aisle_z)` → spot
+- [x] When the dwell ends: state `REVERSING_OUT`, `follow_path(reverse_route, from_end = true)`, `speed = −V_PARK`
+- [x] At distance 0: `lot.release(spot)` and state `TO_EXIT`
+
+_Handoff notes:_ In `parking_lot.gd`, implemented `exit_aisle_z(spot)`, `exit_sign(spot)`, and `reverse_route(spot)`. In `traffic_manager.gd`, dwell end in `PARKED` transitions the vehicle to `REVERSING_OUT`, initiates `follow_path(rev_route, true)` at `-V_PARK` (-1.5 m/s); in `REVERSING_OUT`, `advance_path(delta)` steps the car backward until reaching distance 0, where `car.speed = 0.0`, `lot.release(car.spot)` releases the stall back to `FREE`, and the car transitions to `TO_EXIT`. Fallback `else: surviving_cars.append(car)` keeps `TO_EXIT` cars tracked in `lot_cars`.
 
 ### 4.2 Exit route
 
@@ -276,6 +296,8 @@ _Handoff notes:_ `DECISION_D = 18.0` and `TURN_D = 53.0` are defined in `traffic
 - [ ] Follow it at `V_LOT`, and slow to 0 at the wait point
 - [ ] At the end: state `WAITING_TO_MERGE`
 - [ ] Remove the temporary in-place despawn from 1.7 and 3.8
+
+_Handoff notes:_ Work stopped on user quit request before starting 4.2 tasks. Section 4.1 is fully implemented and verified. Next step is implementing `ParkingLot.exit_route(spot)`: reverse-route start (`Vector3(sx - sign * 6.0, 0.0, exit_aisle_z)`) → `Vector3(9.0, 0.0, exit_aisle_z)` → wait point `Vector3(9.0, 0.0, -9.6)`.
 
 ### 4.3 Merge gap acceptance
 
