@@ -1,5 +1,6 @@
 class_name Car
 extends Area3D
+const Errand = preload("res://errand.gd")
 
 enum CarType {
 	SEDAN,
@@ -10,10 +11,68 @@ enum CarType {
 	BUS
 }
 
+enum Motion {
+	LANE,
+	PATH
+}
+
+enum State {
+	CRUISING,
+	APPROACHING,
+	TO_SPOT,
+	PARKED,
+	REVERSING_OUT,
+	TO_EXIT,
+	WAITING_TO_MERGE,
+	MERGING
+}
+
+const PARKING_CAR_TYPES: Array[CarType] = [
+	CarType.SEDAN,
+	CarType.SUV,
+	CarType.TAXI,
+	CarType.PICKUP,
+]
+
+static func is_type_parkable(type: CarType) -> bool:
+	match type:
+		CarType.SEDAN, CarType.SUV, CarType.TAXI, CarType.PICKUP:
+			return true
+		CarType.BUS, CarType.TRUCK:
+			return false
+	return false
+
+func can_park() -> bool:
+	return is_type_parkable(car_type)
+
 @export var car_type: CarType = CarType.SEDAN
 
 # Authoritative simulation state (per TRAFFIC_SIMULATION.md)
 var lane_id: int = 0
+var motion := Motion.LANE
+var state := State.CRUISING
+
+func get_state_name() -> String:
+	match state:
+		State.CRUISING:
+			return "CRUISING"
+		State.APPROACHING:
+			return "APPROACHING"
+		State.TO_SPOT:
+			return "TO_SPOT"
+		State.PARKED:
+			return "PARKED"
+		State.REVERSING_OUT:
+			return "REVERSING_OUT"
+		State.TO_EXIT:
+			return "TO_EXIT"
+		State.WAITING_TO_MERGE:
+			return "WAITING_TO_MERGE"
+		State.MERGING:
+			return "MERGING"
+	return "UNKNOWN"
+var path: Curve3D = null
+var path_distance: float = 0.0
 var lane_distance: float = 0.0
 var speed: float = 14.0
 var desired_speed: float = 14.0
@@ -22,9 +81,14 @@ var direction: float = 1.0 # +1.0 for Eastbound (+X), -1.0 for Westbound (-X)
 var lane_z: float = 0.0
 var lane_length: float = 140.0
 var start_x: float = -70.0
+var spot: ParkingSpot = null
+var dwell_left: float = 0.0
+var errand: Errand = null
 
 const WHEEL_RADIUS := 0.35
 const BASE_WHEEL_BASIS := Basis(Vector3(1, 0, 0), Vector3(0, 0, 1), Vector3(0, -1, 0))
+const STOP_SPEED := 0.1
+const BLOCKER_LAYER := 4 # Layer 3 (1 << 2)
 
 static var _spoke_mesh: BoxMesh
 static var _hub_mesh: CylinderMesh
@@ -41,11 +105,39 @@ var _active_wheels: Array[Node3D] = []
 @onready var _pickup: Node3D = $Visuals/Pickup
 @onready var _bus: Node3D = $Visuals/Bus
 @onready var _collision_shape: CollisionShape3D = $CollisionShape3D
+var blocker: AnimatableBody3D = null
+var _blocker_shape: CollisionShape3D = null
+var _blocking: bool = false
+
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
+	tree_exiting.connect(_on_tree_exiting)
+	blocker = AnimatableBody3D.new()
+	blocker.name = "Blocker"
+	blocker.sync_to_physics = false
+	blocker.collision_mask = 0
+	_blocking = not is_moving()
+	blocker.collision_layer = BLOCKER_LAYER if _blocking else 0
+	_blocker_shape = CollisionShape3D.new()
+	_blocker_shape.name = "CollisionShape3D"
+	blocker.add_child(_blocker_shape)
+	add_child(blocker)
 	_setup_wheels()
 	_apply_visual_type()
+func _physics_process(_delta: float) -> void:
+	_update_blocker_layer()
+
+
+func _update_blocker_layer() -> void:
+	if not blocker:
+		return
+	var should_block := not is_moving()
+	if should_block != _blocking:
+		_blocking = should_block
+		blocker.set_deferred("collision_layer", BLOCKER_LAYER if _blocking else 0)
+
+
 
 
 static func _init_wheel_resources() -> void:
@@ -93,6 +185,7 @@ func _setup_wheels() -> void:
 
 func setup(p_lane_id: int, p_lane_z: float, p_dir: float, p_start_x: float, p_lane_len: float, p_speed: float, p_type: CarType) -> void:
 	lane_id = p_lane_id
+	motion = Motion.LANE
 	lane_z = p_lane_z
 	direction = p_dir
 	start_x = p_start_x
@@ -103,6 +196,17 @@ func setup(p_lane_id: int, p_lane_z: float, p_dir: float, p_start_x: float, p_la
 	car_type = p_type
 	
 	_apply_visual_type()
+	update_presentation()
+	_update_blocker_layer()
+
+
+func follow_path(curve: Curve3D, from_end := false) -> void:
+	motion = Motion.PATH
+	path = curve
+	if from_end and curve != null:
+		path_distance = curve.get_baked_length()
+	else:
+		path_distance = 0.0
 	update_presentation()
 
 
@@ -185,6 +289,13 @@ func _update_dimensions() -> void:
 		box.size = shape_size
 		col.shape = box
 		col.position = Vector3(0.0, shape_y, 0.0)
+	
+	var b_col = _blocker_shape if _blocker_shape else (blocker.get_node_or_null("CollisionShape3D") if blocker else null)
+	if b_col:
+		var blocker_box := BoxShape3D.new()
+		blocker_box.size = shape_size + Vector3(0.2, 0.2, 0.2)
+		b_col.shape = blocker_box
+		b_col.position = Vector3(0.0, shape_y, 0.0)
 
 
 ## Advance vehicle along lane (kinematic state) and update 3D transform
@@ -192,18 +303,70 @@ func advance_simulation(delta: float) -> void:
 	lane_distance += speed * delta
 	update_presentation()
 	_check_player_overlap()
+	_update_blocker_layer()
+
+
+func advance_path(delta: float) -> bool:
+	if path == null:
+		return true
+	var length := path.get_baked_length()
+	if length <= 0.0:
+		path_distance = 0.0
+		update_presentation()
+		_check_player_overlap()
+		_update_blocker_layer()
+		return true
+	
+	path_distance += speed * delta
+	var arrived := false
+	if speed < 0.0:
+		if path_distance <= 0.0:
+			path_distance = 0.0
+			arrived = true
+	else:
+		if path_distance >= length:
+			path_distance = length
+			arrived = true
+	
+	path_distance = clampf(path_distance, 0.0, length)
+	update_presentation()
+	_check_player_overlap()
+	_update_blocker_layer()
+	return arrived
 
 
 func update_presentation() -> void:
+	if motion == Motion.PATH:
+		if path != null:
+			var length := path.get_baked_length()
+			var d := clampf(path_distance, 0.0, length)
+			global_position = path.sample_baked(d)
+			var d_prev := clampf(d - 0.05, 0.0, length)
+			var d_next := clampf(d + 0.05, 0.0, length)
+			var h := (path.sample_baked(d_next) - path.sample_baked(d_prev)).normalized()
+			if h.length_squared() > 0.0001:
+				rotation.y = atan2(-h.z, h.x)
+			wheel_rotation = fmod(-path_distance / WHEEL_RADIUS, TAU)
+			_update_wheels()
+		return
+	if spot != null:
+		global_transform = spot.transform
+		return
 	var current_x := start_x + (direction * lane_distance)
 	global_position = Vector3(current_x, 0.05, lane_z)
 	rotation.y = 0.0 if direction > 0.0 else PI
 	
 	wheel_rotation = fmod(-lane_distance / WHEEL_RADIUS, TAU)
+	_update_wheels()
+
+
+func _update_wheels() -> void:
 	var wheel_rot := Basis(Vector3.UP, wheel_rotation)
 	var wheel_basis := BASE_WHEEL_BASIS * wheel_rot
 	for wheel in _active_wheels:
 		wheel.transform.basis = wheel_basis
+func is_moving() -> bool:
+	return absf(speed) > STOP_SPEED
 
 func _on_body_entered(body: Node3D) -> void:
 	_check_hit(body)
@@ -215,5 +378,18 @@ func _check_player_overlap() -> void:
 
 
 func _check_hit(body: Node3D) -> void:
+	if not is_moving():
+		return
 	if body.is_in_group("player") or body.has_method("die"):
 		body.die()
+
+
+func _on_tree_exiting() -> void:
+	if spot != null:
+		if spot.lot != null:
+			spot.lot.release(spot)
+		else:
+			if spot.car == self:
+				spot.car = null
+			spot.state = ParkingSpot.State.FREE
+			spot = null

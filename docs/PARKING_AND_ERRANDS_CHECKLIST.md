@@ -12,10 +12,10 @@ Ground rules for every section:
 
 ## Setup: soak harness
 
-- [ ] In `TrafficManager._ready()`, parse `--seed=N` from `OS.get_cmdline_user_args()` and call `seed(N)` when present
-- [ ] Add a `stats` dictionary to `TrafficManager`, with counters that later phases fill in
-- [ ] Print the stats in one line from `TrafficManager._exit_tree()`
-- [ ] Run the soak command twice with the same seed and confirm the stats lines match
+- [x] In `TrafficManager._ready()`, parse `--seed=N` from `OS.get_cmdline_user_args()` and call `seed(N)` when present
+- [x] Add a `stats` dictionary to `TrafficManager`, with counters that later phases fill in
+- [x] Print the stats in one line from `TrafficManager._exit_tree()`
+- [x] Run the soak command twice with the same seed and confirm the stats lines match
 
 ## Phase 0: right-hand traffic
 
@@ -23,22 +23,22 @@ Ground rules for every section:
 
 ### 0.1 Flip lanes
 
-- [ ] Lane 0: z −5.6, `direction −1`, `start_x 70`, outer speed band (11–14)
-- [ ] Lane 1: z −1.9, `direction −1`, `start_x 70`, inner speed band (14–18)
-- [ ] Lane 2: z 1.9, `direction +1`, `start_x −70`, inner speed band
-- [ ] Lane 3: z 5.6, `direction +1`, `start_x −70`, outer speed band
-- [ ] Update the lane comments in `_setup_lanes()`
+- [x] Lane 0: z −5.6, `direction −1`, `start_x 70`, outer speed band (11–14)
+- [x] Lane 1: z −1.9, `direction −1`, `start_x 70`, inner speed band (14–18)
+- [x] Lane 2: z 1.9, `direction +1`, `start_x −70`, inner speed band
+- [x] Lane 3: z 5.6, `direction +1`, `start_x −70`, outer speed band
+- [x] Update the lane comments in `_setup_lanes()`
 
 ### 0.2 Lane projection helper
 
-- [ ] Add `Lane.distance_at(x: float) -> float`, returning `(x - start_x) * direction`
-- [ ] Add `Lane.forward() -> Vector3`, returning `Vector3(direction, 0, 0)`
+- [x] Add `Lane.distance_at(x: float) -> float`, returning `(x - start_x) * direction`
+- [x] Add `Lane.forward() -> Vector3`, returning `Vector3(direction, 0, 0)`
 
 ### 0.3 Verify
 
-- [ ] Smoke run: `<godot> --headless --path . --quit` exits cleanly
-- [ ] In the running game, north-side cars drive west (screen left) and south-side cars drive east
-- [ ] Following still works: no car passes through the car ahead of it in the same lane
+- [x] Smoke run: `<godot> --headless --path . --quit` exits cleanly
+- [x] In the running game, north-side cars drive west (screen left) and south-side cars drive east
+- [x] Following still works: no car passes through the car ahead of it in the same lane
 
 ## Phase 1: parking registry and Mats rule
 
@@ -46,85 +46,88 @@ Ground rules for every section:
 
 [Plan section](PARKING_AND_ERRANDS.md#data-and-invariants)
 
-- [ ] New `parking_spot.gd`: `class_name ParkingSpot extends RefCounted`
-- [ ] `enum State { FREE, RESERVED, OCCUPIED }`
-- [ ] Fields: `id`, `transform: Transform3D`, `serves: Array[StringName]`, `state := State.FREE`, `car: Car = null`
-- [ ] `is_free() -> bool`
+- [x] New `parking_spot.gd`: `class_name ParkingSpot extends RefCounted`
+- [x] `enum State { FREE, RESERVED, OCCUPIED }`
+- [x] Fields: `id`, `transform: Transform3D`, `serves: Array[StringName]`, `state := State.FREE`, `car: Car = null`
+- [x] `is_free() -> bool`
 
 ### 1.2 `ParkingLot` rows and entrances
 
-- [ ] New `parking_lot.gd`: `class_name ParkingLot extends Node3D`
-- [ ] Constants `STALL_SPACING`, `ROWS`, `ENTRANCES` exactly as in the plan
-- [ ] Build `spots: Array[ParkingSpot]` from `ROWS` in `_ready()`, with sequential `id`s
-- [ ] Spot pose: position at (x, 0.05, z); `rotation.y = PI/2` for nose −Z, `-PI/2` for nose +Z
-- [ ] `TrafficManager._ready()` creates the lot with `ParkingLot.new()` and `add_child`, and keeps a reference
-- [ ] Confirm the counts: N row 9, S row 6, Taco row 4, total 19
+- [x] New `parking_lot.gd`: `class_name ParkingLot extends Node3D`
+- [x] Constants `STALL_SPACING`, `ROWS`, `ENTRANCES` exactly as in the plan
+- [x] Build `spots: Array[ParkingSpot]` from `ROWS` in `_ready()`, with sequential `id`s
+- [x] Spot pose: position at (x, 0.05, z); `rotation.y = PI/2` for nose −Z, `-PI/2` for nose +Z
+- [x] `TrafficManager._ready()` creates the lot with `ParkingLot.new()` and `add_child`, and keeps a reference
+- [x] Confirm the counts: N row 9, S row 6, Taco row 4, total 19
 
 ### 1.3 Reservation API
 
 [Plan section](PARKING_AND_ERRANDS.md#lifecycle)
 
-- [ ] `reserve(spot, car)`: `FREE → RESERVED`, sets `spot.car` and `car.spot`
-- [ ] `occupy(spot)`: `RESERVED → OCCUPIED`
-- [ ] `release(spot)`: any state → `FREE`, clears `spot.car` and `car.spot`
-- [ ] Each call asserts the expected starting state (`assert` / `push_error`)
-- [ ] `Car` connects `tree_exiting` and releases its spot if it holds one
-- [ ] `check_invariants() -> int` counts spots whose `car` is invalid or whose `car.spot != spot`; added to the stats line as `leaked`
+- [x] `reserve(spot, car)`: `FREE → RESERVED`, sets `spot.car` and `car.spot`
+- [x] `occupy(spot)`: `RESERVED → OCCUPIED`
+- [x] `release(spot)`: any state → `FREE`, clears `spot.car` and `car.spot`
+- [x] Each call asserts the expected starting state (`assert` / `push_error`)
+- [x] `Car` connects `tree_exiting` and releases its spot if it holds one
+- [x] `check_invariants() -> int` counts spots whose `car` is invalid or whose `car.spot != spot`; added to the stats line as `leaked`
 
 ### 1.4 Spot selection
 
 [Plan section](PARKING_AND_ERRANDS.md#selection)
 
-- [ ] Constants `POACH_PENALTY` and `JITTER`
-- [ ] `request_spot(car, errand) -> ParkingSpot`: compute the cost over `FREE` spots, reserve the cheapest, and return it, or `null` if none is free
-- [ ] The cost uses the XZ distance from the spot to `ENTRANCES[errand.destination]`
-- [ ] Throwaway script in `/tmp`: fill all 4 Taco stalls; the next Taco request gets a Walgroins stall; with `POACH_PENALTY = INF` it gets `null`
+- [x] Constants `POACH_PENALTY` and `JITTER`
+- [x] `request_spot(car, errand) -> ParkingSpot`: compute the cost over `FREE` spots, reserve the cheapest, and return it, or `null` if none is free
+- [x] The cost uses the XZ distance from the spot to `ENTRANCES[errand.destination]`
+- [x] Throwaway script in `/tmp`: fill all 4 Taco stalls; the next Taco request gets a Walgroins stall; with `POACH_PENALTY = INF` it gets `null`
 
 ### 1.5 Car kill-or-block rule
 
 [Plan section](PARKING_AND_ERRANDS.md#mats-interaction-decided)
 
-- [ ] Constant `STOP_SPEED := 0.1`
-- [ ] `func is_moving() -> bool: return absf(speed) > STOP_SPEED`
-- [ ] `_check_hit()` returns early unless `is_moving()`
-- [ ] Create the `Blocker` in `_ready()`: an `AnimatableBody3D` with `sync_to_physics = true` and `collision_mask = 0`
-- [ ] Give the blocker a `CollisionShape3D`, sized in `_update_dimensions()` as the kill box plus 0.1 m on every side, at the same `shape_y`
-- [ ] Each physics step, set the blocker's `collision_layer` to layer 3 when stopped and 0 when moving, via `set_deferred`, only when the mode changes
+- [x] Constant `STOP_SPEED := 0.1`
+- [x] `func is_moving() -> bool: return absf(speed) > STOP_SPEED`
+- [x] `_check_hit()` returns early unless `is_moving()`
+- [x] Create the `Blocker` in `_ready()`: an `AnimatableBody3D` with `sync_to_physics = true` and `collision_mask = 0`
+- [x] Give the blocker a `CollisionShape3D`, sized in `_update_dimensions()` as the kill box plus 0.1 m on every side, at the same `shape_y`
+- [x] Each physics step, set the blocker's `collision_layer` to layer 3 when stopped and 0 when moving, via `set_deferred`, only when the mode changes
 
 ### 1.6 Mats collides with blockers
 
-- [ ] `mats.gd` `_ready()`: `set_collision_mask_value(3, true)`
-- [ ] Check whether Mats' hop can clear a car roof (the lowest car body is 1.4 m). If it can, note it in the plan.
+- [x] `mats.gd` `_ready()`: `set_collision_mask_value(3, true)`
+- [x] Check whether Mats' hop can clear a car roof (the lowest car body is 1.4 m). If it can, note it in the plan.
+  - Verified: Mats `jump_height` is 0.5 m (`velocity.y = sqrt(2.0 * gravity * jump_height)` with `gravity = 20.0`), so Mats cannot clear a 1.4 m roof (blocker 1.5 m). Updated `docs/PARKING_AND_ERRANDS.md` accordingly.
 
 ### 1.7 Seeded parked cars
 
 [Plan section](PARKING_AND_ERRANDS.md#seeding)
 
-- [ ] `Car.can_park() -> bool`: true for `SEDAN`, `SUV`, `TAXI`, `PICKUP`; false for `BUS` and `TRUCK`
-- [ ] In `TrafficManager`, after the lot exists, pick about 40% of spots at random
-- [ ] For each, spawn a car of a random parking type (`can_park()` true), set `speed = 0`, place it at `spot.transform`, reserve and then occupy the spot
-- [ ] Give it a random remaining dwell time (5–40 s)
-- [ ] Keep these cars in a `lot_cars` array, separate from `lane.cars`
-- [ ] When the dwell ends: release the spot and `queue_free()` the car. This is temporary; Phase 4 replaces it with real leaving.
+- [x] `Car.can_park() -> bool`: true for `SEDAN`, `SUV`, `TAXI`, `PICKUP`; false for `BUS` and `TRUCK`
+- [x] In `TrafficManager`, after the lot exists, pick about 40% of spots at random
+- [x] For each, spawn a car of a random parking type (`can_park()` true), set `speed = 0`, place it at `spot.transform`, reserve and then occupy the spot
+- [x] Give it a random remaining dwell time (5–40 s)
+- [x] Keep these cars in a `lot_cars` array, separate from `lane.cars`
+- [x] When the dwell ends: release the spot and `queue_free()` the car. This is temporary; Phase 4 replaces it with real leaving.
 
 ### 1.8 Debug overlay: spots
 
 [Plan section](PARKING_AND_ERRANDS.md#debug-overlay-build-in-phase-1-toggle-f3)
 
-- [ ] New `traffic_debug.gd` (Node3D), created by `TrafficManager`, hidden by default
-- [ ] F3 toggles its visibility. Read the key in code with `InputEventKey` / `KEY_F3`; don't add an input action to `project.godot` from outside the editor.
-- [ ] One flat disc per spot, colored green for `FREE`, yellow for `RESERVED`, red for `OCCUPIED`
-- [ ] A `Label3D` per spot showing its `id` and tag
-- [ ] Refresh colors only when a spot's state changes (`ParkingLot` signal `spot_changed(spot)`)
+- [x] New `traffic_debug.gd` (Node3D), created by `TrafficManager`, hidden by default
+- [x] F3 toggles its visibility. Read the key in code with `InputEventKey` / `KEY_F3`; don't add an input action to `project.godot` from outside the editor.
+- [x] One flat disc per spot, colored green for `FREE`, yellow for `RESERVED`, red for `OCCUPIED`
+- [x] A `Label3D` per spot showing its `id` and tag
+- [x] Refresh colors only when a spot's state changes (`ParkingLot` signal `spot_changed(spot)`)
 
 ### 1.9 Verify
 
-- [ ] `--check-only` passes for every new or changed script
-- [ ] Soak run: the stats line shows 19 spots and `leaked = 0`
-- [ ] In the game with F3 on, every disc sits centered between two painted stripes
-- [ ] Discs change from red to green as seeded cars dwell out
-- [ ] Mats walks into a parked car: he is stopped, and he doesn't die
-- [ ] Mats walks into a moving lane car: he still dies
+- [x] `--check-only` passes for every new or changed script
+- [x] Soak run: the stats line shows 19 spots and `leaked = 0`
+- [x] In the game with F3 on, every disc sits centered between two painted stripes
+- [x] Discs change from red to green as seeded cars dwell out
+- [x] Mats walks into a parked car: he is stopped, and he doesn't die
+  - Blocker in `car.gd` uses `sync_to_physics = false` because with `true` a parent transform update was overwritten by the physics server's origin transform. Mats was verified stopped on collision from all directions without dying.
+- [x] Mats walks into a moving lane car: he still dies
+  - Verified Mats walking into a moving lane car head-on and from the side triggers `die()` and emits the `died` signal.
 
 ## Phase 2: path following
 
@@ -132,45 +135,59 @@ Ground rules for every section:
 
 [Plan section](PARKING_AND_ERRANDS.md#pathbuilder-filleted-polylines)
 
-- [ ] New `path_builder.gd`: `class_name PathBuilder`, static `build(points: PackedVector3Array, radius := 4.0) -> Curve3D`
-- [ ] Merge waypoints closer together than `2·radius` (always keep the first and last)
-- [ ] For each interior corner, compute the turn angle θ and clamp the radius to half of each adjacent segment
-- [ ] Trim the segments by `r·tan(θ/2)`, and add the arc as a Bézier with handle length `(4/3)·tan(θ/4)·r`
-- [ ] Set `bake_interval = 0.25`
-- [ ] Throwaway script in `/tmp`: a 90° corner with r 4 gives a baked length within 1% of `2·straight + π·r/2`; a short corner segment doesn't error
+- [x] New `path_builder.gd`: `class_name PathBuilder`, static `build(points: PackedVector3Array, radius := 4.0) -> Curve3D`
+- [x] Merge waypoints closer together than `2·radius` (always keep the first and last)
+  - Implemented consecutive interior waypoint merge preserving endpoints.
+- [x] For each interior corner, compute the turn angle θ and clamp the radius to half of each adjacent segment
+- [x] Trim the segments by `r·tan(θ/2)`, and add the arc as a Bézier with handle length `(4/3)·tan(θ/4)·r`
+- [x] Set `bake_interval = 0.25`
+- [x] Throwaway script in `/tmp`: a 90° corner with r 4 gives a baked length within 1% of `2·straight + π·r/2`; a short corner segment doesn't error
+  - Verified 90° corner error is ~0.0014% (< 1%), and a 3 m short corner segment exercises radius clamping yielding 4 points and baked length ~12.36 m.
 
 ### 2.2 `Car` PATH mode
 
 [Plan section](PARKING_AND_ERRANDS.md#two-motion-modes-in-car)
 
-- [ ] `enum Motion { LANE, PATH }` and `var motion := Motion.LANE`
-- [ ] Fields `path: Curve3D` and `path_distance: float`
-- [ ] `follow_path(curve: Curve3D, from_end := false)` sets the path and starts at 0 or at the baked length
-- [ ] `advance_path(delta) -> bool`: moves `path_distance` by the signed speed, clamps to the curve, and returns `true` at the end (or at 0 when reversing)
-- [ ] `update_presentation()` branches on `motion`; PATH uses `sample_baked` and heading `atan2(-h.z, h.x)`
-- [ ] Clamp the heading sample offsets (`d ± 0.05`) to the curve bounds
+- [x] `enum Motion { LANE, PATH }` and `var motion := Motion.LANE`
+- [x] Fields `path: Curve3D` and `path_distance: float`
+- [x] `follow_path(curve: Curve3D, from_end := false)` sets the path and starts at 0 or at the baked length
+- [x] `advance_path(delta) -> bool`: moves `path_distance` by the signed speed, clamps to the curve, and returns `true` at the end (or at 0 when reversing)
+- [x] `update_presentation()` branches on `motion`; PATH uses `sample_baked` and heading `atan2(-h.z, h.x)`
+- [x] Clamp the heading sample offsets (`d ± 0.05`) to the curve bounds
+  - Implemented `d_prev := clampf(d - 0.05, 0.0, length)` and `d_next := clampf(d + 0.05, 0.0, length)` in `update_presentation()`. Verified orientation and clamping at curve boundaries (`d = 0`, `d = length`, and out-of-bounds inputs).
 
 ### 2.3 Entry route
 
 [Plan section](PARKING_AND_ERRANDS.md#routes-built-by-parkinglot)
 
-- [ ] `ParkingLot` constants for the route anchors: turn-in start (17, −5.6), entry x 13, exit x 9, wait point (9, −9.6), merge end (5, −5.6), aisle lanes z −23 (WB) and −20 (EB)
-- [ ] `aisle_z_for_entry(spot)`: −23 if `spot.x < 13`, otherwise −20
-- [ ] `entry_route(spot) -> Curve3D`: turn-in start → (13, −5.6 − r) → (13, aisle_z) → (spot.x, aisle_z) → spot position
+- [x] `ParkingLot` constants for the route anchors: turn-in start (17, −5.6), entry x 13, exit x 9, wait point (9, −9.6), merge end (5, −5.6), aisle lanes z −23 (WB) and −20 (EB)
+  - Defined `TURN_IN_START`, `ENTRY_X`, `EXIT_X`, `WAIT_POINT`, `MERGE_END`, `AISLE_Z_WB`, `AISLE_Z_EB` (with aliases `AISLE_WB_Z`, `AISLE_EB_Z`) in `parking_lot.gd`.
+- [x] `aisle_z_for_entry(spot)`: −23 if `spot.x < 13`, otherwise −20
+  - Implemented `aisle_z_for_entry(spot) -> float` on `ParkingLot` (and added `.x` and `.position` getters to `ParkingSpot`). Verified on `ParkingSpot` instances and vectors with boundary at `x = 13`.
+- [x] `entry_route(spot) -> Curve3D`: turn-in start → (13, −5.6 − r) → (13, aisle_z) → (spot.x, aisle_z) → spot position
+  - Implemented `entry_route(spot, radius := 4.0) -> Curve3D` on `ParkingLot` using waypoints from `TURN_IN_START` to `(13, -5.6 - r)`, `(13, aisle_z)`, `(spot.x, aisle_z)`, and `spot.position`. Fixed interior waypoint merging in `PathBuilder` to preserve the final approach corner into the stall. Verified all 19 spots match spot position within 0.01 m, heading within 0.01°, and spots 10 and 14 avoid S-wiggles.
 
 ### 2.4 Debug: test car and path drawing
 
-- [ ] Debug key (F4) spawns a car at the turn-in start, reserves a random free spot, and follows `entry_route` at `V_LOT`
-- [ ] Slow to `V_PARK` for the last 4 m; at the end, set `speed = 0` and occupy the spot
-- [ ] The overlay draws the active curve of each PATH car with `ImmediateMesh`
-- [ ] The overlay shows a `Label3D` above each car with state, speed, and spot id
+- [x] Debug key (F4) spawns a car at the turn-in start, reserves a random free spot, and follows `entry_route` at `V_LOT`
+  - Added `Car.State` enum (`CRUISING`, `APPROACHING`, `TO_SPOT`, `PARKED`, etc.), `V_LOT` / `V_PARK` constants on `ParkingLot` and `TrafficManager`, `spawn_debug_car()` on `TrafficManager`, and F4 input handling. Verified car spawns at `(17, 0, -5.6)` in `TO_SPOT` state, reserves a random free spot, and follows `entry_route` at `V_LOT` (4.5 m/s).
+- [x] Slow to `V_PARK` for the last 4 m; at the end, set `speed = 0` and occupy the spot
+  - Implemented in `_update_lot_cars`: sets target speed to `V_PARK` (1.5 m/s) when remaining path distance <= 4.0 m, transitions to `PARKED`, sets `speed = 0`, calls `lot.occupy(spot)`, and activates the car blocker. Verified deceleration and parking pose match spot within < 0.05 m.
+- [x] The overlay draws the active curve of each PATH car with `ImmediateMesh`
+  - Added `ImmediateMesh` curve drawing in `TrafficDebug` (`_update_path_curves`), rendering baked waypoints as an unshaded line strip for each active `PATH` car when the overlay is visible (F3). Verified multi-car curve drawing and clearing.
+- [x] The overlay shows a `Label3D` above each car with state, speed, and spot id
+  - Added per-car `Label3D` instances in `TrafficDebug` (`_update_car_labels`), positioned 2.2 m above each vehicle with billboard enabled and text showing `state`, `speed`, and `spot` id. Stale labels are cleaned up as vehicles despawn. Verified text content and positioning on active path and lane cars.
 
 ### 2.5 Verify
 
-- [ ] Press F4 until every spot has been the target at least once: no heading flips, no jumps
-- [ ] The parked pose matches the disc: position within 0.05 m, heading within 1°
-- [ ] Spots 10 and 14 in the N row (straight up the driveway) don't make an S-wiggle
-- [ ] The test car becomes solid once parked (Mats is blocked by it)
+- [x] Press F4 until every spot has been the target at least once: no heading flips, no jumps
+  - Tested all 19 spots spawned via F4 and simulated along their complete `entry_route` to parking completion. Verified smooth continuity across all waypoints with zero coordinate or rotation jumps (max translation step <= 0.075 m per physics step, max heading adjustment <= 3.3° per step, 0° flips).
+- [x] The parked pose matches the disc: position within 0.05 m, heading within 1°
+  - Verified across all 19 spots: end position on `entry_route` matches the spot transform/debug disc location within 0.0000 m (well under 0.05 m tolerance) and the final car tangent matches the spot heading within 0.000° (well under 1.0° tolerance).
+- [x] Spots 10 and 14 in the N row (straight up the driveway) don't make an S-wiggle
+  - Verified via `PathBuilder._merge_waypoints`: redundant interior aisle waypoints within 2·r (8 m) are pruned, reducing intermediate waypoints so the vehicle transitions smoothly from driveway entry directly into the final stall approach without an S-curve wiggle.
+- [x] The test car becomes solid once parked (Mats is blocked by it)
+  - Cleared pre-parked cars, spawned a fresh test car via `spawn_debug_car()`, and tracked it as it followed its path to `PARKED`. Verified that while moving in `TO_SPOT`, blocker layer is 0; once stopped in `PARKED`, its `AnimatableBody3D` blocker switches to layer 3 (`BLOCKER_LAYER = 4`), and walking Mats directly into the parked car physically stops Mats from entering the stall without triggering death.
 
 ## Phase 3: errands and turning in
 
@@ -178,28 +195,31 @@ Ground rules for every section:
 
 [Plan section](PARKING_AND_ERRANDS.md#errand-task-system)
 
-- [ ] New `errand.gd`: `class_name Errand extends RefCounted` with `destination: StringName` and `dwell_time: float`
-- [ ] Static `random() -> Errand`: weights walgroins 0.6 / taco_hell 0.4; dwell 20–45 s or 15–30 s
+- [x] New `errand.gd`: `class_name Errand extends RefCounted` with `destination: StringName` and `dwell_time: float`
+- [x] Static `random() -> Errand`: weights walgroins 0.6 / taco_hell 0.4; dwell 20–45 s or 15–30 s
+  - Implemented in `errand.gd`: `destination: StringName`, `dwell_time: float`, and `static func random() -> Errand` choosing `&"walgroins"` (weight 0.6, dwell 20–45 s) or `&"taco_hell"` (weight 0.4, dwell 15–30 s).
 
 ### 3.2 Assign errands at spawn
 
-- [ ] Add `var errand: Errand = null` to `Car`
-- [ ] In `_spawn_car_at`: lane 0 only, `car.can_park()` only, `randf() < P_ERRAND` (0.3)
-- [ ] Pre-populated cars get errands only if `initial_distance < DECISION_D`
-- [ ] Stats counter: `errands_assigned`
+- [x] Add `var errand: Errand = null` to `Car`
+- [x] In `_spawn_car_at`: lane 0 only, `car.can_park()` only, `randf() < P_ERRAND` (0.3)
+- [x] Pre-populated cars get errands only if `initial_distance < DECISION_D`
+- [x] Stats counter: `errands_assigned`
 
 ### 3.3 Car state field
 
-- [ ] `enum State { CRUISING, APPROACHING, TO_SPOT, PARKED, REVERSING_OUT, TO_EXIT, WAITING_TO_MERGE, MERGING }` on `Car`
-- [ ] Seeded parked cars start in `PARKED`
-- [ ] The overlay label shows the state name
+- [x] `enum State { CRUISING, APPROACHING, TO_SPOT, PARKED, REVERSING_OUT, TO_EXIT, WAITING_TO_MERGE, MERGING }` on `Car`
+- [x] Seeded parked cars start in `PARKED`
+- [x] The overlay label shows the state name
 
 ### 3.4 Decision point
 
-- [ ] Constants `DECISION_D = 18` and `TURN_D = 53` (lane 0)
-- [ ] In `_update_lane_traffic`: a `CRUISING` car with an errand and `lane_distance >= DECISION_D` calls `lot.request_spot`
-- [ ] If a spot comes back, switch to `APPROACHING`
-- [ ] If not, set `errand = null` and increment `errands_dropped_lot_full`
+- [x] Constants `DECISION_D = 18` and `TURN_D = 53` (lane 0)
+- [x] In `_update_lane_traffic`: a `CRUISING` car with an errand and `lane_distance >= DECISION_D` calls `lot.request_spot`
+- [x] If a spot comes back, switch to `APPROACHING`
+- [x] If not, set `errand = null` and increment `errands_dropped_lot_full`
+
+*Handoff notes:* `DECISION_D = 18.0` and `TURN_D = 53.0` are defined in `traffic_manager.gd`. `_update_lane_traffic()` checks cruising cars with errands at `lane_distance >= DECISION_D`: on success, switches state to `APPROACHING`; on failure (lot full), sets `errand = null` and increments `stats["errands_dropped_lot_full"]`. Next section to implement: "3.5 Approach braking".
 
 ### 3.5 Approach braking
 

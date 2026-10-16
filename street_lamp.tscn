@@ -1,0 +1,57 @@
+[gd_scene format=3]
+
+[sub_resource type="CylinderShape3D" id="Shape_LightPole"]
+height = 6.5
+radius = 0.2
+
+[sub_resource type="StandardMaterial3D" id="Mat_DarkMetal"]
+albedo_color = Color(0.2, 0.22, 0.25, 1)
+metallic = 0.7
+roughness = 0.3
+
+[sub_resource type="CylinderMesh" id="Mesh_LightPole"]
+material = SubResource("Mat_DarkMetal")
+top_radius = 0.12
+bottom_radius = 0.16
+height = 6.5
+
+[sub_resource type="BoxMesh" id="Mesh_LightArm"]
+material = SubResource("Mat_DarkMetal")
+size = Vector3(0.18, 0.18, 2.2)
+
+[sub_resource type="StandardMaterial3D" id="Mat_Headlight"]
+albedo_color = Color(1, 0.98, 0.85, 1)
+emission_enabled = true
+emission = Color(1, 0.98, 0.85, 1)
+emission_energy_multiplier = 2.0
+
+[sub_resource type="BoxMesh" id="Mesh_LightLamp"]
+material = SubResource("Mat_Headlight")
+size = Vector3(0.4, 0.15, 0.6)
+
+[node name="StreetLamp" type="StaticBody3D"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.25, 0)
+shape = SubResource("Shape_LightPole")
+
+[node name="Pole" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.25, 0)
+mesh = SubResource("Mesh_LightPole")
+
+[node name="Arm" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.4, -0.8)
+mesh = SubResource("Mesh_LightArm")
+
+[node name="Lamp" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.3, -1.8)
+mesh = SubResource("Mesh_LightLamp")
+
+[node name="Light" type="SpotLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 6.2, -1.8)
+light_color = Color(1, 0.96, 0.85, 1)
+light_energy = 4.0
+shadow_enabled = true
+spot_range = 16.0
+spot_angle = 55.0
+spot_angle_attenuation = 1.2

@@ -308,11 +308,11 @@ There is deliberately no in-between band. A band would allow a car that moves sl
 
 Implementation, entirely in `.gd` files:
 
-- `car.gd` creates an `AnimatableBody3D` child named `Blocker` in `_ready()`, with `sync_to_physics = true`. It uses the same box as the kill area from `_update_dimensions()`, plus 0.1 m on every side. An `AnimatableBody3D` pushes a `CharacterBody3D` correctly when a solid car creeps below the cutoff; a `StaticBody3D` would teleport into him. Because the blocker is slightly larger than the kill area, Mats resting against the side or back of a stopped car is outside the kill area when the car drives off. If he stands in front of it, he dies when it moves, as intended.
+- `car.gd` creates an `AnimatableBody3D` child named `Blocker` in `_ready()`, with `sync_to_physics = false` (movement happens in `_physics_process`; `sync_to_physics = true` causes Godot to pin the child transform to origin). It uses the same box as the kill area from `_update_dimensions()`, plus 0.1 m on every side. An `AnimatableBody3D` pushes a `CharacterBody3D` correctly when a solid car creeps below the cutoff; a `StaticBody3D` would teleport into him. Because the blocker is slightly larger than the kill area, Mats resting against the side or back of a stopped car is outside the kill area when the car drives off. If he stands in front of it, he dies when it moves, as intended.
 - The blocker is on **physics layer 3** while the car is stopped, and on no layer while it moves. Use `set_deferred("collision_layer", …)`, because the switch happens during the physics step. Layer 3 keeps the car `Area3D`s (mask 1) from reporting each other's blockers as bodies every frame.
 - `mats.gd` `_ready()` adds `set_collision_mask_value(3, true)`, so `mats.tscn` stays untouched.
 - `_check_hit()` returns early unless the car is moving.
-- Mats' `step_height` is 0.3 and the lowest car body is 1.4 m tall, so he cannot step onto a car. [INFERENCE] His hop probably can't clear a roof either; check this in Phase 1.
+- Mats' step_height is 0.3, jump height is 0.5 m, and the lowest car body is 1.4 m tall (blocker 1.5 m), so he cannot step onto or hop over a car roof.
 - Turning, reversing, and waiting cars all cross the sidewalk band (z −10.7..−7.5). A car waiting to merge is a wall across the sidewalk, and it becomes lethal the moment it pulls out. That supports the game's point.
 
 ## No scene edits

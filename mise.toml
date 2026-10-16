@@ -1,0 +1,10 @@
+[tools]
+uv = "latest"
+oxfmt = "latest"
+
+[tasks.fmt]
+description = "Format GDScript (gdformat) and Markdown (oxfmt) files"
+run = [
+  'uvx --from "gdtoolkit==4.*" gdformat .',
+  'oxfmt "**/*.md"',
+]

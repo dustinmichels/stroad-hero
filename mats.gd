@@ -54,6 +54,7 @@ var _is_dead := false
 
 
 func _ready() -> void:
+	set_collision_mask_value(3, true)
 	floor_snap_length = step_height + 0.05
 	_spawn_transform = global_transform
 	add_to_group("player")
