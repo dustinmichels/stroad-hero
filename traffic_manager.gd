@@ -31,7 +31,7 @@ class Lane:
 
 var lanes: Array[Lane] = []
 
-const MIN_SPAWN_HEADWAY := 14.0 # meters needed before spawning another car in lane
+const MIN_SPAWN_HEADWAY := 18.0 # meters needed before spawning another car in lane
 const SAFE_FOLLOWING_GAP := 8.0 # meters
 const BRAKE_ACCELERATION := 25.0
 const MOTOR_ACCELERATION := 15.0
@@ -93,7 +93,9 @@ func _update_lane_spawning(lane: Lane, delta: float) -> void:
 func _spawn_car_at(lane: Lane, initial_distance: float) -> Node:
 	var car = CAR_SCENE.instantiate()
 	var spd := randf_range(lane.min_speed, lane.max_speed)
-	var car_type: int = randi() % 4
+	var car_type: int = randi() % CarScript.CarType.size()
+	if car_type == CarScript.CarType.BUS:
+		spd *= 0.9
 	
 	add_child(car)
 	car.setup(lane.id, lane.z, lane.direction, lane.start_x, lane.length, spd, car_type)
@@ -123,7 +125,7 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 		# Simple car-following (safe distance to lead car)
 		if i > 0:
 			var lead_car = valid_cars[i - 1]
-			var gap: float = lead_car.lane_distance - car.lane_distance - lead_car.car_length
+			var gap: float = lead_car.lane_distance - car.lane_distance - (0.5 * (lead_car.car_length + car.car_length))
 			if gap < SAFE_FOLLOWING_GAP:
 				var target_speed := minf(car.desired_speed, lead_car.speed * clampf(gap / SAFE_FOLLOWING_GAP, 0.1, 1.0))
 				car.speed = move_toward(car.speed, target_speed, BRAKE_ACCELERATION * delta)
