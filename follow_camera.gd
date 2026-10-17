@@ -36,24 +36,23 @@ func _physics_process(delta: float) -> void:
 		_target_yaw += step * YAW_STEP
 		_is_swinging = true
 	if _is_swinging:
-		_camera_yaw = lerpf(
-			_camera_yaw, _target_yaw, 1.0 - exp(-swing_smoothing * delta)
-		)
+		_camera_yaw = lerpf(_camera_yaw, _target_yaw, 1.0 - exp(-swing_smoothing * delta))
 		if absf(_target_yaw - _camera_yaw) <= SWING_FINISH_ANGLE:
 			_camera_yaw = _target_yaw
 			_is_swinging = false
 
-
-	var goal := target.global_position + Vector3(
-		-sin(_camera_yaw) * _horizontal_distance,
-		0.0,
-		-cos(_camera_yaw) * _horizontal_distance
+	var goal := (
+		target.global_position
+		+ Vector3(
+			-sin(_camera_yaw) * _horizontal_distance, 0.0, -cos(_camera_yaw) * _horizontal_distance
+		)
 	)
 	goal.y = global_position.y
 	global_position = global_position.lerp(goal, 1.0 - exp(-smoothing * delta))
 
 	var target_direction := target.global_position - global_position
 	global_rotation.y = atan2(-target_direction.x, -target_direction.z)
+
 
 func _on_target_died(_death_position: Vector3) -> void:
 	_target_yaw = _camera_yaw + angle_difference(_camera_yaw, _default_yaw)

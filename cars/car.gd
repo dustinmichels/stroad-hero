@@ -7,7 +7,15 @@ enum CarType { SEDAN, SUV, TAXI, TRUCK, PICKUP, BUS, HATCHBACK, MINIVAN, SPORTS 
 enum Motion { LANE, PATH }
 
 enum State {
-	CRUISING, APPROACHING, TO_SPOT, PARKED, REVERSING_OUT, TO_EXIT, WAITING_TO_MERGE, MERGING, DRIVE_THRU
+	CRUISING,
+	APPROACHING,
+	TO_SPOT,
+	PARKED,
+	REVERSING_OUT,
+	TO_EXIT,
+	WAITING_TO_MERGE,
+	MERGING,
+	DRIVE_THRU
 }
 
 enum TurnSignal { NONE, LEFT, RIGHT }
@@ -24,8 +32,7 @@ const PARKING_CAR_TYPES: Array[CarType] = [
 
 static func is_type_parkable(type: CarType) -> bool:
 	match type:
-		CarType.SEDAN, CarType.SUV, CarType.TAXI, CarType.PICKUP, CarType.HATCHBACK, \
-		CarType.MINIVAN, CarType.SPORTS:
+		CarType.SEDAN, CarType.SUV, CarType.TAXI, CarType.PICKUP, CarType.HATCHBACK, CarType.MINIVAN, CarType.SPORTS:
 			return true
 		CarType.BUS, CarType.TRUCK:
 			return false
@@ -149,6 +156,7 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	_update_blocker_layer()
 	_update_signals(delta)
+
 
 func _update_blocker_layer() -> void:
 	if not blocker:
@@ -362,7 +370,9 @@ func _setup_signals() -> void:
 			_create_signal_mesh(car_model, "SignalRearL", tl_r.position, -1.0, -1.0)
 
 
-func _create_signal_mesh(parent: Node, node_name: String, base_pos: Vector3, sign_x: float, sign_z: float) -> MeshInstance3D:
+func _create_signal_mesh(
+	parent: Node, node_name: String, base_pos: Vector3, sign_x: float, sign_z: float
+) -> MeshInstance3D:
 	var sig := MeshInstance3D.new()
 	sig.name = node_name
 	sig.mesh = _signal_mesh

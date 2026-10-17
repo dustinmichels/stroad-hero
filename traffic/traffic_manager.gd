@@ -164,6 +164,7 @@ func _setup_lanes() -> void:
 	# Lane 3: Eastbound outer
 	lanes.append(Lane.new(3, 5.6, 1.0, -95.0, 190.0, 11.0, 14.0, 3.0, 6.0))
 
+
 func _pre_populate_traffic() -> void:
 	# Seed 1-2 cars per lane at start
 	for lane in lanes:
@@ -245,9 +246,15 @@ func _update_lot_cars(delta: float) -> void:
 			continue
 		if car.state == CarScript.State.TO_SPOT:
 			if car.turn_signal != CarScript.TurnSignal.NONE:
-				if (car.lane_id == 0 or car.merge_target_lane == 0) and car.global_position.z <= -9.0:
+				if (
+					(car.lane_id == 0 or car.merge_target_lane == 0)
+					and car.global_position.z <= -9.0
+				):
 					car.set_turn_signal(CarScript.TurnSignal.NONE)
-				elif (car.lane_id == 3 or car.merge_target_lane == 3) and car.global_position.z >= 9.0:
+				elif (
+					(car.lane_id == 3 or car.merge_target_lane == 3)
+					and car.global_position.z >= 9.0
+				):
 					car.set_turn_signal(CarScript.TurnSignal.NONE)
 			var yielding := _update_car_yielding(car, delta)
 			var target_speed := 0.0 if yielding else V_LOT
@@ -264,10 +271,7 @@ func _update_lot_cars(delta: float) -> void:
 			var arrived := car.advance_path(delta)
 			if (
 				arrived
-				or (
-					car.path != null
-					and car.path.get_baked_length() - car.path_distance <= 0.02
-				)
+				or (car.path != null and car.path.get_baked_length() - car.path_distance <= 0.02)
 			):
 				car.speed = 0.0
 				car.desired_speed = 0.0
@@ -295,11 +299,21 @@ func _update_lot_cars(delta: float) -> void:
 					car.set_turn_signal(CarScript.TurnSignal.NONE)
 			var yielding := _update_car_yielding(car, delta)
 			var order_dist := TACO_DT_ORDER_DIST if car.merge_target_lane == 0 else BK_DT_ORDER_DIST
-			var pickup_dist := TACO_DT_PICKUP_DIST if car.merge_target_lane == 0 else BK_DT_PICKUP_DIST
-			if not car.dt_order_done and car.path_distance >= order_dist - 1.5 and car.path_distance <= order_dist + 3.0:
+			var pickup_dist := (
+				TACO_DT_PICKUP_DIST if car.merge_target_lane == 0 else BK_DT_PICKUP_DIST
+			)
+			if (
+				not car.dt_order_done
+				and car.path_distance >= order_dist - 1.5
+				and car.path_distance <= order_dist + 3.0
+			):
 				car.dt_order_done = true
 				car.dt_dwell_timer = randf_range(1.5, 3.0)
-			elif not car.dt_pickup_done and car.path_distance >= pickup_dist - 1.5 and car.path_distance <= pickup_dist + 3.0:
+			elif (
+				not car.dt_pickup_done
+				and car.path_distance >= pickup_dist - 1.5
+				and car.path_distance <= pickup_dist + 3.0
+			):
 				car.dt_pickup_done = true
 				car.dt_dwell_timer = randf_range(1.5, 3.0)
 
@@ -310,7 +324,15 @@ func _update_lot_cars(delta: float) -> void:
 			elif yielding:
 				var b := car.current_blocker
 				if b != null and b.speed > 0.5:
-					var gap := (b.path_distance - car.path_distance - (car.car_length + b.car_length) * 0.5) if (car.path != null and b.path == car.path) else 0.0
+					var gap := (
+						(
+							b.path_distance
+							- car.path_distance
+							- (car.car_length + b.car_length) * 0.5
+						)
+						if (car.path != null and b.path == car.path)
+						else 0.0
+					)
 					if gap > 2.5:
 						target_speed = minf(b.speed, V_DRIVE_THRU)
 					else:
@@ -327,10 +349,7 @@ func _update_lot_cars(delta: float) -> void:
 			var arrived := car.advance_path(delta)
 			if (
 				arrived
-				or (
-					car.path != null
-					and car.path.get_baked_length() - car.path_distance <= 0.05
-				)
+				or (car.path != null and car.path.get_baked_length() - car.path_distance <= 0.05)
 			):
 				car.speed = 0.0
 				car.desired_speed = 0.0
@@ -358,7 +377,9 @@ func _update_lot_cars(delta: float) -> void:
 						car.speed = -V_PARK
 						car.desired_speed = -V_PARK
 					else:
-						push_error("TrafficManager: Missing reverse route for parked car %s" % car.name)
+						push_error(
+							"TrafficManager: Missing reverse route for parked car %s" % car.name
+						)
 			surviving_cars.append(car)
 		elif car.state == CarScript.State.REVERSING_OUT:
 			var yielding := _update_car_yielding(car, delta)
@@ -479,13 +500,12 @@ func _update_lot_cars(delta: float) -> void:
 			var arrived := car.advance_path(delta)
 			if (
 				arrived
-				or (
-					car.path != null
-					and car.path_distance >= car.path.get_baked_length() - 0.05
-				)
+				or (car.path != null and car.path_distance >= car.path.get_baked_length() - 0.05)
 			):
 				var target_lane_id := car.merge_target_lane
-				var target_lane: Lane = lanes[target_lane_id] if lanes.size() > target_lane_id else null
+				var target_lane: Lane = (
+					lanes[target_lane_id] if lanes.size() > target_lane_id else null
+				)
 				car.motion = CarScript.Motion.LANE
 				car.lane_id = target_lane_id
 				if target_lane != null:
@@ -539,7 +559,13 @@ func find_blocker(car: Car) -> Car:
 
 	var spd := absf(car.speed)
 	var lookahead := maxf(4.0, (spd * spd) / (2.0 * BRAKE_ACCELERATION) + 3.0)
-	var sign_dir := -1.0 if (car.speed < 0.0 or car.desired_speed < 0.0 or car.state == CarScript.State.REVERSING_OUT) else 1.0
+	var sign_dir := (
+		-1.0
+		if (
+			car.speed < 0.0 or car.desired_speed < 0.0 or car.state == CarScript.State.REVERSING_OUT
+		)
+		else 1.0
+	)
 	var h := car.get_heading()
 	var forward_vec := Vector3(h.x, 0.0, h.z).normalized() * sign_dir
 	var lateral_vec := Vector3(-forward_vec.z, 0.0, forward_vec.x)
@@ -553,7 +579,11 @@ func find_blocker(car: Car) -> Car:
 	for lane in lanes:
 		if lane != null:
 			for ghost in lane.cars:
-				if is_instance_valid(ghost) and ghost != car and ghost.motion == CarScript.Motion.PATH:
+				if (
+					is_instance_valid(ghost)
+					and ghost != car
+					and ghost.motion == CarScript.Motion.PATH
+				):
 					if not candidates.has(ghost):
 						candidates.append(ghost)
 	var closest_blocker: Car = null
@@ -575,26 +605,68 @@ func find_blocker(car: Car) -> Car:
 		var has_dt: bool = (
 			car.state == CarScript.State.DRIVE_THRU
 			or other.state == CarScript.State.DRIVE_THRU
-			or (car.had_errand and (car.merge_target_lane == 3 or (car.path != null and car.path == taco_hell_drive_thru_path)))
-			or (other.had_errand and (other.merge_target_lane == 3 or (other.path != null and other.path == taco_hell_drive_thru_path)))
+			or (
+				car.had_errand
+				and (
+					car.merge_target_lane == 3
+					or (car.path != null and car.path == taco_hell_drive_thru_path)
+				)
+			)
+			or (
+				other.had_errand
+				and (
+					other.merge_target_lane == 3
+					or (other.path != null and other.path == taco_hell_drive_thru_path)
+				)
+			)
 		)
 		if not has_dt:
 			# Original lot-lot driveway separation rule
-			if car.global_position.z >= -20.0 and car.global_position.z <= -5.6 and other.global_position.z >= -20.0 and other.global_position.z <= -5.6:
-				if car.global_position.x >= 6.0 and car.global_position.x <= 16.0 and other.global_position.x >= 6.0 and other.global_position.x <= 16.0:
+			if (
+				car.global_position.z >= -20.0
+				and car.global_position.z <= -5.6
+				and other.global_position.z >= -20.0
+				and other.global_position.z <= -5.6
+			):
+				if (
+					car.global_position.x >= 6.0
+					and car.global_position.x <= 16.0
+					and other.global_position.x >= 6.0
+					and other.global_position.x <= 16.0
+				):
 					if (car.global_position.x >= 11.0) != (other.global_position.x >= 11.0):
 						continue
 		else:
-			if car.global_position.z >= -18.0 and car.global_position.z <= -5.6 and other.global_position.z >= -18.0 and other.global_position.z <= -5.6:
-				if car.global_position.x >= 6.0 and car.global_position.x <= 16.0 and other.global_position.x >= 6.0 and other.global_position.x <= 16.0:
+			if (
+				car.global_position.z >= -18.0
+				and car.global_position.z <= -5.6
+				and other.global_position.z >= -18.0
+				and other.global_position.z <= -5.6
+			):
+				if (
+					car.global_position.x >= 6.0
+					and car.global_position.x <= 16.0
+					and other.global_position.x >= 6.0
+					and other.global_position.x <= 16.0
+				):
 					if (car.global_position.x >= 11.0) != (other.global_position.x >= 11.0):
 						var ch := car.get_heading()
 						var oh := other.get_heading()
 						if ch.x > -0.3 and oh.x > -0.3:
 							continue
 			# Booger King driveway entry (x < -42) and exit (x >= -42) lanes (z between 5.6 and 18, x between -46 and -38)
-			if car.global_position.z >= 5.6 and car.global_position.z <= 18.0 and other.global_position.z >= 5.6 and other.global_position.z <= 18.0:
-				if car.global_position.x >= -46.0 and car.global_position.x <= -38.0 and other.global_position.x >= -46.0 and other.global_position.x <= -38.0:
+			if (
+				car.global_position.z >= 5.6
+				and car.global_position.z <= 18.0
+				and other.global_position.z >= 5.6
+				and other.global_position.z <= 18.0
+			):
+				if (
+					car.global_position.x >= -46.0
+					and car.global_position.x <= -38.0
+					and other.global_position.x >= -46.0
+					and other.global_position.x <= -38.0
+				):
 					if (car.global_position.x >= -42.0) != (other.global_position.x >= -42.0):
 						var ch := car.get_heading()
 						var oh := other.get_heading()
@@ -603,28 +675,59 @@ func find_blocker(car: Car) -> Car:
 			# Taco Hell crossing mutex at (23, -23)
 			if car.path != null and car.path == taco_hell_drive_thru_path:
 				if car.path_distance >= 20.5 and car.path_distance <= 23.0:
-					if other.path == taco_hell_drive_thru_path and other.path_distance >= 104.0 and other.path_distance <= 111.5:
+					if (
+						other.path == taco_hell_drive_thru_path
+						and other.path_distance >= 104.0
+						and other.path_distance <= 111.5
+					):
 						return other
 					elif other.global_position.distance_to(Vector3(23.0, 0.0, -23.0)) < 3.5:
 						return other
 				elif car.path_distance >= 103.0 and car.path_distance <= 105.0:
-					if other.path == taco_hell_drive_thru_path and other.path_distance >= 22.0 and other.path_distance <= 28.5:
+					if (
+						other.path == taco_hell_drive_thru_path
+						and other.path_distance >= 22.0
+						and other.path_distance <= 28.5
+					):
 						return other
-					elif other.global_position.distance_to(Vector3(23.0, 0.0, -23.0)) < 3.5 and other.get_heading().z < -0.3:
+					elif (
+						other.global_position.distance_to(Vector3(23.0, 0.0, -23.0)) < 3.5
+						and other.get_heading().z < -0.3
+					):
 						return other
 		var half_len_sum := (car.car_length + other.car_length) / 2.0
 		if has_dt:
 			# Single-file queue detection in driveway exit lanes
-			if car.global_position.x >= 6.0 and car.global_position.x < 11.5 and other.global_position.x >= 6.0 and other.global_position.x < 11.5:
-				if car.global_position.z >= -20.5 and car.global_position.z <= -9.0 and other.global_position.z >= -20.5 and other.global_position.z <= -9.0:
+			if (
+				car.global_position.x >= 6.0
+				and car.global_position.x < 11.5
+				and other.global_position.x >= 6.0
+				and other.global_position.x < 11.5
+			):
+				if (
+					car.global_position.z >= -20.5
+					and car.global_position.z <= -9.0
+					and other.global_position.z >= -20.5
+					and other.global_position.z <= -9.0
+				):
 					var dz := other.global_position.z - car.global_position.z
 					if dz > 0.0 and dz < (lookahead + half_len_sum):
 						if dz < min_forward:
 							min_forward = dz
 							closest_blocker = other
 							continue
-			if car.global_position.x >= -42.0 and car.global_position.x <= -38.0 and other.global_position.x >= -42.0 and other.global_position.x <= -38.0:
-				if car.global_position.z >= 7.5 and car.global_position.z <= 22.5 and other.global_position.z >= 7.5 and other.global_position.z <= 22.5:
+			if (
+				car.global_position.x >= -42.0
+				and car.global_position.x <= -38.0
+				and other.global_position.x >= -42.0
+				and other.global_position.x <= -38.0
+			):
+				if (
+					car.global_position.z >= 7.5
+					and car.global_position.z <= 22.5
+					and other.global_position.z >= 7.5
+					and other.global_position.z <= 22.5
+				):
 					var dz := car.global_position.z - other.global_position.z
 					if dz > 0.0 and dz < (lookahead + half_len_sum):
 						if dz < min_forward:
@@ -642,13 +745,17 @@ func find_blocker(car: Car) -> Car:
 				var oh := other.get_heading()
 				var of := Vector3(oh.x, 0.0, oh.z).normalized()
 				var ol := Vector3(-of.z, 0.0, of.x)
-				var other_lat_extent := absf(of.dot(lateral_vec)) * other.car_length * 0.5 + absf(ol.dot(lateral_vec)) * other.car_width * 0.5
+				var other_lat_extent := (
+					absf(of.dot(lateral_vec)) * other.car_length * 0.5
+					+ absf(ol.dot(lateral_vec)) * other.car_width * 0.5
+				)
 				half_width_sum = car.car_width * 0.5 + other_lat_extent + 0.3
 			if lateral < half_width_sum:
 				if forward < min_forward:
 					min_forward = forward
 					closest_blocker = other
 	return closest_blocker
+
 
 func _lot_priority(s: CarScript.State) -> int:
 	match s:
@@ -662,6 +769,7 @@ func _lot_priority(s: CarScript.State) -> int:
 			return 1
 		_:
 			return 0
+
 
 func _should_yield(car: Car) -> bool:
 	var b := find_blocker(car)
@@ -730,20 +838,23 @@ func _check_deadlock_watchdog() -> void:
 						lower_cars.append(c)
 				_fire_watchdog(highest_car, lower_cars)
 
+
 func _fire_watchdog(higher_car: Car, lower_cars: Array[Car]) -> void:
 	stats["watchdog_fires"] += 1
 	var first_lower := lower_cars[0] if not lower_cars.is_empty() else null
 	var lower_id := first_lower.get_instance_id() if first_lower else 0
 	print(
-		"WATCHDOG: Deadlock mutual blocking at equal priority (%s vs %s) > 4.0s! Car %d at %s ignoring Car %d at %s for 1.5s"
-		% [
-			higher_car.get_state_name(),
-			first_lower.get_state_name() if first_lower else "none",
-			higher_car.get_instance_id(),
-			higher_car.global_position,
-			lower_id,
-			first_lower.global_position if first_lower else Vector3.ZERO,
-		]
+		(
+			"WATCHDOG: Deadlock mutual blocking at equal priority (%s vs %s) > 4.0s! Car %d at %s ignoring Car %d at %s for 1.5s"
+			% [
+				higher_car.get_state_name(),
+				first_lower.get_state_name() if first_lower else "none",
+				higher_car.get_instance_id(),
+				higher_car.global_position,
+				lower_id,
+				first_lower.global_position if first_lower else Vector3.ZERO,
+			]
+		)
 	)
 	var targets := {}
 	for lc in lower_cars:
@@ -759,6 +870,7 @@ func _fire_watchdog(higher_car: Car, lower_cars: Array[Car]) -> void:
 	higher_car.blocked_time = 0.0
 	higher_car.current_blocker = null
 
+
 func can_reverse_out(car: Car) -> bool:
 	if car == null or not is_instance_valid(car):
 		return false
@@ -769,6 +881,7 @@ func can_reverse_out(car: Car) -> bool:
 				return false
 	return true
 
+
 func _can_merge(car: Car) -> bool:
 	if car == null or lanes.is_empty():
 		return false
@@ -778,7 +891,12 @@ func _can_merge(car: Car) -> bool:
 	var target_lane: Lane = lanes[target_lane_id]
 
 	for other in lot_cars:
-		if is_instance_valid(other) and other != car and other.state == CarScript.State.MERGING and other.merge_target_lane == target_lane_id:
+		if (
+			is_instance_valid(other)
+			and other != car
+			and other.state == CarScript.State.MERGING
+			and other.merge_target_lane == target_lane_id
+		):
 			return false
 
 	var merge_dist: float
@@ -807,8 +925,11 @@ func _can_merge(car: Car) -> bool:
 				return false
 	return true
 
+
 func can_spawn_drive_thru(dest: StringName) -> bool:
-	var target_path := booger_king_drive_thru_path if dest == &"booger_king" else taco_hell_drive_thru_path
+	var target_path := (
+		booger_king_drive_thru_path if dest == &"booger_king" else taco_hell_drive_thru_path
+	)
 	for car in lot_cars:
 		if is_instance_valid(car) and car.path == target_path:
 			if car.path_distance < 12.0:
@@ -884,6 +1005,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.keycode == KEY_F6 or event.physical_keycode == KEY_F6:
 			spawn_drive_thru_car(&"booger_king")
 
+
 func _update_lane_spawning(lane: Lane, delta: float) -> void:
 	lane.spawn_timer -= delta
 	if lane.spawn_timer > 0.0:
@@ -921,7 +1043,9 @@ func _spawn_car_at(lane: Lane, initial_distance: float) -> Node:
 			car.errand = Errand.random()
 		car.had_errand = true
 		stats["errands_assigned"] += 1
-	elif lane.id == 3 and car.can_park() and initial_distance < DECISION_D_BK and randf() < P_ERRAND:
+	elif (
+		lane.id == 3 and car.can_park() and initial_distance < DECISION_D_BK and randf() < P_ERRAND
+	):
 		car.errand = Errand.new(&"booger_king", randf_range(10.0, 25.0))
 		car.had_errand = true
 		stats["errands_assigned"] += 1
@@ -934,7 +1058,11 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 	# Register any overlapping PATH cars from lot_cars
 	for car in lot_cars:
 		if is_instance_valid(car) and car.motion == Car.Motion.PATH and car.lane_id == lane.id:
-			if car.state == CarScript.State.TO_SPOT or car.state == CarScript.State.MERGING or car.state == CarScript.State.DRIVE_THRU:
+			if (
+				car.state == CarScript.State.TO_SPOT
+				or car.state == CarScript.State.MERGING
+				or car.state == CarScript.State.DRIVE_THRU
+			):
 				if lane.overlaps(car) and not lane.cars.has(car):
 					lane.cars.append(car)
 
@@ -965,10 +1093,7 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 			surviving_cars.append(car)
 			continue
 		# Decision point for errand cars
-		if (
-			car.state == Car.State.CRUISING
-			and car.errand != null
-		):
+		if car.state == Car.State.CRUISING and car.errand != null:
 			if lane.id == 0 and car.lane_distance >= DECISION_D:
 				if car.errand.destination == &"taco_hell_drive_thru":
 					if _count_drive_thru_cars(&"taco_hell_drive_thru") < MAX_DRIVE_THRU_CAPACITY:
@@ -1050,10 +1175,15 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 					lot_cars.append(car)
 				if lane.overlaps(car):
 					car.lane_distance = lane.distance_at(car.global_position.x)
-					if car.state == CarScript.State.TO_SPOT or car.state == CarScript.State.DRIVE_THRU:
+					if (
+						car.state == CarScript.State.TO_SPOT
+						or car.state == CarScript.State.DRIVE_THRU
+					):
 						car.lane_speed = car.speed if car.speed > 0.5 else 0.0
 					else:
-						car.lane_speed = maxf(0.0, car.speed * car.get_heading().dot(lane.forward()))
+						car.lane_speed = maxf(
+							0.0, car.speed * car.get_heading().dot(lane.forward())
+						)
 					surviving_cars.append(car)
 				continue
 		# Check if reached end of lane
@@ -1075,14 +1205,22 @@ func _exit_tree() -> void:
 		for car in lane.cars:
 			if is_instance_valid(car) and not counted.has(car.get_instance_id()):
 				counted[car.get_instance_id()] = true
-				var s_name: String = CarScript.State.keys()[car.state] if car.state < CarScript.State.size() else str(car.state)
+				var s_name: String = (
+					CarScript.State.keys()[car.state]
+					if car.state < CarScript.State.size()
+					else str(car.state)
+				)
 				state_counts[s_name] = state_counts.get(s_name, 0) + 1
 				if car.had_errand:
 					active_errands += 1
 	for car in lot_cars:
 		if is_instance_valid(car) and not counted.has(car.get_instance_id()):
 			counted[car.get_instance_id()] = true
-			var s_name: String = CarScript.State.keys()[car.state] if car.state < CarScript.State.size() else str(car.state)
+			var s_name: String = (
+				CarScript.State.keys()[car.state]
+				if car.state < CarScript.State.size()
+				else str(car.state)
+			)
 			state_counts[s_name] = state_counts.get(s_name, 0) + 1
 			if car.had_errand:
 				active_errands += 1

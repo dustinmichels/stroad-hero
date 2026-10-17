@@ -13,6 +13,7 @@ func _init(p_destination: StringName = &"", p_dwell_time: float = 0.0) -> void:
 func is_drive_thru() -> bool:
 	return destination == &"booger_king" or destination == &"taco_hell_drive_thru"
 
+
 static func random() -> Errand:
 	var dest: StringName
 	var dwell: float

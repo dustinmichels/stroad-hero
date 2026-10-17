@@ -7,7 +7,9 @@ const ROWS := [
 	{"z": -14.5, "x0": -18.0, "count": 6, "nose": 1.0, "serves": &"walgroins"},  # S row, nose +Z
 	{"z": -14.5, "x0": 28.0, "count": 4, "nose": 1.0, "serves": &"taco_hell"},  # Taco row, nose +Z
 ]
-const ENTRANCES: Dictionary[StringName, Vector3] = {&"walgroins": Vector3(-3, 0, -32), &"taco_hell": Vector3(31.5, 0, -27.8)}
+const ENTRANCES: Dictionary[StringName, Vector3] = {
+	&"walgroins": Vector3(-3, 0, -32), &"taco_hell": Vector3(31.5, 0, -27.8)
+}
 const TURN_IN_START := Vector3(17.0, 0.0, -5.6)
 const ENTRY_X := 13.0
 const EXIT_X := 9.0
@@ -195,42 +197,49 @@ static func merge_route(radius := 4.0) -> Curve3D:
 
 
 static func taco_hell_drive_thru_route(radius := 4.0) -> Curve3D:
-	var pts := PackedVector3Array([
-		TURN_IN_START,
-		Vector3(ENTRY_X, 0.0, -5.6 - radius),
-		Vector3(ENTRY_X, 0.0, AISLE_Z_EB),
-		Vector3(23.0, 0.0, AISLE_Z_EB),
-		Vector3(23.0, 0.0, -43.0),
-		Vector3(47.0, 0.0, -43.0),
-		Vector3(47.0, 0.0, AISLE_Z_WB),
-		Vector3(EXIT_X, 0.0, AISLE_Z_WB),
-		WAIT_POINT,
-	])
+	var pts := PackedVector3Array(
+		[
+			TURN_IN_START,
+			Vector3(ENTRY_X, 0.0, -5.6 - radius),
+			Vector3(ENTRY_X, 0.0, AISLE_Z_EB),
+			Vector3(23.0, 0.0, AISLE_Z_EB),
+			Vector3(23.0, 0.0, -43.0),
+			Vector3(47.0, 0.0, -43.0),
+			Vector3(47.0, 0.0, AISLE_Z_WB),
+			Vector3(EXIT_X, 0.0, AISLE_Z_WB),
+			WAIT_POINT,
+		]
+	)
 	return PathBuilder.build(pts, radius)
 
 
 static func booger_king_drive_thru_route(radius := 4.0) -> Curve3D:
-	var pts := PackedVector3Array([
-		BK_TURN_IN_START,
-		Vector3(-43.5, 0.0, 9.6),
-		Vector3(-43.5, 0.0, 22.0),
-		Vector3(-54.25, 0.0, 22.0),
-		Vector3(-54.25, 0.0, 45.0),
-		Vector3(-29.75, 0.0, 45.0),
-		Vector3(-29.75, 0.0, 22.0),
-		Vector3(-40.5, 0.0, 22.0),
-		BK_WAIT_POINT,
-	])
+	var pts := PackedVector3Array(
+		[
+			BK_TURN_IN_START,
+			Vector3(-43.5, 0.0, 9.6),
+			Vector3(-43.5, 0.0, 22.0),
+			Vector3(-54.25, 0.0, 22.0),
+			Vector3(-54.25, 0.0, 45.0),
+			Vector3(-29.75, 0.0, 45.0),
+			Vector3(-29.75, 0.0, 22.0),
+			Vector3(-40.5, 0.0, 22.0),
+			BK_WAIT_POINT,
+		]
+	)
 	return PathBuilder.build(pts, radius)
 
 
 static func booger_king_merge_route(radius := 4.0) -> Curve3D:
-	var pts := PackedVector3Array([
-		BK_WAIT_POINT,
-		Vector3(-40.5, 0.0, 5.6),
-		BK_MERGE_END,
-	])
+	var pts := PackedVector3Array(
+		[
+			BK_WAIT_POINT,
+			Vector3(-40.5, 0.0, 5.6),
+			BK_MERGE_END,
+		]
+	)
 	return PathBuilder.build(pts, radius)
+
 
 func _init() -> void:
 	_build_spots()

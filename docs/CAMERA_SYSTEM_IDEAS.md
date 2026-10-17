@@ -10,17 +10,16 @@ The camera uses eight evenly spaced viewpoints around Mats:
 - Arrow-key movement keeps the camera basis captured at the start of the stride.
 - Death returns the camera to its starting view.
 
-
 ## Options
 
-| Option | Controls | Strengths | Risks |
-|---|---|---|---|
-| Relative orbit | A/D orbit left and right; W moves behind Mats; S moves in front of Mats | Every input is relative to the player, provides direct control, and has a reliable reset | W/S are actions rather than symmetric orbit axes |
-| Free orbit | A/D control yaw; W/S control pitch | Familiar third-person camera control and complete viewpoint freedom | Pitch is probably less useful than quick recentering in a road-crossing game; keyboard control can feel mechanical |
-| Eight-way stepping | Each WASD press rotates 45 degrees relative to the current view | Simple, discrete, and easy to tune | The meaning of each individual key is difficult to teach; repeated taps are needed to recover a known view |
-| Automatic follow | Camera gradually moves behind Mats while walking; WASD temporarily overrides it | Low input burden and consistently shows the direction of travel | The camera may move when the player needs a stable view of oncoming traffic |
-| Fixed isometric views | WASD selects one of four authored viewpoints | Predictable composition and straightforward level design | Abrupt conceptual changes between views; less freedom around buildings and parking lots |
-| Road-aware camera | Camera favors the direction of dangerous traffic near roads and follows normally elsewhere | Can improve hazard visibility without player input | Hidden rules, surprising movement, and substantially more tuning and code |
+| Option                | Controls                                                                                   | Strengths                                                                                | Risks                                                                                                              |
+| --------------------- | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Relative orbit        | A/D orbit left and right; W moves behind Mats; S moves in front of Mats                    | Every input is relative to the player, provides direct control, and has a reliable reset | W/S are actions rather than symmetric orbit axes                                                                   |
+| Free orbit            | A/D control yaw; W/S control pitch                                                         | Familiar third-person camera control and complete viewpoint freedom                      | Pitch is probably less useful than quick recentering in a road-crossing game; keyboard control can feel mechanical |
+| Eight-way stepping    | Each WASD press rotates 45 degrees relative to the current view                            | Simple, discrete, and easy to tune                                                       | The meaning of each individual key is difficult to teach; repeated taps are needed to recover a known view         |
+| Automatic follow      | Camera gradually moves behind Mats while walking; WASD temporarily overrides it            | Low input burden and consistently shows the direction of travel                          | The camera may move when the player needs a stable view of oncoming traffic                                        |
+| Fixed isometric views | WASD selects one of four authored viewpoints                                               | Predictable composition and straightforward level design                                 | Abrupt conceptual changes between views; less freedom around buildings and parking lots                            |
+| Road-aware camera     | Camera favors the direction of dangerous traffic near roads and follows normally elsewhere | Can improve hazard visibility without player input                                       | Hidden rules, surprising movement, and substantially more tuning and code                                          |
 
 ## Earlier Recommendation: Relative Orbit
 

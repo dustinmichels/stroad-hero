@@ -29,18 +29,18 @@ When cars need to route through a second lot or driveway, upgrade the hard-coded
 - `Car` is an `Area3D`. `body_entered` and `_check_player_overlap()` kill Mats on any contact, whether or not the car is moving.
 - Lot geometry in `main.tscn`, using world XZ coordinates where −Z is north, away from the camera:
 
-| Feature                       | Location                                                                                    |
-| ----------------------------- | ------------------------------------------------------------------------------------------- |
-| Stroad asphalt                | x −60..60, z −7.5..7.5                                                                      |
-| North sidewalk                | z −10.7..−7.5, with a single curb cut (`DrivewayApron`) at **x 7..15**                      |
-| Walgroins lot asphalt         | x −29..23, z −32..−10.7                                                                     |
-| Taco Hell lot asphalt         | x 22..48, z −32..−10.7. Continuous with the Walgroins lot, so there is one shared driveway. |
-| North stall row               | stripes at z −28.5, x −20..16 step 4 → **9 stalls**, centers x −18..14                      |
-| South stall row               | stripes at z −14.5, x −20..4 → **6 stalls**, centers x −18..2                               |
-| Taco stall row                | stripes at z −14.5, x 26..42 → **4 stalls**, centers x 28..40                               |
-| Aisle                         | z −26.25..−16.75, center z ≈ −21.5                                                          |
-| Walgroins door                | ≈ (−3, −32)                                                                                 |
-| Taco Hell door (arch portico) | ≈ (31.5, −27.8)                                                                             |
+| Feature                       | Location                                                                                                                                            |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Stroad asphalt                | x −60..60, z −7.5..7.5                                                                                                                              |
+| North sidewalk                | z −10.7..−7.5, with a single curb cut (`DrivewayApron`) at **x 7..15**                                                                              |
+| Walgroins lot asphalt         | x −29..23, z −32..−10.7                                                                                                                             |
+| Taco Hell lot asphalt         | x 22..48, z −32..−10.7. Continuous with the Walgroins lot, so there is one shared driveway.                                                         |
+| North stall row               | stripes at z −28.5, x −20..16 step 4 → **9 stalls**, centers x −18..14                                                                              |
+| South stall row               | stripes at z −14.5, x −20..4 → **6 stalls**, centers x −18..2                                                                                       |
+| Taco stall row                | stripes at z −14.5, x 26..42 → **4 stalls**, centers x 28..40                                                                                       |
+| Aisle                         | z −26.25..−16.75, center z ≈ −21.5                                                                                                                  |
+| Walgroins door                | ≈ (−3, −32)                                                                                                                                         |
+| Taco Hell door (arch portico) | ≈ (31.5, −27.8)                                                                                                                                     |
 | Booger King site              | Separate south-side lot at x −56..−28, z 14..30, with its own driveway and drive-thru loop. It is visual-only; errand cars still use the north lot. |
 
 Stalls are 4 m wide and 4.5 m deep. Pickups (5.0 m) stick into the aisle a little; that is acceptable.

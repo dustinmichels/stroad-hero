@@ -82,6 +82,7 @@ func _ready() -> void:
 
 	_setup_hud()
 
+
 func _setup_spots() -> void:
 	for spot in lot.spots:
 		_create_spot_disc(spot)
@@ -186,7 +187,10 @@ func _update_car_labels() -> void:
 			car.get_state_name() if car.has_method("get_state_name") else str(car.state)
 		)
 		if car.state == Car.State.WAITING_TO_MERGE and "merge_wait_time" in car:
-			label.text = "%s (%.1fs)\n%.1f m/s\nspot: %s" % [state_str, car.merge_wait_time, car.speed, spot_str]
+			label.text = (
+				"%s (%.1fs)\n%.1f m/s\nspot: %s"
+				% [state_str, car.merge_wait_time, car.speed, spot_str]
+			)
 		else:
 			label.text = "%s\n%.1f m/s\nspot: %s" % [state_str, car.speed, spot_str]
 	var to_remove: Array[int] = []
