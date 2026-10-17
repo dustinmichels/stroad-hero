@@ -211,7 +211,7 @@ Straight lanes stay analytic. Turning them into `Curve3D` would unify the two mo
 `PathBuilder.build(points: PackedVector3Array, radius := 4.0) -> Curve3D`
 
 - Straight segments are joined by circular fillets. Each fillet is a cubic Bézier with handle length `(4/3)·tan(θ/4)·r`, where θ is the turn angle.
-- The radius is **clamped per corner** to half of each adjacent segment, so the builder never fails. Tight layouts just get tighter turns.
+- The radius is **clamped per corner** to half of each adjacent segment length. In addition, the fillet trim distance `trim = r · tan(θ/2)` is clamped to half of each adjacent segment (scaling `r` down further on sharp turns where θ > 90°), so the builder never fails or overshoots vertices. Tight layouts just get tighter turns.
 - Waypoints closer together than `2·r` are merged first. This handles N row stalls x = 10 and 14, which sit almost straight up the driveway, without an S-wiggle.
 - `bake_interval = 0.25`.
 

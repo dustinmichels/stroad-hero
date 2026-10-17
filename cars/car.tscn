@@ -1,6 +1,6 @@
 [gd_scene load_steps=64 format=3]
 
-[ext_resource type="Script" path="res://car.gd" id="1_car"]
+[ext_resource type="Script" path="res://cars/car.gd" id="1_car"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_car"]
 size = Vector3(4.4, 1.6, 2.1)

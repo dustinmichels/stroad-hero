@@ -1,15 +1,16 @@
 class_name Car
 extends Area3D
-const Errand = preload("res://errand.gd")
+const Errand = preload("res://traffic/errand.gd")
 
 enum CarType { SEDAN, SUV, TAXI, TRUCK, PICKUP, BUS, HATCHBACK, MINIVAN, SPORTS }
 
 enum Motion { LANE, PATH }
 
 enum State {
-	CRUISING, APPROACHING, TO_SPOT, PARKED, REVERSING_OUT, TO_EXIT, WAITING_TO_MERGE, MERGING
+	CRUISING, APPROACHING, TO_SPOT, PARKED, REVERSING_OUT, TO_EXIT, WAITING_TO_MERGE, MERGING, DRIVE_THRU
 }
 
+enum TurnSignal { NONE, LEFT, RIGHT }
 const PARKING_CAR_TYPES: Array[CarType] = [
 	CarType.SEDAN,
 	CarType.SUV,
@@ -61,6 +62,8 @@ func get_state_name() -> String:
 			return "WAITING_TO_MERGE"
 		State.MERGING:
 			return "MERGING"
+		State.DRIVE_THRU:
+			return "DRIVE_THRU"
 	return "UNKNOWN"
 
 
@@ -83,7 +86,20 @@ var errand: Errand = null
 var had_errand: bool = false
 var blocked_time: float = 0.0
 var current_blocker: Car = null
+var merge_target_lane: int = 0
+var dt_order_done: bool = false
+var dt_pickup_done: bool = false
+var dt_dwell_timer: float = 0.0
+var turn_signal: TurnSignal = TurnSignal.NONE
+const SIGNAL_BLINK_INTERVAL := 0.35
+var _signal_blink_timer: float = 0.0
+var _signals_initialized: bool = false
+var _active_right_signals: Array[MeshInstance3D] = []
+var _active_left_signals: Array[MeshInstance3D] = []
 
+static var _signal_mesh: BoxMesh
+static var _signal_mat_on: StandardMaterial3D
+static var _signal_mat_off: StandardMaterial3D
 const WHEEL_RADIUS := 0.35
 const BASE_WHEEL_BASIS := Basis(Vector3(1, 0, 0), Vector3(0, 0, 1), Vector3(0, -1, 0))
 const STOP_SPEED := 0.1
@@ -126,12 +142,13 @@ func _ready() -> void:
 	blocker.add_child(_blocker_shape)
 	add_child(blocker)
 	_setup_wheels()
+	_setup_signals()
 	_apply_visual_type()
 
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	_update_blocker_layer()
-
+	_update_signals(delta)
 
 func _update_blocker_layer() -> void:
 	if not blocker:
@@ -254,7 +271,10 @@ func _apply_visual_type() -> void:
 	_update_dimensions()
 
 	_setup_wheels()
+	_setup_signals()
 	_active_wheels.clear()
+	_active_right_signals.clear()
+	_active_left_signals.clear()
 	var active_node: Node3D = null
 	match car_type:
 		CarType.SEDAN:
@@ -279,6 +299,106 @@ func _apply_visual_type() -> void:
 		for child in active_node.get_children():
 			if child is Node3D and child.name.begins_with("Wheel"):
 				_active_wheels.append(child)
+			elif child is MeshInstance3D:
+				if child.name == "SignalFrontR" or child.name == "SignalRearR":
+					_active_right_signals.append(child)
+				elif child.name == "SignalFrontL" or child.name == "SignalRearL":
+					_active_left_signals.append(child)
+
+
+func set_turn_signal(sig: TurnSignal) -> void:
+	if turn_signal != sig:
+		turn_signal = sig
+		_signal_blink_timer = 0.0
+		_update_signals(0.0)
+
+
+func has_turn_signal_right() -> bool:
+	return turn_signal == TurnSignal.RIGHT
+
+
+static func _init_signal_resources() -> void:
+	if _signal_mesh != null:
+		return
+	_signal_mesh = BoxMesh.new()
+	_signal_mesh.size = Vector3(0.16, 0.18, 0.16)
+
+	_signal_mat_on = StandardMaterial3D.new()
+	_signal_mat_on.albedo_color = Color(1.0, 0.62, 0.02, 1.0)
+	_signal_mat_on.emission_enabled = true
+	_signal_mat_on.emission = Color(1.0, 0.62, 0.02, 1.0)
+	_signal_mat_on.emission_energy_multiplier = 4.0
+	_signal_mat_on.roughness = 0.3
+
+	_signal_mat_off = StandardMaterial3D.new()
+	_signal_mat_off.albedo_color = Color(0.38, 0.22, 0.04, 1.0)
+	_signal_mat_off.emission_enabled = false
+	_signal_mat_off.emission_energy_multiplier = 0.0
+	_signal_mat_off.roughness = 0.5
+
+
+func _setup_signals() -> void:
+	if _signals_initialized:
+		return
+	_signals_initialized = true
+	_init_signal_resources()
+
+	var visuals := get_node_or_null("Visuals")
+	if not visuals:
+		return
+	for car_model in visuals.get_children():
+		var hl_l: Node3D = car_model.get_node_or_null("HeadlightL")
+		var hl_r: Node3D = car_model.get_node_or_null("HeadlightR")
+		var tl_l: Node3D = car_model.get_node_or_null("TaillightL")
+		var tl_r: Node3D = car_model.get_node_or_null("TaillightR")
+
+		if hl_l:
+			_create_signal_mesh(car_model, "SignalFrontR", hl_l.position, 1.0, 1.0)
+		if tl_l:
+			_create_signal_mesh(car_model, "SignalRearR", tl_l.position, -1.0, 1.0)
+		if hl_r:
+			_create_signal_mesh(car_model, "SignalFrontL", hl_r.position, 1.0, -1.0)
+		if tl_r:
+			_create_signal_mesh(car_model, "SignalRearL", tl_r.position, -1.0, -1.0)
+
+
+func _create_signal_mesh(parent: Node, node_name: String, base_pos: Vector3, sign_x: float, sign_z: float) -> MeshInstance3D:
+	var sig := MeshInstance3D.new()
+	sig.name = node_name
+	sig.mesh = _signal_mesh
+	sig.position = base_pos + Vector3(sign_x * 0.02, 0.0, sign_z * 0.16)
+	sig.material_override = _signal_mat_off
+	sig.visible = false
+	parent.add_child(sig)
+	return sig
+
+
+func _update_signals(delta: float) -> void:
+	if turn_signal == TurnSignal.NONE:
+		_signal_blink_timer = 0.0
+		for s in _active_right_signals:
+			s.visible = false
+		for s in _active_left_signals:
+			s.visible = false
+		return
+
+	_signal_blink_timer += delta
+	var blink_cycle := fmod(_signal_blink_timer, SIGNAL_BLINK_INTERVAL * 2.0)
+	var is_on := blink_cycle < SIGNAL_BLINK_INTERVAL
+	var target_mat := _signal_mat_on if is_on else _signal_mat_off
+
+	if turn_signal == TurnSignal.RIGHT:
+		for s in _active_right_signals:
+			s.visible = true
+			s.material_override = target_mat
+		for s in _active_left_signals:
+			s.visible = false
+	elif turn_signal == TurnSignal.LEFT:
+		for s in _active_left_signals:
+			s.visible = true
+			s.material_override = target_mat
+		for s in _active_right_signals:
+			s.visible = false
 
 
 func _update_dimensions() -> void:
@@ -382,10 +502,13 @@ func advance_path(delta: float) -> bool:
 		if path_distance <= 0.0:
 			path_distance = 0.0
 			arrived = true
+		elif path_distance >= length:
+			path_distance = length
+			arrived = true
+	else:
 		if path_distance >= length:
 			path_distance = length
 			arrived = true
-
 	path_distance = clampf(path_distance, 0.0, length)
 	update_presentation()
 	_check_player_overlap()
@@ -407,7 +530,7 @@ func update_presentation() -> void:
 			wheel_rotation = fmod(-path_distance / WHEEL_RADIUS, TAU)
 			_update_wheels()
 		return
-	if spot != null:
+	if state == State.PARKED and spot != null:
 		global_transform = spot.transform
 		return
 	var current_x := start_x + (direction * lane_distance)

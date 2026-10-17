@@ -1,6 +1,6 @@
 [gd_scene load_steps=24 format=3]
 
-[ext_resource type="Script" path="res://mats.gd" id="1_mats"]
+[ext_resource type="Script" path="res://player/mats.gd" id="1_mats"]
 
 [sub_resource type="CapsuleShape3D" id="Shape_Mats"]
 radius = 0.3

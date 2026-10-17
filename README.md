@@ -22,7 +22,11 @@ I think the underlying model should perhaps be 3D, so I can simulate real traffi
 - W/A/S/D: swing the camera to forward, left, back, or right viewpoints
 - Space: small hop
 - C: open the paused character editor; use Up/Down to choose a row and Left/Right to change it. The preview slowly turns to show the backpack.
+- F3: toggle traffic and parking debug overlay (parking stall statuses, car states/paths, merge windows, and HUD metrics)
+- F4: spawn a debug errand car at the driveway turn-in
 
 ## Traffic
 
 Traffic includes sedans, SUVs, taxis, delivery vans, pickup trucks, buses, hatchbacks, minivans, and sports cars. Smaller passenger vehicles can use parking lots; buses and delivery vans remain on the road.
+
+Vehicles in the westbound curb lane can run errands to Walgroins and Taco Hell. When assigned an errand, a car reserves a suitable stall, decelerates and turns into the shared parking lot driveway across the sidewalk apron, parks and dwells for a visit, reverses out into the aisle, proceeds to the exit wait point, yields for an acceptable gap in westbound traffic, and merges back into flow.

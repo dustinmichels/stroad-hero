@@ -22,6 +22,13 @@ const JITTER := 5.0
 const V_LOT := 4.5
 const V_PARK := 1.5
 
+const BK_TURN_IN_START := Vector3(-45.0, 0.0, 5.6)
+const BK_WAIT_POINT := Vector3(-40.5, 0.0, 9.6)
+const BK_MERGE_END := Vector3(-36.5, 0.0, 5.6)
+const TACO_DT_ORDER_DIST := 38.5
+const TACO_DT_PICKUP_DIST := 75.1
+const BK_DT_ORDER_DIST := 75.5
+const BK_DT_PICKUP_DIST := 77.0
 var poach_penalty: float = POACH_PENALTY
 var jitter: float = JITTER
 
@@ -186,6 +193,44 @@ static func merge_route(radius := 4.0) -> Curve3D:
 	)
 	return PathBuilder.build(pts, radius)
 
+
+static func taco_hell_drive_thru_route(radius := 4.0) -> Curve3D:
+	var pts := PackedVector3Array([
+		TURN_IN_START,
+		Vector3(ENTRY_X, 0.0, -5.6 - radius),
+		Vector3(ENTRY_X, 0.0, AISLE_Z_EB),
+		Vector3(23.0, 0.0, AISLE_Z_EB),
+		Vector3(23.0, 0.0, -43.0),
+		Vector3(47.0, 0.0, -43.0),
+		Vector3(47.0, 0.0, AISLE_Z_WB),
+		Vector3(EXIT_X, 0.0, AISLE_Z_WB),
+		WAIT_POINT,
+	])
+	return PathBuilder.build(pts, radius)
+
+
+static func booger_king_drive_thru_route(radius := 4.0) -> Curve3D:
+	var pts := PackedVector3Array([
+		BK_TURN_IN_START,
+		Vector3(-43.5, 0.0, 9.6),
+		Vector3(-43.5, 0.0, 22.0),
+		Vector3(-54.25, 0.0, 22.0),
+		Vector3(-54.25, 0.0, 45.0),
+		Vector3(-29.75, 0.0, 45.0),
+		Vector3(-29.75, 0.0, 22.0),
+		Vector3(-40.5, 0.0, 22.0),
+		BK_WAIT_POINT,
+	])
+	return PathBuilder.build(pts, radius)
+
+
+static func booger_king_merge_route(radius := 4.0) -> Curve3D:
+	var pts := PackedVector3Array([
+		BK_WAIT_POINT,
+		Vector3(-40.5, 0.0, 5.6),
+		BK_MERGE_END,
+	])
+	return PathBuilder.build(pts, radius)
 
 func _init() -> void:
 	_build_spots()

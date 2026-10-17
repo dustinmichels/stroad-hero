@@ -21,8 +21,7 @@ size = Vector3(28, 0.1, 16)
 
 [sub_resource type="BoxMesh" id="Mesh_Driveway"]
 material = SubResource("Mat_SiteAsphalt")
-size = Vector3(7, 0.1, 7)
-
+size = Vector3(8, 0.1, 7)
 [sub_resource type="BoxMesh" id="Mesh_DriveThruSide"]
 material = SubResource("Mat_SiteAsphalt")
 size = Vector3(5.5, 0.1, 19)
@@ -51,29 +50,29 @@ mesh = SubResource("Mesh_ParkingLot")
 shape = SubResource("Shape_ParkingLot")
 
 [node name="Driveway" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.14, -25.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, -25.5)
 mesh = SubResource("Mesh_Driveway")
 
 [node name="ParkingStripes" type="Node3D" parent="."]
 
-[node name="Stripe_m6" type="MeshInstance3D" parent="ParkingStripes"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0.06, -19.5)
+[node name="Stripe_m12" type="MeshInstance3D" parent="ParkingStripes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0.06, -19.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
-[node name="Stripe_m2" type="MeshInstance3D" parent="ParkingStripes"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0.06, -19.5)
+[node name="Stripe_m8" type="MeshInstance3D" parent="ParkingStripes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0.06, -19.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
-[node name="Stripe_2" type="MeshInstance3D" parent="ParkingStripes"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.06, -19.5)
+[node name="Stripe_m4" type="MeshInstance3D" parent="ParkingStripes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.06, -19.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
-[node name="Stripe_6" type="MeshInstance3D" parent="ParkingStripes"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.06, -19.5)
+[node name="Stripe_5" type="MeshInstance3D" parent="ParkingStripes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0.06, -19.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
-[node name="Stripe_10" type="MeshInstance3D" parent="ParkingStripes"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0.06, -19.5)
+[node name="Stripe_9" type="MeshInstance3D" parent="ParkingStripes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0.06, -19.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="DriveThru" type="Node3D" parent="."]

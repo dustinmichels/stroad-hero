@@ -1,7 +1,7 @@
 [gd_scene load_steps=17 format=3]
 
-[ext_resource type="Script" path="res://character_editor.gd" id="1_editor"]
-[ext_resource type="PackedScene" path="res://mats.tscn" id="2_mats"]
+[ext_resource type="Script" path="res://player/character_editor.gd" id="1_editor"]
+[ext_resource type="PackedScene" path="res://player/mats.tscn" id="2_mats"]
 [ext_resource type="FontFile" path="res://fonts/ArchivoBlack-Regular.ttf" id="3_heading"]
 [ext_resource type="FontFile" path="res://fonts/Fredoka.ttf" id="4_body"]
 

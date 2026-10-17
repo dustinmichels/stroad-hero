@@ -8,7 +8,7 @@ extends Node3D
 static func spawn(
 	at_world_pos: Vector3, parent_node: Node, exclude_rids: Array[RID] = []
 ) -> Node3D:
-	var splat_script: GDScript = load("res://blood_splat.gd")
+	var splat_script: GDScript = load("res://player/blood_splat.gd")
 	var splat: Node3D = splat_script.new()
 	parent_node.add_child(splat)
 

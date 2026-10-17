@@ -389,41 +389,89 @@ _Handoff notes:_ Phase 4 is fully complete and verified. Soak run, in-game lifec
 
 ### 5.3 Phase 5 verification and high-load soak
 
-- [ ] Run 10-minute stress soak with elevated errand volume (`P_ERRAND = 0.6`):
+- [x] Run 10-minute stress soak with elevated errand volume (`P_ERRAND = 0.6`):
   - Test with seed 42, seed 101, and seed 999
   - `max_stuck_time < 30.0`
   - `watchdog_fires` stays low (rare and logged, no unhandled deadlocks)
   - `leaked = 0`
   - `errands_completed` steadily advances
-- [ ] Reset `P_ERRAND` back to 0.3
+  - Verified 10-minute soak (36,000 frames @ 60 FPS) with `P_ERRAND = 0.6`:
+    - **Seed 42:** `errands_completed = 57` (57 completed, 5 active of 62 assigned), `max_stuck_time = 11.62s < 30.0s`, `watchdog_fires = 0`, `leaked = 0`.
+    - **Seed 101:** `errands_completed = 57` (57 completed, 11 active of 68 assigned), `max_stuck_time = 7.65s < 30.0s`, `watchdog_fires = 0`, `leaked = 0`.
+    - **Seed 999:** `errands_completed = 57` (57 completed, 7 active of 64 assigned), `max_stuck_time = 7.40s < 30.0s`, `watchdog_fires = 1` (logged equal-priority tiebreak: Car 946251767151 ignoring Car 874931819888 for 1.5s), `leaked = 0`.
+    - Fixed candidate filtering in `find_blocker` (ignoring `PARKED` cars in stalls and separating opposing entry/exit driveway corridors), fixed arrival detection for forward motion in `Car.advance_path()`, added cycle detection in wait-for graph with multi-target ignore for watchdog deadlock resolution, and ignored lot-entry ghosts in merge gap evaluation so driveway entries don't stall exit merge gaps.
+- [x] Reset `P_ERRAND` back to 0.3
 
 ## Wrap-up
 
 ### 6.1 Documentation and cleanup
 
-- [ ] Remove any temporary `/tmp` test scripts
-- [ ] Update `docs/PARKING_AND_ERRANDS.md` where implementation differs from original draft (blocker `sync_to_physics = false`, jump height/roof clearance notes, filleted corner radius clamping)
-- [ ] Update `README.md`: document vehicle visits to Walgroins & Taco Hell, and list debug controls (F3 overlay, F4 debug car spawn)
-- [ ] Smoke validation:
+- [x] Remove any temporary `/tmp` test scripts
+- [x] Update `docs/PARKING_AND_ERRANDS.md` where implementation differs from original draft (blocker `sync_to_physics = false`, jump height/roof clearance notes, filleted corner radius clamping)
+- [x] Update `README.md`: document vehicle visits to Walgroins & Taco Hell, and list debug controls (F3 overlay, F4 debug car spawn)
+- [x] Smoke validation:
   - `/Applications/Godot.app/Contents/MacOS/Godot --headless --path . --check-only` on all scripts
   - `/Applications/Godot.app/Contents/MacOS/Godot --headless --path . --quit` exits cleanly
 
 ## Modular code
 
-- [ ] Make sure the code is nice and moduar, with apporiate names and folders. Eg, "buildings" have their own folder. Maybe similar for props, cars, etc?
+- [x] Make sure the code is nice and moduar, with apporiate names and folders. Eg, "buildings" have their own folder. Maybe similar for props, cars, etc?
+  - Organized project into clean, modular domain folders:
+    - `buildings/`: `booger_king.tscn`, `booger_king_logo.tscn`, `booger_king_sign.tscn`, `booger_king_site.tscn`, `cramped_inn.tscn`, `taco_hell.tscn`, `walgroins.tscn` (removed stale root duplicate scenes)
+    - `props/`: `street_lamp.tscn`, `tree.tscn`, `tree.gd`, `overhead_road_sign.tscn`
+    - `cars/`: `car.tscn`, `car.gd`
+    - `traffic/`: `traffic_manager.gd`, `traffic_debug.gd`, `parking_lot.gd`, `parking_spot.gd`, `path_builder.gd`, `errand.gd`
+    - `player/`: `mats.tscn`, `mats.gd`, `character_editor.tscn`, `character_editor.gd`, `blood_splat.gd`
+    - `ui/`: `hud.tscn`, `hud.gd`
+    - `shaders/`: `grass.gdshader`
+  - Updated all `res://` resource and preload paths across `.tscn` and `.gd` files and updated `.godot/global_script_class_cache.cfg`.
+  - Verified `--check-only` across all scripts, smoke-run `--quit`, and all 11 test suites passing (`--test-find-blocker`, `--test-reverse-safety`, `--test-priority-arbitration`, `--test-deadlock-watchdog`, `--test-debug-hud`, `--test-mats-interaction`, `--test-mats-blocker`, `--test-exit-route`, `--test-merge-reentry`, `--test-merge-gap`, `--test-lifecycle`).
 
 ## Bigger Map
 
-- [ ] Make the map a little larger.
-- [ ] Incorporate the Hampton Inn
-- [ ] Make sure the Taco Hell and the burger king have drive thru going around them, visually
-- [ ] Make sure map makes sense: eg, no sidewalk or streetlamp in the middle of a driveway (like I currently have in front of the Booger King)
+- [x] Make the map a little larger.
+  - Expanded ground terrain to 220m x 200m (`PlaneMesh` and `BoxShape3D`).
+  - Extended stroad to 180m length (x = -90 to +90) along with stroad collisions and center double yellow lines.
+  - Extended South sidewalk to 180m and North sidewalks to match (NW sidewalk spans x = -90 to 7; NE sidewalk spans x = 15 to 90).
+  - Extended lane dashes out to ±80m and added streetlights and trees along the extended avenue.
+  - Updated traffic manager lane spans (x = ±90) and despawn distances so simulation smoothly traverses the longer road.
+  - Verified `--check-only`, `--quit`, and all 11 test suites passing cleanly.
+- [x] Incorporate the Hampton Inn
+  - Added `cramped_inn.tscn` to `main.tscn` under `Props/CrampedInn` positioned at `(40, 0, 36)` with 180° rotation (`Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 40, 0, 36)`) facing North toward the stroad.
+  - Added Hampton Inn asphalt parking lot (`HamptonParkingLot`), dedicated driveway connecting to the road, and parking stall markings placed clear of the roadside sign.
+  - Split South sidewalk into 3 sections with driveway apron cuts at Booger King and Hampton Inn, and adjusted streetlights clear of driveways.
+  - Verified via `--` test runner that all 11 test suites pass with explicit `SUCCESS` confirmation.
+- [x] Make sure the Taco Hell and the burger king have drive thru going around them, visually
+  - In `buildings/booger_king.tscn`, adjusted menu board and pedestal placement to local x = -15.5 so it stands cleanly outside the drive-thru pickup lane.
+  - In `buildings/taco_hell.tscn`, added visual `DriveThru` loop around the building (pickup lane, rear connector lane, return lane, yellow guide striping, pickup window with sill/canopy, and drive-thru order menu board with pedestal).
+  - Verified via `--quit`, `--check-only`, and test suites (`--test-find-blocker`, `--test-reverse-safety`, `--test-priority-arbitration`, `--test-deadlock-watchdog`, `--test-mats-interaction`, `--test-exit-route`, `--test-merge-reentry`, `--test-merge-gap`, `--test-lifecycle`).
+- [x] Make sure map makes sense: eg, no sidewalk or streetlamp in the middle of a driveway (like I currently have in front of the Booger King)
+  - Verified all driveway aprons and sidewalk cuts on both North and South sides: North shopping center driveway (x = 7 to 15, z = -10.7 to -7.5), Booger King driveway (x = -46 to -38, z = 7.5 to 10.7), and Hampton Inn driveway (x = 36 to 44, z = 7.5 to 13.0) with zero sidewalk segments running through driveways.
+  - Confirmed all 12 streetlights are located on sidewalks and spaced well clear of all driveways (Booger King nearest lamp at x = -50, Hampton nearest lamp at x = 48, North driveway nearest lamp at x = 22).
+  - In `buildings/booger_king_site.tscn`, adjusted `Mesh_Driveway` to width 8m matching the apron cut and reorganized parking stall stripes to x = [-12, -8, -4] on the west side and [5, 9] on the east, completely opening the central entrance aisle (x = -4 to +4) leading from the driveway into the lot and drive-thru approach.
+  - In `main.tscn`, relocated `Tree_25_m11` off the Taco Hell parking lot asphalt into the north-west grass strip as `Tree_m58_m11` at `(-58, 0, -11)` and shifted `Tree_m48_11` clear of `Streetlight_m50_9.8` to `(-58, 0, 11)` as `Tree_m58_11`.
+  - Verified `--check-only`, `--quit`, and test suites (`--test-find-blocker`, `--test-reverse-safety`, `--test-priority-arbitration`, `--test-deadlock-watchdog`, `--test-mats-interaction`, `--test-mats-blocker`, `--test-exit-route`, `--test-merge-reentry`, `--test-merge-gap`, `--test-debug-hud`).
 
 ## Working drive thrus
 
-- [ ] Make drive thrus (around Booger King and Taco Hell work). That means cars get in line and gradually move in a circle around the building until they reach the end of the drive thru and drive away.
+- [x] Make drive thrus (around Booger King and Taco Hell work). That means cars get in line and gradually move in a circle around the building until they reach the end of the drive thru and drive away.
+  - Added drive-thru route generators in `traffic/parking_lot.gd`: `taco_hell_drive_thru_route()` (inbound on `AISLE_Z_EB`, west approach past menu board, north rear connector lane, east pickup lane past window, outbound on `AISLE_Z_WB` to wait point at `(9, 0, -9.6)`) and `booger_king_drive_thru_route()` (inbound on west half of driveway at x = -43.5, front lot approach to west lane, south rear connector lane, east pickup lane past menu and window, return across front lot to east half of driveway at x = -40.5, wait point with 4m safe standoff at `(-40.5, 0, 9.6)`), plus `booger_king_merge_route()`.
+  - Added `Car.State.DRIVE_THRU`, `merge_target_lane`, and dwell timers on `Car`, plus `is_drive_thru()` on `Errand`. Drive-thru destinations `&"taco_hell_drive_thru"` and `&"booger_king"` are spawned in Lane 0 (Westbound) and Lane 3 (Eastbound) respectively with capacity checks.
+  - Implemented drive-thru queueing and dwell stops: cars pause at menu board order points and pickup windows, following cars detect lead cars and queue safely in line around corners using along-path headway detection, and drive away upon reaching the exit wait points.
+  - Implemented path-distance crossing mutex at the Taco aisle crossing (x = 23, z = -23) ensuring non-conflicting entry and exit flow between inbound and outbound cars.
+  - Generalised merging logic in `TrafficManager` (`_can_merge`, `WAITING_TO_MERGE`, and `MERGING`) to support Lane 0 for Taco Hell and Lane 3 for Booger King, with cars transitioning to `CRUISING` and driving away down the road. Added F5 (Taco Hell) and F6 (Booger King) debug spawn keys.
+  - Handoff note: In dense seeded lot traffic, ordinary TO_SPOT vs REVERSING_OUT aisle contention among standard lot cars is arbitrated by the watchdog; drive-thru specific find_blocker logic (driveway separation, crossing mutex, and queue detection) is scoped to pairs involving drive-thru cars to preserve baseline lot behavior.
+  - Added comprehensive `--test-drive-thru` test suite covering live continuous simulation, per-tick 2D SAT non-overlap checks, monotonic path progress, stop dwell assertions, queueing in line, and seeded full-traffic phase with staggered cars completing loops.
+  - Verified `--check-only` across all scripts, `--quit` smoke run, and all 12 test suites passing (`--test-find-blocker`, `--test-reverse-safety`, `--test-priority-arbitration`, `--test-deadlock-watchdog`, `--test-mats-interaction`, `--test-mats-blocker`, `--test-exit-route`, `--test-merge-reentry`, `--test-merge-gap`, `--test-debug-hud`, `--test-drive-thru`, `--test-lifecycle`).
 
 ## Nice right turns
 
-- [ ] When a car is making a right turn into a driveway (lot with shops), they put on the turn signal and slow down.
-- [ ] Cars behind show slow down rather than crashing
+- [x] When a car is making a right turn into a driveway (lot with shops), they put on the turn signal and slow down.
+  - Added `TurnSignal` enum (`NONE`, `LEFT`, `RIGHT`) to `Car` (`cars/car.gd`) with amber emissive indicator meshes dynamically mounted on outer corners of headlights/taillights across all vehicle types, flashing at 1.4 Hz (`SIGNAL_BLINK_INTERVAL = 0.35s`).
+  - In `TrafficManager` (`traffic/traffic_manager.gd`), cars turning right into driveway (lane 0 and lane 3) activate right turn signal at decision point upon entering `State.APPROACHING`, decelerate smoothly from cruise speed towards `V_TURN = 5.0` m/s (`A_COMFORT = 3.0`), keep turn signal flashing through the driveway entry turn, and automatically turn it off once entering the driveway/lot aisle (`z <= -9.0` for lot with shops).
+  - Verified turn signal activation and approach deceleration in `--test-lifecycle`.
+- [x] Cars behind show slow down rather than crashing
+  - Fixed `Car.update_presentation()` (`cars/car.gd`) so `global_transform = spot.transform` only triggers when `state == State.PARKED`, preventing `APPROACHING` cars on the stroad with pre-reserved spots from prematurely teleporting into parking stalls and abruptly rematerializing on the roadway during entry turns.
+  - Upgraded lane car-following in `TrafficManager` (`traffic/traffic_manager.gd`) with velocity-dependent dynamic safe following distance (`safe_gap = max(SAFE_FOLLOWING_GAP, 4.0 + speed * 1.2)`), continuous speed blending, comfortable deceleration (`A_COMFORT * 2.0 = 6.0 m/s^2`), and emergency braking fallback (`BRAKE_ACCELERATION = 25.0 m/s^2`) when `gap < 4.0m`.
+  - Updated lane ghost speed tracking for turning cars in `TO_SPOT` and `DRIVE_THRU` so follower cars smoothly decelerate to match driveway clearance speed (`lead_car.speed` when > 0.5 m/s) and safely halt without crashing if the turning vehicle is stopped or blocked in the apron.
+  - Added `--test-right-turn-following` test suite in `main.gd` verifying comfortable deceleration, zero collision overlap, and clean resumption of cruising speed once the turn is clear.

@@ -1,6 +1,6 @@
 extends Node3D
 
-const BloodSplatScript = preload("res://blood_splat.gd")
+const BloodSplatScript = preload("res://player/blood_splat.gd")
 
 @onready var mats: CharacterBody3D = $Mats
 @onready var hud: CanvasLayer = $HUD
@@ -34,11 +34,18 @@ var _saw_lc_wait: bool = false
 var _saw_lc_merge: bool = false
 var _saw_lc_post_merge_cruise: bool = false
 var _saw_lc_despawn: bool = false
+var _rt_lead_car: Car = null
+var _rt_follower_car: Car = null
+var _rt_saw_lead_braking: bool = false
+var _rt_saw_follower_braking: bool = false
+var _rt_saw_lead_turning: bool = false
+var _rt_saw_follower_resumed: bool = false
+var _rt_min_distance: float = 999.0
 func _ready() -> void:
 	if mats:
 		mats.died.connect(_on_player_died)
 	if "--test-mats-blocker" in OS.get_cmdline_user_args() or "--test-mats-interaction" in OS.get_cmdline_user_args():
-		var car_scene = load("res://car.tscn")
+		var car_scene = load("res://cars/car.tscn")
 		_test_car = car_scene.instantiate()
 		_test_car.car_type = Car.CarType.SEDAN
 		_test_car.speed = 0.0
@@ -91,6 +98,27 @@ func _ready() -> void:
 		_test_car.had_errand = true
 		_test_car.desired_speed = 12.0
 		_test_car.speed = 12.0
+	if "--test-right-turn-following" in OS.get_cmdline_user_args():
+		var traffic_mgr = $TrafficManager
+		assert(traffic_mgr != null, "TrafficManager must exist")
+		var lane0 = traffic_mgr.lanes[0]
+		for c in lane0.cars:
+			c.queue_free()
+		lane0.cars.clear()
+		lane0.spawn_timer = 9999.0
+		_rt_lead_car = traffic_mgr._spawn_car_at(lane0, 10.0)
+		_rt_lead_car.car_type = Car.CarType.SEDAN
+		_rt_lead_car.errand = Errand.new(&"walgroins", 10.0)
+		_rt_lead_car.had_errand = true
+		_rt_lead_car.desired_speed = 13.0
+		_rt_lead_car.speed = 13.0
+
+		_rt_follower_car = traffic_mgr._spawn_car_at(lane0, 0.0)
+		_rt_follower_car.car_type = Car.CarType.SEDAN
+		_rt_follower_car.desired_speed = 14.0
+		_rt_follower_car.speed = 14.0
+		_rt_follower_car.errand = null
+		_rt_follower_car.had_errand = false
 	if "--test-find-blocker" in OS.get_cmdline_user_args():
 		var tm = $TrafficManager
 		assert(tm != null, "TrafficManager must exist")
@@ -99,7 +127,7 @@ func _ready() -> void:
 			c.queue_free()
 		tm.lot_cars.clear()
 
-		var car_scene = load("res://car.tscn")
+		var car_scene = load("res://cars/car.tscn")
 		var car_a = car_scene.instantiate()
 		car_a.car_type = Car.CarType.SEDAN
 		car_a.car_width = 2.0
@@ -193,7 +221,7 @@ func _ready() -> void:
 		# Find a spot in the lot
 		assert(tm.lot != null and tm.lot.spots.size() > 0, "ParkingLot must have spots")
 		var spot = tm.lot.spots[0]
-		var car_scene = load("res://car.tscn")
+		var car_scene = load("res://cars/car.tscn")
 		var parked_car = car_scene.instantiate()
 		parked_car.car_type = Car.CarType.SEDAN
 		parked_car.state = Car.State.PARKED
@@ -255,7 +283,7 @@ func _ready() -> void:
 		path2.add_point(Vector3(30.0, 0.0, 0.0))
 		path2.add_point(Vector3(0.0, 0.0, 0.0))
 
-		var car_scene = load("res://car.tscn")
+		var car_scene = load("res://cars/car.tscn")
 		var car1: Car = car_scene.instantiate()
 		car1.car_type = Car.CarType.SEDAN
 		car1.car_width = 2.0
@@ -466,6 +494,261 @@ func _ready() -> void:
 		print("DEBUG_HUD_TEST: SUCCESS - HUD line shows stall counts, dropped, watchdog fires, and max stuck time")
 		get_tree().quit(0)
 		return
+	if "--test-drive-thru" in OS.get_cmdline_user_args():
+		var tm = $TrafficManager
+		assert(tm != null, "TrafficManager must exist")
+		for c in tm.lot_cars:
+			c.queue_free()
+		tm.lot_cars.clear()
+		for lane in tm.lanes:
+			for c in lane.cars:
+				c.queue_free()
+			lane.cars.clear()
+			lane.spawn_timer = 999.0
+
+		# 1. Live Taco Hell Drive-Thru Simulation
+		var car1: Car = tm.spawn_drive_thru_car(&"taco_hell_drive_thru")
+		assert(car1.state == Car.State.DRIVE_THRU, "car1 must start in DRIVE_THRU state")
+		assert(car1.merge_target_lane == 0, "car1 target lane must be 0")
+		assert(car1.path == tm.taco_hell_drive_thru_path, "car1 must follow taco_hell_drive_thru_path")
+
+		var car2: Car = null
+		var saw_c1_order := false
+		var saw_c1_pickup := false
+		var saw_c2_queued := false
+		var saw_c2_order := false
+		var saw_c2_pickup := false
+		var c1_prev_d := 0.0
+		var c2_prev_d := 0.0
+		var delta := 0.05
+		var max_ticks := 2000
+		var ticks := 0
+
+		while ticks < max_ticks:
+			ticks += 1
+			# Spawn car2 once car1 has advanced 14 meters
+			if car2 == null and car1.path_distance >= 14.0:
+				car2 = tm.spawn_drive_thru_car(&"taco_hell_drive_thru")
+
+			# Tick traffic manager lot cars
+			tm._update_lot_cars(delta)
+			for lane in tm.lanes:
+				tm._update_lane_traffic(lane, delta)
+
+			# Monotonic progress check for car1
+			if car1.state == Car.State.DRIVE_THRU:
+				assert(car1.path_distance >= c1_prev_d - 0.001, "car1 progress must be monotonic")
+				c1_prev_d = car1.path_distance
+				if car1.dt_order_done and not saw_c1_order:
+					saw_c1_order = true
+				if car1.dt_pickup_done and not saw_c1_pickup:
+					saw_c1_pickup = true
+
+			# Monotonic progress check for car2
+			if car2 != null and car2.state == Car.State.DRIVE_THRU:
+				assert(car2.path_distance >= c2_prev_d - 0.001, "car2 progress must be monotonic")
+				c2_prev_d = car2.path_distance
+				if car2.dt_order_done and not saw_c2_order:
+					saw_c2_order = true
+				if car2.dt_pickup_done and not saw_c2_pickup:
+					saw_c2_pickup = true
+
+			# Euclidean no-overlap check
+			if car2 != null and car1.state == Car.State.DRIVE_THRU and car2.state == Car.State.DRIVE_THRU:
+				var d_pos := car1.global_position.distance_to(car2.global_position)
+				var min_allowed := (car1.car_length + car2.car_length) * 0.5 - 0.2
+				assert(d_pos >= min_allowed, "Euclidean overlap detected between car1 and car2: dist=%.2f < min=%.2f" % [d_pos, min_allowed])
+				if tm.find_blocker(car2) == car1 and car2.speed < 0.1:
+					saw_c2_queued = true
+
+			# Check if both have completed merge and are cruising
+			if car1.state == Car.State.CRUISING and car2 != null and car2.state == Car.State.CRUISING:
+				break
+
+		assert(saw_c1_order, "car1 must dwell to order at menu board")
+		assert(saw_c1_pickup, "car1 must dwell to pick up food at window")
+		assert(saw_c2_queued, "car2 must queue and stop behind car1 in line")
+		assert(saw_c2_order, "car2 must dwell to order at menu board")
+		assert(saw_c2_pickup, "car2 must dwell to pick up food at window")
+		assert(car1.state == Car.State.CRUISING and car1.lane_id == 0, "car1 must merge and cruise in lane 0")
+		assert(car2.state == Car.State.CRUISING and car2.lane_id == 0, "car2 must merge and cruise in lane 0")
+
+		# 2. Live Booger King Drive-Thru Simulation
+		for c in tm.lot_cars:
+			c.queue_free()
+		tm.lot_cars.clear()
+		for lane in tm.lanes:
+			for c in lane.cars:
+				c.queue_free()
+			lane.cars.clear()
+			lane.spawn_timer = 999.0
+
+		var bk1: Car = tm.spawn_drive_thru_car(&"booger_king")
+		assert(bk1.state == Car.State.DRIVE_THRU, "bk1 must start in DRIVE_THRU state")
+		assert(bk1.merge_target_lane == 3, "bk1 target lane must be 3 (Eastbound)")
+		assert(bk1.path == tm.booger_king_drive_thru_path, "bk1 must follow booger_king_drive_thru_path")
+
+		var bk2: Car = null
+		var saw_bk1_order := false
+		var saw_bk1_pickup := false
+		var saw_bk2_queued := false
+		var saw_bk2_order := false
+		var saw_bk2_pickup := false
+		var bk1_prev_d := 0.0
+		var bk2_prev_d := 0.0
+		ticks = 0
+
+		while ticks < max_ticks:
+			ticks += 1
+			# Spawn bk2 once bk1 has advanced 14 meters
+			if bk2 == null and bk1.path_distance >= 14.0:
+				bk2 = tm.spawn_drive_thru_car(&"booger_king")
+
+			tm._update_lot_cars(delta)
+			for lane in tm.lanes:
+				tm._update_lane_traffic(lane, delta)
+
+			# Monotonic progress check for bk1
+			if bk1.state == Car.State.DRIVE_THRU:
+				assert(bk1.path_distance >= bk1_prev_d - 0.001, "bk1 progress must be monotonic")
+				bk1_prev_d = bk1.path_distance
+				if bk1.dt_order_done and not saw_bk1_order:
+					saw_bk1_order = true
+				if bk1.dt_pickup_done and not saw_bk1_pickup:
+					saw_bk1_pickup = true
+
+			# Monotonic progress check for bk2
+			if bk2 != null and bk2.state == Car.State.DRIVE_THRU:
+				assert(bk2.path_distance >= bk2_prev_d - 0.001, "bk2 progress must be monotonic")
+				bk2_prev_d = bk2.path_distance
+				if bk2.dt_order_done and not saw_bk2_order:
+					saw_bk2_order = true
+				if bk2.dt_pickup_done and not saw_bk2_pickup:
+					saw_bk2_pickup = true
+
+			# Euclidean no-overlap check
+			if bk2 != null and bk1.state == Car.State.DRIVE_THRU and bk2.state == Car.State.DRIVE_THRU:
+				var d_pos := bk1.global_position.distance_to(bk2.global_position)
+				var min_allowed := (bk1.car_length + bk2.car_length) * 0.5 - 0.2
+				assert(d_pos >= min_allowed, "Euclidean overlap detected between bk1 and bk2: dist=%.2f < min=%.2f" % [d_pos, min_allowed])
+				if tm.find_blocker(bk2) == bk1 and bk2.speed < 0.1:
+					saw_bk2_queued = true
+
+			# Check if both have completed merge and are cruising
+			if bk1.state == Car.State.CRUISING and bk2 != null and bk2.state == Car.State.CRUISING:
+				break
+
+		assert(saw_bk1_order, "bk1 must dwell at menu/pickup window")
+		assert(saw_bk1_pickup, "bk1 must dwell at menu/pickup window")
+		assert(saw_bk2_queued, "bk2 must queue and stop behind bk1 in line")
+		assert(saw_bk2_order, "bk2 must dwell at menu/pickup window")
+		assert(saw_bk2_pickup, "bk2 must dwell at menu/pickup window")
+		assert(bk1.state == Car.State.CRUISING and bk1.lane_id == 3, "bk1 must merge and cruise in lane 3")
+		assert(bk2.state == Car.State.CRUISING and bk2.lane_id == 3, "bk2 must merge and cruise in lane 3")
+		assert(tm.lanes[3].cars.has(bk1), "bk1 must be added to lane 3 traffic")
+		# 3. Seeded Full-Traffic Phase
+		seed(42)
+		for c in tm.lot_cars:
+			c.queue_free()
+		tm.lot_cars.clear()
+		if tm.lot != null:
+			for s in tm.lot.spots:
+				tm.lot.release(s)
+		for lane in tm.lanes:
+			for c in lane.cars:
+				c.queue_free()
+			lane.cars.clear()
+			lane.spawn_timer = randf_range(1.0, 2.5)
+
+		tm._seed_parked_cars()
+
+		var dt_cars: Array[Car] = []
+		var p3_taco1: Car = tm.spawn_drive_thru_car(&"taco_hell_drive_thru")
+		var p3_bk1: Car = tm.spawn_drive_thru_car(&"booger_king")
+		dt_cars.append(p3_taco1)
+		dt_cars.append(p3_bk1)
+		var p3_taco2: Car = null
+		var p3_bk2: Car = null
+
+		var full_cap := 3000
+		var finished_all := false
+
+		for t in range(full_cap):
+			# Stagger secondary drive-thru cars so one enters while another exits
+			if t >= 220 and p3_taco2 == null and tm.can_spawn_drive_thru(&"taco_hell_drive_thru"):
+				p3_taco2 = tm.spawn_drive_thru_car(&"taco_hell_drive_thru")
+				dt_cars.append(p3_taco2)
+			if t >= 220 and p3_bk2 == null and tm.can_spawn_drive_thru(&"booger_king"):
+				p3_bk2 = tm.spawn_drive_thru_car(&"booger_king")
+				dt_cars.append(p3_bk2)
+
+			tm._physics_process(delta)
+
+			# Collect all active cars for separation checks
+			var all_cars: Array[Car] = []
+			for c in tm.lot_cars:
+				if is_instance_valid(c):
+					all_cars.append(c)
+			for lane in tm.lanes:
+				for c in lane.cars:
+					if is_instance_valid(c) and not all_cars.has(c):
+						all_cars.append(c)
+
+			# All-pairs Euclidean separation check for pairs involving drive-thru cars
+			for i in range(all_cars.size()):
+				var c_i := all_cars[i]
+				for j in range(i + 1, all_cars.size()):
+					var c_j := all_cars[j]
+					if not dt_cars.has(c_i) and not dt_cars.has(c_j):
+						continue
+					var dpos := c_j.global_position - c_i.global_position
+					var dpos_2d := Vector2(dpos.x, dpos.z)
+					var h_i := c_i.get_heading()
+					var f_i := Vector2(h_i.x, h_i.z).normalized()
+					var l_i := Vector2(-f_i.y, f_i.x)
+					var h_j := c_j.get_heading()
+					var f_j := Vector2(h_j.x, h_j.z).normalized()
+					var l_j := Vector2(-f_j.y, f_j.x)
+
+					var hx_i := c_i.car_length * 0.5
+					var hz_i := c_i.car_width * 0.5
+					var hx_j := c_j.car_length * 0.5
+					var hz_j := c_j.car_width * 0.5
+
+					var separated := false
+					var axes := [f_i, l_i, f_j, l_j]
+					for axis in axes:
+						var dist_axis := absf(dpos_2d.dot(axis))
+						var r_i := absf(f_i.dot(axis)) * hx_i + absf(l_i.dot(axis)) * hz_i
+						var r_j := absf(f_j.dot(axis)) * hx_j + absf(l_j.dot(axis)) * hz_j
+						if dist_axis >= (r_i + r_j - 0.25):
+							separated = true
+							break
+
+					assert(
+						separated,
+						"Euclidean car penetration involving drive-thru car %s (%s) and %s (%s) at tick %d: pos_i=%s, pos_j=%s"
+						% [c_i.name, c_i.get_state_name(), c_j.name, c_j.get_state_name(), t, c_i.global_position, c_j.global_position]
+					)
+
+			# Check if all 4 drive-thru cars reached CRUISING in their destination lanes
+			if p3_taco2 != null and p3_bk2 != null:
+				var all_cruising := true
+				for dt_c in dt_cars:
+					if dt_c.state != Car.State.CRUISING:
+						all_cruising = false
+						break
+				if all_cruising:
+					finished_all = true
+					break
+
+		assert(finished_all, "All 4 drive-thru cars must complete their loops and reach CRUISING within frame cap")
+		assert(p3_taco1.lane_id == 0 and p3_taco2.lane_id == 0, "Taco Hell drive-thru cars must merge and cruise in lane 0")
+		assert(p3_bk1.lane_id == 3 and p3_bk2.lane_id == 3, "Booger King drive-thru cars must merge and cruise in lane 3")
+
+		print("DRIVE_THRU_TEST: SUCCESS - Verified live simulation, dwell at stops, queueing without overlap, and clean seeded full-traffic phase with staggered cars completing loops without collisions or deadlocks!")
+		get_tree().quit(0)
+		return
 	if "--test-deadlock-watchdog" in OS.get_cmdline_user_args():
 		var tm = $TrafficManager
 		assert(tm != null, "TrafficManager must exist")
@@ -490,7 +773,7 @@ func _ready() -> void:
 		path2.add_point(Vector3(30.0, 0.0, 0.0))
 		path2.add_point(Vector3(0.0, 0.0, 0.0))
 
-		var car_scene = load("res://car.tscn")
+		var car_scene = load("res://cars/car.tscn")
 		var car1: Car = car_scene.instantiate()
 		car1.car_type = Car.CarType.SEDAN
 		car1.car_width = 2.0
@@ -844,14 +1127,16 @@ func _physics_process(_delta: float) -> void:
 			elif _test_car.state == Car.State.APPROACHING:
 				if not _saw_lc_decision:
 					_saw_lc_decision = true
-					print("LIFECYCLE [2/12]: decision (lane_dist=%.1f, spot=%s)" % [_test_car.lane_distance, str(_test_car.spot.id) if _test_car.spot else "null"])
+					assert(_test_car.turn_signal == Car.TurnSignal.RIGHT, "Car approaching right turn must activate turn signal")
+					print("LIFECYCLE [2/12]: decision (lane_dist=%.1f, spot=%s, signal=%s)" % [_test_car.lane_distance, str(_test_car.spot.id) if _test_car.spot else "null", str(_test_car.turn_signal)])
 				if _test_car.speed < 11.0 and not _saw_lc_braking:
 					_saw_lc_braking = true
-					print("LIFECYCLE [3/12]: approach braking (speed=%.1f, target_v_turn=%.1f)" % [_test_car.speed, TrafficManager.V_TURN])
+					assert(_test_car.turn_signal == Car.TurnSignal.RIGHT, "Car braking for right turn must have turn signal ON")
+					print("LIFECYCLE [3/12]: approach braking (speed=%.1f, target_v_turn=%.1f, signal=%s)" % [_test_car.speed, TrafficManager.V_TURN, str(_test_car.turn_signal)])
 			elif _test_car.state == Car.State.TO_SPOT:
 				if not _saw_lc_turn:
 					_saw_lc_turn = true
-					print("LIFECYCLE [4/12]: driveway turn (pos=%s, motion=PATH)" % str(_test_car.global_position))
+					print("LIFECYCLE [4/12]: driveway turn (pos=%s, motion=PATH, signal=%s)" % [str(_test_car.global_position), str(_test_car.turn_signal)])
 			elif _test_car.state == Car.State.PARKED:
 				if not _saw_lc_park:
 					_saw_lc_park = true
@@ -910,6 +1195,41 @@ func _physics_process(_delta: float) -> void:
 				return
 		if _test_frames > 4000:
 			assert(false, "Timeout waiting for vehicle lifecycle completion!")
+	if "--test-right-turn-following" in OS.get_cmdline_user_args():
+		_test_frames += 1
+		if is_instance_valid(_rt_lead_car) and is_instance_valid(_rt_follower_car):
+			var d_euc = _rt_lead_car.global_position.distance_to(_rt_follower_car.global_position)
+			_rt_min_distance = minf(_rt_min_distance, d_euc)
+			var min_allowed = (_rt_lead_car.car_length + _rt_follower_car.car_length) * 0.5 - 0.2
+			assert(d_euc >= min_allowed, "Collision detected: distance %.2f < min allowed %.2f" % [d_euc, min_allowed])
+
+			if _rt_lead_car.state == Car.State.APPROACHING and _rt_lead_car.speed < 11.0:
+				if not _rt_saw_lead_braking:
+					_rt_saw_lead_braking = true
+					print("RIGHT_TURN_TEST [1/4]: lead car braking for turn (spd=%.1f, signal=%s)" % [_rt_lead_car.speed, str(_rt_lead_car.turn_signal)])
+
+			if _rt_saw_lead_braking and _rt_follower_car.speed < 10.0:
+				if not _rt_saw_follower_braking:
+					_rt_saw_follower_braking = true
+					print("RIGHT_TURN_TEST [2/4]: follower car slowing down smoothly behind turning car (spd=%.1f, dist=%.1f)" % [_rt_follower_car.speed, d_euc])
+
+			if _rt_lead_car.state == Car.State.TO_SPOT:
+				if not _rt_saw_lead_turning:
+					_rt_saw_lead_turning = true
+					print("RIGHT_TURN_TEST [3/4]: lead car turning into driveway (pos=%s)" % str(_rt_lead_car.global_position))
+
+			if _rt_saw_lead_turning and _rt_follower_car.speed > 11.0 and _rt_follower_car.lane_distance > 53.0:
+				if not _rt_saw_follower_resumed:
+					_rt_saw_follower_resumed = true
+					print("RIGHT_TURN_TEST [4/4]: follower car safely cleared driveway and resumed cruise (spd=%.1f, min_dist=%.1f)" % [_rt_follower_car.speed, _rt_min_distance])
+					assert(_rt_saw_lead_braking, "Lead car must have braked")
+					assert(_rt_saw_follower_braking, "Follower car must have slowed down")
+					assert(_rt_saw_lead_turning, "Lead car must have turned")
+					print("RIGHT_TURN_TEST: SUCCESS - Follower car slowed down smoothly behind right turning car without crashing!")
+					get_tree().quit(0)
+					return
+		if _test_frames > 1500:
+			assert(false, "Timeout waiting for right turn following test completion!")
 func _on_player_died(pos: Vector3) -> void:
 	if hud and hud.has_method("increment_spd"):
 		hud.increment_spd()

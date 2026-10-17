@@ -1,17 +1,18 @@
-[gd_scene load_steps=43 format=3 uid="uid://c47ja8e0n02s"]
+[gd_scene load_steps=52 format=3 uid="uid://c47ja8e0n02s"]
 
 [ext_resource type="Script" path="res://follow_camera.gd" id="1_camera"]
-[ext_resource type="PackedScene" path="res://mats.tscn" id="2_mats"]
+[ext_resource type="PackedScene" path="res://player/mats.tscn" id="2_mats"]
 [ext_resource type="Script" path="res://main.gd" id="3_main"]
-[ext_resource type="Script" path="res://traffic_manager.gd" id="4_traffic"]
-[ext_resource type="PackedScene" path="res://hud.tscn" id="5_hud"]
+[ext_resource type="Script" path="res://traffic/traffic_manager.gd" id="4_traffic"]
+[ext_resource type="PackedScene" path="res://ui/hud.tscn" id="5_hud"]
 [ext_resource type="PackedScene" path="res://buildings/taco_hell.tscn" id="6_taco"]
 [ext_resource type="PackedScene" path="res://buildings/walgroins.tscn" id="7_walgroins"]
-[ext_resource type="PackedScene" path="res://street_lamp.tscn" id="8_lamp"]
-[ext_resource type="PackedScene" path="res://tree.tscn" id="9_tree"]
-[ext_resource type="PackedScene" path="res://character_editor.tscn" id="10_editor"]
-[ext_resource type="Shader" path="res://grass.gdshader" id="11_grass"]
-[ext_resource type="PackedScene" path="res://booger_king_site.tscn" id="12_booger_king_site"]
+[ext_resource type="PackedScene" path="res://props/street_lamp.tscn" id="8_lamp"]
+[ext_resource type="PackedScene" path="res://props/tree.tscn" id="9_tree"]
+[ext_resource type="PackedScene" path="res://player/character_editor.tscn" id="10_editor"]
+[ext_resource type="Shader" path="res://shaders/grass.gdshader" id="11_grass"]
+[ext_resource type="PackedScene" path="res://buildings/booger_king_site.tscn" id="12_booger_king_site"]
+[ext_resource type="PackedScene" uid="uid://cwuyboq2ow2qx" path="res://buildings/cramped_inn.tscn" id="13_cramped_inn"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.35, 0.55, 0.85, 1)
@@ -37,10 +38,10 @@ shader_parameter/dry_grass = Color(0.46, 0.43, 0.2, 1)
 
 [sub_resource type="PlaneMesh" id="Mesh_Ground"]
 material = SubResource("Mat_Grass")
-size = Vector2(160, 160)
+size = Vector2(220, 200)
 
 [sub_resource type="BoxShape3D" id="Shape_Ground"]
-size = Vector3(160, 1, 160)
+size = Vector3(220, 1, 200)
 
 [sub_resource type="StandardMaterial3D" id="Mat_Asphalt"]
 albedo_color = Color(0.16, 0.17, 0.2, 1)
@@ -48,35 +49,21 @@ roughness = 0.8
 
 [sub_resource type="BoxMesh" id="Mesh_Stroad"]
 material = SubResource("Mat_Asphalt")
-size = Vector3(120, 0.1, 15)
+size = Vector3(180, 0.1, 15)
 
 [sub_resource type="BoxShape3D" id="Shape_Stroad"]
-size = Vector3(120, 0.1, 15)
+size = Vector3(180, 0.1, 15)
 
 [sub_resource type="StandardMaterial3D" id="Mat_Concrete"]
 albedo_color = Color(0.72, 0.72, 0.74, 1)
 roughness = 0.7
 
-[sub_resource type="BoxMesh" id="Mesh_Sidewalk"]
+[sub_resource type="BoxMesh" id="Mesh_SidewalkSouthWest"]
 material = SubResource("Mat_Concrete")
-size = Vector3(120, 0.25, 3.2)
+size = Vector3(44, 0.25, 3.2)
 
-[sub_resource type="BoxShape3D" id="Shape_Sidewalk"]
-size = Vector3(120, 0.25, 3.2)
-
-[sub_resource type="BoxMesh" id="Mesh_SidewalkNorthWest"]
-material = SubResource("Mat_Concrete")
-size = Vector3(67, 0.25, 3.2)
-
-[sub_resource type="BoxShape3D" id="Shape_SidewalkNorthWest"]
-size = Vector3(67, 0.25, 3.2)
-
-[sub_resource type="BoxMesh" id="Mesh_SidewalkNorthEast"]
-material = SubResource("Mat_Concrete")
-size = Vector3(45, 0.25, 3.2)
-
-[sub_resource type="BoxShape3D" id="Shape_SidewalkNorthEast"]
-size = Vector3(45, 0.25, 3.2)
+[sub_resource type="BoxShape3D" id="Shape_SidewalkSouthWest"]
+size = Vector3(44, 0.25, 3.2)
 
 [sub_resource type="StandardMaterial3D" id="Mat_ParkingAsphalt"]
 albedo_color = Color(0.22, 0.23, 0.25, 1)
@@ -89,12 +76,40 @@ size = Vector3(8, 0.1, 3.2)
 [sub_resource type="BoxShape3D" id="Shape_DrivewayApron"]
 size = Vector3(8, 0.1, 3.2)
 
+[sub_resource type="BoxMesh" id="Mesh_SidewalkSouthMid"]
+material = SubResource("Mat_Concrete")
+size = Vector3(74, 0.25, 3.2)
+
+[sub_resource type="BoxShape3D" id="Shape_SidewalkSouthMid"]
+size = Vector3(74, 0.25, 3.2)
+
+[sub_resource type="BoxMesh" id="Mesh_SidewalkSouthEast"]
+material = SubResource("Mat_Concrete")
+size = Vector3(46, 0.25, 3.2)
+
+[sub_resource type="BoxShape3D" id="Shape_SidewalkSouthEast"]
+size = Vector3(46, 0.25, 3.2)
+
+[sub_resource type="BoxMesh" id="Mesh_SidewalkNorthWest"]
+material = SubResource("Mat_Concrete")
+size = Vector3(97, 0.25, 3.2)
+
+[sub_resource type="BoxShape3D" id="Shape_SidewalkNorthWest"]
+size = Vector3(97, 0.25, 3.2)
+
+[sub_resource type="BoxMesh" id="Mesh_SidewalkNorthEast"]
+material = SubResource("Mat_Concrete")
+size = Vector3(75, 0.25, 3.2)
+
+[sub_resource type="BoxShape3D" id="Shape_SidewalkNorthEast"]
+size = Vector3(75, 0.25, 3.2)
+
 [sub_resource type="StandardMaterial3D" id="Mat_YellowMarking"]
 albedo_color = Color(0.96, 0.78, 0.1, 1)
 
 [sub_resource type="BoxMesh" id="Mesh_YellowLine"]
 material = SubResource("Mat_YellowMarking")
-size = Vector3(120, 0.12, 0.18)
+size = Vector3(180, 0.12, 0.18)
 
 [sub_resource type="StandardMaterial3D" id="Mat_WhiteMarking"]
 albedo_color = Color(0.92, 0.92, 0.94, 1)
@@ -121,6 +136,20 @@ size = Vector3(26, 0.1, 21.3)
 [sub_resource type="BoxShape3D" id="Shape_TacoParkingApron"]
 size = Vector3(26, 0.1, 21.3)
 
+[sub_resource type="BoxMesh" id="Mesh_HamptonParkingLot"]
+material = SubResource("Mat_ParkingAsphalt")
+size = Vector3(42, 0.1, 20)
+
+[sub_resource type="BoxShape3D" id="Shape_HamptonParkingLot"]
+size = Vector3(42, 0.1, 20)
+
+[sub_resource type="BoxMesh" id="Mesh_HamptonDriveway"]
+material = SubResource("Mat_ParkingAsphalt")
+size = Vector3(8, 0.1, 5.5)
+
+[sub_resource type="BoxShape3D" id="Shape_HamptonDriveway"]
+size = Vector3(8, 0.1, 5.5)
+
 [sub_resource type="StandardMaterial3D" id="Mat_Hydrant"]
 albedo_color = Color(0.9, 0.2, 0.15, 1)
 roughness = 0.5
@@ -140,7 +169,7 @@ environment = SubResource("Environment_main")
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.819152, 0.42625, -0.383798, 0, 0.669131, 0.743145, 0.573576, -0.608749, 0.54812, 0, 16, 0)
 shadow_enabled = true
-directional_shadow_max_distance = 60.0
+directional_shadow_max_distance = 80.0
 
 [node name="Camera3D" type="Camera3D" parent="." node_paths=PackedStringArray("target")]
 transform = Transform3D(1, 0, 0, 0, 0.803857, 0.594823, 0, -0.594823, 0.803857, 0, 16.5, 19.5)
@@ -182,17 +211,44 @@ mesh = SubResource("Mesh_Stroad")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Road/Stroad/StaticBody3D"]
 shape = SubResource("Shape_Stroad")
 
-[node name="SidewalkSouth" type="MeshInstance3D" parent="Road"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.12, 9.1)
-mesh = SubResource("Mesh_Sidewalk")
+[node name="SidewalkSouthWest" type="MeshInstance3D" parent="Road"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -68, 0.12, 9.1)
+mesh = SubResource("Mesh_SidewalkSouthWest")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Road/SidewalkSouth"]
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/SidewalkSouthWest"]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/SidewalkSouth/StaticBody3D"]
-shape = SubResource("Shape_Sidewalk")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/SidewalkSouthWest/StaticBody3D"]
+shape = SubResource("Shape_SidewalkSouthWest")
+
+[node name="DrivewayApronSouthBK" type="MeshInstance3D" parent="Road"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -42, 0.05, 9.1)
+mesh = SubResource("Mesh_DrivewayApron")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/DrivewayApronSouthBK"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/DrivewayApronSouthBK/StaticBody3D"]
+shape = SubResource("Shape_DrivewayApron")
+
+[node name="SidewalkSouthMid" type="MeshInstance3D" parent="Road"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0.12, 9.1)
+mesh = SubResource("Mesh_SidewalkSouthMid")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/SidewalkSouthMid"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/SidewalkSouthMid/StaticBody3D"]
+shape = SubResource("Shape_SidewalkSouthMid")
+
+[node name="SidewalkSouthEast" type="MeshInstance3D" parent="Road"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 67, 0.12, 9.1)
+mesh = SubResource("Mesh_SidewalkSouthEast")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/SidewalkSouthEast"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/SidewalkSouthEast/StaticBody3D"]
+shape = SubResource("Shape_SidewalkSouthEast")
 
 [node name="SidewalkNorthWest" type="MeshInstance3D" parent="Road"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -26.5, 0.12, -9.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -41.5, 0.12, -9.1)
 mesh = SubResource("Mesh_SidewalkNorthWest")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="Road/SidewalkNorthWest"]
@@ -201,7 +257,7 @@ mesh = SubResource("Mesh_SidewalkNorthWest")
 shape = SubResource("Shape_SidewalkNorthWest")
 
 [node name="SidewalkNorthEast" type="MeshInstance3D" parent="Road"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 37.5, 0.12, -9.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 52.5, 0.12, -9.1)
 mesh = SubResource("Mesh_SidewalkNorthEast")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="Road/SidewalkNorthEast"]
@@ -227,6 +283,18 @@ mesh = SubResource("Mesh_YellowLine")
 [node name="CenterLine2" type="MeshInstance3D" parent="Road/Markings"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06, -0.16)
 mesh = SubResource("Mesh_YellowLine")
+
+[node name="LaneDashEast_-80" type="MeshInstance3D" parent="Road/Markings"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -80, 0.06, -3.75)
+mesh = SubResource("Mesh_WhiteDash")
+
+[node name="LaneDashEast_-72" type="MeshInstance3D" parent="Road/Markings"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -72, 0.06, -3.75)
+mesh = SubResource("Mesh_WhiteDash")
+
+[node name="LaneDashEast_-64" type="MeshInstance3D" parent="Road/Markings"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -64, 0.06, -3.75)
+mesh = SubResource("Mesh_WhiteDash")
 
 [node name="LaneDashEast_-56" type="MeshInstance3D" parent="Road/Markings"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -56, 0.06, -3.75)
@@ -288,6 +356,30 @@ mesh = SubResource("Mesh_WhiteDash")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 56, 0.06, -3.75)
 mesh = SubResource("Mesh_WhiteDash")
 
+[node name="LaneDashEast_64" type="MeshInstance3D" parent="Road/Markings"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64, 0.06, -3.75)
+mesh = SubResource("Mesh_WhiteDash")
+
+[node name="LaneDashEast_72" type="MeshInstance3D" parent="Road/Markings"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 72, 0.06, -3.75)
+mesh = SubResource("Mesh_WhiteDash")
+
+[node name="LaneDashEast_80" type="MeshInstance3D" parent="Road/Markings"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 80, 0.06, -3.75)
+mesh = SubResource("Mesh_WhiteDash")
+
+[node name="LaneDashWest_-80" type="MeshInstance3D" parent="Road/Markings"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -80, 0.06, 3.75)
+mesh = SubResource("Mesh_WhiteDash")
+
+[node name="LaneDashWest_-72" type="MeshInstance3D" parent="Road/Markings"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -72, 0.06, 3.75)
+mesh = SubResource("Mesh_WhiteDash")
+
+[node name="LaneDashWest_-64" type="MeshInstance3D" parent="Road/Markings"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -64, 0.06, 3.75)
+mesh = SubResource("Mesh_WhiteDash")
+
 [node name="LaneDashWest_-56" type="MeshInstance3D" parent="Road/Markings"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -56, 0.06, 3.75)
 mesh = SubResource("Mesh_WhiteDash")
@@ -346,6 +438,18 @@ mesh = SubResource("Mesh_WhiteDash")
 
 [node name="LaneDashWest_56" type="MeshInstance3D" parent="Road/Markings"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 56, 0.06, 3.75)
+mesh = SubResource("Mesh_WhiteDash")
+
+[node name="LaneDashWest_64" type="MeshInstance3D" parent="Road/Markings"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64, 0.06, 3.75)
+mesh = SubResource("Mesh_WhiteDash")
+
+[node name="LaneDashWest_72" type="MeshInstance3D" parent="Road/Markings"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 72, 0.06, 3.75)
+mesh = SubResource("Mesh_WhiteDash")
+
+[node name="LaneDashWest_80" type="MeshInstance3D" parent="Road/Markings"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 80, 0.06, 3.75)
 mesh = SubResource("Mesh_WhiteDash")
 
 [node name="Parking" type="Node3D" parent="."]
@@ -456,6 +560,52 @@ mesh = SubResource("Mesh_ParkingStripe")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 42, 0.06, -14.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
+[node name="HamptonParkingLot" type="MeshInstance3D" parent="Parking"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0.05, 23)
+mesh = SubResource("Mesh_HamptonParkingLot")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Parking/HamptonParkingLot"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Parking/HamptonParkingLot/StaticBody3D"]
+shape = SubResource("Shape_HamptonParkingLot")
+
+[node name="HamptonDriveway" type="MeshInstance3D" parent="Parking"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0.05, 10.25)
+mesh = SubResource("Mesh_HamptonDriveway")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Parking/HamptonDriveway"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Parking/HamptonDriveway/StaticBody3D"]
+shape = SubResource("Shape_HamptonDriveway")
+
+[node name="ParkingStall_Hampton_20" type="MeshInstance3D" parent="Parking"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0.06, 24)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_Hampton_24" type="MeshInstance3D" parent="Parking"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 0.06, 24)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_Hampton_28" type="MeshInstance3D" parent="Parking"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 0.06, 24)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_Hampton_32" type="MeshInstance3D" parent="Parking"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, 0.06, 24)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_Hampton_52" type="MeshInstance3D" parent="Parking"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 52, 0.06, 24)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_Hampton_56" type="MeshInstance3D" parent="Parking"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 56, 0.06, 24)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_Hampton_60" type="MeshInstance3D" parent="Parking"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 60, 0.06, 24)
+mesh = SubResource("Mesh_ParkingStripe")
+
 [node name="Props" type="Node3D" parent="."]
 
 [node name="Walgroins" parent="Props" instance=ExtResource("7_walgroins")]
@@ -466,6 +616,9 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35, 0, -34)
 
 [node name="BoogerKingSite" parent="Props" instance=ExtResource("12_booger_king_site")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -42, 0, 36)
+
+[node name="CrampedInn" parent="Props" instance=ExtResource("13_cramped_inn")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 40, 0, 36)
 
 [node name="FireHydrant" type="MeshInstance3D" parent="Props"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.45, 9.8)
@@ -485,17 +638,29 @@ transform = Transform3D(-1, 0, 1.22465e-16, 0, 1, 0, -1.22465e-16, 0, -1, -6, 0,
 [node name="Streetlight_22_m9.8" parent="Props/Streetlights" instance=ExtResource("8_lamp")]
 transform = Transform3D(-1, 0, 1.22465e-16, 0, 1, 0, -1.22465e-16, 0, -1, 22, 0, -9.8)
 
-[node name="Streetlight_m42_9.8" parent="Props/Streetlights" instance=ExtResource("8_lamp")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -42, 0, 9.8)
+[node name="Streetlight_m50_9.8" parent="Props/Streetlights" instance=ExtResource("8_lamp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -50, 0, 9.8)
 
-[node name="Streetlight_42_9.8" parent="Props/Streetlights" instance=ExtResource("8_lamp")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 42, 0, 9.8)
+[node name="Streetlight_48_9.8" parent="Props/Streetlights" instance=ExtResource("8_lamp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48, 0, 9.8)
 
 [node name="Streetlight_m38_m9.8" parent="Props/Streetlights" instance=ExtResource("8_lamp")]
 transform = Transform3D(-1, 0, 1.22465e-16, 0, 1, 0, -1.22465e-16, 0, -1, -38, 0, -9.8)
 
 [node name="Streetlight_42_m9.8" parent="Props/Streetlights" instance=ExtResource("8_lamp")]
 transform = Transform3D(-1, 0, 1.22465e-16, 0, 1, 0, -1.22465e-16, 0, -1, 42, 0, -9.8)
+
+[node name="Streetlight_m66_9.8" parent="Props/Streetlights" instance=ExtResource("8_lamp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -66, 0, 9.8)
+
+[node name="Streetlight_66_9.8" parent="Props/Streetlights" instance=ExtResource("8_lamp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 66, 0, 9.8)
+
+[node name="Streetlight_m66_m9.8" parent="Props/Streetlights" instance=ExtResource("8_lamp")]
+transform = Transform3D(-1, 0, 1.22465e-16, 0, 1, 0, -1.22465e-16, 0, -1, -66, 0, -9.8)
+
+[node name="Streetlight_66_m9.8" parent="Props/Streetlights" instance=ExtResource("8_lamp")]
+transform = Transform3D(-1, 0, 1.22465e-16, 0, 1, 0, -1.22465e-16, 0, -1, 66, 0, -9.8)
 
 [node name="Trees" type="Node3D" parent="Props"]
 
@@ -506,16 +671,16 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, 0, 11)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 11)
 tree_type = 4
 
-[node name="Tree_m20_m11" parent="Props/Trees" instance=ExtResource("9_tree")]
+[node name="Tree_m31_m15" parent="Props/Trees" instance=ExtResource("9_tree")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -31, 0, -15)
 tree_type = 1
 
-[node name="Tree_25_m11" parent="Props/Trees" instance=ExtResource("9_tree")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25, 0, -11)
+[node name="Tree_m58_m11" parent="Props/Trees" instance=ExtResource("9_tree")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -58, 0, -11)
 tree_type = 4
 
-[node name="Tree_m48_11" parent="Props/Trees" instance=ExtResource("9_tree")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -48, 0, 11)
+[node name="Tree_m58_11" parent="Props/Trees" instance=ExtResource("9_tree")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -58, 0, 11)
 tree_type = 2
 
 [node name="Tree_30_11" parent="Props/Trees" instance=ExtResource("9_tree")]
@@ -530,9 +695,25 @@ tree_type = 3
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -44, 0, -11)
 tree_type = 3
 
-[node name="Tree_36_m11" parent="Props/Trees" instance=ExtResource("9_tree")]
+[node name="Tree_50_m11" parent="Props/Trees" instance=ExtResource("9_tree")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50, 0, -11)
 tree_type = 2
 
 [node name="Tree_55_m11" parent="Props/Trees" instance=ExtResource("9_tree")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 55, 0, -11)
+
+[node name="Tree_m70_11" parent="Props/Trees" instance=ExtResource("9_tree")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -70, 0, 11)
+tree_type = 1
+
+[node name="Tree_72_11" parent="Props/Trees" instance=ExtResource("9_tree")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 72, 0, 11)
+tree_type = 4
+
+[node name="Tree_m72_m11" parent="Props/Trees" instance=ExtResource("9_tree")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -72, 0, -11)
+tree_type = 2
+
+[node name="Tree_75_m11" parent="Props/Trees" instance=ExtResource("9_tree")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 75, 0, -11)
+tree_type = 3
