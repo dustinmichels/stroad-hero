@@ -1,4 +1,4 @@
-[gd_scene load_steps=52 format=3 uid="uid://c47ja8e0n02s"]
+[gd_scene load_steps=53 format=3 uid="uid://c47ja8e0n02s"]
 
 [ext_resource type="Script" path="res://follow_camera.gd" id="1_camera"]
 [ext_resource type="PackedScene" path="res://player/mats.tscn" id="2_mats"]
@@ -13,6 +13,7 @@
 [ext_resource type="Shader" path="res://shaders/grass.gdshader" id="11_grass"]
 [ext_resource type="PackedScene" path="res://buildings/booger_king_site.tscn" id="12_booger_king_site"]
 [ext_resource type="PackedScene" uid="uid://cwuyboq2ow2qx" path="res://buildings/cramped_inn.tscn" id="13_cramped_inn"]
+[ext_resource type="PackedScene" path="res://props/us_flag.tscn" id="14_flag"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.35, 0.55, 0.85, 1)
@@ -717,3 +718,28 @@ tree_type = 2
 [node name="Tree_75_m11" parent="Props/Trees" instance=ExtResource("9_tree")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 75, 0, -11)
 tree_type = 3
+
+[node name="Flags" type="Node3D" parent="Props"]
+
+[node name="Flag_BoogerKing" parent="Props/Flags" instance=ExtResource("14_flag")]
+transform = Transform3D(0.996195, 0, -0.087156, 0, 1, 0, 0.087156, 0, 0.996195, -25, 0, 13)
+
+[node name="Flag_MotelLobby" parent="Props/Flags" instance=ExtResource("14_flag")]
+transform = Transform3D(0.990268, 0, 0.139173, 0, 1, 0, -0.139173, 0, 0.990268, 16, 0, 13)
+
+[node name="Flag_Walgroins" parent="Props/Flags" instance=ExtResource("14_flag")]
+transform = Transform3D(0.978148, 0, 0.207912, 0, 1, 0, -0.207912, 0, 0.978148, -36, 0, -13)
+
+[node name="Flag_TacoHell" parent="Props/Flags" instance=ExtResource("14_flag")]
+transform = Transform3D(0.990268, 0, -0.139173, 0, 1, 0, 0.139173, 0, 0.990268, 52, 0, -14)
+
+[node name="Flag_WestGiant" parent="Props/Flags" instance=ExtResource("14_flag")]
+transform = Transform3D(0.997564, 0, 0.069756, 0, 1, 0, -0.069756, 0, 0.997564, -80, 0, 16)
+flag_size = 2
+
+[node name="Flag_EastLarge" parent="Props/Flags" instance=ExtResource("14_flag")]
+transform = Transform3D(0.994522, 0, -0.104528, 0, 1, 0, 0.104528, 0, 0.994522, 80, 0, -15)
+flag_size = 1
+
+[node name="Flag_CrampedInnEast" parent="Props/Flags" instance=ExtResource("14_flag")]
+transform = Transform3D(0.99863, 0, 0.052336, 0, 1, 0, -0.052336, 0, 0.99863, 64, 0, 15)

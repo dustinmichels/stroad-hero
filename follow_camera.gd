@@ -1,5 +1,5 @@
 extends Camera3D
-## Tracks `target`; WASD smoothly swings to cardinal and diagonal viewpoints.
+## Tracks `target`; each WASD press steps the view 45 degrees around it.
 ## Death returns the camera to its starting view.
 
 @export var target: CharacterBody3D
@@ -7,6 +7,7 @@ extends Camera3D
 @export var swing_smoothing := 8.0
 
 const SWING_FINISH_ANGLE := deg_to_rad(1.0)
+const YAW_STEP := PI / 4.0
 var _horizontal_distance: float
 var _default_yaw: float
 var _camera_yaw: float
@@ -25,17 +26,20 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	var camera_input := Input.get_vector(
-		"camera_left", "camera_right", "camera_forward", "camera_back"
+	var step := (
+		int(Input.is_action_just_pressed("camera_left"))
+		+ int(Input.is_action_just_pressed("camera_forward"))
+		- int(Input.is_action_just_pressed("camera_right"))
+		- int(Input.is_action_just_pressed("camera_back"))
 	)
-	if not camera_input.is_zero_approx():
-		_target_yaw = atan2(-camera_input.x, -camera_input.y)
-		_is_swinging = absf(angle_difference(_camera_yaw, _target_yaw)) > SWING_FINISH_ANGLE
+	if step != 0:
+		_target_yaw += step * YAW_STEP
+		_is_swinging = true
 	if _is_swinging:
-		_camera_yaw = lerp_angle(
+		_camera_yaw = lerpf(
 			_camera_yaw, _target_yaw, 1.0 - exp(-swing_smoothing * delta)
 		)
-		if absf(angle_difference(_camera_yaw, _target_yaw)) <= SWING_FINISH_ANGLE:
+		if absf(_target_yaw - _camera_yaw) <= SWING_FINISH_ANGLE:
 			_camera_yaw = _target_yaw
 			_is_swinging = false
 
@@ -52,5 +56,5 @@ func _physics_process(delta: float) -> void:
 	global_rotation.y = atan2(-target_direction.x, -target_direction.z)
 
 func _on_target_died(_death_position: Vector3) -> void:
-	_target_yaw = _default_yaw
+	_target_yaw = _camera_yaw + angle_difference(_camera_yaw, _default_yaw)
 	_is_swinging = true

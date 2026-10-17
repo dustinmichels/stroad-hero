@@ -1,0 +1,1008 @@
+[gd_scene format=3]
+
+[ext_resource type="FontFile" path="res://fonts/Lobster-Regular.ttf" id="1_lobster"]
+[ext_resource type="FontFile" path="res://fonts/ArchivoBlack-Regular.ttf" id="2_archivo"]
+[ext_resource type="PackedScene" path="res://buildings/dorf_logo.tscn" id="3_logo"]
+
+[sub_resource type="BoxShape3D" id="Shape_Showroom"]
+size = Vector3(20, 7, 16)
+
+[sub_resource type="BoxShape3D" id="Shape_Tower"]
+size = Vector3(6.5, 9.2, 5)
+
+[sub_resource type="BoxShape3D" id="Shape_Service"]
+size = Vector3(18, 5.4, 18)
+
+[sub_resource type="BoxShape3D" id="Shape_ServiceCanopy"]
+size = Vector3(14, 0.4, 4.5)
+
+[sub_resource type="BoxShape3D" id="Shape_PylonBase"]
+size = Vector3(3.4, 12, 1.8)
+
+[sub_resource type="StandardMaterial3D" id="Mat_ShowroomSilver"]
+albedo_color = Color(0.82, 0.84, 0.87, 1)
+metallic = 0.65
+roughness = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Mat_TowerWhite"]
+albedo_color = Color(0.94, 0.95, 0.96, 1)
+roughness = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Mat_ServiceWall"]
+albedo_color = Color(0.72, 0.74, 0.76, 1)
+roughness = 0.8
+
+[sub_resource type="StandardMaterial3D" id="Mat_DarkTrim"]
+albedo_color = Color(0.18, 0.2, 0.22, 1)
+metallic = 0.4
+roughness = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Mat_ShowroomGlass"]
+albedo_color = Color(0.08, 0.18, 0.24, 0.88)
+metallic = 0.35
+roughness = 0.08
+
+[sub_resource type="StandardMaterial3D" id="Mat_AluminumMullion"]
+albedo_color = Color(0.32, 0.34, 0.36, 1)
+metallic = 0.8
+roughness = 0.25
+
+[sub_resource type="StandardMaterial3D" id="Mat_DorfBlueAccent"]
+albedo_color = Color(0.04, 0.26, 0.66, 1)
+roughness = 0.3
+emission_enabled = true
+emission = Color(0.03, 0.18, 0.45, 1)
+emission_energy_multiplier = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Mat_QuickPainOrange"]
+albedo_color = Color(0.95, 0.48, 0.08, 1)
+roughness = 0.35
+emission_enabled = true
+emission = Color(0.85, 0.38, 0.05, 1)
+emission_energy_multiplier = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Mat_GarageDoor"]
+albedo_color = Color(0.88, 0.89, 0.9, 1)
+roughness = 0.45
+
+[sub_resource type="StandardMaterial3D" id="Mat_GarageDoorGlass"]
+albedo_color = Color(0.1, 0.14, 0.18, 1)
+roughness = 0.1
+
+[sub_resource type="StandardMaterial3D" id="Mat_SafetyYellow"]
+albedo_color = Color(0.95, 0.78, 0.05, 1)
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_RoofGravel"]
+albedo_color = Color(0.28, 0.27, 0.26, 1)
+roughness = 0.95
+
+[sub_resource type="StandardMaterial3D" id="Mat_HvacMetal"]
+albedo_color = Color(0.65, 0.67, 0.69, 1)
+metallic = 0.7
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_PylonWhite"]
+albedo_color = Color(0.93, 0.94, 0.96, 1)
+roughness = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Mat_WhiteVinyl"]
+albedo_color = Color(0.96, 0.96, 0.97, 1)
+roughness = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Mat_Concrete"]
+albedo_color = Color(0.62, 0.61, 0.59, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Mat_DisplayRamp"]
+albedo_color = Color(0.18, 0.25, 0.38, 1)
+metallic = 0.7
+roughness = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Mat_InteriorFloor"]
+albedo_color = Color(0.22, 0.23, 0.25, 1)
+roughness = 0.25
+
+[sub_resource type="StandardMaterial3D" id="Mat_LightFixture"]
+albedo_color = Color(1, 1, 1, 1)
+emission_enabled = true
+emission = Color(1, 1, 0.9, 1)
+emission_energy_multiplier = 0.8
+
+[sub_resource type="StandardMaterial3D" id="Mat_DeskWood"]
+albedo_color = Color(0.4, 0.26, 0.16, 1)
+roughness = 0.6
+
+[sub_resource type="BoxMesh" id="Mesh_ShowroomBody"]
+material = SubResource("Mat_ShowroomSilver")
+size = Vector3(20, 6.6, 16)
+
+[sub_resource type="BoxMesh" id="Mesh_ShowroomRoofCap"]
+material = SubResource("Mat_DarkTrim")
+size = Vector3(20.3, 0.3, 16.3)
+
+[sub_resource type="BoxMesh" id="Mesh_RoofGravelShowroom"]
+material = SubResource("Mat_RoofGravel")
+size = Vector3(19.8, 0.1, 15.8)
+
+[sub_resource type="BoxMesh" id="Mesh_ShowroomFasciaBand"]
+material = SubResource("Mat_ShowroomSilver")
+size = Vector3(17, 1.8, 0.4)
+
+[sub_resource type="BoxMesh" id="Mesh_ShowroomBaseCurb"]
+material = SubResource("Mat_DarkTrim")
+size = Vector3(17, 0.4, 0.3)
+
+[sub_resource type="BoxMesh" id="Mesh_ShowroomGlass"]
+material = SubResource("Mat_ShowroomGlass")
+size = Vector3(16.6, 4.5, 0.1)
+
+[sub_resource type="BoxMesh" id="Mesh_MullionV"]
+material = SubResource("Mat_AluminumMullion")
+size = Vector3(0.12, 4.5, 0.18)
+
+[sub_resource type="BoxMesh" id="Mesh_MullionH"]
+material = SubResource("Mat_AluminumMullion")
+size = Vector3(16.6, 0.12, 0.18)
+
+[sub_resource type="BoxMesh" id="Mesh_ShowroomFloor"]
+material = SubResource("Mat_InteriorFloor")
+size = Vector3(19.6, 0.1, 15.6)
+
+[sub_resource type="CylinderMesh" id="Mesh_Turntable"]
+material = SubResource("Mat_DarkTrim")
+top_radius = 2.4
+bottom_radius = 2.4
+height = 0.16
+radial_segments = 36
+
+[sub_resource type="CylinderMesh" id="Mesh_TurntablePlate"]
+material = SubResource("Mat_ShowroomSilver")
+top_radius = 2.3
+bottom_radius = 2.3
+height = 0.05
+radial_segments = 36
+
+[sub_resource type="BoxMesh" id="Mesh_SalesDesk"]
+material = SubResource("Mat_DeskWood")
+size = Vector3(2.4, 0.9, 1.2)
+
+[sub_resource type="BoxMesh" id="Mesh_DeskPartition"]
+material = SubResource("Mat_DarkTrim")
+size = Vector3(2.4, 0.5, 0.08)
+
+[sub_resource type="BoxMesh" id="Mesh_CeilingLight"]
+material = SubResource("Mat_LightFixture")
+size = Vector3(3.5, 0.05, 0.8)
+
+[sub_resource type="BoxMesh" id="Mesh_TowerBody"]
+material = SubResource("Mat_TowerWhite")
+size = Vector3(6.5, 9.2, 5)
+
+[sub_resource type="BoxMesh" id="Mesh_TowerParapet"]
+material = SubResource("Mat_DarkTrim")
+size = Vector3(6.7, 0.25, 5.2)
+
+[sub_resource type="BoxMesh" id="Mesh_TowerBlueAccent"]
+material = SubResource("Mat_DorfBlueAccent")
+size = Vector3(6.6, 0.18, 0.1)
+
+[sub_resource type="BoxMesh" id="Mesh_EntryCanopy"]
+material = SubResource("Mat_DarkTrim")
+size = Vector3(4.2, 0.12, 1.8)
+
+[sub_resource type="BoxMesh" id="Mesh_EntryDoorsFrame"]
+material = SubResource("Mat_DarkTrim")
+size = Vector3(3.8, 2.7, 0.15)
+
+[sub_resource type="BoxMesh" id="Mesh_EntryDoorsGlass"]
+material = SubResource("Mat_ShowroomGlass")
+size = Vector3(3.6, 2.5, 0.1)
+
+[sub_resource type="BoxMesh" id="Mesh_EntryHandle"]
+material = SubResource("Mat_ShowroomSilver")
+size = Vector3(0.06, 0.9, 0.08)
+
+[sub_resource type="BoxMesh" id="Mesh_ServiceBody"]
+material = SubResource("Mat_ServiceWall")
+size = Vector3(18, 5.4, 18)
+
+[sub_resource type="BoxMesh" id="Mesh_ServiceParapet"]
+material = SubResource("Mat_DarkTrim")
+size = Vector3(18.3, 0.25, 18.3)
+
+[sub_resource type="BoxMesh" id="Mesh_ServiceRoofGravel"]
+material = SubResource("Mat_RoofGravel")
+size = Vector3(17.8, 0.1, 17.8)
+
+[sub_resource type="BoxMesh" id="Mesh_BayDoorFrame"]
+material = SubResource("Mat_DarkTrim")
+size = Vector3(3.8, 3.8, 0.2)
+
+[sub_resource type="BoxMesh" id="Mesh_BayDoorPanel"]
+material = SubResource("Mat_GarageDoor")
+size = Vector3(3.5, 3.6, 0.1)
+
+[sub_resource type="BoxMesh" id="Mesh_BayDoorGlass"]
+material = SubResource("Mat_GarageDoorGlass")
+size = Vector3(3.3, 0.35, 0.12)
+
+[sub_resource type="CylinderMesh" id="Mesh_Bollard"]
+material = SubResource("Mat_SafetyYellow")
+top_radius = 0.12
+bottom_radius = 0.12
+height = 1
+radial_segments = 16
+
+[sub_resource type="BoxMesh" id="Mesh_ServiceCanopy"]
+material = SubResource("Mat_ShowroomSilver")
+size = Vector3(14, 0.35, 4.5)
+
+[sub_resource type="BoxMesh" id="Mesh_ServiceCanopyFascia"]
+material = SubResource("Mat_QuickPainOrange")
+size = Vector3(14.05, 0.35, 0.1)
+
+[sub_resource type="CylinderMesh" id="Mesh_ServiceCanopyPost"]
+material = SubResource("Mat_DarkTrim")
+top_radius = 0.12
+bottom_radius = 0.12
+height = 4.2
+radial_segments = 16
+
+[sub_resource type="CylinderMesh" id="Mesh_ServicePostWrap"]
+material = SubResource("Mat_SafetyYellow")
+top_radius = 0.16
+bottom_radius = 0.16
+height = 1
+radial_segments = 16
+
+[sub_resource type="BoxMesh" id="Mesh_HvacUnit"]
+material = SubResource("Mat_HvacMetal")
+size = Vector3(2.4, 1.4, 1.6)
+
+[sub_resource type="CylinderMesh" id="Mesh_HvacFan"]
+material = SubResource("Mat_DarkTrim")
+top_radius = 0.5
+bottom_radius = 0.5
+height = 0.15
+radial_segments = 24
+
+[sub_resource type="CylinderMesh" id="Mesh_ExhaustVent"]
+material = SubResource("Mat_HvacMetal")
+top_radius = 0.25
+bottom_radius = 0.25
+height = 0.8
+radial_segments = 16
+
+[sub_resource type="BoxMesh" id="Mesh_PylonBase"]
+material = SubResource("Mat_Concrete")
+size = Vector3(3.4, 0.8, 1.8)
+
+[sub_resource type="BoxMesh" id="Mesh_PylonColumn"]
+material = SubResource("Mat_PylonWhite")
+size = Vector3(0.65, 11.5, 0.9)
+
+[sub_resource type="BoxMesh" id="Mesh_PylonCrossBrace"]
+material = SubResource("Mat_DarkTrim")
+size = Vector3(2.2, 0.25, 0.5)
+
+[sub_resource type="BoxMesh" id="Mesh_PylonDealerCabinet"]
+material = SubResource("Mat_PylonWhite")
+size = Vector3(4.8, 1.8, 0.7)
+
+[sub_resource type="BoxMesh" id="Mesh_PylonReaderFace"]
+material = SubResource("Mat_DarkTrim")
+size = Vector3(4.6, 0.7, 0.72)
+
+[sub_resource type="BoxMesh" id="Mesh_PylonHeadBracket"]
+material = SubResource("Mat_PylonWhite")
+size = Vector3(4.5, 0.4, 0.8)
+
+[sub_resource type="BoxMesh" id="Mesh_FencePost"]
+material = SubResource("Mat_WhiteVinyl")
+size = Vector3(0.14, 1.3, 0.14)
+
+[sub_resource type="BoxMesh" id="Mesh_FenceRail"]
+material = SubResource("Mat_WhiteVinyl")
+size = Vector3(3, 0.08, 0.04)
+
+[sub_resource type="BoxMesh" id="Mesh_FloodlightBase"]
+material = SubResource("Mat_Concrete")
+size = Vector3(0.8, 0.6, 0.8)
+
+[sub_resource type="BoxMesh" id="Mesh_FloodlightPole"]
+material = SubResource("Mat_PylonWhite")
+size = Vector3(0.3, 8.5, 0.3)
+
+[sub_resource type="BoxMesh" id="Mesh_FloodlightArm"]
+material = SubResource("Mat_DarkTrim")
+size = Vector3(2.2, 0.15, 0.15)
+
+[sub_resource type="BoxMesh" id="Mesh_FloodlightHead"]
+material = SubResource("Mat_DarkTrim")
+size = Vector3(0.6, 0.25, 0.4)
+
+[sub_resource type="BoxMesh" id="Mesh_FloodlightLens"]
+material = SubResource("Mat_LightFixture")
+size = Vector3(0.55, 0.05, 0.35)
+
+[sub_resource type="BoxMesh" id="Mesh_DisplayRampBed"]
+material = SubResource("Mat_DisplayRamp")
+size = Vector3(2.4, 0.2, 5)
+
+[sub_resource type="BoxMesh" id="Mesh_DisplayRampLeg"]
+material = SubResource("Mat_DarkTrim")
+size = Vector3(0.15, 1, 0.15)
+
+[node name="Dorf" type="Node3D"]
+
+[node name="Building" type="StaticBody3D" parent="."]
+
+[node name="CollisionShowroom" type="CollisionShape3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 3.5, -1)
+shape = SubResource("Shape_Showroom")
+
+[node name="CollisionTower" type="CollisionShape3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.5, 4.6, 5.5)
+shape = SubResource("Shape_Tower")
+
+[node name="CollisionService" type="CollisionShape3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 2.7, -2)
+shape = SubResource("Shape_Service")
+
+[node name="CollisionServiceCanopy" type="CollisionShape3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11, 4.4, 9.25)
+shape = SubResource("Shape_ServiceCanopy")
+
+[node name="Showroom" type="Node3D" parent="Building"]
+
+[node name="MainBody" type="MeshInstance3D" parent="Building/Showroom"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 3.3, -1)
+mesh = SubResource("Mesh_ShowroomBody")
+
+[node name="RoofParapet" type="MeshInstance3D" parent="Building/Showroom"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 6.65, -1)
+mesh = SubResource("Mesh_ShowroomRoofCap")
+
+[node name="RoofGravel" type="MeshInstance3D" parent="Building/Showroom"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 6.55, -1)
+mesh = SubResource("Mesh_RoofGravelShowroom")
+
+[node name="FasciaBand" type="MeshInstance3D" parent="Building/Showroom"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 5.7, 7)
+mesh = SubResource("Mesh_ShowroomFasciaBand")
+
+[node name="BaseCurb" type="MeshInstance3D" parent="Building/Showroom"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 0.2, 6.95)
+mesh = SubResource("Mesh_ShowroomBaseCurb")
+
+[node name="GlassCurtainWall" type="MeshInstance3D" parent="Building/Showroom"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 2.65, 6.95)
+mesh = SubResource("Mesh_ShowroomGlass")
+
+[node name="MullionV_0" type="MeshInstance3D" parent="Building/Showroom"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.7, 2.65, 7.02)
+mesh = SubResource("Mesh_MullionV")
+
+[node name="MullionV_1" type="MeshInstance3D" parent="Building/Showroom"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.4, 2.65, 7.02)
+mesh = SubResource("Mesh_MullionV")
+
+[node name="MullionV_2" type="MeshInstance3D" parent="Building/Showroom"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 2.65, 7.02)
+mesh = SubResource("Mesh_MullionV")
+
+[node name="MullionV_3" type="MeshInstance3D" parent="Building/Showroom"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.6, 2.65, 7.02)
+mesh = SubResource("Mesh_MullionV")
+
+[node name="MullionV_4" type="MeshInstance3D" parent="Building/Showroom"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.7, 2.65, 7.02)
+mesh = SubResource("Mesh_MullionV")
+
+[node name="MullionH" type="MeshInstance3D" parent="Building/Showroom"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 2.7, 7.02)
+mesh = SubResource("Mesh_MullionH")
+
+[node name="Floor" type="MeshInstance3D" parent="Building/Showroom"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 0.05, -1)
+mesh = SubResource("Mesh_ShowroomFloor")
+
+[node name="Turntable" type="MeshInstance3D" parent="Building/Showroom"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 0.08, 2)
+mesh = SubResource("Mesh_Turntable")
+
+[node name="TurntablePlate" type="MeshInstance3D" parent="Building/Showroom"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 0.18, 2)
+mesh = SubResource("Mesh_TurntablePlate")
+
+[node name="SalesDesk" type="MeshInstance3D" parent="Building/Showroom"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 2.5)
+mesh = SubResource("Mesh_SalesDesk")
+
+[node name="DeskPartition" type="MeshInstance3D" parent="Building/Showroom"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.15, 1.95)
+mesh = SubResource("Mesh_DeskPartition")
+
+[node name="CeilingLight_0" type="MeshInstance3D" parent="Building/Showroom"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 6.4, 2)
+mesh = SubResource("Mesh_CeilingLight")
+
+[node name="CeilingLight_1" type="MeshInstance3D" parent="Building/Showroom"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.5, 6.4, 2)
+mesh = SubResource("Mesh_CeilingLight")
+
+[node name="CeilingLight_2" type="MeshInstance3D" parent="Building/Showroom"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 6.4, -3)
+mesh = SubResource("Mesh_CeilingLight")
+
+[node name="DealerName" type="Label3D" parent="Building/Showroom"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 5.9, 7.22)
+pixel_size = 0.016
+modulate = Color(0.18, 0.22, 0.26, 1)
+outline_modulate = Color(0.9, 0.92, 0.95, 1)
+text = "DERP CHAMBERS"
+font = ExtResource("2_archivo")
+font_size = 54
+outline_size = 8
+
+[node name="DealerSubName" type="Label3D" parent="Building/Showroom"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 5.25, 7.22)
+pixel_size = 0.012
+modulate = Color(0.04, 0.26, 0.66, 1)
+outline_modulate = Color(1, 1, 1, 1)
+text = "DORF OF WESTBOROUGH"
+font = ExtResource("2_archivo")
+font_size = 28
+outline_size = 4
+
+[node name="EntranceTower" type="Node3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.5, 0, 5.5)
+
+[node name="TowerBody" type="MeshInstance3D" parent="Building/EntranceTower"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.6, 0)
+mesh = SubResource("Mesh_TowerBody")
+
+[node name="TowerParapet" type="MeshInstance3D" parent="Building/EntranceTower"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9.25, 0)
+mesh = SubResource("Mesh_TowerParapet")
+
+[node name="TowerBlueAccent" type="MeshInstance3D" parent="Building/EntranceTower"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.8, 2.52)
+mesh = SubResource("Mesh_TowerBlueAccent")
+
+[node name="Canopy" type="MeshInstance3D" parent="Building/EntranceTower"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.85, 3.2)
+mesh = SubResource("Mesh_EntryCanopy")
+
+[node name="DoorsFrame" type="MeshInstance3D" parent="Building/EntranceTower"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 2.52)
+mesh = SubResource("Mesh_EntryDoorsFrame")
+
+[node name="DoorsGlass" type="MeshInstance3D" parent="Building/EntranceTower"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 2.54)
+mesh = SubResource("Mesh_EntryDoorsGlass")
+
+[node name="HandleL" type="MeshInstance3D" parent="Building/EntranceTower"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.15, 1.3, 2.62)
+mesh = SubResource("Mesh_EntryHandle")
+
+[node name="HandleR" type="MeshInstance3D" parent="Building/EntranceTower"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.15, 1.3, 2.62)
+mesh = SubResource("Mesh_EntryHandle")
+
+[node name="DorfLogo" parent="Building/EntranceTower" instance=ExtResource("3_logo")]
+transform = Transform3D(0.85, 0, 0, 0, 0.85, 0, 0, 0, 0.85, 0, 6.2, 2.55)
+
+[node name="DorfChromeText" type="Label3D" parent="Building/EntranceTower"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.2, 2.55)
+pixel_size = 0.014
+modulate = Color(0.9, 0.92, 0.95, 1)
+outline_modulate = Color(0.1, 0.15, 0.25, 1)
+text = "SHOWROOM"
+font = ExtResource("2_archivo")
+font_size = 32
+outline_size = 6
+
+[node name="HoursLabel" type="Label3D" parent="Building/EntranceTower"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.1, 2.55)
+pixel_size = 0.009
+modulate = Color(0.1, 0.1, 0.1, 1)
+outline_modulate = Color(1, 1, 1, 1)
+text = "MON-SAT 8AM - 9PM  •  SUN 10AM - 6PM"
+font = ExtResource("2_archivo")
+font_size = 20
+outline_size = 3
+
+[node name="ServiceDepartment" type="Node3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0, -2)
+
+[node name="ServiceBody" type="MeshInstance3D" parent="Building/ServiceDepartment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.7, 0)
+mesh = SubResource("Mesh_ServiceBody")
+
+[node name="ServiceParapet" type="MeshInstance3D" parent="Building/ServiceDepartment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.45, 0)
+mesh = SubResource("Mesh_ServiceParapet")
+
+[node name="ServiceRoof" type="MeshInstance3D" parent="Building/ServiceDepartment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.35, 0)
+mesh = SubResource("Mesh_ServiceRoofGravel")
+
+[node name="Bay1Frame" type="MeshInstance3D" parent="Building/ServiceDepartment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 2, 9.02)
+mesh = SubResource("Mesh_BayDoorFrame")
+
+[node name="Bay1Door" type="MeshInstance3D" parent="Building/ServiceDepartment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 2, 9.04)
+mesh = SubResource("Mesh_BayDoorPanel")
+
+[node name="Bay1Glass" type="MeshInstance3D" parent="Building/ServiceDepartment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 2.5, 9.08)
+mesh = SubResource("Mesh_BayDoorGlass")
+
+[node name="Bay1BollardL" type="MeshInstance3D" parent="Building/ServiceDepartment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.5, 9.3)
+mesh = SubResource("Mesh_Bollard")
+
+[node name="Bay1BollardR" type="MeshInstance3D" parent="Building/ServiceDepartment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0.5, 9.3)
+mesh = SubResource("Mesh_Bollard")
+
+[node name="Bay2Frame" type="MeshInstance3D" parent="Building/ServiceDepartment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 9.02)
+mesh = SubResource("Mesh_BayDoorFrame")
+
+[node name="Bay2Door" type="MeshInstance3D" parent="Building/ServiceDepartment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 9.04)
+mesh = SubResource("Mesh_BayDoorPanel")
+
+[node name="Bay2Glass" type="MeshInstance3D" parent="Building/ServiceDepartment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 9.08)
+mesh = SubResource("Mesh_BayDoorGlass")
+
+[node name="Bay2BollardL" type="MeshInstance3D" parent="Building/ServiceDepartment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0.5, 9.3)
+mesh = SubResource("Mesh_Bollard")
+
+[node name="Bay2BollardR" type="MeshInstance3D" parent="Building/ServiceDepartment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.5, 9.3)
+mesh = SubResource("Mesh_Bollard")
+
+[node name="Bay3Frame" type="MeshInstance3D" parent="Building/ServiceDepartment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 2, 9.02)
+mesh = SubResource("Mesh_BayDoorFrame")
+
+[node name="Bay3Door" type="MeshInstance3D" parent="Building/ServiceDepartment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 2, 9.04)
+mesh = SubResource("Mesh_BayDoorPanel")
+
+[node name="Bay3Glass" type="MeshInstance3D" parent="Building/ServiceDepartment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 2.5, 9.08)
+mesh = SubResource("Mesh_BayDoorGlass")
+
+[node name="Bay3BollardL" type="MeshInstance3D" parent="Building/ServiceDepartment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 0.5, 9.3)
+mesh = SubResource("Mesh_Bollard")
+
+[node name="Bay3BollardR" type="MeshInstance3D" parent="Building/ServiceDepartment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0.5, 9.3)
+mesh = SubResource("Mesh_Bollard")
+
+[node name="ServiceCanopy" type="MeshInstance3D" parent="Building/ServiceDepartment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 4.4, 11.25)
+mesh = SubResource("Mesh_ServiceCanopy")
+
+[node name="ServiceCanopyFascia" type="MeshInstance3D" parent="Building/ServiceDepartment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 4.4, 13.52)
+mesh = SubResource("Mesh_ServiceCanopyFascia")
+
+[node name="ServicePostL" type="MeshInstance3D" parent="Building/ServiceDepartment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.5, 2.1, 13.2)
+mesh = SubResource("Mesh_ServiceCanopyPost")
+
+[node name="ServicePostWrapL" type="MeshInstance3D" parent="Building/ServiceDepartment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.5, 0.5, 13.2)
+mesh = SubResource("Mesh_ServicePostWrap")
+
+[node name="ServicePostR" type="MeshInstance3D" parent="Building/ServiceDepartment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 2.1, 13.2)
+mesh = SubResource("Mesh_ServiceCanopyPost")
+
+[node name="ServicePostWrapR" type="MeshInstance3D" parent="Building/ServiceDepartment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 0.5, 13.2)
+mesh = SubResource("Mesh_ServicePostWrap")
+
+[node name="QuickPainSign" type="Label3D" parent="Building/ServiceDepartment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 4.4, 13.62)
+pixel_size = 0.014
+modulate = Color(1, 1, 1, 1)
+outline_modulate = Color(0.85, 0.35, 0, 1)
+text = "QUICK PAIN"
+font = ExtResource("2_archivo")
+font_size = 36
+outline_size = 8
+
+[node name="ServicePartsLabel" type="Label3D" parent="Building/ServiceDepartment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 4.95, 9.1)
+pixel_size = 0.013
+modulate = Color(0.9, 0.92, 0.95, 1)
+outline_modulate = Color(0.1, 0.15, 0.2, 1)
+text = "SERVICE & PARTS"
+font = ExtResource("2_archivo")
+font_size = 32
+outline_size = 6
+
+[node name="Rooftop" type="Node3D" parent="Building"]
+
+[node name="HvacShowroom1" type="MeshInstance3D" parent="Building/Rooftop"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 7.3, -2)
+mesh = SubResource("Mesh_HvacUnit")
+
+[node name="HvacShowroom1Fan" type="MeshInstance3D" parent="Building/Rooftop"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 8.05, -2)
+mesh = SubResource("Mesh_HvacFan")
+
+[node name="HvacShowroom2" type="MeshInstance3D" parent="Building/Rooftop"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 7.3, -4)
+mesh = SubResource("Mesh_HvacUnit")
+
+[node name="HvacShowroom2Fan" type="MeshInstance3D" parent="Building/Rooftop"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 8.05, -4)
+mesh = SubResource("Mesh_HvacFan")
+
+[node name="HvacService1" type="MeshInstance3D" parent="Building/Rooftop"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 6.1, -1)
+mesh = SubResource("Mesh_HvacUnit")
+
+[node name="HvacService1Fan" type="MeshInstance3D" parent="Building/Rooftop"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 6.85, -1)
+mesh = SubResource("Mesh_HvacFan")
+
+[node name="HvacService2" type="MeshInstance3D" parent="Building/Rooftop"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 6.1, -4)
+mesh = SubResource("Mesh_HvacUnit")
+
+[node name="HvacService2Fan" type="MeshInstance3D" parent="Building/Rooftop"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 6.85, -4)
+mesh = SubResource("Mesh_HvacFan")
+
+[node name="ExhaustVent1" type="MeshInstance3D" parent="Building/Rooftop"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 5.8, -7)
+mesh = SubResource("Mesh_ExhaustVent")
+
+[node name="ExhaustVent2" type="MeshInstance3D" parent="Building/Rooftop"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11, 5.8, -7)
+mesh = SubResource("Mesh_ExhaustVent")
+
+[node name="ExhaustVent3" type="MeshInstance3D" parent="Building/Rooftop"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 7, -6)
+mesh = SubResource("Mesh_ExhaustVent")
+
+[node name="RoadsideSign" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 26)
+
+[node name="StaticBody3D" type="StaticBody3D" parent="RoadsideSign"]
+
+[node name="CollisionPylon" type="CollisionShape3D" parent="RoadsideSign/StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, 0)
+shape = SubResource("Shape_PylonBase")
+
+[node name="PylonBase" type="MeshInstance3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, 0)
+mesh = SubResource("Mesh_PylonBase")
+
+[node name="ColumnL" type="MeshInstance3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.1, 6.5, 0)
+mesh = SubResource("Mesh_PylonColumn")
+
+[node name="ColumnR" type="MeshInstance3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.1, 6.5, 0)
+mesh = SubResource("Mesh_PylonColumn")
+
+[node name="CrossBrace1" type="MeshInstance3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.5, 0)
+mesh = SubResource("Mesh_PylonCrossBrace")
+
+[node name="CrossBrace2" type="MeshInstance3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, 0)
+mesh = SubResource("Mesh_PylonCrossBrace")
+
+[node name="DealerCabinet" type="MeshInstance3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.5, 0)
+mesh = SubResource("Mesh_PylonDealerCabinet")
+
+[node name="ReaderFace" type="MeshInstance3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8, 0)
+mesh = SubResource("Mesh_PylonReaderFace")
+
+[node name="DealerSignFront" type="Label3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.9, 0.38)
+pixel_size = 0.012
+modulate = Color(0.04, 0.26, 0.66, 1)
+outline_modulate = Color(1, 1, 1, 1)
+text = "DERP CHAMBERS"
+font = ExtResource("2_archivo")
+font_size = 38
+outline_size = 6
+
+[node name="DealerSignBack" type="Label3D" parent="RoadsideSign"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 8.9, -0.38)
+pixel_size = 0.012
+modulate = Color(0.04, 0.26, 0.66, 1)
+outline_modulate = Color(1, 1, 1, 1)
+text = "DERP CHAMBERS"
+font = ExtResource("2_archivo")
+font_size = 38
+outline_size = 6
+
+[node name="ReaderSignFront" type="Label3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8, 0.38)
+pixel_size = 0.011
+modulate = Color(1, 1, 1, 1)
+outline_modulate = Color(0.1, 0.1, 0.1, 1)
+text = "BUILT DORF TOUGH  •  0% APR"
+font = ExtResource("2_archivo")
+font_size = 24
+outline_size = 5
+
+[node name="ReaderSignBack" type="Label3D" parent="RoadsideSign"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 8, -0.38)
+pixel_size = 0.011
+modulate = Color(1, 1, 1, 1)
+outline_modulate = Color(0.1, 0.1, 0.1, 1)
+text = "NEW & PRE-OWNED LEMONS"
+font = ExtResource("2_archivo")
+font_size = 24
+outline_size = 5
+
+[node name="HeadBracket" type="MeshInstance3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 12.1, 0)
+mesh = SubResource("Mesh_PylonHeadBracket")
+
+[node name="GiantOvalFront" parent="RoadsideSign" instance=ExtResource("3_logo")]
+transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 0, 13.8, 0.12)
+
+[node name="GiantOvalBack" parent="RoadsideSign" instance=ExtResource("3_logo")]
+transform = Transform3D(-1.4, 0, 0, 0, 1.4, 0, 0, 0, -1.4, 0, 13.8, -0.12)
+
+[node name="SiteFeatures" type="Node3D" parent="."]
+
+[node name="Fence" type="Node3D" parent="SiteFeatures"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 23)
+
+[node name="Post_m21" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21, 0.65, 0)
+mesh = SubResource("Mesh_FencePost")
+
+[node name="Post_m18" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 0.65, 0)
+mesh = SubResource("Mesh_FencePost")
+
+[node name="Post_m15" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0.65, 0)
+mesh = SubResource("Mesh_FencePost")
+
+[node name="Post_m12" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0.65, 0)
+mesh = SubResource("Mesh_FencePost")
+
+[node name="Post_m9" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 0.65, 0)
+mesh = SubResource("Mesh_FencePost")
+
+[node name="Post_m6" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0.65, 0)
+mesh = SubResource("Mesh_FencePost")
+
+[node name="Post_m3" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0.65, 0)
+mesh = SubResource("Mesh_FencePost")
+
+[node name="Post_0" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.65, 0)
+mesh = SubResource("Mesh_FencePost")
+
+[node name="Post_3" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.65, 0)
+mesh = SubResource("Mesh_FencePost")
+
+[node name="Post_6" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.65, 0)
+mesh = SubResource("Mesh_FencePost")
+
+[node name="Post_9" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0.65, 0)
+mesh = SubResource("Mesh_FencePost")
+
+[node name="Post_12" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0.65, 0)
+mesh = SubResource("Mesh_FencePost")
+
+[node name="RailTop_m19_5" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.5, 1.05, 0)
+mesh = SubResource("Mesh_FenceRail")
+
+[node name="RailMid_m19_5" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.5, 0.7, 0)
+mesh = SubResource("Mesh_FenceRail")
+
+[node name="RailBtm_m19_5" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.5, 0.35, 0)
+mesh = SubResource("Mesh_FenceRail")
+
+[node name="RailTop_m16_5" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.5, 1.05, 0)
+mesh = SubResource("Mesh_FenceRail")
+
+[node name="RailMid_m16_5" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.5, 0.7, 0)
+mesh = SubResource("Mesh_FenceRail")
+
+[node name="RailBtm_m16_5" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.5, 0.35, 0)
+mesh = SubResource("Mesh_FenceRail")
+
+[node name="RailTop_m13_5" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.5, 1.05, 0)
+mesh = SubResource("Mesh_FenceRail")
+
+[node name="RailMid_m13_5" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.5, 0.7, 0)
+mesh = SubResource("Mesh_FenceRail")
+
+[node name="RailBtm_m13_5" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.5, 0.35, 0)
+mesh = SubResource("Mesh_FenceRail")
+
+[node name="RailTop_m10_5" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.5, 1.05, 0)
+mesh = SubResource("Mesh_FenceRail")
+
+[node name="RailMid_m10_5" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.5, 0.7, 0)
+mesh = SubResource("Mesh_FenceRail")
+
+[node name="RailBtm_m10_5" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.5, 0.35, 0)
+mesh = SubResource("Mesh_FenceRail")
+
+[node name="RailTop_m7_5" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 1.05, 0)
+mesh = SubResource("Mesh_FenceRail")
+
+[node name="RailMid_m7_5" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 0.7, 0)
+mesh = SubResource("Mesh_FenceRail")
+
+[node name="RailBtm_m7_5" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 0.35, 0)
+mesh = SubResource("Mesh_FenceRail")
+
+[node name="RailTop_m4_5" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.5, 1.05, 0)
+mesh = SubResource("Mesh_FenceRail")
+
+[node name="RailMid_m4_5" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.5, 0.7, 0)
+mesh = SubResource("Mesh_FenceRail")
+
+[node name="RailBtm_m4_5" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.5, 0.35, 0)
+mesh = SubResource("Mesh_FenceRail")
+
+[node name="RailTop_m1_5" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 1.05, 0)
+mesh = SubResource("Mesh_FenceRail")
+
+[node name="RailMid_m1_5" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0.7, 0)
+mesh = SubResource("Mesh_FenceRail")
+
+[node name="RailBtm_m1_5" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0.35, 0)
+mesh = SubResource("Mesh_FenceRail")
+
+[node name="RailTop_1_5" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 1.05, 0)
+mesh = SubResource("Mesh_FenceRail")
+
+[node name="RailMid_1_5" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0.7, 0)
+mesh = SubResource("Mesh_FenceRail")
+
+[node name="RailBtm_1_5" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0.35, 0)
+mesh = SubResource("Mesh_FenceRail")
+
+[node name="RailTop_4_5" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 1.05, 0)
+mesh = SubResource("Mesh_FenceRail")
+
+[node name="RailMid_4_5" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 0.7, 0)
+mesh = SubResource("Mesh_FenceRail")
+
+[node name="RailBtm_4_5" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 0.35, 0)
+mesh = SubResource("Mesh_FenceRail")
+
+[node name="RailTop_7_5" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 1.05, 0)
+mesh = SubResource("Mesh_FenceRail")
+
+[node name="RailMid_7_5" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 0.7, 0)
+mesh = SubResource("Mesh_FenceRail")
+
+[node name="RailBtm_7_5" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 0.35, 0)
+mesh = SubResource("Mesh_FenceRail")
+
+[node name="RailTop_10_5" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.5, 1.05, 0)
+mesh = SubResource("Mesh_FenceRail")
+
+[node name="RailMid_10_5" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.5, 0.7, 0)
+mesh = SubResource("Mesh_FenceRail")
+
+[node name="RailBtm_10_5" type="MeshInstance3D" parent="SiteFeatures/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.5, 0.35, 0)
+mesh = SubResource("Mesh_FenceRail")
+
+[node name="FloodlightPole" type="Node3D" parent="SiteFeatures"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, 18)
+
+[node name="Base" type="MeshInstance3D" parent="SiteFeatures/FloodlightPole"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+mesh = SubResource("Mesh_FloodlightBase")
+
+[node name="Pole" type="MeshInstance3D" parent="SiteFeatures/FloodlightPole"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, 0)
+mesh = SubResource("Mesh_FloodlightPole")
+
+[node name="Arm" type="MeshInstance3D" parent="SiteFeatures/FloodlightPole"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.7, 0)
+mesh = SubResource("Mesh_FloodlightArm")
+
+[node name="HeadL" type="MeshInstance3D" parent="SiteFeatures/FloodlightPole"]
+transform = Transform3D(1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, -0.7, 8.6, 0.2)
+mesh = SubResource("Mesh_FloodlightHead")
+
+[node name="LensL" type="MeshInstance3D" parent="SiteFeatures/FloodlightPole"]
+transform = Transform3D(1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, -0.7, 8.48, 0.25)
+mesh = SubResource("Mesh_FloodlightLens")
+
+[node name="HeadR" type="MeshInstance3D" parent="SiteFeatures/FloodlightPole"]
+transform = Transform3D(1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, 0.7, 8.6, 0.2)
+mesh = SubResource("Mesh_FloodlightHead")
+
+[node name="LensR" type="MeshInstance3D" parent="SiteFeatures/FloodlightPole"]
+transform = Transform3D(1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, 0.7, 8.48, 0.25)
+mesh = SubResource("Mesh_FloodlightLens")
+
+[node name="DisplayRamp" type="Node3D" parent="SiteFeatures"]
+transform = Transform3D(0.965926, 0, 0.258819, 0, 1, 0, -0.258819, 0, 0.965926, 8, 0, 17)
+
+[node name="RampBed" type="MeshInstance3D" parent="SiteFeatures/DisplayRamp"]
+transform = Transform3D(1, 0, 0, 0, 0.965926, -0.258819, 0, 0.258819, 0.965926, 0, 0.65, 0)
+mesh = SubResource("Mesh_DisplayRampBed")
+
+[node name="LegFL" type="MeshInstance3D" parent="SiteFeatures/DisplayRamp"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.05, 0.5, 2.1)
+mesh = SubResource("Mesh_DisplayRampLeg")
+
+[node name="LegFR" type="MeshInstance3D" parent="SiteFeatures/DisplayRamp"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.05, 0.5, 2.1)
+mesh = SubResource("Mesh_DisplayRampLeg")
+
+[node name="RampBanner" type="Label3D" parent="SiteFeatures/DisplayRamp"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 2.45)
+pixel_size = 0.012
+modulate = Color(1, 1, 1, 1)
+outline_modulate = Color(0.04, 0.26, 0.66, 1)
+text = "BUILT DORF TOUGH"
+font = ExtResource("2_archivo")
+font_size = 28
+outline_size = 6

@@ -1,16 +1,15 @@
-# Camera System Ideas
+# Camera System Evaluation Notes
 
-## Problem
+## Current Prototype
 
-The current camera maps W/A/S/D to absolute world-space viewpoints. This has several drawbacks:
+The camera uses eight evenly spaced viewpoints around Mats:
 
-- The controls describe directions on the keyboard, but the result depends on an invisible world compass.
-- W can swing 180 degrees from the starting view because the starting camera is on the opposite side of Mats.
-- A held key continually retargets the same fixed angle instead of feeling like direct camera control.
-- The camera can move while arrow-key walking remains locked to the movement basis captured at the start of the stride. That is stable, but the relationship is not obvious to the player.
-- There is no quick command whose meaning is always “put the camera behind Mats.”
+- **W/A:** rotate one 45-degree step counterclockwise.
+- **S/D:** rotate one 45-degree step clockwise.
+- Each press advances one step, including presses made while the previous swing is still moving.
+- Arrow-key movement keeps the camera basis captured at the start of the stride.
+- Death returns the camera to its starting view.
 
-The camera should prioritize seeing traffic, preserving movement direction during a crossing, and recovering a useful view with one predictable input.
 
 ## Options
 
@@ -23,7 +22,7 @@ The camera should prioritize seeing traffic, preserving movement direction durin
 | Fixed isometric views | WASD selects one of four authored viewpoints | Predictable composition and straightforward level design | Abrupt conceptual changes between views; less freedom around buildings and parking lots |
 | Road-aware camera | Camera favors the direction of dangerous traffic near roads and follows normally elsewhere | Can improve hazard visibility without player input | Hidden rules, surprising movement, and substantially more tuning and code |
 
-## Recommendation: Relative Orbit
+## Earlier Recommendation: Relative Orbit
 
 Use a restrained third-person orbit rather than absolute compass directions.
 
@@ -105,6 +104,6 @@ A successful camera should satisfy all of these:
 - Camera motion never starts without input while crossing the road.
 - Mats remains visible near large vehicles and buildings.
 
-## Suggested Next Prototype
+## Possible Follow-up Prototype
 
-Implement only the recommended relative orbit behavior in `follow_camera.gd`. Keep the existing distance, pitch, target tracking, smoothing, and death reset. Replace absolute WASD yaw targets with A/D relative orbit plus W/S facing-relative recenter commands. Evaluate that before adding collision handling or automatic behavior.
+If eight-way stepping proves too slow to recover a useful view, evaluate the relative-orbit behavior above while keeping the existing distance, pitch, target tracking, smoothing, and death reset.

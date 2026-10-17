@@ -1,0 +1,84 @@
+[gd_scene format=3]
+
+[ext_resource type="FontFile" path="res://fonts/Lobster-Regular.ttf" id="1_lobster"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_DorfChrome"]
+albedo_color = Color(0.88, 0.90, 0.93, 1)
+metallic = 0.85
+roughness = 0.2
+
+[sub_resource type="StandardMaterial3D" id="Mat_DorfDarkBlue"]
+albedo_color = Color(0.02, 0.10, 0.30, 1)
+roughness = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Mat_DorfPinstripe"]
+albedo_color = Color(0.95, 0.97, 1.0, 1)
+metallic = 0.75
+roughness = 0.25
+emission_enabled = true
+emission = Color(0.6, 0.75, 0.95, 1)
+emission_energy_multiplier = 0.2
+
+[sub_resource type="StandardMaterial3D" id="Mat_DorfBlueFace"]
+albedo_color = Color(0.04, 0.26, 0.66, 1)
+metallic = 0.15
+roughness = 0.25
+emission_enabled = true
+emission = Color(0.02, 0.14, 0.38, 1)
+emission_energy_multiplier = 0.25
+
+[sub_resource type="CylinderMesh" id="Mesh_DorfChromeRim"]
+material = SubResource("Mat_DorfChrome")
+top_radius = 1.05
+bottom_radius = 1.05
+height = 0.08
+radial_segments = 48
+
+[sub_resource type="CylinderMesh" id="Mesh_DorfDarkBlueLip"]
+material = SubResource("Mat_DorfDarkBlue")
+top_radius = 1.01
+bottom_radius = 1.01
+height = 0.09
+radial_segments = 48
+
+[sub_resource type="CylinderMesh" id="Mesh_DorfPinstripeRing"]
+material = SubResource("Mat_DorfPinstripe")
+top_radius = 0.93
+bottom_radius = 0.93
+height = 0.1
+radial_segments = 48
+
+[sub_resource type="CylinderMesh" id="Mesh_DorfBlueFace"]
+material = SubResource("Mat_DorfBlueFace")
+top_radius = 0.87
+bottom_radius = 0.87
+height = 0.11
+radial_segments = 48
+
+[node name="DorfLogo" type="Node3D"]
+
+[node name="OuterChromeRim" type="MeshInstance3D" parent="."]
+transform = Transform3D(2.15, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0)
+mesh = SubResource("Mesh_DorfChromeRim")
+
+[node name="OuterDarkBlueLip" type="MeshInstance3D" parent="."]
+transform = Transform3D(2.11, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0.01)
+mesh = SubResource("Mesh_DorfDarkBlueLip")
+
+[node name="ChromePinstripeRing" type="MeshInstance3D" parent="."]
+transform = Transform3D(2.03, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0.02)
+mesh = SubResource("Mesh_DorfPinstripeRing")
+
+[node name="InnerBlueOval" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.97, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0.03)
+mesh = SubResource("Mesh_DorfBlueFace")
+
+[node name="Text" type="Label3D" parent="."]
+transform = Transform3D(1.05, 0.07, 0, -0.07, 1.05, 0, 0, 0, 1.05, -0.02, -0.05, 0.1)
+pixel_size = 0.013
+modulate = Color(1, 1, 1, 1)
+outline_modulate = Color(0.01, 0.1, 0.3, 1)
+text = "Dorf"
+font = ExtResource("1_lobster")
+font_size = 110
+outline_size = 10

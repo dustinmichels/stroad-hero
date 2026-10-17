@@ -19,7 +19,7 @@ I think the underlying model should perhaps be 3D, so I can simulate real traffi
 ## Controls
 
 - Arrow keys: walk relative to the current camera
-- W/A/S/D: swing the camera to forward, left, back, or right viewpoints
+- W/A: rotate the camera left 45 degrees; S/D: rotate it right 45 degrees
 - Space: small hop
 - C: open the paused character editor; use Up/Down to choose a row and Left/Right to change it. The preview slowly turns to show the backpack.
 - F3: toggle traffic and parking debug overlay (parking stall statuses, car states/paths, merge windows, and HUD metrics)
