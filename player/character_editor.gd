@@ -1,13 +1,13 @@
 extends CanvasLayer
 
-const BACKPACK_COLORS := [
+const BACKPACK_COLORS: Array[Color] = [
 	Color(0.2, 0.55, 0.3, 1.0),
 	Color(0.12, 0.32, 0.82, 1.0),
 	Color(0.78, 0.2, 0.16, 1.0),
 	Color(0.95, 0.72, 0.12, 1.0),
 ]
-const BACKPACK_NAMES := ["Pine", "Blue", "Red", "Yellow"]
-const HEADWEAR_NAMES := ["Natural", "Red ball cap"]
+const BACKPACK_NAMES: Array[String] = ["Pine", "Blue", "Red", "Yellow"]
+const HEADWEAR_NAMES: Array[String] = ["Natural", "Red ball cap"]
 
 const PREVIEW_TURN_PERIOD := 8.0
 const UNSELECTED_MODULATE := Color(0.7, 0.72, 0.74, 1.0)

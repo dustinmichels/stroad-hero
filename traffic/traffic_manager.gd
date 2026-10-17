@@ -18,7 +18,7 @@ class Lane:
 	var spawn_interval_min: float
 	var spawn_interval_max: float
 	var spawn_timer: float = 0.0
-	var cars: Array = []
+	var cars: Array[Car] = []
 
 	func _init(
 		p_id: int,
@@ -51,7 +51,7 @@ class Lane:
 	const LANE_WIDTH := 3.75
 	const MARGIN := 1.0
 
-	func overlaps(car) -> bool:
+	func overlaps(car: Car) -> bool:
 		if car == null or not is_instance_valid(car):
 			return false
 		var pos: Vector3 = car.global_position
@@ -95,7 +95,7 @@ var taco_hell_drive_thru_path: Curve3D = null
 var booger_king_drive_thru_path: Curve3D = null
 var booger_king_merge_path: Curve3D = null
 var _physics_tick_count: int = 0
-var _watchdog_ignores: Dictionary = {}  # int (car_instance_id) -> Dictionary { "target_id": int, "timer": float }
+var _watchdog_ignores: Dictionary[int, Dictionary] = {}  # int (car_instance_id) -> Dictionary { "target_id": int, "timer": float }
 
 var stats: Dictionary = {
 	"cars_spawned": 0,
@@ -231,7 +231,7 @@ func _physics_process(delta: float) -> void:
 
 
 func _update_lot_cars(delta: float) -> void:
-	var expired_ignores: Array = []
+	var expired_ignores: Array[int] = []
 	for cid in _watchdog_ignores.keys():
 		_watchdog_ignores[cid]["timer"] -= delta
 		if _watchdog_ignores[cid]["timer"] <= 0.0 or instance_from_id(cid) == null:
@@ -939,7 +939,7 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 					lane.cars.append(car)
 
 	# Clean up despawned / invalid cars and PATH cars that no longer overlap
-	var valid_cars: Array = []
+	var valid_cars: Array[Car] = []
 	for car in lane.cars:
 		if not is_instance_valid(car):
 			continue
@@ -956,9 +956,9 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 		valid_cars.append(car)
 
 	# Sort cars by distance descending (farthest ahead first)
-	valid_cars.sort_custom(func(a, b) -> bool: return a.lane_distance > b.lane_distance)
+	valid_cars.sort_custom(func(a: Car, b: Car) -> bool: return a.lane_distance > b.lane_distance)
 
-	var surviving_cars: Array = []
+	var surviving_cars: Array[Car] = []
 	for i in range(valid_cars.size()):
 		var car = valid_cars[i]
 		if car.motion == Car.Motion.PATH:

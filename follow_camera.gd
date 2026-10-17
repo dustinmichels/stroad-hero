@@ -22,7 +22,7 @@ func _ready() -> void:
 	_camera_yaw = _default_yaw
 	_target_yaw = _default_yaw
 	if target.has_signal("died"):
-		target.connect("died", _on_target_died)
+		target.died.connect(_on_target_died)
 
 
 func _physics_process(delta: float) -> void:

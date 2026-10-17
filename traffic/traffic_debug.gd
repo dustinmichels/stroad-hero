@@ -4,9 +4,9 @@ extends Node3D
 var traffic_manager: TrafficManager = null
 var lot: ParkingLot = null
 
-var _spot_discs: Dictionary = {}
-var _spot_labels: Dictionary = {}
-var _car_labels: Dictionary = {}
+var _spot_discs: Dictionary[int, MeshInstance3D] = {}
+var _spot_labels: Dictionary[int, Label3D] = {}
+var _car_labels: Dictionary[int, Label3D] = {}
 var _mat_free: StandardMaterial3D
 var _mat_reserved: StandardMaterial3D
 var _mat_occupied: StandardMaterial3D
@@ -189,7 +189,7 @@ func _update_car_labels() -> void:
 			label.text = "%s (%.1fs)\n%.1f m/s\nspot: %s" % [state_str, car.merge_wait_time, car.speed, spot_str]
 		else:
 			label.text = "%s\n%.1f m/s\nspot: %s" % [state_str, car.speed, spot_str]
-	var to_remove: Array = []
+	var to_remove: Array[int] = []
 	for cid in _car_labels.keys():
 		if not active_ids.has(cid):
 			var lbl: Label3D = _car_labels[cid]

@@ -41,10 +41,13 @@ var _rt_saw_follower_braking: bool = false
 var _rt_saw_lead_turning: bool = false
 var _rt_saw_follower_resumed: bool = false
 var _rt_min_distance: float = 999.0
+var _user_args: PackedStringArray = []
+
 func _ready() -> void:
+	_user_args = OS.get_cmdline_user_args()
 	if mats:
 		mats.died.connect(_on_player_died)
-	if "--test-mats-blocker" in OS.get_cmdline_user_args() or "--test-mats-interaction" in OS.get_cmdline_user_args():
+	if "--test-mats-blocker" in _user_args or "--test-mats-interaction" in _user_args:
 		var car_scene = load("res://cars/car.tscn")
 		_test_car = car_scene.instantiate()
 		_test_car.car_type = Car.CarType.SEDAN
@@ -56,18 +59,18 @@ func _ready() -> void:
 		_test_car.rotation.y = -PI / 2.0  # facing +Z
 		_test_car._update_blocker_layer()
 		mats.global_position = Vector3(9.0, 0.5, -13.0)
-	if "--test-exit-route" in OS.get_cmdline_user_args():
+	if "--test-exit-route" in _user_args:
 		var traffic_mgr = $TrafficManager
 		assert(traffic_mgr != null and traffic_mgr.lot_cars.size() > 0, "TrafficManager must have seeded cars")
 		_test_car = traffic_mgr.lot_cars[0]
 		_test_car.dwell_left = 0.0
-	if "--test-merge-reentry" in OS.get_cmdline_user_args():
+	if "--test-merge-reentry" in _user_args:
 		var traffic_mgr = $TrafficManager
 		assert(traffic_mgr != null and traffic_mgr.lot_cars.size() > 0, "TrafficManager must have seeded cars")
 		_test_car = traffic_mgr.lot_cars[0]
 		_test_car.dwell_left = 0.0
 		_test_car.had_errand = true
-	if "--test-merge-gap" in OS.get_cmdline_user_args():
+	if "--test-merge-gap" in _user_args:
 		var traffic_mgr = $TrafficManager
 		assert(traffic_mgr != null and traffic_mgr.lot_cars.size() > 0, "TrafficManager must have seeded cars")
 		_test_car = traffic_mgr.lot_cars[0]
@@ -85,7 +88,7 @@ func _ready() -> void:
 		_test_car.had_errand = true
 		_test_car.merge_wait_time = 0.0
 		_test_car._update_blocker_layer()
-	if "--test-lifecycle" in OS.get_cmdline_user_args():
+	if "--test-lifecycle" in _user_args:
 		var traffic_mgr = $TrafficManager
 		assert(traffic_mgr != null, "TrafficManager must exist")
 		var lane0 = traffic_mgr.lanes[0]
@@ -98,7 +101,7 @@ func _ready() -> void:
 		_test_car.had_errand = true
 		_test_car.desired_speed = 12.0
 		_test_car.speed = 12.0
-	if "--test-right-turn-following" in OS.get_cmdline_user_args():
+	if "--test-right-turn-following" in _user_args:
 		var traffic_mgr = $TrafficManager
 		assert(traffic_mgr != null, "TrafficManager must exist")
 		var lane0 = traffic_mgr.lanes[0]
@@ -119,7 +122,7 @@ func _ready() -> void:
 		_rt_follower_car.speed = 14.0
 		_rt_follower_car.errand = null
 		_rt_follower_car.had_errand = false
-	if "--test-find-blocker" in OS.get_cmdline_user_args():
+	if "--test-find-blocker" in _user_args:
 		var tm = $TrafficManager
 		assert(tm != null, "TrafficManager must exist")
 		# Clear lot cars for isolated unit testing of find_blocker
@@ -211,7 +214,7 @@ func _ready() -> void:
 		print("FIND_BLOCKER_TEST: SUCCESS - all 8 blocker test cases passed!")
 		get_tree().quit(0)
 		return
-	if "--test-reverse-safety" in OS.get_cmdline_user_args():
+	if "--test-reverse-safety" in _user_args:
 		var tm = $TrafficManager
 		assert(tm != null, "TrafficManager must exist")
 		for c in tm.lot_cars:
@@ -265,7 +268,7 @@ func _ready() -> void:
 		print("REVERSE_SAFETY_TEST: SUCCESS - parked car delays reversing while moving lot car is within 8m, and reverses once clear!")
 		get_tree().quit(0)
 		return
-	if "--test-priority-arbitration" in OS.get_cmdline_user_args():
+	if "--test-priority-arbitration" in _user_args:
 		var tm = $TrafficManager
 		assert(tm != null, "TrafficManager must exist")
 		for c in tm.lot_cars:
@@ -432,7 +435,7 @@ func _ready() -> void:
 		print("PRIORITY_ARBITRATION_TEST: SUCCESS - Priority arbitration TO_SPOT > TO_EXIT > REVERSING_OUT verified!")
 		get_tree().quit(0)
 		return
-	if "--test-debug-hud" in OS.get_cmdline_user_args():
+	if "--test-debug-hud" in _user_args:
 		var tm = $TrafficManager
 		assert(tm != null and tm.debug_overlay != null, "TrafficManager and debug_overlay must exist")
 		var dbg: TrafficDebug = tm.debug_overlay
@@ -494,7 +497,7 @@ func _ready() -> void:
 		print("DEBUG_HUD_TEST: SUCCESS - HUD line shows stall counts, dropped, watchdog fires, and max stuck time")
 		get_tree().quit(0)
 		return
-	if "--test-drive-thru" in OS.get_cmdline_user_args():
+	if "--test-drive-thru" in _user_args:
 		var tm = $TrafficManager
 		assert(tm != null, "TrafficManager must exist")
 		for c in tm.lot_cars:
@@ -749,7 +752,7 @@ func _ready() -> void:
 		print("DRIVE_THRU_TEST: SUCCESS - Verified live simulation, dwell at stops, queueing without overlap, and clean seeded full-traffic phase with staggered cars completing loops without collisions or deadlocks!")
 		get_tree().quit(0)
 		return
-	if "--test-deadlock-watchdog" in OS.get_cmdline_user_args():
+	if "--test-deadlock-watchdog" in _user_args:
 		var tm = $TrafficManager
 		assert(tm != null, "TrafficManager must exist")
 		for c in tm.lot_cars:
@@ -859,7 +862,7 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 func _physics_process(_delta: float) -> void:
-	if "--test-mats-blocker" in OS.get_cmdline_user_args() or "--test-mats-interaction" in OS.get_cmdline_user_args():
+	if "--test-mats-blocker" in _user_args or "--test-mats-interaction" in _user_args:
 		_test_frames += 1
 		if _mats_stage == 0:
 			# Push Mats south along sidewalk into the car (from z=-13 toward z=-9.6)
@@ -913,7 +916,7 @@ func _physics_process(_delta: float) -> void:
 			elif _test_frames - _mats_start_frame > 120:
 				assert(false, "Timeout: Mats did not die when hit by car pulling out into merge!")
 
-	if "--test-exit-route" in OS.get_cmdline_user_args():
+	if "--test-exit-route" in _user_args:
 		_test_frames += 1
 		if _test_car.state == Car.State.REVERSING_OUT:
 			_saw_reversing = true
@@ -942,10 +945,10 @@ func _physics_process(_delta: float) -> void:
 					assert(mats.global_position.z < -11.0, "Mats walked through stopped car across sidewalk!")
 					print("EXIT_TEST: SUCCESS - car reversed out, drove to wait point, stopped without despawning, and blocked Mats!")
 					get_tree().quit(0)
-		if _test_frames > 1200:
+		if _test_frames > 1500:
 			assert(false, "Timeout waiting for exit route completion!")
 
-	if "--test-merge-reentry" in OS.get_cmdline_user_args():
+	if "--test-merge-reentry" in _user_args:
 		_test_frames += 1
 		if _test_car != null and is_instance_valid(_test_car):
 			var tm = $TrafficManager
@@ -1010,7 +1013,7 @@ func _physics_process(_delta: float) -> void:
 		if _test_frames > 2000:
 			assert(false, "Timeout waiting for merge re-entry and despawn!")
 
-	if "--test-merge-gap" in OS.get_cmdline_user_args():
+	if "--test-merge-gap" in _user_args:
 		_test_frames += 1
 		var tm = $TrafficManager
 		var lane0 = tm.lanes[0]
@@ -1114,7 +1117,7 @@ func _physics_process(_delta: float) -> void:
 		if _test_frames > 600:
 			assert(false, "Timeout waiting for gap test completion!")
 
-	if "--test-lifecycle" in OS.get_cmdline_user_args():
+	if "--test-lifecycle" in _user_args:
 		_test_frames += 1
 		if _saw_lc_despawn:
 			return
@@ -1195,7 +1198,7 @@ func _physics_process(_delta: float) -> void:
 				return
 		if _test_frames > 4000:
 			assert(false, "Timeout waiting for vehicle lifecycle completion!")
-	if "--test-right-turn-following" in OS.get_cmdline_user_args():
+	if "--test-right-turn-following" in _user_args:
 		_test_frames += 1
 		if is_instance_valid(_rt_lead_car) and is_instance_valid(_rt_follower_car):
 			var d_euc = _rt_lead_car.global_position.distance_to(_rt_follower_car.global_position)

@@ -1,6 +1,6 @@
 # Agent Guidelines
 
-Godot 4.3 project (GDScript). The user usually has the Godot editor open while you work, so these rules keep you from crashing it or having your changes silently overwritten.
+Godot 4.7 project (GDScript). The user usually has the Godot editor open while you work, so these rules keep you from crashing it or having your changes silently overwritten.
 
 ## Running Godot
 

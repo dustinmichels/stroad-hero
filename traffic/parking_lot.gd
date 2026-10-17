@@ -7,7 +7,7 @@ const ROWS := [
 	{"z": -14.5, "x0": -18.0, "count": 6, "nose": 1.0, "serves": &"walgroins"},  # S row, nose +Z
 	{"z": -14.5, "x0": 28.0, "count": 4, "nose": 1.0, "serves": &"taco_hell"},  # Taco row, nose +Z
 ]
-const ENTRANCES := {&"walgroins": Vector3(-3, 0, -32), &"taco_hell": Vector3(31.5, 0, -27.8)}
+const ENTRANCES: Dictionary[StringName, Vector3] = {&"walgroins": Vector3(-3, 0, -32), &"taco_hell": Vector3(31.5, 0, -27.8)}
 const TURN_IN_START := Vector3(17.0, 0.0, -5.6)
 const ENTRY_X := 13.0
 const EXIT_X := 9.0
