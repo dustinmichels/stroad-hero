@@ -48,7 +48,8 @@ __pycache__/
 
 # Distribution / packaging
 .Python
-build/
+build/*
+!build/.gdignore
 develop-eggs/
 dist/
 downloads/

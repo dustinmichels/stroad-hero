@@ -773,7 +773,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.58, 0)
 mesh = SubResource("Mesh_SedanBody")
 
 [node name="Hood" type="MeshInstance3D" parent="Visuals/Sedan"]
-transform = Transform3D(0.997053, -0.076719, 0, 0.076719, 0.997053, 0, 0, 0, 1, 1.35, 0.72, 0)
+transform = Transform3D(0.997053, 0.076719, 0, -0.076719, 0.997053, 0, 0, 0, 1, 1.35, 0.72, 0)
 mesh = SubResource("Mesh_SedanHood")
 
 [node name="FrontBumper" type="MeshInstance3D" parent="Visuals/Sedan"]
@@ -833,27 +833,27 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2, 1.33, 0)
 mesh = SubResource("Mesh_SedanRoof")
 
 [node name="Windshield" type="MeshInstance3D" parent="Visuals/Sedan"]
-transform = Transform3D(0.692143, 0.72176, 0, -0.72176, 0.692143, 0, 0, 0, 1, 0.6, 1.06, 0)
+transform = Transform3D(0.692143, -0.72176, 0, 0.72176, 0.692143, 0, 0, 0, 1, 0.6, 1.06, 0)
 mesh = SubResource("Mesh_SedanWindshield")
 
 [node name="APillarL" type="MeshInstance3D" parent="Visuals/Sedan"]
-transform = Transform3D(0.692143, 0.72176, 0, -0.72176, 0.692143, 0, 0, 0, 1, 0.6, 1.06, 0.73)
+transform = Transform3D(0.692143, -0.72176, 0, 0.72176, 0.692143, 0, 0, 0, 1, 0.6, 1.06, 0.73)
 mesh = SubResource("Mesh_SedanPillarA")
 
 [node name="APillarR" type="MeshInstance3D" parent="Visuals/Sedan"]
-transform = Transform3D(0.692143, 0.72176, 0, -0.72176, 0.692143, 0, 0, 0, 1, 0.6, 1.06, -0.73)
+transform = Transform3D(0.692143, -0.72176, 0, 0.72176, 0.692143, 0, 0, 0, 1, 0.6, 1.06, -0.73)
 mesh = SubResource("Mesh_SedanPillarA")
 
 [node name="RearWindow" type="MeshInstance3D" parent="Visuals/Sedan"]
-transform = Transform3D(0.692143, -0.72176, 0, 0.72176, 0.692143, 0, 0, 0, 1, -1, 1.06, 0)
+transform = Transform3D(0.692143, 0.72176, 0, -0.72176, 0.692143, 0, 0, 0, 1, -1, 1.06, 0)
 mesh = SubResource("Mesh_SedanRearWindow")
 
 [node name="CPillarL" type="MeshInstance3D" parent="Visuals/Sedan"]
-transform = Transform3D(0.692143, -0.72176, 0, 0.72176, 0.692143, 0, 0, 0, 1, -1, 1.06, 0.73)
+transform = Transform3D(0.692143, 0.72176, 0, -0.72176, 0.692143, 0, 0, 0, 1, -1, 1.06, 0.73)
 mesh = SubResource("Mesh_SedanPillarC")
 
 [node name="CPillarR" type="MeshInstance3D" parent="Visuals/Sedan"]
-transform = Transform3D(0.692143, -0.72176, 0, 0.72176, 0.692143, 0, 0, 0, 1, -1, 1.06, -0.73)
+transform = Transform3D(0.692143, 0.72176, 0, -0.72176, 0.692143, 0, 0, 0, 1, -1, 1.06, -0.73)
 mesh = SubResource("Mesh_SedanPillarC")
 
 [node name="BPillarL" type="MeshInstance3D" parent="Visuals/Sedan"]
@@ -924,7 +924,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.72, 0)
 mesh = SubResource("Mesh_SUVBody")
 
 [node name="Hood" type="MeshInstance3D" parent="Visuals/SUV"]
-transform = Transform3D(0.99863, -0.052336, 0, 0.052336, 0.99863, 0, 0, 0, 1, 1.48, 1.02, 0)
+transform = Transform3D(0.99863, 0.052336, 0, -0.052336, 0.99863, 0, 0, 0, 1, 1.48, 1.02, 0)
 mesh = SubResource("Mesh_SUVHood")
 
 [node name="FrontBumper" type="MeshInstance3D" parent="Visuals/SUV"]
@@ -988,27 +988,27 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 1.74, -0.72)
 mesh = SubResource("Mesh_SUVRoofRail")
 
 [node name="Windshield" type="MeshInstance3D" parent="Visuals/SUV"]
-transform = Transform3D(0.745476, 0.666532, 0, -0.666532, 0.745476, 0, 0, 0, 1, 0.6, 1.34, 0)
+transform = Transform3D(0.745476, -0.666532, 0, 0.666532, 0.745476, 0, 0, 0, 1, 0.6, 1.34, 0)
 mesh = SubResource("Mesh_SUVWindshield")
 
 [node name="APillarL" type="MeshInstance3D" parent="Visuals/SUV"]
-transform = Transform3D(0.745476, 0.666532, 0, -0.666532, 0.745476, 0, 0, 0, 1, 0.6, 1.34, 0.81)
+transform = Transform3D(0.745476, -0.666532, 0, 0.666532, 0.745476, 0, 0, 0, 1, 0.6, 1.34, 0.81)
 mesh = SubResource("Mesh_SUVPillarA")
 
 [node name="APillarR" type="MeshInstance3D" parent="Visuals/SUV"]
-transform = Transform3D(0.745476, 0.666532, 0, -0.666532, 0.745476, 0, 0, 0, 1, 0.6, 1.34, -0.81)
+transform = Transform3D(0.745476, -0.666532, 0, 0.666532, 0.745476, 0, 0, 0, 1, 0.6, 1.34, -0.81)
 mesh = SubResource("Mesh_SUVPillarA")
 
 [node name="TailgateGlass" type="MeshInstance3D" parent="Visuals/SUV"]
-transform = Transform3D(0.779338, -0.626604, 0, 0.626604, 0.779338, 0, 0, 0, 1, -1.52, 1.34, 0)
+transform = Transform3D(0.779338, 0.626604, 0, -0.626604, 0.779338, 0, 0, 0, 1, -1.52, 1.34, 0)
 mesh = SubResource("Mesh_SUVTailgateGlass")
 
 [node name="DPillarL" type="MeshInstance3D" parent="Visuals/SUV"]
-transform = Transform3D(0.779338, -0.626604, 0, 0.626604, 0.779338, 0, 0, 0, 1, -1.52, 1.34, 0.81)
+transform = Transform3D(0.779338, 0.626604, 0, -0.626604, 0.779338, 0, 0, 0, 1, -1.52, 1.34, 0.81)
 mesh = SubResource("Mesh_SUVPillarD")
 
 [node name="DPillarR" type="MeshInstance3D" parent="Visuals/SUV"]
-transform = Transform3D(0.779338, -0.626604, 0, 0.626604, 0.779338, 0, 0, 0, 1, -1.52, 1.34, -0.81)
+transform = Transform3D(0.779338, 0.626604, 0, -0.626604, 0.779338, 0, 0, 0, 1, -1.52, 1.34, -0.81)
 mesh = SubResource("Mesh_SUVPillarD")
 
 [node name="MirrorHousingL" type="MeshInstance3D" parent="Visuals/SUV"]
@@ -1055,7 +1055,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.58, 0)
 mesh = SubResource("Mesh_TaxiBody")
 
 [node name="Hood" type="MeshInstance3D" parent="Visuals/Taxi"]
-transform = Transform3D(0.997053, -0.076719, 0, 0.076719, 0.997053, 0, 0, 0, 1, 1.35, 0.72, 0)
+transform = Transform3D(0.997053, 0.076719, 0, -0.076719, 0.997053, 0, 0, 0, 1, 1.35, 0.72, 0)
 mesh = SubResource("Mesh_TaxiHood")
 
 [node name="FrontBumper" type="MeshInstance3D" parent="Visuals/Taxi"]
@@ -1115,27 +1115,27 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2, 1.33, 0)
 mesh = SubResource("Mesh_TaxiRoof")
 
 [node name="Windshield" type="MeshInstance3D" parent="Visuals/Taxi"]
-transform = Transform3D(0.692143, 0.72176, 0, -0.72176, 0.692143, 0, 0, 0, 1, 0.6, 1.06, 0)
+transform = Transform3D(0.692143, -0.72176, 0, 0.72176, 0.692143, 0, 0, 0, 1, 0.6, 1.06, 0)
 mesh = SubResource("Mesh_SedanWindshield")
 
 [node name="APillarL" type="MeshInstance3D" parent="Visuals/Taxi"]
-transform = Transform3D(0.692143, 0.72176, 0, -0.72176, 0.692143, 0, 0, 0, 1, 0.6, 1.06, 0.73)
+transform = Transform3D(0.692143, -0.72176, 0, 0.72176, 0.692143, 0, 0, 0, 1, 0.6, 1.06, 0.73)
 mesh = SubResource("Mesh_TaxiPillarA")
 
 [node name="APillarR" type="MeshInstance3D" parent="Visuals/Taxi"]
-transform = Transform3D(0.692143, 0.72176, 0, -0.72176, 0.692143, 0, 0, 0, 1, 0.6, 1.06, -0.73)
+transform = Transform3D(0.692143, -0.72176, 0, 0.72176, 0.692143, 0, 0, 0, 1, 0.6, 1.06, -0.73)
 mesh = SubResource("Mesh_TaxiPillarA")
 
 [node name="RearWindow" type="MeshInstance3D" parent="Visuals/Taxi"]
-transform = Transform3D(0.692143, -0.72176, 0, 0.72176, 0.692143, 0, 0, 0, 1, -1, 1.06, 0)
+transform = Transform3D(0.692143, 0.72176, 0, -0.72176, 0.692143, 0, 0, 0, 1, -1, 1.06, 0)
 mesh = SubResource("Mesh_SedanRearWindow")
 
 [node name="CPillarL" type="MeshInstance3D" parent="Visuals/Taxi"]
-transform = Transform3D(0.692143, -0.72176, 0, 0.72176, 0.692143, 0, 0, 0, 1, -1, 1.06, 0.73)
+transform = Transform3D(0.692143, 0.72176, 0, -0.72176, 0.692143, 0, 0, 0, 1, -1, 1.06, 0.73)
 mesh = SubResource("Mesh_TaxiPillarC")
 
 [node name="CPillarR" type="MeshInstance3D" parent="Visuals/Taxi"]
-transform = Transform3D(0.692143, -0.72176, 0, 0.72176, 0.692143, 0, 0, 0, 1, -1, 1.06, -0.73)
+transform = Transform3D(0.692143, 0.72176, 0, -0.72176, 0.692143, 0, 0, 0, 1, -1, 1.06, -0.73)
 mesh = SubResource("Mesh_TaxiPillarC")
 
 [node name="BPillarL" type="MeshInstance3D" parent="Visuals/Taxi"]
@@ -1218,11 +1218,11 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.35, 0.52, -0.94)
 mesh = SubResource("Mesh_SportsRearFlare")
 
 [node name="Hood" type="MeshInstance3D" parent="Visuals/Sports"]
-transform = Transform3D(0.995056, -0.0993197, 0, 0.0993197, 0.995056, 0, 0, 0, 1, 1.2, 0.6, 0)
+transform = Transform3D(0.995056, 0.0993197, 0, -0.0993197, 0.995056, 0, 0, 0, 1, 1.2, 0.6, 0)
 mesh = SubResource("Mesh_SportsHood")
 
 [node name="HoodScoop" type="MeshInstance3D" parent="Visuals/Sports"]
-transform = Transform3D(0.995056, -0.0993197, 0, 0.0993197, 0.995056, 0, 0, 0, 1, 1.2, 0.67, 0)
+transform = Transform3D(0.995056, 0.0993197, 0, -0.0993197, 0.995056, 0, 0, 0, 1, 1.2, 0.67, 0)
 mesh = SubResource("Mesh_SportsScoop")
 
 [node name="FrontBumper" type="MeshInstance3D" parent="Visuals/Sports"]
@@ -1282,27 +1282,27 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.18, 1.12, 0)
 mesh = SubResource("Mesh_SportsRoof")
 
 [node name="Windshield" type="MeshInstance3D" parent="Visuals/Sports"]
-transform = Transform3D(0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 0, 0, 1, 0.29, 0.89, 0)
+transform = Transform3D(0.707107, -0.707107, 0, 0.707107, 0.707107, 0, 0, 0, 1, 0.29, 0.89, 0)
 mesh = SubResource("Mesh_SportsWindshield")
 
 [node name="APillarL" type="MeshInstance3D" parent="Visuals/Sports"]
-transform = Transform3D(0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 0, 0, 1, 0.29, 0.89, 0.71)
+transform = Transform3D(0.707107, -0.707107, 0, 0.707107, 0.707107, 0, 0, 0, 1, 0.29, 0.89, 0.71)
 mesh = SubResource("Mesh_SportsPillarA")
 
 [node name="APillarR" type="MeshInstance3D" parent="Visuals/Sports"]
-transform = Transform3D(0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 0, 0, 1, 0.29, 0.89, -0.71)
+transform = Transform3D(0.707107, -0.707107, 0, 0.707107, 0.707107, 0, 0, 0, 1, 0.29, 0.89, -0.71)
 mesh = SubResource("Mesh_SportsPillarA")
 
 [node name="FastbackGlass" type="MeshInstance3D" parent="Visuals/Sports"]
-transform = Transform3D(0.406737, -0.913545, 0, 0.913545, 0.406737, 0, 0, 0, 1, -0.9, 0.9, 0)
+transform = Transform3D(0.406737, 0.913545, 0, -0.913545, 0.406737, 0, 0, 0, 1, -0.9, 0.9, 0)
 mesh = SubResource("Mesh_SportsFastbackGlass")
 
 [node name="FastbackL" type="MeshInstance3D" parent="Visuals/Sports"]
-transform = Transform3D(0.406737, -0.913545, 0, 0.913545, 0.406737, 0, 0, 0, 1, -0.9, 0.9, 0.71)
+transform = Transform3D(0.406737, 0.913545, 0, -0.913545, 0.406737, 0, 0, 0, 1, -0.9, 0.9, 0.71)
 mesh = SubResource("Mesh_SportsFastbackPillar")
 
 [node name="FastbackR" type="MeshInstance3D" parent="Visuals/Sports"]
-transform = Transform3D(0.406737, -0.913545, 0, 0.913545, 0.406737, 0, 0, 0, 1, -0.9, 0.9, -0.71)
+transform = Transform3D(0.406737, 0.913545, 0, -0.913545, 0.406737, 0, 0, 0, 1, -0.9, 0.9, -0.71)
 mesh = SubResource("Mesh_SportsFastbackPillar")
 
 [node name="SpoilerWing" type="MeshInstance3D" parent="Visuals/Sports"]
@@ -1361,7 +1361,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.58, 0)
 mesh = SubResource("Mesh_HatchBody")
 
 [node name="Hood" type="MeshInstance3D" parent="Visuals/Hatchback"]
-transform = Transform3D(0.996195, -0.0871557, 0, 0.0871557, 0.996195, 0, 0, 0, 1, 1.18, 0.72, 0)
+transform = Transform3D(0.996195, 0.0871557, 0, -0.0871557, 0.996195, 0, 0, 0, 1, 1.18, 0.72, 0)
 mesh = SubResource("Mesh_HatchHood")
 
 [node name="FrontBumper" type="MeshInstance3D" parent="Visuals/Hatchback"]
@@ -1413,27 +1413,27 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.02, 1.44, 0)
 mesh = SubResource("Mesh_HatchRoofSpoiler")
 
 [node name="Windshield" type="MeshInstance3D" parent="Visuals/Hatchback"]
-transform = Transform3D(0.779338, 0.626604, 0, -0.626604, 0.779338, 0, 0, 0, 1, 0.42, 1.08, 0)
+transform = Transform3D(0.779338, -0.626604, 0, 0.626604, 0.779338, 0, 0, 0, 1, 0.42, 1.08, 0)
 mesh = SubResource("Mesh_HatchWindshield")
 
 [node name="APillarL" type="MeshInstance3D" parent="Visuals/Hatchback"]
-transform = Transform3D(0.779338, 0.626604, 0, -0.626604, 0.779338, 0, 0, 0, 1, 0.42, 1.08, 0.73)
+transform = Transform3D(0.779338, -0.626604, 0, 0.626604, 0.779338, 0, 0, 0, 1, 0.42, 1.08, 0.73)
 mesh = SubResource("Mesh_HatchPillarA")
 
 [node name="APillarR" type="MeshInstance3D" parent="Visuals/Hatchback"]
-transform = Transform3D(0.779338, 0.626604, 0, -0.626604, 0.779338, 0, 0, 0, 1, 0.42, 1.08, -0.73)
+transform = Transform3D(0.779338, -0.626604, 0, 0.626604, 0.779338, 0, 0, 0, 1, 0.42, 1.08, -0.73)
 mesh = SubResource("Mesh_HatchPillarA")
 
 [node name="RearHatchGlass" type="MeshInstance3D" parent="Visuals/Hatchback"]
-transform = Transform3D(0.71325, -0.700909, 0, 0.700909, 0.71325, 0, 0, 0, 1, -1.18, 1.08, 0)
+transform = Transform3D(0.71325, 0.700909, 0, -0.700909, 0.71325, 0, 0, 0, 1, -1.18, 1.08, 0)
 mesh = SubResource("Mesh_HatchGlassR")
 
 [node name="CPillarL" type="MeshInstance3D" parent="Visuals/Hatchback"]
-transform = Transform3D(0.71325, -0.700909, 0, 0.700909, 0.71325, 0, 0, 0, 1, -1.18, 1.08, 0.73)
+transform = Transform3D(0.71325, 0.700909, 0, -0.700909, 0.71325, 0, 0, 0, 1, -1.18, 1.08, 0.73)
 mesh = SubResource("Mesh_HatchPillarC")
 
 [node name="CPillarR" type="MeshInstance3D" parent="Visuals/Hatchback"]
-transform = Transform3D(0.71325, -0.700909, 0, 0.700909, 0.71325, 0, 0, 0, 1, -1.18, 1.08, -0.73)
+transform = Transform3D(0.71325, 0.700909, 0, -0.700909, 0.71325, 0, 0, 0, 1, -1.18, 1.08, -0.73)
 mesh = SubResource("Mesh_HatchPillarC")
 
 [node name="MirrorHousingL" type="MeshInstance3D" parent="Visuals/Hatchback"]
@@ -1480,7 +1480,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.68, 0)
 mesh = SubResource("Mesh_MinivanBody")
 
 [node name="SlopingNose" type="MeshInstance3D" parent="Visuals/Minivan"]
-transform = Transform3D(0.990268, -0.139173, 0, 0.139173, 0.990268, 0, 0, 0, 1, 1.72, 0.88, 0)
+transform = Transform3D(0.990268, 0.139173, 0, -0.139173, 0.990268, 0, 0, 0, 1, 1.72, 0.88, 0)
 mesh = SubResource("Mesh_MinivanNose")
 
 [node name="FrontBumper" type="MeshInstance3D" parent="Visuals/Minivan"]
@@ -1528,27 +1528,27 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.8, 1.8, 0)
 mesh = SubResource("Mesh_MinivanRoofSpoiler")
 
 [node name="Windshield" type="MeshInstance3D" parent="Visuals/Minivan"]
-transform = Transform3D(0.736097, 0.676876, 0, -0.676876, 0.736097, 0, 0, 0, 1, 0.85, 1.36, 0)
+transform = Transform3D(0.736097, -0.676876, 0, 0.676876, 0.736097, 0, 0, 0, 1, 0.85, 1.36, 0)
 mesh = SubResource("Mesh_MinivanWindshield")
 
 [node name="APillarL" type="MeshInstance3D" parent="Visuals/Minivan"]
-transform = Transform3D(0.736097, 0.676876, 0, -0.676876, 0.736097, 0, 0, 0, 1, 0.85, 1.36, 0.86)
+transform = Transform3D(0.736097, -0.676876, 0, 0.676876, 0.736097, 0, 0, 0, 1, 0.85, 1.36, 0.86)
 mesh = SubResource("Mesh_MinivanPillarA")
 
 [node name="APillarR" type="MeshInstance3D" parent="Visuals/Minivan"]
-transform = Transform3D(0.736097, 0.676876, 0, -0.676876, 0.736097, 0, 0, 0, 1, 0.85, 1.36, -0.86)
+transform = Transform3D(0.736097, -0.676876, 0, 0.676876, 0.736097, 0, 0, 0, 1, 0.85, 1.36, -0.86)
 mesh = SubResource("Mesh_MinivanPillarA")
 
 [node name="RearWindow" type="MeshInstance3D" parent="Visuals/Minivan"]
-transform = Transform3D(0.884581, -0.466387, 0, 0.466387, 0.884581, 0, 0, 0, 1, -1.9, 1.36, 0)
+transform = Transform3D(0.884581, 0.466387, 0, -0.466387, 0.884581, 0, 0, 0, 1, -1.9, 1.36, 0)
 mesh = SubResource("Mesh_MinivanRearWindow")
 
 [node name="DPillarL" type="MeshInstance3D" parent="Visuals/Minivan"]
-transform = Transform3D(0.884581, -0.466387, 0, 0.466387, 0.884581, 0, 0, 0, 1, -1.9, 1.36, 0.86)
+transform = Transform3D(0.884581, 0.466387, 0, -0.466387, 0.884581, 0, 0, 0, 1, -1.9, 1.36, 0.86)
 mesh = SubResource("Mesh_MinivanPillarD")
 
 [node name="DPillarR" type="MeshInstance3D" parent="Visuals/Minivan"]
-transform = Transform3D(0.884581, -0.466387, 0, 0.466387, 0.884581, 0, 0, 0, 1, -1.9, 1.36, -0.86)
+transform = Transform3D(0.884581, 0.466387, 0, -0.466387, 0.884581, 0, 0, 0, 1, -1.9, 1.36, -0.86)
 mesh = SubResource("Mesh_MinivanPillarD")
 
 [node name="MirrorHousingL" type="MeshInstance3D" parent="Visuals/Minivan"]
@@ -1599,7 +1599,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.64, 0)
 mesh = SubResource("Mesh_PickupBody")
 
 [node name="Hood" type="MeshInstance3D" parent="Visuals/Pickup"]
-transform = Transform3D(0.998135, -0.0610485, 0, 0.0610485, 0.998135, 0, 0, 0, 1, 1.55, 1.02, 0)
+transform = Transform3D(0.998135, 0.0610485, 0, -0.0610485, 0.998135, 0, 0, 0, 1, 1.55, 1.02, 0)
 mesh = SubResource("Mesh_PickupHood")
 
 [node name="FrontBumper" type="MeshInstance3D" parent="Visuals/Pickup"]
@@ -1627,15 +1627,15 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.15, 1.6, 0)
 mesh = SubResource("Mesh_PickupRoof")
 
 [node name="Windshield" type="MeshInstance3D" parent="Visuals/Pickup"]
-transform = Transform3D(0.755853, 0.654741, 0, -0.654741, 0.755853, 0, 0, 0, 1, 0.675, 1.3, 0)
+transform = Transform3D(0.755853, -0.654741, 0, 0.654741, 0.755853, 0, 0, 0, 1, 0.675, 1.3, 0)
 mesh = SubResource("Mesh_PickupWindshield")
 
 [node name="APillarL" type="MeshInstance3D" parent="Visuals/Pickup"]
-transform = Transform3D(0.755853, 0.654741, 0, -0.654741, 0.755853, 0, 0, 0, 1, 0.675, 1.3, 0.89)
+transform = Transform3D(0.755853, -0.654741, 0, 0.654741, 0.755853, 0, 0, 0, 1, 0.675, 1.3, 0.89)
 mesh = SubResource("Mesh_PickupPillarA")
 
 [node name="APillarR" type="MeshInstance3D" parent="Visuals/Pickup"]
-transform = Transform3D(0.755853, 0.654741, 0, -0.654741, 0.755853, 0, 0, 0, 1, 0.675, 1.3, -0.89)
+transform = Transform3D(0.755853, -0.654741, 0, 0.654741, 0.755853, 0, 0, 0, 1, 0.675, 1.3, -0.89)
 mesh = SubResource("Mesh_PickupPillarA")
 
 [node name="RearCabGlass" type="MeshInstance3D" parent="Visuals/Pickup"]
@@ -1738,19 +1738,19 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 1.62, 0)
 mesh = SubResource("Mesh_TruckCabRoof")
 
 [node name="Windshield" type="MeshInstance3D" parent="Visuals/Truck"]
-transform = Transform3D(0.906308, 0.422618, 0, -0.422618, 0.906308, 0, 0, 0, 1, 1.02, 1.3, 0)
+transform = Transform3D(0.906308, -0.422618, 0, 0.422618, 0.906308, 0, 0, 0, 1, 1.02, 1.3, 0)
 mesh = SubResource("Mesh_TruckWindshield")
 
 [node name="APillarL" type="MeshInstance3D" parent="Visuals/Truck"]
-transform = Transform3D(0.906308, 0.422618, 0, -0.422618, 0.906308, 0, 0, 0, 1, 1.02, 1.3, 0.86)
+transform = Transform3D(0.906308, -0.422618, 0, 0.422618, 0.906308, 0, 0, 0, 1, 1.02, 1.3, 0.86)
 mesh = SubResource("Mesh_TruckPillarA")
 
 [node name="APillarR" type="MeshInstance3D" parent="Visuals/Truck"]
-transform = Transform3D(0.906308, 0.422618, 0, -0.422618, 0.906308, 0, 0, 0, 1, 1.02, 1.3, -0.86)
+transform = Transform3D(0.906308, -0.422618, 0, 0.422618, 0.906308, 0, 0, 0, 1, 1.02, 1.3, -0.86)
 mesh = SubResource("Mesh_TruckPillarA")
 
 [node name="RoofDeflector" type="MeshInstance3D" parent="Visuals/Truck"]
-transform = Transform3D(0.819152, -0.573576, 0, 0.573576, 0.819152, 0, 0, 0, 1, 0.15, 1.84, 0)
+transform = Transform3D(0.819152, 0.573576, 0, -0.573576, 0.819152, 0, 0, 0, 1, 0.15, 1.84, 0)
 mesh = SubResource("Mesh_TruckRoofDeflector")
 
 [node name="CargoBox" type="MeshInstance3D" parent="Visuals/Truck"]
