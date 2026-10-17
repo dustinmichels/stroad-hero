@@ -1,4 +1,4 @@
-[gd_scene load_steps=53 format=3 uid="uid://c47ja8e0n02s"]
+[gd_scene load_steps=54 format=3 uid="uid://c47ja8e0n02s"]
 
 [ext_resource type="Script" path="res://follow_camera.gd" id="1_camera"]
 [ext_resource type="PackedScene" path="res://player/mats.tscn" id="2_mats"]
@@ -14,6 +14,9 @@
 [ext_resource type="PackedScene" path="res://buildings/booger_king_site.tscn" id="12_booger_king_site"]
 [ext_resource type="PackedScene" uid="uid://cwuyboq2ow2qx" path="res://buildings/cramped_inn.tscn" id="13_cramped_inn"]
 [ext_resource type="PackedScene" path="res://props/us_flag.tscn" id="14_flag"]
+[ext_resource type="PackedScene" path="res://props/fire_hydrant.tscn" id="15_hydrant"]
+[ext_resource type="PackedScene" path="res://props/shopping_cart.tscn" id="17_cart"]
+[ext_resource type="Script" path="res://game_state.gd" id="15_gamestate"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.35, 0.55, 0.85, 1)
@@ -29,6 +32,9 @@ background_mode = 2
 sky = SubResource("Sky_env")
 tonemap_mode = 2
 glow_enabled = true
+ambient_light_source = 3
+ambient_light_color = Color(0.62, 0.7, 0.84, 1)
+ambient_light_sky_contribution = 0.6
 
 [sub_resource type="ShaderMaterial" id="Mat_Grass"]
 render_priority = 0
@@ -151,18 +157,12 @@ size = Vector3(8, 0.1, 5.5)
 [sub_resource type="BoxShape3D" id="Shape_HamptonDriveway"]
 size = Vector3(8, 0.1, 5.5)
 
-[sub_resource type="StandardMaterial3D" id="Mat_Hydrant"]
-albedo_color = Color(0.9, 0.2, 0.15, 1)
-roughness = 0.5
-
-[sub_resource type="CylinderMesh" id="Mesh_Hydrant"]
-material = SubResource("Mat_Hydrant")
-top_radius = 0.22
-bottom_radius = 0.22
-height = 0.7
 
 [node name="Main" type="Node3D"]
 script = ExtResource("3_main")
+
+[node name="GameState" type="Node" parent="."]
+script = ExtResource("15_gamestate")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_main")
@@ -171,6 +171,7 @@ environment = SubResource("Environment_main")
 transform = Transform3D(0.819152, 0.42625, -0.383798, 0, 0.669131, 0.743145, 0.573576, -0.608749, 0.54812, 0, 16, 0)
 shadow_enabled = true
 directional_shadow_max_distance = 80.0
+light_color = Color(1, 0.96, 0.88, 1)
 
 [node name="Camera3D" type="Camera3D" parent="." node_paths=PackedStringArray("target")]
 transform = Transform3D(1, 0, 0, 0, 0.803857, 0.594823, 0, -0.594823, 0.803857, 0, 16.5, 19.5)
@@ -621,9 +622,22 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -42, 0, 36)
 [node name="CrampedInn" parent="Props" instance=ExtResource("13_cramped_inn")]
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 40, 0, 36)
 
-[node name="FireHydrant" type="MeshInstance3D" parent="Props"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.45, 9.8)
-mesh = SubResource("Mesh_Hydrant")
+[node name="FireHydrant" parent="Props" instance=ExtResource("15_hydrant")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 4, 0.245, 9.8)
+
+[node name="WalgroinsShoppingCarts" type="Node3D" parent="Props"]
+
+[node name="Cart_Abandoned_WestApron" parent="Props/WalgroinsShoppingCarts" instance=ExtResource("17_cart")]
+transform = Transform3D(0.819152, 0, 0.573576, 0, 1, 0, -0.573576, 0, 0.819152, -22.5, 0.1, -27.5)
+
+[node name="Cart_Abandoned_Curb" parent="Props/WalgroinsShoppingCarts" instance=ExtResource("17_cart")]
+transform = Transform3D(0.422618, 0.0868241, -0.902166, 0, 0.995404, 0.0957581, 0.906308, -0.0404691, 0.420676, -26.5, 0.12, -19)
+
+[node name="Cart_Abandoned_MidLot" parent="Props/WalgroinsShoppingCarts" instance=ExtResource("17_cart")]
+transform = Transform3D(0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, 0.707107, 5.2, 0.1, -14.5)
+
+[node name="Cart_Abandoned_WestWalkway" parent="Props/WalgroinsShoppingCarts" instance=ExtResource("17_cart")]
+transform = Transform3D(-0.34202, 0, 0.939693, 0, 1, 0, -0.939693, 0, -0.34202, -22, 0.1, -30.5)
 
 [node name="Streetlights" type="Node3D" parent="Props"]
 

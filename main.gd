@@ -42,6 +42,8 @@ var _rt_saw_lead_turning: bool = false
 var _rt_saw_follower_resumed: bool = false
 var _rt_min_distance: float = 999.0
 var _user_args: PackedStringArray = []
+var _dt_saw_order: bool = false
+var _dt_saw_pickup: bool = false
 
 
 func _ready() -> void:
@@ -49,7 +51,7 @@ func _ready() -> void:
 	if mats:
 		mats.died.connect(_on_player_died)
 	if "--test-mats-blocker" in _user_args or "--test-mats-interaction" in _user_args:
-		var car_scene = load("res://cars/car.tscn")
+		var car_scene = load("res://cars/passenger_car.tscn")
 		_test_car = car_scene.instantiate()
 		_test_car.car_type = Car.CarType.SEDAN
 		_test_car.speed = 0.0
@@ -98,6 +100,65 @@ func _ready() -> void:
 		_test_car.had_errand = true
 		_test_car.merge_wait_time = 0.0
 		_test_car._update_blocker_layer()
+	if "--test-exit-priority" in _user_args:
+		var tm = $TrafficManager
+		for lane in tm.lanes:
+			for car in lane.cars:
+				car.queue_free()
+			lane.cars.clear()
+		for car in tm.lot_cars:
+			car.queue_free()
+		tm.lot_cars.clear()
+		for lane_id in [0, 3]:
+			var lane = tm.lanes[lane_id]
+			var exiting: Car = tm.PassengerCarScene.instantiate()
+			tm.add_child(exiting)
+			exiting.motion = Car.Motion.PATH
+			exiting.state = Car.State.DRIVE_THRU
+			exiting.lane_id = lane_id
+			exiting.merge_target_lane = lane_id
+			exiting.dt_order_done = true
+			exiting.dt_pickup_done = true
+			exiting.follow_path(
+				tm.taco_hell_drive_thru_path if lane_id == 0 else tm.booger_king_drive_thru_path
+			)
+			exiting.path_distance = exiting.path.get_baked_length() - 0.01
+			exiting.speed = 0.0
+			exiting.update_presentation()
+			tm.lot_cars.append(exiting)
+			lane.cars.append(exiting)
+			var merge_x: float = (
+				ParkingLot.WAIT_POINT.x if lane_id == 0 else ParkingLot.BK_WAIT_POINT.x
+			)
+			var through: Car = tm._spawn_car_at(
+				lane, lane.distance_at(merge_x) - 20.0, tm.PassengerCarScene
+			)
+			through.errand = null
+			through.speed = 13.0
+			through.desired_speed = 13.0
+			var saw_wait := false
+			for tick in range(360):
+				tm._update_lane_traffic(lane, 1.0 / 60.0)
+				tm._update_lot_cars(1.0 / 60.0)
+				if exiting.state == Car.State.WAITING_TO_MERGE:
+					saw_wait = true
+					assert(
+						is_equal_approx(through.speed, 13.0),
+						"Main-road traffic must not brake for a waiting driveway car"
+					)
+					assert(exiting.speed == 0.0, "Exiting car must wait for main-road traffic")
+				if exiting.state == Car.State.CRUISING:
+					break
+			assert(saw_wait, "Returning drive-thru car must yield before merging")
+			assert(
+				exiting.state == Car.State.CRUISING, "Exit must clear once main-road traffic passes"
+			)
+			for car in lane.cars:
+				car.queue_free()
+			lane.cars.clear()
+		print("EXIT_PRIORITY: SUCCESS - both exits yield without stopping main-road traffic")
+		get_tree().quit(0)
+		return
 	if "--test-lifecycle" in _user_args:
 		var traffic_mgr = $TrafficManager
 		assert(traffic_mgr != null, "TrafficManager must exist")
@@ -105,7 +166,7 @@ func _ready() -> void:
 		for c in lane0.cars:
 			c.queue_free()
 		lane0.cars.clear()
-		_test_car = traffic_mgr._spawn_car_at(lane0, 0.0)
+		_test_car = traffic_mgr._spawn_car_at(lane0, 0.0, traffic_mgr.PassengerCarScene)
 		_test_car.car_type = Car.CarType.SEDAN
 		_test_car.errand = Errand.random()
 		_test_car.had_errand = true
@@ -119,19 +180,140 @@ func _ready() -> void:
 			c.queue_free()
 		lane0.cars.clear()
 		lane0.spawn_timer = 9999.0
-		_rt_lead_car = traffic_mgr._spawn_car_at(lane0, 10.0)
+		_rt_lead_car = traffic_mgr._spawn_car_at(lane0, 10.0, traffic_mgr.PassengerCarScene)
 		_rt_lead_car.car_type = Car.CarType.SEDAN
 		_rt_lead_car.errand = Errand.new(&"walgroins", 10.0)
 		_rt_lead_car.had_errand = true
 		_rt_lead_car.desired_speed = 13.0
 		_rt_lead_car.speed = 13.0
 
-		_rt_follower_car = traffic_mgr._spawn_car_at(lane0, 0.0)
+		_rt_follower_car = traffic_mgr._spawn_car_at(lane0, 0.0, traffic_mgr.PassengerCarScene)
 		_rt_follower_car.car_type = Car.CarType.SEDAN
 		_rt_follower_car.desired_speed = 14.0
 		_rt_follower_car.speed = 14.0
 		_rt_follower_car.errand = null
 		_rt_follower_car.had_errand = false
+	if "--test-taco-dt-zones" in _user_args:
+		var tm = $TrafficManager
+		assert(tm != null, "TrafficManager must exist")
+		for c in tm.lot_cars:
+			c.queue_free()
+		tm.lot_cars.clear()
+		for lane in tm.lanes:
+			for c in lane.cars:
+				c.queue_free()
+			lane.cars.clear()
+			lane.spawn_timer = 9999.0
+		_test_car = tm.spawn_drive_thru_car(&"taco_hell_drive_thru")
+	if "--test-wind-flags" in _user_args:
+		# Test 1: GameState initial properties
+		assert(GameState.wind_direction.is_normalized(), "Wind direction must be normalized")
+		assert(absf(GameState.wind_direction.y) < 0.0001, "Wind direction Y must be 0 (horizontal)")
+		assert(GameState.wind_speed > 0.0, "Wind speed must be positive")
+		assert(
+			absf(GameState.wind_direction.length() - 1.0) < 0.001,
+			"Wind direction must have length 1"
+		)
+
+		# Test 2: Wind subtle variation over time
+		var initial_angle = GameState.wind_angle
+		var max_step_change: float = 0.0
+		for i in range(120):
+			var prev_angle = GameState.wind_angle
+			GameState.advance(1.0 / 60.0)
+			var d_angle = absf(GameState.wind_angle - prev_angle)
+			if d_angle > max_step_change:
+				max_step_change = d_angle
+
+		assert(GameState.wind_angle != initial_angle, "Wind angle must change over time")
+		assert(
+			max_step_change < 0.005,
+			"Per-frame wind angle change must be subtle (was %f)" % max_step_change
+		)
+
+		# Test 3: All flags in main scene respect wind direction
+		var flags_node = get_node_or_null("Props/Flags")
+		assert(flags_node != null, "Props/Flags node must exist in main scene")
+
+		var flags: Array[USFlag] = []
+		for child in flags_node.get_children():
+			if child is USFlag:
+				flags.append(child)
+
+		assert(
+			flags.size() >= 7, "Must have at least 7 flags in Props/Flags, found %d" % flags.size()
+		)
+
+		# Snap all flags to initial wind
+		for flag in flags:
+			flag._update_wind_orientation(0.0, true)
+
+		var cur_wind = GameState.wind_direction
+		for flag in flags:
+			var config: Dictionary = USFlag.SIZE_CONFIG[flag.flag_size]
+			var node_name: String = config["node_name"]
+			var flag_mesh: MeshInstance3D = flag.get_node("Visuals/" + node_name + "/Flag")
+			var half_w: float = config["flag_half_width"]
+			var fy: float = config["flag_y"]
+
+			var hoist_world = flag_mesh.global_transform * Vector3(-half_w, 0.0, 0.0)
+			var fly_world = flag_mesh.global_transform * Vector3(half_w, 0.0, 0.0)
+			var pole_top = flag.global_position + Vector3(0.0, fy, 0.0)
+
+			var dist_to_pole = hoist_world.distance_to(pole_top)
+			assert(
+				dist_to_pole < 0.01,
+				"Flag hoist must stay attached to pole, dist = %f" % dist_to_pole
+			)
+
+			var flag_dir = fly_world - hoist_world
+			flag_dir.y = 0.0
+			flag_dir = flag_dir.normalized()
+			var dot = flag_dir.dot(cur_wind)
+			assert(
+				dot > 0.95,
+				"Flag '%s' must respect wind direction! Dot product: %f" % [flag.name, dot]
+			)
+
+		# Test 4: Dynamic wind change - all flags swivel to new direction
+		var test_wind_targets = [
+			Vector3(0.0, 0.0, 1.0),
+			Vector3(-1.0, 0.0, 0.0),
+			Vector3(0.0, 0.0, -1.0),
+			Vector3(0.707, 0.0, -0.707).normalized(),
+		]
+
+		for target_wind in test_wind_targets:
+			GameState.set_wind_direction(target_wind, true)
+			for step in range(90):
+				for flag in flags:
+					flag._update_wind_orientation(1.0 / 60.0, false)
+
+			for flag in flags:
+				var config: Dictionary = USFlag.SIZE_CONFIG[flag.flag_size]
+				var node_name: String = config["node_name"]
+				var flag_mesh: MeshInstance3D = flag.get_node("Visuals/" + node_name + "/Flag")
+				var half_w: float = config["flag_half_width"]
+
+				var hoist_world = flag_mesh.global_transform * Vector3(-half_w, 0.0, 0.0)
+				var fly_world = flag_mesh.global_transform * Vector3(half_w, 0.0, 0.0)
+				var flag_dir = fly_world - hoist_world
+				flag_dir.y = 0.0
+				flag_dir = flag_dir.normalized()
+
+				var dot = flag_dir.dot(target_wind)
+				assert(
+					dot > 0.98,
+					(
+						"Flag '%s' must swivel to target wind %s! Dot: %f"
+						% [flag.name, target_wind, dot]
+					)
+				)
+
+		GameState.resume_wind_simulation()
+		print("WIND_FLAGS_TEST: SUCCESS - all test cases passed!")
+		get_tree().quit(0)
+		return
 	if "--test-find-blocker" in _user_args:
 		var tm = $TrafficManager
 		assert(tm != null, "TrafficManager must exist")
@@ -140,7 +322,7 @@ func _ready() -> void:
 			c.queue_free()
 		tm.lot_cars.clear()
 
-		var car_scene = load("res://cars/car.tscn")
+		var car_scene = load("res://cars/passenger_car.tscn")
 		var car_a = car_scene.instantiate()
 		car_a.car_type = Car.CarType.SEDAN
 		car_a.car_width = 2.0
@@ -249,7 +431,7 @@ func _ready() -> void:
 		# Find a spot in the lot
 		assert(tm.lot != null and tm.lot.spots.size() > 0, "ParkingLot must have spots")
 		var spot = tm.lot.spots[0]
-		var car_scene = load("res://cars/car.tscn")
+		var car_scene = load("res://cars/passenger_car.tscn")
 		var parked_car = car_scene.instantiate()
 		parked_car.car_type = Car.CarType.SEDAN
 		parked_car.state = Car.State.PARKED
@@ -328,7 +510,7 @@ func _ready() -> void:
 		path2.add_point(Vector3(30.0, 0.0, 0.0))
 		path2.add_point(Vector3(0.0, 0.0, 0.0))
 
-		var car_scene = load("res://cars/car.tscn")
+		var car_scene = load("res://cars/passenger_car.tscn")
 		var car1: Car = car_scene.instantiate()
 		car1.car_type = Car.CarType.SEDAN
 		car1.car_width = 2.0
@@ -928,7 +1110,7 @@ func _ready() -> void:
 		path2.add_point(Vector3(30.0, 0.0, 0.0))
 		path2.add_point(Vector3(0.0, 0.0, 0.0))
 
-		var car_scene = load("res://cars/car.tscn")
+		var car_scene = load("res://cars/passenger_car.tscn")
 		var car1: Car = car_scene.instantiate()
 		car1.car_type = Car.CarType.SEDAN
 		car1.car_width = 2.0
@@ -1173,7 +1355,7 @@ func _physics_process(_delta: float) -> void:
 			elif _test_car.state == Car.State.MERGING:
 				_saw_waiting = true
 				if _test_follower == null:
-					_test_follower = tm._spawn_car_at(tm.lanes[0], 42.0)
+					_test_follower = tm._spawn_car_at(tm.lanes[0], 42.0, tm.PassengerCarScene)
 					_test_follower.speed = 13.0
 					_test_follower.desired_speed = 13.0
 					_test_follower.errand = null
@@ -1253,7 +1435,7 @@ func _physics_process(_delta: float) -> void:
 
 			assert(tm._can_merge(_test_car), "Must be able to merge when lane 0 is clear")
 
-			var dummy1 = tm._spawn_car_at(lane0, 70.0)
+			var dummy1 = tm._spawn_car_at(lane0, 70.0, tm.PassengerCarScene)
 			assert(
 				not tm._can_merge(_test_car),
 				"Must reject merge when car is at d=70.0 (inside window)"
@@ -1261,7 +1443,7 @@ func _physics_process(_delta: float) -> void:
 			lane0.cars.erase(dummy1)
 			dummy1.queue_free()
 
-			var dummy2 = tm._spawn_car_at(lane0, 58.0)
+			var dummy2 = tm._spawn_car_at(lane0, 58.0, tm.PassengerCarScene)
 			assert(
 				not tm._can_merge(_test_car),
 				"Must reject merge when car is at d=58.0 (inside window)"
@@ -1269,8 +1451,10 @@ func _physics_process(_delta: float) -> void:
 			lane0.cars.erase(dummy2)
 			dummy2.queue_free()
 
-			var dummy3 = tm._spawn_car_at(lane0, 25.0)
+			var dummy3 = tm._spawn_car_at(lane0, 25.0, tm.PassengerCarScene)
 			dummy3.lane_speed = 13.0
+			dummy3.speed = 13.0
+			dummy3.desired_speed = 13.0
 			assert(
 				not tm._can_merge(_test_car),
 				"Must reject merge when upstream car gap is 2.77s <= 3.0s"
@@ -1278,15 +1462,17 @@ func _physics_process(_delta: float) -> void:
 			lane0.cars.erase(dummy3)
 			dummy3.queue_free()
 
-			var dummy4 = tm._spawn_car_at(lane0, 20.0)
+			var dummy4 = tm._spawn_car_at(lane0, 20.0, tm.PassengerCarScene)
 			dummy4.lane_speed = 13.0
+			dummy4.speed = 13.0
+			dummy4.desired_speed = 13.0
 			assert(
 				tm._can_merge(_test_car), "Must accept merge when upstream car gap is 3.15s > 3.0s"
 			)
 			lane0.cars.erase(dummy4)
 			dummy4.queue_free()
 
-			_passing_car = tm._spawn_car_at(lane0, 45.0)
+			_passing_car = tm._spawn_car_at(lane0, 45.0, tm.PassengerCarScene)
 			_passing_car.speed = 13.0
 			_passing_car.desired_speed = 13.0
 			_passing_car.lane_speed = 13.0
@@ -1336,7 +1522,7 @@ func _physics_process(_delta: float) -> void:
 			if _test_car.state == Car.State.MERGING:
 				_saw_gap_merge = true
 				print("GAP_TEST: Car successfully initiated merge when valid gap opened!")
-				_test_follower = tm._spawn_car_at(lane0, 42.0)
+				_test_follower = tm._spawn_car_at(lane0, 42.0, tm.PassengerCarScene)
 				_test_follower.speed = 13.0
 				_test_follower.desired_speed = 13.0
 				_test_follower.errand = null
@@ -1604,6 +1790,27 @@ func _physics_process(_delta: float) -> void:
 					return
 		if _test_frames > 1500:
 			assert(false, "Timeout waiting for right turn following test completion!")
+	if "--test-taco-dt-zones" in _user_args:
+		_test_frames += 1
+		var taco_hell = $Props/TacoHell
+		var dt = taco_hell.get_node("DriveThru")
+		var lcd = dt.get_node("MenuBoard/LcdLabel")
+		var pickup = dt.get_node("PickupLabel")
+		if "CONFIRMED" in lcd.text or "IN PROGRESS" in lcd.text:
+			_dt_saw_order = true
+		if "SERVING" in pickup.text:
+			_dt_saw_pickup = true
+		if _test_car != null and is_instance_valid(_test_car):
+			if _test_car.state == Car.State.CRUISING:
+				assert(_dt_saw_order, "Taco Hell drive-thru LCD must show active order")
+				assert(_dt_saw_pickup, "Taco Hell drive-thru pickup sign must show serving")
+				print(
+					"TACO_DT_ZONES_TEST: SUCCESS - Verified live reactive LCD order screen and pickup window sign during real traffic simulation loop!"
+				)
+				get_tree().quit(0)
+				return
+		if _test_frames > 3600:
+			assert(false, "Timeout waiting for taco dt zones test completion!")
 
 
 func _on_player_died(pos: Vector3) -> void:

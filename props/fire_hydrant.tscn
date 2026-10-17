@@ -1,0 +1,158 @@
+[gd_scene format=3]
+
+[sub_resource type="CylinderShape3D" id="Shape_Hydrant"]
+height = 0.85
+radius = 0.26
+
+[sub_resource type="StandardMaterial3D" id="Mat_HydrantRed"]
+albedo_color = Color(0.88, 0.16, 0.12, 1)
+roughness = 0.42
+
+[sub_resource type="StandardMaterial3D" id="Mat_HydrantSilver"]
+albedo_color = Color(0.82, 0.84, 0.88, 1)
+metallic = 0.85
+roughness = 0.28
+
+[sub_resource type="StandardMaterial3D" id="Mat_HydrantDark"]
+albedo_color = Color(0.18, 0.18, 0.2, 1)
+roughness = 0.6
+
+[sub_resource type="CylinderMesh" id="Mesh_BaseFlange"]
+material = SubResource("Mat_HydrantRed")
+top_radius = 0.24
+bottom_radius = 0.26
+height = 0.1
+radial_segments = 16
+
+[sub_resource type="CylinderMesh" id="Mesh_LowerBarrel"]
+material = SubResource("Mat_HydrantRed")
+top_radius = 0.19
+bottom_radius = 0.2
+height = 0.22
+radial_segments = 16
+
+[sub_resource type="CylinderMesh" id="Mesh_MiddleRing"]
+material = SubResource("Mat_HydrantRed")
+top_radius = 0.22
+bottom_radius = 0.22
+height = 0.06
+radial_segments = 16
+
+[sub_resource type="CylinderMesh" id="Mesh_UpperBarrel"]
+material = SubResource("Mat_HydrantRed")
+top_radius = 0.185
+bottom_radius = 0.19
+height = 0.32
+radial_segments = 16
+
+[sub_resource type="CylinderMesh" id="Mesh_BonnetCap"]
+material = SubResource("Mat_HydrantRed")
+top_radius = 0.1
+bottom_radius = 0.21
+height = 0.12
+radial_segments = 16
+
+[sub_resource type="CylinderMesh" id="Mesh_TopNut"]
+material = SubResource("Mat_HydrantSilver")
+top_radius = 0.045
+bottom_radius = 0.045
+height = 0.07
+radial_segments = 6
+
+[sub_resource type="CylinderMesh" id="Mesh_SideNozzle"]
+material = SubResource("Mat_HydrantRed")
+top_radius = 0.065
+bottom_radius = 0.07
+height = 0.16
+radial_segments = 12
+
+[sub_resource type="CylinderMesh" id="Mesh_SideCap"]
+material = SubResource("Mat_HydrantSilver")
+top_radius = 0.075
+bottom_radius = 0.075
+height = 0.05
+radial_segments = 12
+
+[sub_resource type="BoxMesh" id="Mesh_CapNut"]
+material = SubResource("Mat_HydrantSilver")
+size = Vector3(0.04, 0.04, 0.03)
+
+[sub_resource type="CylinderMesh" id="Mesh_FrontNozzle"]
+material = SubResource("Mat_HydrantRed")
+top_radius = 0.08
+bottom_radius = 0.085
+height = 0.12
+radial_segments = 14
+
+[sub_resource type="CylinderMesh" id="Mesh_FrontCap"]
+material = SubResource("Mat_HydrantSilver")
+top_radius = 0.095
+bottom_radius = 0.095
+height = 0.05
+radial_segments = 14
+
+[node name="FireHydrant" type="StaticBody3D"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.425, 0)
+shape = SubResource("Shape_Hydrant")
+
+[node name="BaseFlange" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
+mesh = SubResource("Mesh_BaseFlange")
+
+[node name="LowerBarrel" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.21, 0)
+mesh = SubResource("Mesh_LowerBarrel")
+
+[node name="MiddleRing" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.35, 0)
+mesh = SubResource("Mesh_MiddleRing")
+
+[node name="UpperBarrel" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.54, 0)
+mesh = SubResource("Mesh_UpperBarrel")
+
+[node name="BonnetCap" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.76, 0)
+mesh = SubResource("Mesh_BonnetCap")
+
+[node name="TopNut" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
+mesh = SubResource("Mesh_TopNut")
+
+[node name="NozzleLeft" type="MeshInstance3D" parent="."]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, -0.22, 0.54, 0)
+mesh = SubResource("Mesh_SideNozzle")
+
+[node name="CapLeft" type="MeshInstance3D" parent="."]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, -0.32, 0.54, 0)
+mesh = SubResource("Mesh_SideCap")
+
+[node name="NutLeft" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.35, 0.54, 0)
+mesh = SubResource("Mesh_CapNut")
+
+[node name="NozzleRight" type="MeshInstance3D" parent="."]
+transform = Transform3D(0, 1, 0, -1, 0, 0, 0, 0, 1, 0.22, 0.54, 0)
+mesh = SubResource("Mesh_SideNozzle")
+
+[node name="CapRight" type="MeshInstance3D" parent="."]
+transform = Transform3D(0, 1, 0, -1, 0, 0, 0, 0, 1, 0.32, 0.54, 0)
+mesh = SubResource("Mesh_SideCap")
+
+[node name="NutRight" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 0.54, 0)
+mesh = SubResource("Mesh_CapNut")
+
+[node name="NozzleFront" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0.46, 0.2)
+mesh = SubResource("Mesh_FrontNozzle")
+
+[node name="CapFront" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0.46, 0.28)
+mesh = SubResource("Mesh_FrontCap")
+
+[node name="NutFront" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.46, 0.31)
+mesh = SubResource("Mesh_CapNut")

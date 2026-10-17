@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="FontFile" path="res://fonts/Lobster-Regular.ttf" id="1_lobster"]
+[ext_resource type="PackedScene" path="res://props/bollard.tscn" id="2_bollard"]
 
 [sub_resource type="StandardMaterial3D" id="Mat_BuildingWall"]
 albedo_color = Color(0.8, 0.77, 0.72, 1)
@@ -98,6 +99,16 @@ size = Vector3(4.8, 2.4, 0.4)
 material = SubResource("Mat_SignWhite")
 size = Vector3(4.2, 1.8, 0.2)
 
+[sub_resource type="StandardMaterial3D" id="Mat_WalkwayConcrete"]
+albedo_color = Color(0.72, 0.72, 0.7, 1)
+roughness = 0.85
+
+[sub_resource type="BoxMesh" id="Mesh_FrontWalkway"]
+material = SubResource("Mat_WalkwayConcrete")
+size = Vector3(26, 0.16, 0.8)
+
+[sub_resource type="BoxShape3D" id="Shape_FrontWalkway"]
+size = Vector3(26, 0.16, 0.8)
 [node name="Walgroins" type="Node3D"]
 
 [node name="Building" type="Node3D" parent="."]
@@ -186,6 +197,33 @@ outline_modulate = Color(0.82, 0.08, 0.1, 1)
 text = "PHARMACY"
 font_size = 64
 outline_size = 4
+
+
+[node name="FrontWalkway" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.08, 6.35)
+mesh = SubResource("Mesh_FrontWalkway")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Building/FrontWalkway"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Building/FrontWalkway/StaticBody3D"]
+shape = SubResource("Shape_FrontWalkway")
+
+[node name="Bollards" type="Node3D" parent="Building"]
+
+[node name="Bollard_m3" parent="Building/Bollards" instance=ExtResource("2_bollard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0.16, 6.72)
+
+[node name="Bollard_m1.5" parent="Building/Bollards" instance=ExtResource("2_bollard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0.16, 6.72)
+
+[node name="Bollard_0" parent="Building/Bollards" instance=ExtResource("2_bollard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.16, 6.72)
+
+[node name="Bollard_1.5" parent="Building/Bollards" instance=ExtResource("2_bollard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0.16, 6.72)
+
+[node name="Bollard_3" parent="Building/Bollards" instance=ExtResource("2_bollard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.16, 6.72)
 
 [node name="RoadsideSign" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 0, 28)

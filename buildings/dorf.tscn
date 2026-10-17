@@ -298,6 +298,9 @@ size = Vector3(4.6, 0.7, 0.72)
 material = SubResource("Mat_PylonWhite")
 size = Vector3(4.5, 0.4, 0.8)
 
+[sub_resource type="BoxShape3D" id="Shape_Fence"]
+size = Vector3(33.14, 1.3, 0.14)
+
 [sub_resource type="BoxMesh" id="Mesh_FencePost"]
 material = SubResource("Mat_WhiteVinyl")
 size = Vector3(0.14, 1.3, 0.14)
@@ -770,6 +773,12 @@ transform = Transform3D(-1.4, 0, 0, 0, 1.4, 0, 0, 0, -1.4, 0, 13.8, -0.12)
 
 [node name="Fence" type="Node3D" parent="SiteFeatures"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 23)
+[node name="StaticBody3D" type="StaticBody3D" parent="SiteFeatures/Fence"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SiteFeatures/Fence/StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.5, 0.65, 0)
+shape = SubResource("Shape_Fence")
+
 
 [node name="Post_m21" type="MeshInstance3D" parent="SiteFeatures/Fence"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21, 0.65, 0)

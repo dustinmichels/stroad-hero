@@ -2,6 +2,7 @@
 
 [ext_resource type="PackedScene" path="res://buildings/booger_king_sign.tscn" id="1_sign"]
 [ext_resource type="PackedScene" path="res://buildings/booger_king_logo.tscn" id="2_logo"]
+[ext_resource type="PackedScene" path="res://props/bollard.tscn" id="3_bollard"]
 
 [sub_resource type="StandardMaterial3D" id="Mat_BKStucco"]
 albedo_color = Color(0.85, 0.82, 0.76, 1)
@@ -137,19 +138,6 @@ size = Vector3(0.4, 0.08, 1.5)
 [sub_resource type="BoxMesh" id="Mesh_BKDriveThruCanopy"]
 material = SubResource("Mat_BKAwningMetal")
 size = Vector3(0.9, 0.08, 1.7)
-
-[sub_resource type="BoxMesh" id="Mesh_BKMenuPedestal"]
-material = SubResource("Mat_BKDarkFrame")
-size = Vector3(0.25, 1.2, 0.4)
-
-[sub_resource type="BoxMesh" id="Mesh_BKMenuBoard"]
-material = SubResource("Mat_BKDarkFrame")
-size = Vector3(0.2, 1.4, 1.6)
-
-[sub_resource type="BoxMesh" id="Mesh_BKMenuFace"]
-material = SubResource("Mat_BKReaderWhite")
-size = Vector3(0.05, 1.3, 1.5)
-
 [sub_resource type="BoxMesh" id="Mesh_BKHvacLarge"]
 material = SubResource("Mat_BKHvacMetal")
 size = Vector3(2.5, 1.2, 1.8)
@@ -313,39 +301,6 @@ outline_modulate = Color(1, 1, 1, 1)
 text = "PICK UP"
 font_size = 28
 outline_size = 6
-
-[node name="MenuPedestal" type="MeshInstance3D" parent="Building"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.5, 0.6, -1.5)
-mesh = SubResource("Mesh_BKMenuPedestal")
-
-[node name="MenuBoard" type="MeshInstance3D" parent="Building"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.5, 1.7, -1.5)
-mesh = SubResource("Mesh_BKMenuBoard")
-
-[node name="MenuFace" type="MeshInstance3D" parent="Building"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.38, 1.7, -1.5)
-mesh = SubResource("Mesh_BKMenuFace")
-
-[node name="MenuHeader" type="Label3D" parent="Building"]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -15.34, 2.15, -1.5)
-pixel_size = 0.008
-modulate = Color(0.85, 0.1, 0.1, 1)
-outline_modulate = Color(0.95, 0.65, 0.1, 1)
-text = "BOOGER KING"
-font_size = 24
-outline_size = 6
-
-[node name="MenuItems" type="Label3D" parent="Building"]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -15.34, 1.55, -1.5)
-pixel_size = 0.009
-modulate = Color(0.1, 0.1, 0.1, 1)
-outline_modulate = Color(1, 1, 1, 1)
-text = "THE BOOGER
-SNOT FRIES
-SLIME SHAKE"
-font_size = 20
-outline_size = 4
-
 [node name="HvacLarge" type="MeshInstance3D" parent="Building"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.5, 4.76, -1.5)
 mesh = SubResource("Mesh_BKHvacLarge")
@@ -386,5 +341,14 @@ mesh = SubResource("Mesh_BKHedgeFront")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.2, 0.45, 7.0)
 mesh = SubResource("Mesh_BKHedgeCorner")
 
+
+[node name="BollardEntranceL" parent="Building" instance=ExtResource("3_bollard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.2, 0.16, 8.1)
+
+[node name="BollardEntranceM" parent="Building" instance=ExtResource("3_bollard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.3, 0.16, 8.1)
+
+[node name="BollardEntranceR" parent="Building" instance=ExtResource("3_bollard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.4, 0.16, 8.1)
 [node name="RoadsideSign" parent="." instance=ExtResource("1_sign")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 22)

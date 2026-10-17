@@ -15,3 +15,7 @@ Godot 4.7 project (GDScript). The user usually has the Godot editor open while y
 - Prefer editing `.gd` files. The editor hot-reloads scripts safely.
 - Never invent `uid://` values. Reference resources by `res://` path; Godot assigns UIDs on its next save.
 - Write temp/scratch files to `/tmp`, never inside the project. Godot scans and imports every new file under `res://`.
+
+## Conventions
+
+- Run `mise run fmt` periodically

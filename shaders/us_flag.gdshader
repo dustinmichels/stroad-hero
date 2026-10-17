@@ -8,6 +8,8 @@ uniform float wave_speed : hint_range(0.5, 12.0) = 4.2;
 uniform float flag_width = 2.47;
 uniform float flag_height = 1.30;
 uniform float time_offset = 0.0;
+uniform vec2 wind_direction = vec2(0.978, 0.208);
+uniform float wind_strength : hint_range(0.0, 3.0) = 1.0;
 
 // Flag colors (Official US Flag / Old Glory specs)
 uniform vec3 red_color : source_color = vec3(0.698, 0.133, 0.204);
@@ -21,8 +23,9 @@ float get_displacement(vec2 uv, float t, vec3 w_pos) {
 	float x = clamp(uv.x, 0.0, 1.0);
 	float wave_factor = pow(x, 1.25);
 	
-	// Spatial wind wave propagation across the map
-	float spatial_phase = w_pos.x * 0.22 + w_pos.z * 0.16;
+	// Spatial wind wave propagation across the map aligned with wind direction
+	vec2 w_dir = length(wind_direction) > 0.001 ? normalize(wind_direction) : vec2(1.0, 0.0);
+	float spatial_phase = dot(w_pos.xz, w_dir) * 0.22;
 	
 	// Primary traveling wave from pole to fly
 	float w1 = sin(x * wave_frequency - t * wave_speed + spatial_phase);
@@ -31,12 +34,12 @@ float get_displacement(vec2 uv, float t, vec3 w_pos) {
 	// Fast trailing-edge flutter
 	float w3 = sin((x * 4.2 - uv.y * 2.1) * wave_frequency * 0.5 - t * wave_speed * 2.2) * (0.16 * smoothstep(0.25, 1.0, x));
 	
-	return (w1 + w2 + w3) * wave_amplitude * wave_factor;
+	return (w1 + w2 + w3) * (wave_amplitude * (0.85 + 0.15 * wind_strength)) * wave_factor;
 }
 
 void vertex() {
 	v_world_pos = (MODEL_MATRIX * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
-	float t = TIME + time_offset;
+	float t = (TIME + time_offset) * (0.85 + 0.15 * wind_strength);
 	
 	float d0 = get_displacement(UV, t, v_world_pos);
 	

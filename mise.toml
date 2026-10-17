@@ -5,3 +5,13 @@ oxfmt = "latest"
 [tasks.fmt]
 description = "Format GDScript (gdformat) and Markdown (oxfmt) files"
 run = ['uvx --from "gdtoolkit==4.*" gdformat .', 'oxfmt "**/*.md"']
+
+[tasks.export-web]
+description = "Export the Web preset to build/web (from a /tmp copy, so the open editor's .godot/ is untouched)"
+run = '''
+set -eu
+work=/tmp/stroad-hero-export
+rsync -a --delete --exclude .git --exclude build ./ "$work/"
+mkdir -p build/web
+/Applications/Godot.app/Contents/MacOS/Godot --headless --path "$work" --export-release "Web" "$PWD/build/web/index.html"
+'''

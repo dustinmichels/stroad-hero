@@ -1,5 +1,6 @@
 class_name Car
 extends Area3D
+
 const Errand = preload("res://traffic/errand.gd")
 
 enum CarType { SEDAN, SUV, TAXI, TRUCK, PICKUP, BUS, HATCHBACK, MINIVAN, SPORTS }
@@ -19,10 +20,10 @@ enum State {
 }
 
 enum TurnSignal { NONE, LEFT, RIGHT }
+
 const PARKING_CAR_TYPES: Array[CarType] = [
 	CarType.SEDAN,
 	CarType.SUV,
-	CarType.TAXI,
 	CarType.PICKUP,
 	CarType.HATCHBACK,
 	CarType.MINIVAN,
@@ -32,15 +33,23 @@ const PARKING_CAR_TYPES: Array[CarType] = [
 
 static func is_type_parkable(type: CarType) -> bool:
 	match type:
-		CarType.SEDAN, CarType.SUV, CarType.TAXI, CarType.PICKUP, CarType.HATCHBACK, CarType.MINIVAN, CarType.SPORTS:
+		CarType.SEDAN, CarType.SUV, CarType.PICKUP, CarType.HATCHBACK, CarType.MINIVAN, CarType.SPORTS:
 			return true
-		CarType.BUS, CarType.TRUCK:
+		CarType.BUS, CarType.TRUCK, CarType.TAXI:
 			return false
 	return false
 
 
 func can_park() -> bool:
 	return is_type_parkable(car_type)
+
+
+func can_take_errands() -> bool:
+	return can_park()
+
+
+func can_use_drive_thru() -> bool:
+	return can_park()
 
 
 @export var car_type: CarType = CarType.SEDAN
@@ -120,16 +129,7 @@ var wheel_rotation: float = 0.0
 var _wheels_initialized: bool = false
 var _active_wheels: Array[Node3D] = []
 
-@onready var _sedan: Node3D = $Visuals/Sedan
-@onready var _suv: Node3D = $Visuals/SUV
-@onready var _taxi: Node3D = $Visuals/Taxi
-@onready var _truck: Node3D = $Visuals/Truck
-@onready var _pickup: Node3D = $Visuals/Pickup
-@onready var _bus: Node3D = $Visuals/Bus
-@onready var _hatchback: Node3D = $Visuals/Hatchback
-@onready var _minivan: Node3D = $Visuals/Minivan
-@onready var _sports: Node3D = $Visuals/Sports
-@onready var _collision_shape: CollisionShape3D = $CollisionShape3D
+@onready var _collision_shape: CollisionShape3D = get_node_or_null("CollisionShape3D")
 var blocker: AnimatableBody3D = null
 var _blocker_shape: CollisionShape3D = null
 var _blocking: bool = false
@@ -246,63 +246,30 @@ func follow_path(curve: Curve3D, from_end := false) -> void:
 	update_presentation()
 
 
+func get_active_model() -> Node3D:
+	var visuals := get_node_or_null("Visuals")
+	if not visuals:
+		return null
+	for child in visuals.get_children():
+		if child is Node3D and child.visible:
+			return child
+	if visuals.get_child_count() == 1 and visuals.get_child(0) is Node3D:
+		return visuals.get_child(0)
+	return null
+
+
 func _apply_visual_type() -> void:
-	var sedan = _sedan if _sedan else get_node_or_null("Visuals/Sedan")
-	var suv = _suv if _suv else get_node_or_null("Visuals/SUV")
-	var taxi = _taxi if _taxi else get_node_or_null("Visuals/Taxi")
-	var truck = _truck if _truck else get_node_or_null("Visuals/Truck")
-	var pickup = _pickup if _pickup else get_node_or_null("Visuals/Pickup")
-	var bus = _bus if _bus else get_node_or_null("Visuals/Bus")
-	var hatchback = _hatchback if _hatchback else get_node_or_null("Visuals/Hatchback")
-	var minivan = _minivan if _minivan else get_node_or_null("Visuals/Minivan")
-	var sports = _sports if _sports else get_node_or_null("Visuals/Sports")
-
-	if sedan:
-		sedan.visible = (car_type == CarType.SEDAN)
-	if suv:
-		suv.visible = (car_type == CarType.SUV)
-	if taxi:
-		taxi.visible = (car_type == CarType.TAXI)
-	if truck:
-		truck.visible = (car_type == CarType.TRUCK)
-	if pickup:
-		pickup.visible = (car_type == CarType.PICKUP)
-	if bus:
-		bus.visible = (car_type == CarType.BUS)
-	if hatchback:
-		hatchback.visible = (car_type == CarType.HATCHBACK)
-	if minivan:
-		minivan.visible = (car_type == CarType.MINIVAN)
-	if sports:
-		sports.visible = (car_type == CarType.SPORTS)
-
 	_update_dimensions()
-
 	_setup_wheels()
 	_setup_signals()
+	_collect_active_parts()
+
+
+func _collect_active_parts() -> void:
 	_active_wheels.clear()
 	_active_right_signals.clear()
 	_active_left_signals.clear()
-	var active_node: Node3D = null
-	match car_type:
-		CarType.SEDAN:
-			active_node = sedan
-		CarType.SUV:
-			active_node = suv
-		CarType.TAXI:
-			active_node = taxi
-		CarType.TRUCK:
-			active_node = truck
-		CarType.PICKUP:
-			active_node = pickup
-		CarType.BUS:
-			active_node = bus
-		CarType.HATCHBACK:
-			active_node = hatchback
-		CarType.MINIVAN:
-			active_node = minivan
-		CarType.SPORTS:
-			active_node = sports
+	var active_node := get_active_model()
 	if active_node:
 		for child in active_node.get_children():
 			if child is Node3D and child.name.begins_with("Wheel"):

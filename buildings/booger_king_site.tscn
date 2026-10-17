@@ -1,6 +1,10 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene format=3]
 
 [ext_resource type="PackedScene" path="res://buildings/booger_king.tscn" id="1_building"]
+[ext_resource type="PackedScene" path="res://props/dumpster.tscn" id="2_dumpster"]
+[ext_resource type="PackedScene" path="res://props/bollard.tscn" id="3_bollard"]
+[ext_resource type="FontFile" path="res://fonts/Fredoka.ttf" id="4_font"]
+[ext_resource type="FontFile" path="res://fonts/ArchivoBlack-Regular.ttf" id="5_font_archivo"]
 
 [sub_resource type="StandardMaterial3D" id="Mat_SiteAsphalt"]
 albedo_color = Color(0.2, 0.21, 0.23, 1)
@@ -12,6 +16,38 @@ albedo_color = Color(0.94, 0.94, 0.92, 1)
 [sub_resource type="StandardMaterial3D" id="Mat_DriveThruLine"]
 albedo_color = Color(0.96, 0.72, 0.08, 1)
 
+[sub_resource type="StandardMaterial3D" id="Mat_EnclosureWood"]
+albedo_color = Color(0.42, 0.32, 0.22, 1)
+roughness = 0.92
+
+[sub_resource type="StandardMaterial3D" id="Mat_ConcretePad"]
+albedo_color = Color(0.68, 0.68, 0.66, 1)
+roughness = 0.85
+
+[sub_resource type="BoxMesh" id="Mesh_DumpsterPad"]
+material = SubResource("Mat_ConcretePad")
+size = Vector3(6.8, 0.12, 4.4)
+
+[sub_resource type="BoxShape3D" id="Shape_DumpsterPad"]
+size = Vector3(6.8, 0.12, 4.4)
+[sub_resource type="BoxShape3D" id="Shape_CorralBackWall"]
+size = Vector3(6.8, 1.9, 0.15)
+
+[sub_resource type="BoxShape3D" id="Shape_CorralSideWall"]
+size = Vector3(0.15, 1.9, 4.2)
+
+
+[sub_resource type="BoxMesh" id="Mesh_CorralBackWall"]
+material = SubResource("Mat_EnclosureWood")
+size = Vector3(6.8, 1.9, 0.15)
+
+[sub_resource type="BoxMesh" id="Mesh_CorralSideWall"]
+material = SubResource("Mat_EnclosureWood")
+size = Vector3(0.15, 1.9, 4.2)
+
+[sub_resource type="BoxMesh" id="Mesh_CorralPost"]
+material = SubResource("Mat_EnclosureWood")
+size = Vector3(0.2, 2.05, 0.2)
 [sub_resource type="BoxMesh" id="Mesh_ParkingLot"]
 material = SubResource("Mat_SiteAsphalt")
 size = Vector3(28, 0.1, 16)
@@ -36,7 +72,140 @@ size = Vector3(0.18, 0.12, 4.5)
 
 [sub_resource type="BoxMesh" id="Mesh_DriveThruLine"]
 material = SubResource("Mat_DriveThruLine")
-size = Vector3(0.16, 0.12, 12)
+size = Vector3(0.16, 0.12, 16)
+[sub_resource type="StandardMaterial3D" id="Mat_BKDarkFrame"]
+albedo_color = Color(0.18, 0.18, 0.20, 1)
+metallic = 0.6
+roughness = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Mat_BKRed"]
+albedo_color = Color(0.85, 0.10, 0.10, 1)
+emission_enabled = true
+emission = Color(0.85, 0.10, 0.10, 1)
+emission_energy_multiplier = 0.3
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_BKMenuFace"]
+albedo_color = Color(0.96, 0.96, 0.94, 1)
+roughness = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Mat_BKLcdScreen"]
+albedo_color = Color(0.04, 0.18, 0.12, 1)
+emission_enabled = true
+emission = Color(0.06, 0.30, 0.18, 1)
+emission_energy_multiplier = 0.5
+roughness = 0.2
+
+[sub_resource type="StandardMaterial3D" id="Mat_BKLedGreen"]
+albedo_color = Color(0.2, 0.95, 0.3, 1)
+emission_enabled = true
+emission = Color(0.2, 0.95, 0.3, 1)
+emission_energy_multiplier = 0.8
+
+[sub_resource type="StandardMaterial3D" id="Mat_BKSpeakerMarquee"]
+albedo_color = Color(0.96, 0.78, 0.12, 1)
+emission_enabled = true
+emission = Color(0.96, 0.78, 0.12, 1)
+emission_energy_multiplier = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Mat_BKMenuCanopy"]
+albedo_color = Color(0.82, 0.84, 0.86, 1)
+metallic = 0.7
+roughness = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Mat_BKLightBar"]
+albedo_color = Color(1.0, 0.96, 0.85, 1)
+emission_enabled = true
+emission = Color(1.0, 0.96, 0.85, 1)
+emission_energy_multiplier = 0.6
+
+[sub_resource type="BoxMesh" id="Mesh_MenuBase"]
+material = SubResource("Mat_ConcretePad")
+size = Vector3(0.8, 0.25, 2.6)
+
+[sub_resource type="BoxMesh" id="Mesh_MenuPost"]
+material = SubResource("Mat_BKDarkFrame")
+size = Vector3(0.16, 1.6, 0.16)
+
+[sub_resource type="BoxMesh" id="Mesh_MenuCabinet"]
+material = SubResource("Mat_BKDarkFrame")
+size = Vector3(0.26, 1.7, 2.4)
+
+[sub_resource type="BoxMesh" id="Mesh_MenuHood"]
+material = SubResource("Mat_BKMenuCanopy")
+size = Vector3(0.55, 0.12, 2.55)
+
+[sub_resource type="BoxMesh" id="Mesh_MenuLight"]
+material = SubResource("Mat_BKLightBar")
+size = Vector3(0.08, 0.04, 2.3)
+
+[sub_resource type="BoxMesh" id="Mesh_MenuHeaderBar"]
+material = SubResource("Mat_BKRed")
+size = Vector3(0.04, 0.32, 2.25)
+
+[sub_resource type="BoxMesh" id="Mesh_MenuPanelWhite"]
+material = SubResource("Mat_BKMenuFace")
+size = Vector3(0.02, 0.92, 1.05)
+
+[sub_resource type="BoxMesh" id="Mesh_MenuLcdFrame"]
+material = SubResource("Mat_BKDarkFrame")
+size = Vector3(0.03, 0.42, 1.05)
+
+[sub_resource type="BoxMesh" id="Mesh_MenuLcdFace"]
+material = SubResource("Mat_BKLcdScreen")
+size = Vector3(0.02, 0.38, 1.01)
+
+[sub_resource type="BoxMesh" id="Mesh_SpeakerBase"]
+material = SubResource("Mat_BKDarkFrame")
+size = Vector3(0.35, 0.15, 0.35)
+
+[sub_resource type="BoxMesh" id="Mesh_SpeakerPole"]
+material = SubResource("Mat_BKDarkFrame")
+size = Vector3(0.12, 1.05, 0.12)
+
+[sub_resource type="BoxMesh" id="Mesh_SpeakerHousing"]
+material = SubResource("Mat_BKDarkFrame")
+size = Vector3(0.28, 0.55, 0.38)
+
+[sub_resource type="BoxMesh" id="Mesh_SpeakerFace"]
+material = SubResource("Mat_BKDarkFrame")
+size = Vector3(0.02, 0.32, 0.32)
+
+[sub_resource type="BoxMesh" id="Mesh_SpeakerGrilleSlat"]
+material = SubResource("Mat_BKMenuCanopy")
+size = Vector3(0.025, 0.02, 0.26)
+
+[sub_resource type="BoxMesh" id="Mesh_SpeakerMarquee"]
+material = SubResource("Mat_BKSpeakerMarquee")
+size = Vector3(0.03, 0.14, 0.34)
+
+[sub_resource type="BoxMesh" id="Mesh_SpeakerLed"]
+material = SubResource("Mat_BKLedGreen")
+size = Vector3(0.03, 0.04, 0.04)
+
+[sub_resource type="BoxMesh" id="Mesh_StopBar"]
+material = SubResource("Mat_SiteStripe")
+size = Vector3(4.8, 0.04, 0.38)
+
+[sub_resource type="BoxMesh" id="Mesh_OrderBar"]
+material = SubResource("Mat_DriveThruLine")
+size = Vector3(4.8, 0.04, 0.32)
+
+[sub_resource type="BoxMesh" id="Mesh_WindowApronLine"]
+material = SubResource("Mat_DriveThruLine")
+size = Vector3(0.14, 0.04, 5.0)
+
+[sub_resource type="BoxMesh" id="Mesh_HazardHash"]
+material = SubResource("Mat_DriveThruLine")
+size = Vector3(0.48, 0.04, 0.12)
+
+[sub_resource type="BoxMesh" id="Mesh_ArrowStem"]
+material = SubResource("Mat_DriveThruLine")
+size = Vector3(0.28, 0.04, 1.4)
+
+[sub_resource type="BoxMesh" id="Mesh_ArrowBarb"]
+material = SubResource("Mat_DriveThruLine")
+size = Vector3(0.16, 0.04, 0.65)
 
 [node name="BoogerKingSite" type="Node3D"]
 
@@ -90,12 +259,355 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.25, 0.05, 1.5)
 mesh = SubResource("Mesh_DriveThruSide")
 
 [node name="PickupLaneInnerLine" type="MeshInstance3D" parent="DriveThru"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.55, 0.07, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.55, 0.07, 1)
 mesh = SubResource("Mesh_DriveThruLine")
 
 [node name="PickupLaneOuterLine" type="MeshInstance3D" parent="DriveThru"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.95, 0.07, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.95, 0.07, 1)
 mesh = SubResource("Mesh_DriveThruLine")
+
+[node name="Striping" type="Node3D" parent="DriveThru"]
+
+[node name="StopBarWindow" type="MeshInstance3D" parent="DriveThru/Striping"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.25, 0.11, 0.05)
+mesh = SubResource("Mesh_StopBar")
+
+[node name="StopBarWindowLabel" type="Label3D" parent="DriveThru/Striping"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 12.25, 0.135, 0.5)
+pixel_size = 0.009
+font = ExtResource("5_font_archivo")
+text = "WAIT HERE FOR PICKUP"
+font_size = 24
+outline_size = 5
+modulate = Color(0.96, 0.72, 0.08, 1)
+outline_modulate = Color(0.15, 0.15, 0.15, 1)
+
+[node name="StopBarOrder" type="MeshInstance3D" parent="DriveThru/Striping"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.25, 0.11, 1.55)
+mesh = SubResource("Mesh_OrderBar")
+
+[node name="StopBarOrderLabel" type="Label3D" parent="DriveThru/Striping"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 12.25, 0.135, 2.0)
+pixel_size = 0.009
+font = ExtResource("5_font_archivo")
+text = "ORDER STOP"
+font_size = 24
+outline_size = 5
+modulate = Color(0.96, 0.72, 0.08, 1)
+outline_modulate = Color(0.15, 0.15, 0.15, 1)
+
+[node name="WindowApronBorder" type="MeshInstance3D" parent="DriveThru/Striping"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.85, 0.11, 0.0)
+mesh = SubResource("Mesh_WindowApronLine")
+
+[node name="Hash1" type="MeshInstance3D" parent="DriveThru/Striping"]
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 9.6, 0.11, -1.8)
+mesh = SubResource("Mesh_HazardHash")
+
+[node name="Hash2" type="MeshInstance3D" parent="DriveThru/Striping"]
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 9.6, 0.11, -1.2)
+mesh = SubResource("Mesh_HazardHash")
+
+[node name="Hash3" type="MeshInstance3D" parent="DriveThru/Striping"]
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 9.6, 0.11, -0.6)
+mesh = SubResource("Mesh_HazardHash")
+
+[node name="Hash4" type="MeshInstance3D" parent="DriveThru/Striping"]
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 9.6, 0.11, 0.0)
+mesh = SubResource("Mesh_HazardHash")
+
+[node name="Hash5" type="MeshInstance3D" parent="DriveThru/Striping"]
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 9.6, 0.11, 0.6)
+mesh = SubResource("Mesh_HazardHash")
+
+[node name="Hash6" type="MeshInstance3D" parent="DriveThru/Striping"]
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 9.6, 0.11, 1.2)
+mesh = SubResource("Mesh_HazardHash")
+
+[node name="Hash7" type="MeshInstance3D" parent="DriveThru/Striping"]
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 9.6, 0.11, 1.8)
+mesh = SubResource("Mesh_HazardHash")
+
+[node name="ArrowApproach" type="Node3D" parent="DriveThru/Striping"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.25, 0.11, 5.5)
+
+[node name="Stem" type="MeshInstance3D" parent="DriveThru/Striping/ArrowApproach"]
+mesh = SubResource("Mesh_ArrowStem")
+
+[node name="BarbL" type="MeshInstance3D" parent="DriveThru/Striping/ArrowApproach"]
+transform = Transform3D(0.866025, 0, -0.5, 0, 1, 0, 0.5, 0, 0.866025, -0.22, 0, -0.45)
+mesh = SubResource("Mesh_ArrowBarb")
+
+[node name="BarbR" type="MeshInstance3D" parent="DriveThru/Striping/ArrowApproach"]
+transform = Transform3D(0.866025, 0, 0.5, 0, 1, 0, -0.5, 0, 0.866025, 0.22, 0, -0.45)
+mesh = SubResource("Mesh_ArrowBarb")
+
+[node name="ArrowExit" type="Node3D" parent="DriveThru/Striping"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.25, 0.11, -3.5)
+
+[node name="Stem" type="MeshInstance3D" parent="DriveThru/Striping/ArrowExit"]
+mesh = SubResource("Mesh_ArrowStem")
+
+[node name="BarbL" type="MeshInstance3D" parent="DriveThru/Striping/ArrowExit"]
+transform = Transform3D(0.866025, 0, -0.5, 0, 1, 0, 0.5, 0, 0.866025, -0.22, 0, -0.45)
+mesh = SubResource("Mesh_ArrowBarb")
+
+[node name="BarbR" type="MeshInstance3D" parent="DriveThru/Striping/ArrowExit"]
+transform = Transform3D(0.866025, 0, 0.5, 0, 1, 0, -0.5, 0, 0.866025, 0.22, 0, -0.45)
+mesh = SubResource("Mesh_ArrowBarb")
+
+[node name="PavementDriveThru" type="Label3D" parent="DriveThru/Striping"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 12.25, 0.135, 8.0)
+pixel_size = 0.012
+font = ExtResource("5_font_archivo")
+text = "DRIVE  THRU"
+font_size = 32
+outline_size = 6
+modulate = Color(0.96, 0.72, 0.08, 1)
+outline_modulate = Color(0.12, 0.12, 0.12, 1)
+
+[node name="MenuBoard" type="Node3D" parent="DriveThru"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.65, 0, 1.55)
+
+[node name="Base" type="MeshInstance3D" parent="DriveThru/MenuBoard"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.125, 0)
+mesh = SubResource("Mesh_MenuBase")
+
+[node name="PostL" type="MeshInstance3D" parent="DriveThru/MenuBoard"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, -0.8)
+mesh = SubResource("Mesh_MenuPost")
+
+[node name="PostR" type="MeshInstance3D" parent="DriveThru/MenuBoard"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0.8)
+mesh = SubResource("Mesh_MenuPost")
+
+[node name="Cabinet" type="MeshInstance3D" parent="DriveThru/MenuBoard"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.9, 0)
+mesh = SubResource("Mesh_MenuCabinet")
+
+[node name="Hood" type="MeshInstance3D" parent="DriveThru/MenuBoard"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.15, 2.78, 0)
+mesh = SubResource("Mesh_MenuHood")
+
+[node name="LightBar" type="MeshInstance3D" parent="DriveThru/MenuBoard"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3, 2.7, 0)
+mesh = SubResource("Mesh_MenuLight")
+
+[node name="HeaderBar" type="MeshInstance3D" parent="DriveThru/MenuBoard"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.15, 2.52, 0)
+mesh = SubResource("Mesh_MenuHeaderBar")
+
+[node name="HeaderLabel" type="Label3D" parent="DriveThru/MenuBoard"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -0.18, 2.52, 0)
+pixel_size = 0.007
+font = ExtResource("4_font")
+text = "BOOGER KING  •  DRIVE THRU"
+font_size = 32
+outline_size = 8
+modulate = Color(0.96, 0.12, 0.12, 1)
+outline_modulate = Color(0.98, 0.82, 0.15, 1)
+
+[node name="LeftPanel" type="MeshInstance3D" parent="DriveThru/MenuBoard"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.14, 1.85, -0.57)
+mesh = SubResource("Mesh_MenuPanelWhite")
+
+[node name="LeftLabel" type="Label3D" parent="DriveThru/MenuBoard"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -0.16, 1.85, -0.57)
+pixel_size = 0.0055
+font = ExtResource("5_font_archivo")
+text = "COMBOS & BURGERS
+#1 THE BOOGER  $6.99
+#2 DBL BOOGER  $8.49
+#3 TRIPLE KING $9.99
+#4 BACON SLIME $7.49
+#5 CRISPY NOSE $6.49"
+font_size = 22
+outline_size = 4
+modulate = Color(0.12, 0.12, 0.14, 1)
+outline_modulate = Color(1, 1, 1, 1)
+
+[node name="RightPanel" type="MeshInstance3D" parent="DriveThru/MenuBoard"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.14, 1.85, 0.57)
+mesh = SubResource("Mesh_MenuPanelWhite")
+
+[node name="RightLabel" type="Label3D" parent="DriveThru/MenuBoard"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -0.16, 1.85, 0.57)
+pixel_size = 0.0055
+font = ExtResource("5_font_archivo")
+text = "SIDES & SWEETS
+SNOT FRIES     $0.99
+ONION RINGUS   $1.99
+SLIME SHAKE    $2.49
+FOUNTAIN SODA  $1.49
+HOT APPLE SNOT $1.29"
+font_size = 22
+outline_size = 4
+modulate = Color(0.12, 0.12, 0.14, 1)
+outline_modulate = Color(1, 1, 1, 1)
+
+[node name="LcdFrame" type="MeshInstance3D" parent="DriveThru/MenuBoard"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.14, 1.18, 0)
+mesh = SubResource("Mesh_MenuLcdFrame")
+
+[node name="LcdScreen" type="MeshInstance3D" parent="DriveThru/MenuBoard"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.16, 1.18, 0)
+mesh = SubResource("Mesh_MenuLcdFace")
+
+[node name="LcdLabel" type="Label3D" parent="DriveThru/MenuBoard"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -0.18, 1.18, 0)
+pixel_size = 0.005
+font = ExtResource("5_font_archivo")
+text = "[ORDER CONFIRMATION]
+WELCOME TO BOOGER KING
+PLEASE ORDER AT SPEAKER"
+font_size = 20
+outline_size = 4
+modulate = Color(0.3, 0.95, 0.45, 1)
+outline_modulate = Color(0.02, 0.2, 0.08, 1)
+
+[node name="OrderingSpeaker" type="Node3D" parent="DriveThru"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.3, 0, 2.75)
+
+[node name="Base" type="MeshInstance3D" parent="DriveThru/OrderingSpeaker"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.075, 0)
+mesh = SubResource("Mesh_SpeakerBase")
+
+[node name="Pole" type="MeshInstance3D" parent="DriveThru/OrderingSpeaker"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.65, 0)
+mesh = SubResource("Mesh_SpeakerPole")
+
+[node name="Housing" type="MeshInstance3D" parent="DriveThru/OrderingSpeaker"]
+transform = Transform3D(0.965926, 0, 0.258819, 0, 1, 0, -0.258819, 0, 0.965926, 0, 1.35, 0)
+mesh = SubResource("Mesh_SpeakerHousing")
+
+[node name="SpeakerFace" type="MeshInstance3D" parent="DriveThru/OrderingSpeaker/Housing"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.15, 0, 0)
+mesh = SubResource("Mesh_SpeakerFace")
+
+[node name="Slat1" type="MeshInstance3D" parent="DriveThru/OrderingSpeaker/Housing"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.16, 0.08, 0)
+mesh = SubResource("Mesh_SpeakerGrilleSlat")
+
+[node name="Slat2" type="MeshInstance3D" parent="DriveThru/OrderingSpeaker/Housing"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.16, 0.03, 0)
+mesh = SubResource("Mesh_SpeakerGrilleSlat")
+
+[node name="Slat3" type="MeshInstance3D" parent="DriveThru/OrderingSpeaker/Housing"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.16, -0.02, 0)
+mesh = SubResource("Mesh_SpeakerGrilleSlat")
+
+[node name="Slat4" type="MeshInstance3D" parent="DriveThru/OrderingSpeaker/Housing"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.16, -0.07, 0)
+mesh = SubResource("Mesh_SpeakerGrilleSlat")
+
+[node name="StatusLed" type="MeshInstance3D" parent="DriveThru/OrderingSpeaker/Housing"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.16, -0.12, 0.12)
+mesh = SubResource("Mesh_SpeakerLed")
+
+[node name="Marquee" type="MeshInstance3D" parent="DriveThru/OrderingSpeaker/Housing"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.15, 0.23, 0)
+mesh = SubResource("Mesh_SpeakerMarquee")
+
+[node name="MarqueeLabel" type="Label3D" parent="DriveThru/OrderingSpeaker/Housing"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -0.17, 0.23, 0)
+pixel_size = 0.006
+font = ExtResource("4_font")
+text = "ORDER HERE"
+font_size = 28
+outline_size = 6
+modulate = Color(0.92, 0.1, 0.1, 1)
+outline_modulate = Color(0.98, 0.85, 0.1, 1)
+
+[node name="SpeakerIconLabel" type="Label3D" parent="DriveThru/OrderingSpeaker/Housing"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -0.17, -0.12, -0.04)
+pixel_size = 0.005
+font = ExtResource("5_font_archivo")
+text = "◄ SPEAKER"
+font_size = 18
+outline_size = 4
+modulate = Color(0.95, 0.95, 0.9, 1)
+outline_modulate = Color(0.1, 0.1, 0.1, 1)
+
+[node name="BollardWindowApproach" parent="DriveThru" instance=ExtResource("3_bollard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.65, 0.05, 1.45)
+
+[node name="BollardWindowExit" parent="DriveThru" instance=ExtResource("3_bollard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.65, 0.05, -1.45)
+
+[node name="BollardSpeaker" parent="DriveThru" instance=ExtResource("3_bollard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.85, 0.05, 3.1)
+
+[node name="BollardMenuNorth" parent="DriveThru" instance=ExtResource("3_bollard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.1, 0.05, 0.1)
 
 [node name="Building" parent="." instance=ExtResource("1_building")]
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0)
+
+[node name="DumpsterEnclosure" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 14.5)
+
+[node name="ConcretePad" type="MeshInstance3D" parent="DumpsterEnclosure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06, 0)
+mesh = SubResource("Mesh_DumpsterPad")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="DumpsterEnclosure/ConcretePad"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DumpsterEnclosure/ConcretePad/StaticBody3D"]
+shape = SubResource("Shape_DumpsterPad")
+[node name="Fence" type="StaticBody3D" parent="DumpsterEnclosure"]
+
+[node name="CollisionBack" type="CollisionShape3D" parent="DumpsterEnclosure/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 2.1)
+shape = SubResource("Shape_CorralBackWall")
+
+[node name="CollisionLeft" type="CollisionShape3D" parent="DumpsterEnclosure/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.35, 1, 0)
+shape = SubResource("Shape_CorralSideWall")
+
+[node name="CollisionRight" type="CollisionShape3D" parent="DumpsterEnclosure/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.35, 1, 0)
+shape = SubResource("Shape_CorralSideWall")
+
+[node name="BackWall" type="MeshInstance3D" parent="DumpsterEnclosure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, 2.1)
+mesh = SubResource("Mesh_CorralBackWall")
+
+[node name="WallLeft" type="MeshInstance3D" parent="DumpsterEnclosure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.35, 1.0, 0)
+mesh = SubResource("Mesh_CorralSideWall")
+
+[node name="WallRight" type="MeshInstance3D" parent="DumpsterEnclosure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.35, 1.0, 0)
+mesh = SubResource("Mesh_CorralSideWall")
+
+[node name="PostBackL" type="MeshInstance3D" parent="DumpsterEnclosure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.35, 1.05, 2.1)
+mesh = SubResource("Mesh_CorralPost")
+
+[node name="PostBackR" type="MeshInstance3D" parent="DumpsterEnclosure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.35, 1.05, 2.1)
+mesh = SubResource("Mesh_CorralPost")
+
+[node name="PostFrontL" type="MeshInstance3D" parent="DumpsterEnclosure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.35, 1.05, -2.1)
+mesh = SubResource("Mesh_CorralPost")
+
+[node name="PostFrontR" type="MeshInstance3D" parent="DumpsterEnclosure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.35, 1.05, -2.1)
+mesh = SubResource("Mesh_CorralPost")
+
+[node name="DumpsterTrash" parent="DumpsterEnclosure" instance=ExtResource("2_dumpster")]
+transform = Transform3D(0.996, 0, 0.087, 0, 1, 0, -0.087, 0, 0.996, -1.6, 0.12, 0.2)
+dumpster_color = "green"
+lid_open = true
+
+[node name="DumpsterRecycle" parent="DumpsterEnclosure" instance=ExtResource("2_dumpster")]
+transform = Transform3D(0.998, 0, -0.052, 0, 1, 0, 0.052, 0, 0.998, 1.6, 0.12, 0.15)
+dumpster_color = "blue"
+lid_open = false
+
+[node name="BollardL" parent="DumpsterEnclosure" instance=ExtResource("3_bollard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.6, 0, -2.3)
+
+[node name="BollardR" parent="DumpsterEnclosure" instance=ExtResource("3_bollard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.6, 0, -2.3)

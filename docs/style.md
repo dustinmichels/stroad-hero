@@ -1,66 +1,109 @@
-### 1. Lighting & "Toybox" Post-Processing (WorldEnvironment)
+# Visual Style & Polish Checklist
 
-Right now, the lighting is standard flat directional light with sharp, high-contrast shadows and washed-out ambient tones. Adding post-processing inside Godot instantly elevates low-poly block art:
-
-- **Tilt-Shift Depth of Field:** In the `Camera3D` or `WorldEnvironment`, enable Depth of Field with a narrow focus distance centered on the player's street lane. Blurring the top parking lot and bottom foreground gives the scene a miniature, diorama toy-set aesthetic.
-- **Warm Directional Sun & Ambient Tint:** Shift the `DirectionalLight3D` to a slightly warm golden/sunlight tint (e.g., pale warm cream) and set ambient light (`Environment > Ambient Light > Sky/Color`) to a soft cool periwinkle blue so shadows aren't pitch black.
-- **Screen-Space Ambient Occlusion (SSAO):** Enable SSAO in Godot's `WorldEnvironment`. This adds soft contact shadows under car chassis, where building walls meet asphalt, and around curbs, eliminating the "floating" feeling of untextured primitives.
-- **Tonemapping & Color Grading:** Change the tonemapper from `Linear` to `Filmic` or `ACES` and bump saturation slightly (1.1–1.15) to make the bright saturated reds, yellows, and greens punch through cleanly.
+Items marked **`[HUMAN REVIEW NEEDED]`** highlight unresolved choices in the document and direct contradictions between the descriptive recommendations (Sections 1–4) and the Immediate Implementation Plan (Section 5).
 
 ---
 
-### 2. Materials, Textures, and Outlines
+## 1. Lighting & "Toybox" Post-Processing (`WorldEnvironment`)
 
-Flat solid-color materials show polygon edges abruptly without conveying surface feel. Subtle stylized tweaks keep the low-poly style without requiring complex 3D texturing:
-
-- **Stylized Edge Outlines:** Apply an inverted-hull unshaded outline material or a screen-space pixel outline post-process shader. A 1–2 pixel outline around cars, signs, and character meshes emphasizes the retro cartoon/comic tone.
-- **Break Up Monolithic Asphalt:**
-- The parking lot and road currently look like single flat grey planes. Add simple painted details: road arrows, zebra crossing stripes, oil drip decals in parking stalls, manhole covers, and yellow-painted curb edges.
-- Use a subtle triplanar noise shader on the grass and pavement just to add slight value jitter rather than flat hex colors.
-
-- **Glow/Emissive Signs & Lights:** Give the neon green "OPEN" sign, streetlamp bulbs, car headlights, and restaurant logos an emissive property, and toggle **Glow** in the `WorldEnvironment` to make night/dusk transitions pop.
-
----
-
-### 3. Environmental Dressing & Micro-Details
-
-The humor in satirical storefronts ("Walgroins", "Booger King", "Taco Hell") works best when the surrounding scene matches the mundane absurdity of suburban strip malls:
-
-- **Street Furniture:**
-- Replace the red primitive cylinder on the sidewalk with a recognizable stylized fire hydrant (a cylinder with two side pegs and a top cap).
-- Add low-poly dumpsters behind Booger King, newspaper vending boxes, steel bollards near store entrances, and stray shopping carts abandoned in the Walgroins parking lot.
-
-- **Foliage Jitter:** The round trees look great conceptually, but give them scale, height, and rotation variations (±15% randomized via script or editor) and alternate between 2–3 slight green shades so they don't look cloned.
-- **Drive-Thru Details:** Add a menu board, ordering speaker box, and lane striping around the Booger King drive-thru window.
+- [ ] **Tilt-Shift Depth of Field**
+  - [ ] Enable Depth of Field with narrow focus distance centered on the player's street lane.
+  - [ ] [HUMAN REVIEW NEEDED] Placement choice from doc: Configure on `Camera3D` or in `WorldEnvironment`.
+  - [ ] Verify miniature diorama toy-set aesthetic (top parking lot and bottom foreground blurred).
+- [x] **Warm Directional Sun & Ambient Tint**
+  - [x] Shift `DirectionalLight3D` to a slightly warm golden/sunlight tint (pale warm cream).
+  - [x] Set ambient light (`Environment > Ambient Light > Sky/Color`) to soft cool periwinkle blue so shadows are not pitch black.
+- [ ] **Screen-Space Ambient Occlusion (SSAO)**
+  - [ ] Enable SSAO in `WorldEnvironment` for soft contact shadows under car chassis, building walls/asphalt seams, and curbs.
+- [ ] **Tonemapping & Color Grading**
+  - [ ] [HUMAN REVIEW NEEDED] Contradiction with Section 5: Section 1 suggests choosing between `Filmic` or `ACES`, whereas Section 5 preselects `ACES`.
+    - [x] `Filmic` (Active in `main.tscn` via `tonemap_mode = 2`)
+    - [ ] `ACES`
+  - [ ] Bump saturation slightly (1.1–1.15) to make bright reds, yellows, and greens punch through cleanly.
 
 ---
 
-### 4. Dynamic Animation & "Juice"
+## 2. Materials, Textures, and Outlines
 
-Low-poly games feel infinitely better when rigid bodies have exaggerated physical responses:
-
-- **Car Movement Dynamics:** Give vehicles a slight chassis roll when cornering, a forward dip on hard braking, and a back squat on acceleration using simple tweening or raycast spring damping.
-- **Particle Systems (`GPUParticles3D`):**
-- Tiny cartoon smoke puffs (2D billowy sprite or low-poly white spheres that quickly shrink) spitting from car exhausts.
-- Simple dust poofs under the player's shoes when walking or sprinting.
-
-- **Blinking / Neon Flicker:** A small script that randomly flickers the "OPEN" sign or buzzes a parking lot lamp adds life to static buildings.
+- [ ] **Stylized Edge Outlines**
+  - [ ] [HUMAN REVIEW NEEDED] Contradiction with Section 5: Section 2 proposes choosing between an inverted-hull material or a screen-space pixel outline shader applied across cars, signs, and character meshes. Section 5 preselects inverted hull for car base materials only.
+    - [ ] Option A: Inverted-hull unshaded outline material.
+    - [ ] Option B: Screen-space pixel outline post-process shader.
+  - [ ] Target outline width: 1–2 pixels (black/dark navy).
+  - [ ] Target scope: Decide whether outlines apply to cars only (per Section 5) or cars, signs, and character meshes (per Section 2).
+- [ ] **Break Up Monolithic Asphalt**
+  - [ ] Add painted road details:
+    - [ ] Zebra crossing stripes.
+    - [x] Road arrows (Added to Booger King drive-thru lane).
+    - [ ] Oil drip decals in parking stalls.
+    - [ ] Manhole covers.
+    - [ ] Yellow-painted curb edges.
+  - [ ] Add subtle triplanar noise shader on grass and pavement for slight value jitter instead of flat hex colors.
+- [ ] **Glow / Emissive Signs & Lights**
+  - [ ] Set emissive property on neon green "OPEN" sign, streetlamp bulbs, car headlights, and restaurant logos.
+  - [x] Toggle **Glow** in `WorldEnvironment` for night/dusk transitions.
 
 ---
 
-### Immediate Implementation Plan
+## 3. Environmental Dressing & Micro-Details
 
-```
-1. Godot Environment Pass (15 min):
-   └── Add WorldEnvironment node -> Set Tonemap to ACES -> Enable SSAO -> Enable Glow (Soft) -> Add slight DOF.
+- [x] **Street Furniture**
+  - [x] Replace red primitive sidewalk cylinder with recognizable stylized fire hydrant (cylinder with two side pegs and a top cap).
+  - [x] Add low-poly dumpsters behind Booger King.
+  - [x] Add steel bollards near store entrances.
+  - [x] Add stray shopping carts abandoned in Walgroins parking lot.
+- [ ] **Foliage Jitter**
+  - [ ] [HUMAN REVIEW NEEDED] Choice in doc: Randomize tree scale, height, and rotation (±15%) via script or in editor.
+    - [ ] Script randomization.
+    - [ ] Editor manual / tool setup.
+  - [x] Alternate between 2–3 slight green shades across round trees (Implemented via 5 distinct tree variants with distinct albedo green tints and foliage meshes in `props/tree.tscn`).
+- [x] **Drive-Thru Details (Booger King)**
+  - [x] Add menu board.
+  - [x] Add ordering speaker box.
+  - [x] Add lane striping around drive-thru window.
 
-2. Road & Lot Decals (30 min):
-   └── Place 3D Decal nodes or thin flat planes for crosswalk zebra stripes, manhole covers, and oil stains.
+---
 
-3. Car & Entity Outlines (20 min):
-   └── Attach an inverted hull outline pass (black/dark navy, cull_front, unshaded) to car base materials.
+## 4. Dynamic Animation & "Juice"
 
-4. Micro-Props (30 min):
-   └── Build 3 quick Godot CSG assemblies: low-poly dumpster, fire hydrant, and parking lot shopping cart.
+- [ ] **Car Movement Dynamics**
+  - [ ] Add chassis roll when cornering, forward dip on hard braking, and back squat on acceleration.
+  - [ ] [HUMAN REVIEW NEEDED] Choice in doc: Implement via simple tweening or raycast spring damping.
+    - [ ] Simple tweening.
+    - [ ] Raycast spring damping.
+- [ ] **Particle Systems (`GPUParticles3D`)**
+  - [ ] [HUMAN REVIEW NEEDED] Choice in doc: Car exhaust smoke style:
+    - [ ] 2D billowy sprite.
+    - [ ] Low-poly white spheres that quickly shrink.
+  - [ ] Add simple dust poofs under player shoes when walking or sprinting.
+- [ ] **Blinking / Neon Flicker**
+  - [ ] Add small script to randomly flicker "OPEN" sign.
+  - [ ] Add small script to buzz / flicker parking lot lamp.
 
-```
+- [x] **Wind & Flag Simulation**
+  - [x] Global wind manager (`GameState`) simulating dynamic wind direction and speed fluctuations with gusts.
+  - [x] Dynamic flagpole alignment swiveling cloth meshes to match prevailing wind while preserving hoist edge attachment.
+  - [x] Custom vertex displacement shader (`shaders/us_flag.gdshader`) reacting to wind speed.
+
+---
+
+## 5. Immediate Implementation Plan
+
+- [ ] **1. Godot Environment Pass (15 min)**
+  - [x] Add `WorldEnvironment` node.
+  - [ ] [HUMAN REVIEW NEEDED] Set Tonemap to `ACES` (Conflicted: commits to `ACES`, while Section 1 leaves `Filmic` open; currently using `Filmic` / mode 2 in `main.tscn`).
+  - [ ] Enable SSAO.
+  - [x] Enable Glow (Soft).
+  - [ ] Add slight DOF.
+- [ ] **2. Road & Lot Decals (30 min)**
+  - [ ] [HUMAN REVIEW NEEDED] Choice in doc: Place 3D Decal nodes or thin flat planes for markings.
+    - [ ] Option A: 3D Decal nodes.
+    - [ ] Option B: Thin flat planes.
+  - [ ] Apply to crosswalk zebra stripes, manhole covers, and oil stains.
+- [ ] **3. Car & Entity Outlines (20 min)**
+  - [ ] [HUMAN REVIEW NEEDED] Attach an inverted hull outline pass (black/dark navy, `cull_front`, unshaded) to car base materials (Conflicted: commits to inverted hull on cars only, while Section 2 also suggested a screen-space pixel shader and included signs and character meshes).
+- [x] **4. Micro-Props (30 min)**
+  - [x] Build 3 quick Godot assemblies:
+    - [x] Low-poly dumpster.
+    - [x] Fire hydrant.
+    - [x] Parking lot shopping cart.

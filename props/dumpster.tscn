@@ -1,0 +1,132 @@
+[gd_scene load_steps=15 format=3]
+
+[ext_resource type="Script" path="res://props/dumpster.gd" id="1_dumpster"]
+
+[sub_resource type="BoxShape3D" id="Shape_Dumpster"]
+size = Vector3(2.35, 1.35, 1.6)
+
+[sub_resource type="StandardMaterial3D" id="Mat_DumpsterBody"]
+albedo_color = Color(0.18, 0.36, 0.22, 1)
+roughness = 0.75
+
+[sub_resource type="StandardMaterial3D" id="Mat_DumpsterLid"]
+albedo_color = Color(0.12, 0.13, 0.14, 1)
+roughness = 0.85
+
+[sub_resource type="StandardMaterial3D" id="Mat_DumpsterDarkSteel"]
+albedo_color = Color(0.15, 0.16, 0.18, 1)
+metallic = 0.6
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_WarningYellow"]
+albedo_color = Color(0.95, 0.8, 0.1, 1)
+roughness = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Mat_TrashBag"]
+albedo_color = Color(0.9, 0.9, 0.88, 1)
+roughness = 0.6
+
+[sub_resource type="BoxMesh" id="Mesh_DumpsterBody"]
+material = SubResource("Mat_DumpsterBody")
+size = Vector3(2.2, 1.05, 1.45)
+
+[sub_resource type="BoxMesh" id="Mesh_TopRim"]
+material = SubResource("Mat_DumpsterBody")
+size = Vector3(2.28, 0.08, 1.53)
+
+[sub_resource type="BoxMesh" id="Mesh_ForkPocket"]
+material = SubResource("Mat_DumpsterDarkSteel")
+size = Vector3(0.12, 0.22, 1.35)
+
+[sub_resource type="BoxMesh" id="Mesh_Rib"]
+material = SubResource("Mat_DumpsterBody")
+size = Vector3(0.06, 0.95, 0.04)
+
+[sub_resource type="BoxMesh" id="Mesh_Skid"]
+material = SubResource("Mat_DumpsterDarkSteel")
+size = Vector3(0.15, 0.08, 1.4)
+
+[sub_resource type="BoxMesh" id="Mesh_Lid"]
+material = SubResource("Mat_DumpsterLid")
+size = Vector3(1.08, 0.05, 1.48)
+
+[sub_resource type="BoxMesh" id="Mesh_Sticker"]
+material = SubResource("Mat_WarningYellow")
+size = Vector3(0.5, 0.22, 0.02)
+
+[sub_resource type="SphereMesh" id="Mesh_Bag"]
+material = SubResource("Mat_TrashBag")
+radius = 0.32
+height = 0.45
+
+[node name="Dumpster" type="StaticBody3D"]
+script = ExtResource("1_dumpster")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.675, 0)
+shape = SubResource("Shape_Dumpster")
+
+[node name="Body" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+material_override = SubResource("Mat_DumpsterBody")
+mesh = SubResource("Mesh_DumpsterBody")
+
+[node name="TopRim" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.15, 0)
+mesh = SubResource("Mesh_TopRim")
+
+[node name="PocketL" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.14, 0.65, 0)
+mesh = SubResource("Mesh_ForkPocket")
+
+[node name="PocketR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.14, 0.65, 0)
+mesh = SubResource("Mesh_ForkPocket")
+
+[node name="RibL" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, 0.6, 0.74)
+mesh = SubResource("Mesh_Rib")
+
+[node name="RibM" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0.74)
+mesh = SubResource("Mesh_Rib")
+
+[node name="RibR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.55, 0.6, 0.74)
+mesh = SubResource("Mesh_Rib")
+
+[node name="SkidL" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.85, 0.04, 0)
+mesh = SubResource("Mesh_Skid")
+
+[node name="SkidR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.85, 0.04, 0)
+mesh = SubResource("Mesh_Skid")
+
+[node name="WarningSticker" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0.74)
+mesh = SubResource("Mesh_Sticker")
+
+[node name="WarningLabel" type="Label3D" parent="WarningSticker"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.02)
+pixel_size = 0.003
+modulate = Color(0.1, 0.1, 0.1, 1)
+text = "NO PARKING
+PRIVATE PROPERTY"
+font_size = 28
+
+[node name="LeftLid" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.56, 1.2, 0)
+mesh = SubResource("Mesh_Lid")
+
+[node name="RightLidPivot" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.56, 1.2, -0.74)
+
+[node name="RightLid" type="MeshInstance3D" parent="RightLidPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.74)
+mesh = SubResource("Mesh_Lid")
+
+[node name="TrashBag" type="MeshInstance3D" parent="."]
+visible = false
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 1.15, 0.2)
+mesh = SubResource("Mesh_Bag")

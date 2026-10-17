@@ -1,6 +1,10 @@
 [gd_scene format=3]
 
 [ext_resource type="FontFile" path="res://fonts/ArchivoBlack-Regular.ttf" id="1_archivo"]
+[ext_resource type="PackedScene" path="res://props/bollard.tscn" id="2_bollard"]
+[ext_resource type="PackedScene" path="res://props/dumpster.tscn" id="3_dumpster"]
+[ext_resource type="FontFile" path="res://fonts/Fredoka.ttf" id="4_font"]
+[ext_resource type="Script" path="res://buildings/taco_hell_drive_thru.gd" id="5_dt_script"]
 
 [sub_resource type="StandardMaterial3D" id="Mat_TacoWallTan"]
 albedo_color = Color(0.83, 0.70, 0.56, 1)
@@ -188,6 +192,63 @@ albedo_color = Color(0.96, 0.72, 0.08, 1)
 albedo_color = Color(0.35, 0.15, 0.45, 1)
 roughness = 0.4
 
+[sub_resource type="StandardMaterial3D" id="Mat_TacoSiteStripe"]
+albedo_color = Color(0.94, 0.94, 0.92, 1)
+
+[sub_resource type="StandardMaterial3D" id="Mat_TacoConcretePad"]
+albedo_color = Color(0.68, 0.68, 0.66, 1)
+roughness = 0.85
+
+[sub_resource type="StandardMaterial3D" id="Mat_TacoDarkFrame"]
+albedo_color = Color(0.18, 0.18, 0.20, 1)
+metallic = 0.6
+roughness = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Mat_TacoMagentaHeader"]
+albedo_color = Color(0.92, 0.08, 0.48, 1)
+emission_enabled = true
+emission = Color(0.92, 0.08, 0.48, 1)
+emission_energy_multiplier = 0.35
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_TacoLcdScreen"]
+albedo_color = Color(0.04, 0.18, 0.12, 1)
+emission_enabled = true
+emission = Color(0.06, 0.30, 0.18, 1)
+emission_energy_multiplier = 0.5
+roughness = 0.2
+
+[sub_resource type="StandardMaterial3D" id="Mat_TacoSpeakerLed"]
+albedo_color = Color(0.96, 0.72, 0.08, 1)
+emission_enabled = true
+emission = Color(0.96, 0.72, 0.08, 1)
+emission_energy_multiplier = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Mat_TacoSpeakerMarquee"]
+albedo_color = Color(0.92, 0.08, 0.48, 1)
+emission_enabled = true
+emission = Color(0.92, 0.08, 0.48, 1)
+emission_energy_multiplier = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Mat_TacoMenuHood"]
+albedo_color = Color(0.32, 0.12, 0.42, 1)
+metallic = 0.5
+roughness = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Mat_TacoLightBar"]
+albedo_color = Color(1.0, 0.96, 0.85, 1)
+emission_enabled = true
+emission = Color(1.0, 0.96, 0.85, 1)
+emission_energy_multiplier = 0.6
+
+[sub_resource type="StandardMaterial3D" id="Mat_TacoEnclosureAdobe"]
+albedo_color = Color(0.83, 0.70, 0.56, 1)
+roughness = 0.88
+
+[sub_resource type="StandardMaterial3D" id="Mat_TacoEnclosureWood"]
+albedo_color = Color(0.42, 0.32, 0.22, 1)
+roughness = 0.92
+
 [sub_resource type="BoxMesh" id="Mesh_TacoDTSide"]
 material = SubResource("Mat_TacoAsphalt")
 size = Vector3(5.5, 0.1, 19)
@@ -196,9 +257,13 @@ size = Vector3(5.5, 0.1, 19)
 material = SubResource("Mat_TacoAsphalt")
 size = Vector3(29.5, 0.1, 5.5)
 
-[sub_resource type="BoxMesh" id="Mesh_TacoDTLine"]
+[sub_resource type="BoxMesh" id="Mesh_TacoDTLineLong"]
 material = SubResource("Mat_TacoDriveThruLine")
-size = Vector3(0.16, 0.12, 12)
+size = Vector3(0.16, 0.12, 19)
+
+[sub_resource type="BoxMesh" id="Mesh_TacoDTLineRear"]
+material = SubResource("Mat_TacoDriveThruLine")
+size = Vector3(29.5, 0.12, 0.16)
 
 [sub_resource type="BoxMesh" id="Mesh_TacoDTWin"]
 material = SubResource("Mat_TacoDarkGlass")
@@ -216,18 +281,139 @@ size = Vector3(0.4, 0.08, 1.5)
 material = SubResource("Mat_TacoAwningMetal")
 size = Vector3(0.9, 0.08, 1.7)
 
-[sub_resource type="BoxMesh" id="Mesh_TacoMenuPedestal"]
-material = SubResource("Mat_DoorFrame")
-size = Vector3(0.25, 1.2, 0.4)
+[sub_resource type="BoxMesh" id="Mesh_TacoDTCounter"]
+material = SubResource("Mat_TacoAwningMetal")
+size = Vector3(0.45, 0.06, 1.6)
 
-[sub_resource type="BoxMesh" id="Mesh_TacoMenuBoard"]
+[sub_resource type="BoxMesh" id="Mesh_TacoStopBar"]
+material = SubResource("Mat_TacoSiteStripe")
+size = Vector3(4.8, 0.04, 0.38)
+
+[sub_resource type="BoxMesh" id="Mesh_TacoOrderBar"]
+material = SubResource("Mat_TacoDriveThruLine")
+size = Vector3(4.8, 0.04, 0.32)
+
+[sub_resource type="BoxMesh" id="Mesh_TacoWindowApronLine"]
+material = SubResource("Mat_TacoDriveThruLine")
+size = Vector3(0.14, 0.04, 5.0)
+
+[sub_resource type="BoxMesh" id="Mesh_TacoHazardHash"]
+material = SubResource("Mat_TacoDriveThruLine")
+size = Vector3(0.48, 0.04, 0.12)
+
+[sub_resource type="BoxMesh" id="Mesh_TacoArrowStem"]
+material = SubResource("Mat_TacoDriveThruLine")
+size = Vector3(0.28, 0.04, 1.4)
+
+[sub_resource type="BoxMesh" id="Mesh_TacoArrowBarb"]
+material = SubResource("Mat_TacoDriveThruLine")
+size = Vector3(0.16, 0.04, 0.65)
+
+[sub_resource type="BoxMesh" id="Mesh_TacoArrowRearStem"]
+material = SubResource("Mat_TacoDriveThruLine")
+size = Vector3(1.4, 0.04, 0.28)
+
+[sub_resource type="BoxMesh" id="Mesh_TacoArrowRearBarb"]
+material = SubResource("Mat_TacoDriveThruLine")
+size = Vector3(0.65, 0.04, 0.16)
+
+[sub_resource type="BoxMesh" id="Mesh_TacoMenuBase"]
+material = SubResource("Mat_TacoConcretePad")
+size = Vector3(0.8, 0.25, 2.6)
+
+[sub_resource type="BoxMesh" id="Mesh_TacoMenuPost"]
+material = SubResource("Mat_TacoDarkFrame")
+size = Vector3(0.16, 1.6, 0.16)
+
+[sub_resource type="BoxMesh" id="Mesh_TacoMenuCabinet"]
 material = SubResource("Mat_TacoSignPurple")
-size = Vector3(0.2, 1.4, 1.6)
+size = Vector3(0.26, 1.7, 2.4)
 
-[sub_resource type="BoxMesh" id="Mesh_TacoMenuFace"]
+[sub_resource type="BoxMesh" id="Mesh_TacoMenuHood"]
+material = SubResource("Mat_TacoMenuHood")
+size = Vector3(0.55, 0.12, 2.55)
+
+[sub_resource type="BoxMesh" id="Mesh_TacoMenuLight"]
+material = SubResource("Mat_TacoLightBar")
+size = Vector3(0.08, 0.04, 2.3)
+
+[sub_resource type="BoxMesh" id="Mesh_TacoMenuHeaderBar"]
+material = SubResource("Mat_TacoMagentaHeader")
+size = Vector3(0.04, 0.32, 2.25)
+
+[sub_resource type="BoxMesh" id="Mesh_TacoMenuPanelWhite"]
 material = SubResource("Mat_TacoWhiteTrim")
-size = Vector3(0.05, 1.3, 1.5)
+size = Vector3(0.02, 0.92, 1.05)
 
+[sub_resource type="BoxMesh" id="Mesh_TacoMenuLcdFrame"]
+material = SubResource("Mat_TacoDarkFrame")
+size = Vector3(0.03, 0.42, 1.05)
+
+[sub_resource type="BoxMesh" id="Mesh_TacoMenuLcdFace"]
+material = SubResource("Mat_TacoLcdScreen")
+size = Vector3(0.02, 0.38, 1.01)
+
+[sub_resource type="BoxMesh" id="Mesh_TacoSpeakerBase"]
+material = SubResource("Mat_TacoDarkFrame")
+size = Vector3(0.35, 0.15, 0.35)
+
+[sub_resource type="BoxMesh" id="Mesh_TacoSpeakerPole"]
+material = SubResource("Mat_TacoDarkFrame")
+size = Vector3(0.12, 1.05, 0.12)
+
+[sub_resource type="BoxMesh" id="Mesh_TacoSpeakerHousing"]
+material = SubResource("Mat_TacoDarkFrame")
+size = Vector3(0.28, 0.55, 0.38)
+
+[sub_resource type="BoxMesh" id="Mesh_TacoSpeakerFace"]
+material = SubResource("Mat_TacoDarkFrame")
+size = Vector3(0.02, 0.32, 0.32)
+
+[sub_resource type="BoxMesh" id="Mesh_TacoSpeakerGrilleSlat"]
+material = SubResource("Mat_TacoWhiteTrim")
+size = Vector3(0.025, 0.02, 0.26)
+
+[sub_resource type="BoxMesh" id="Mesh_TacoSpeakerMarquee"]
+material = SubResource("Mat_TacoSpeakerMarquee")
+size = Vector3(0.03, 0.14, 0.34)
+
+[sub_resource type="BoxMesh" id="Mesh_TacoSpeakerLed"]
+material = SubResource("Mat_TacoSpeakerLed")
+size = Vector3(0.03, 0.04, 0.04)
+
+[sub_resource type="BoxMesh" id="Mesh_TacoClearancePost"]
+material = SubResource("Mat_TacoSignPurple")
+size = Vector3(0.18, 3.4, 0.18)
+
+[sub_resource type="BoxMesh" id="Mesh_TacoClearanceCrossbar"]
+material = SubResource("Mat_TacoSignPurple")
+size = Vector3(5.6, 0.18, 0.18)
+
+[sub_resource type="BoxMesh" id="Mesh_TacoClearanceDangle"]
+material = SubResource("Mat_TacoDriveThruLine")
+size = Vector3(4.6, 0.24, 0.08)
+
+[sub_resource type="BoxMesh" id="Mesh_TacoDumpsterPad"]
+material = SubResource("Mat_TacoConcretePad")
+size = Vector3(6.8, 0.12, 4.4)
+
+[sub_resource type="BoxShape3D" id="Shape_TacoDumpsterPad"]
+size = Vector3(6.8, 0.12, 4.4)
+
+[sub_resource type="BoxMesh" id="Mesh_TacoCorralBackWall"]
+material = SubResource("Mat_TacoEnclosureAdobe")
+size = Vector3(6.8, 1.9, 0.18)
+
+[sub_resource type="BoxMesh" id="Mesh_TacoCorralSideWall"]
+material = SubResource("Mat_TacoEnclosureAdobe")
+size = Vector3(0.18, 1.9, 4.2)
+
+[sub_resource type="BoxMesh" id="Mesh_TacoCorralPost"]
+material = SubResource("Mat_TacoEnclosureWood")
+size = Vector3(0.25, 2.05, 0.25)
+
+[sub_resource type="BoxShape3D" id="Shape_TacoZone"]
+size = Vector3(4.5, 2.5, 4.5)
 [sub_resource type="BoxShape3D" id="Shape_BuildingCollision"]
 size = Vector3(18.5, 5.5, 12.5)
 
@@ -344,6 +530,12 @@ mesh = SubResource("Mesh_DoorFrame")
 [node name="Doors" type="MeshInstance3D" parent="Building/MainArchPortico"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3, 0.05)
 mesh = SubResource("Mesh_Doors")
+
+[node name="BollardEntranceL" parent="Building/MainArchPortico" instance=ExtResource("2_bollard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.8, 0, 1.3)
+
+[node name="BollardEntranceR" parent="Building/MainArchPortico" instance=ExtResource("2_bollard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8, 0, 1.3)
 
 [node name="SecondaryArch" type="Node3D" parent="Building"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 0, 6.1)
@@ -463,6 +655,23 @@ font_size = 28
 outline_size = 6
 
 [node name="DriveThru" type="Node3D" parent="."]
+script = ExtResource("5_dt_script")
+
+[node name="OrderZone" type="Area3D" parent="DriveThru"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 1, -2)
+collision_layer = 0
+collision_mask = 3
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DriveThru/OrderZone"]
+shape = SubResource("Shape_TacoZone")
+
+[node name="PickupZone" type="Area3D" parent="DriveThru"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 1, 0)
+collision_layer = 0
+collision_mask = 3
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DriveThru/PickupZone"]
+shape = SubResource("Shape_TacoZone")
 
 [node name="PickupLane" type="MeshInstance3D" parent="DriveThru"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.0, 0.05, 0)
@@ -478,11 +687,332 @@ mesh = SubResource("Mesh_TacoDTSide")
 
 [node name="PickupLaneInnerLine" type="MeshInstance3D" parent="DriveThru"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.3, 0.07, 0)
-mesh = SubResource("Mesh_TacoDTLine")
+mesh = SubResource("Mesh_TacoDTLineLong")
 
 [node name="PickupLaneOuterLine" type="MeshInstance3D" parent="DriveThru"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.7, 0.07, 0)
-mesh = SubResource("Mesh_TacoDTLine")
+mesh = SubResource("Mesh_TacoDTLineLong")
+
+[node name="ReturnLaneInnerLine" type="MeshInstance3D" parent="DriveThru"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.3, 0.07, 0)
+mesh = SubResource("Mesh_TacoDTLineLong")
+
+[node name="ReturnLaneOuterLine" type="MeshInstance3D" parent="DriveThru"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.7, 0.07, 0)
+mesh = SubResource("Mesh_TacoDTLineLong")
+
+[node name="RearLaneInnerLine" type="MeshInstance3D" parent="DriveThru"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.07, -6.3)
+mesh = SubResource("Mesh_TacoDTLineRear")
+
+[node name="RearLaneOuterLine" type="MeshInstance3D" parent="DriveThru"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.07, -11.7)
+mesh = SubResource("Mesh_TacoDTLineRear")
+
+[node name="Striping" type="Node3D" parent="DriveThru"]
+
+[node name="StopBarWindow" type="MeshInstance3D" parent="DriveThru/Striping"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.0, 0.11, 0.05)
+mesh = SubResource("Mesh_TacoStopBar")
+
+[node name="StopBarWindowLabel" type="Label3D" parent="DriveThru/Striping"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 12.0, 0.135, -0.45)
+pixel_size = 0.009
+font = ExtResource("1_archivo")
+text = "WAIT HERE FOR PICKUP"
+font_size = 24
+outline_size = 5
+modulate = Color(0.96, 0.72, 0.08, 1)
+outline_modulate = Color(0.15, 0.15, 0.15, 1)
+
+[node name="StopBarOrder" type="MeshInstance3D" parent="DriveThru/Striping"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.0, 0.11, -2.0)
+mesh = SubResource("Mesh_TacoOrderBar")
+
+[node name="StopBarOrderLabel" type="Label3D" parent="DriveThru/Striping"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, -12.0, 0.135, -1.55)
+pixel_size = 0.009
+font = ExtResource("1_archivo")
+text = "ORDER STOP"
+font_size = 24
+outline_size = 5
+modulate = Color(0.96, 0.72, 0.08, 1)
+outline_modulate = Color(0.15, 0.15, 0.15, 1)
+
+[node name="WindowApronBorder" type="MeshInstance3D" parent="DriveThru/Striping"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.55, 0.11, 0.0)
+mesh = SubResource("Mesh_TacoWindowApronLine")
+
+[node name="Hash1" type="MeshInstance3D" parent="DriveThru/Striping"]
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 9.35, 0.11, -1.8)
+mesh = SubResource("Mesh_TacoHazardHash")
+
+[node name="Hash2" type="MeshInstance3D" parent="DriveThru/Striping"]
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 9.35, 0.11, -1.2)
+mesh = SubResource("Mesh_TacoHazardHash")
+
+[node name="Hash3" type="MeshInstance3D" parent="DriveThru/Striping"]
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 9.35, 0.11, -0.6)
+mesh = SubResource("Mesh_TacoHazardHash")
+
+[node name="Hash4" type="MeshInstance3D" parent="DriveThru/Striping"]
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 9.35, 0.11, 0.0)
+mesh = SubResource("Mesh_TacoHazardHash")
+
+[node name="Hash5" type="MeshInstance3D" parent="DriveThru/Striping"]
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 9.35, 0.11, 0.6)
+mesh = SubResource("Mesh_TacoHazardHash")
+
+[node name="Hash6" type="MeshInstance3D" parent="DriveThru/Striping"]
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 9.35, 0.11, 1.2)
+mesh = SubResource("Mesh_TacoHazardHash")
+
+[node name="Hash7" type="MeshInstance3D" parent="DriveThru/Striping"]
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 9.35, 0.11, 1.8)
+mesh = SubResource("Mesh_TacoHazardHash")
+
+[node name="ArrowApproach" type="Node3D" parent="DriveThru/Striping"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.0, 0.11, 4.5)
+
+[node name="Stem" type="MeshInstance3D" parent="DriveThru/Striping/ArrowApproach"]
+mesh = SubResource("Mesh_TacoArrowStem")
+
+[node name="BarbL" type="MeshInstance3D" parent="DriveThru/Striping/ArrowApproach"]
+transform = Transform3D(0.866025, 0, -0.5, 0, 1, 0, 0.5, 0, 0.866025, -0.22, 0, -0.45)
+mesh = SubResource("Mesh_TacoArrowBarb")
+
+[node name="BarbR" type="MeshInstance3D" parent="DriveThru/Striping/ArrowApproach"]
+transform = Transform3D(0.866025, 0, 0.5, 0, 1, 0, -0.5, 0, 0.866025, 0.22, 0, -0.45)
+mesh = SubResource("Mesh_TacoArrowBarb")
+
+[node name="ArrowRear" type="Node3D" parent="DriveThru/Striping"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.11, -9.0)
+
+[node name="Stem" type="MeshInstance3D" parent="DriveThru/Striping/ArrowRear"]
+mesh = SubResource("Mesh_TacoArrowRearStem")
+
+[node name="BarbL" type="MeshInstance3D" parent="DriveThru/Striping/ArrowRear"]
+transform = Transform3D(0.866025, 0, 0.5, 0, 1, 0, -0.5, 0, 0.866025, 0.45, 0, -0.22)
+mesh = SubResource("Mesh_TacoArrowRearBarb")
+
+[node name="BarbR" type="MeshInstance3D" parent="DriveThru/Striping/ArrowRear"]
+transform = Transform3D(0.866025, 0, -0.5, 0, 1, 0, 0.5, 0, 0.866025, 0.45, 0, 0.22)
+mesh = SubResource("Mesh_TacoArrowRearBarb")
+
+[node name="ArrowExit" type="Node3D" parent="DriveThru/Striping"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.0, 0.11, 4.5)
+
+[node name="Stem" type="MeshInstance3D" parent="DriveThru/Striping/ArrowExit"]
+mesh = SubResource("Mesh_TacoArrowStem")
+
+[node name="BarbL" type="MeshInstance3D" parent="DriveThru/Striping/ArrowExit"]
+transform = Transform3D(0.866025, 0, 0.5, 0, 1, 0, -0.5, 0, 0.866025, -0.22, 0, 0.45)
+mesh = SubResource("Mesh_TacoArrowBarb")
+
+[node name="BarbR" type="MeshInstance3D" parent="DriveThru/Striping/ArrowExit"]
+transform = Transform3D(0.866025, 0, -0.5, 0, 1, 0, 0.5, 0, 0.866025, 0.22, 0, 0.45)
+mesh = SubResource("Mesh_TacoArrowBarb")
+
+[node name="PavementDriveThru" type="Label3D" parent="DriveThru/Striping"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, -12.0, 0.135, 7.5)
+pixel_size = 0.012
+font = ExtResource("1_archivo")
+text = "DRIVE  THRU"
+font_size = 32
+outline_size = 6
+modulate = Color(0.96, 0.72, 0.08, 1)
+outline_modulate = Color(0.12, 0.12, 0.12, 1)
+
+[node name="ClearanceArch" type="Node3D" parent="DriveThru"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.0, 0, 8.8)
+
+[node name="PostL" type="MeshInstance3D" parent="DriveThru/ClearanceArch"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6, 1.7, 0)
+mesh = SubResource("Mesh_TacoClearancePost")
+
+[node name="PostR" type="MeshInstance3D" parent="DriveThru/ClearanceArch"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.6, 1.7, 0)
+mesh = SubResource("Mesh_TacoClearancePost")
+
+[node name="Crossbar" type="MeshInstance3D" parent="DriveThru/ClearanceArch"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.4, 0)
+mesh = SubResource("Mesh_TacoClearanceCrossbar")
+
+[node name="DangleBar" type="MeshInstance3D" parent="DriveThru/ClearanceArch"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.85, 0)
+mesh = SubResource("Mesh_TacoClearanceDangle")
+
+[node name="ClearanceLabel" type="Label3D" parent="DriveThru/ClearanceArch"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.85, 0.06)
+pixel_size = 0.007
+font = ExtResource("1_archivo")
+text = "CLEARANCE 9' 0\"  •  DRIVE THRU ONLY"
+font_size = 22
+outline_size = 5
+modulate = Color(0.26, 0.08, 0.38, 1)
+outline_modulate = Color(1, 1, 1, 1)
+
+[node name="MenuBoard" type="Node3D" parent="DriveThru"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.65, 0, -2.0)
+
+[node name="Base" type="MeshInstance3D" parent="DriveThru/MenuBoard"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.125, 0)
+mesh = SubResource("Mesh_TacoMenuBase")
+
+[node name="PostL" type="MeshInstance3D" parent="DriveThru/MenuBoard"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0.8)
+mesh = SubResource("Mesh_TacoMenuPost")
+
+[node name="PostR" type="MeshInstance3D" parent="DriveThru/MenuBoard"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, -0.8)
+mesh = SubResource("Mesh_TacoMenuPost")
+
+[node name="Cabinet" type="MeshInstance3D" parent="DriveThru/MenuBoard"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.9, 0)
+mesh = SubResource("Mesh_TacoMenuCabinet")
+
+[node name="Hood" type="MeshInstance3D" parent="DriveThru/MenuBoard"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.15, 2.78, 0)
+mesh = SubResource("Mesh_TacoMenuHood")
+
+[node name="LightBar" type="MeshInstance3D" parent="DriveThru/MenuBoard"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 2.7, 0)
+mesh = SubResource("Mesh_TacoMenuLight")
+
+[node name="HeaderBar" type="MeshInstance3D" parent="DriveThru/MenuBoard"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.15, 2.52, 0)
+mesh = SubResource("Mesh_TacoMenuHeaderBar")
+
+[node name="HeaderLabel" type="Label3D" parent="DriveThru/MenuBoard"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0.18, 2.52, 0)
+pixel_size = 0.007
+font = ExtResource("4_font")
+text = "TACO HELL  •  DRIVE THRU 🔔"
+font_size = 32
+outline_size = 8
+modulate = Color(0.92, 0.08, 0.48, 1)
+outline_modulate = Color(0.98, 0.82, 0.15, 1)
+
+[node name="LeftPanel" type="MeshInstance3D" parent="DriveThru/MenuBoard"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.14, 1.85, 0.57)
+mesh = SubResource("Mesh_TacoMenuPanelWhite")
+
+[node name="LeftLabel" type="Label3D" parent="DriveThru/MenuBoard"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0.16, 1.85, 0.57)
+pixel_size = 0.0055
+font = ExtResource("1_archivo")
+text = "COMBOS & TACOS
+#1 CRUNCHY TACO   $5.99
+#2 GORDITA HELL   $6.49
+#3 CRUNCHWRAP     $7.29
+#4 BURRITO SUPR   $5.49
+#5 CHALUPA SUPR   $6.29"
+font_size = 22
+outline_size = 4
+modulate = Color(0.12, 0.12, 0.14, 1)
+outline_modulate = Color(1, 1, 1, 1)
+
+[node name="RightPanel" type="MeshInstance3D" parent="DriveThru/MenuBoard"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.14, 1.85, -0.57)
+mesh = SubResource("Mesh_TacoMenuPanelWhite")
+
+[node name="RightLabel" type="Label3D" parent="DriveThru/MenuBoard"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0.16, 1.85, -0.57)
+pixel_size = 0.0055
+font = ExtResource("1_archivo")
+text = "DRINKS & SIDES
+BAJA BLAST        $2.29
+DIABLO FREEZE     $2.99
+NACHO FRIES       $2.49
+CINNA TWISTS      $1.49
+HELLFIRE SAUCE    $0.00"
+font_size = 22
+outline_size = 4
+modulate = Color(0.12, 0.12, 0.14, 1)
+outline_modulate = Color(1, 1, 1, 1)
+
+[node name="LcdFrame" type="MeshInstance3D" parent="DriveThru/MenuBoard"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.14, 1.18, 0)
+mesh = SubResource("Mesh_TacoMenuLcdFrame")
+
+[node name="LcdScreen" type="MeshInstance3D" parent="DriveThru/MenuBoard"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.16, 1.18, 0)
+mesh = SubResource("Mesh_TacoMenuLcdFace")
+
+[node name="LcdLabel" type="Label3D" parent="DriveThru/MenuBoard"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0.18, 1.18, 0)
+pixel_size = 0.005
+font = ExtResource("1_archivo")
+text = "[ORDER CONFIRMATION]
+WELCOME TO TACO HELL
+PLEASE ORDER AT SPEAKER"
+font_size = 20
+outline_size = 4
+modulate = Color(0.3, 0.95, 0.45, 1)
+outline_modulate = Color(0.02, 0.2, 0.08, 1)
+
+[node name="OrderingSpeaker" type="Node3D" parent="DriveThru"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.3, 0, -0.6)
+
+[node name="Base" type="MeshInstance3D" parent="DriveThru/OrderingSpeaker"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.075, 0)
+mesh = SubResource("Mesh_TacoSpeakerBase")
+
+[node name="Pole" type="MeshInstance3D" parent="DriveThru/OrderingSpeaker"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.65, 0)
+mesh = SubResource("Mesh_TacoSpeakerPole")
+
+[node name="Housing" type="MeshInstance3D" parent="DriveThru/OrderingSpeaker"]
+transform = Transform3D(0.965926, 0, -0.258819, 0, 1, 0, 0.258819, 0, 0.965926, 0, 1.35, 0)
+mesh = SubResource("Mesh_TacoSpeakerHousing")
+
+[node name="SpeakerFace" type="MeshInstance3D" parent="DriveThru/OrderingSpeaker/Housing"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.15, 0, 0)
+mesh = SubResource("Mesh_TacoSpeakerFace")
+
+[node name="Slat1" type="MeshInstance3D" parent="DriveThru/OrderingSpeaker/Housing"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.16, 0.08, 0)
+mesh = SubResource("Mesh_TacoSpeakerGrilleSlat")
+
+[node name="Slat2" type="MeshInstance3D" parent="DriveThru/OrderingSpeaker/Housing"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.16, 0.03, 0)
+mesh = SubResource("Mesh_TacoSpeakerGrilleSlat")
+
+[node name="Slat3" type="MeshInstance3D" parent="DriveThru/OrderingSpeaker/Housing"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.16, -0.02, 0)
+mesh = SubResource("Mesh_TacoSpeakerGrilleSlat")
+
+[node name="Slat4" type="MeshInstance3D" parent="DriveThru/OrderingSpeaker/Housing"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.16, -0.07, 0)
+mesh = SubResource("Mesh_TacoSpeakerGrilleSlat")
+
+[node name="StatusLed" type="MeshInstance3D" parent="DriveThru/OrderingSpeaker/Housing"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.16, -0.12, -0.12)
+mesh = SubResource("Mesh_TacoSpeakerLed")
+
+[node name="Marquee" type="MeshInstance3D" parent="DriveThru/OrderingSpeaker/Housing"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.15, 0.23, 0)
+mesh = SubResource("Mesh_TacoSpeakerMarquee")
+
+[node name="MarqueeLabel" type="Label3D" parent="DriveThru/OrderingSpeaker/Housing"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0.17, 0.23, 0)
+pixel_size = 0.006
+font = ExtResource("4_font")
+text = "ORDER HERE"
+font_size = 28
+outline_size = 6
+modulate = Color(0.92, 0.08, 0.48, 1)
+outline_modulate = Color(0.98, 0.85, 0.1, 1)
+
+[node name="SpeakerIconLabel" type="Label3D" parent="DriveThru/OrderingSpeaker/Housing"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0.17, -0.12, 0.04)
+pixel_size = 0.005
+font = ExtResource("1_archivo")
+text = "SPEAKER ►"
+font_size = 18
+outline_size = 4
+modulate = Color(0.95, 0.95, 0.9, 1)
+outline_modulate = Color(0.1, 0.1, 0.1, 1)
 
 [node name="PickupFrame" type="MeshInstance3D" parent="DriveThru"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.06, 2.0, 0)
@@ -495,6 +1025,10 @@ mesh = SubResource("Mesh_TacoDTWin")
 [node name="PickupSill" type="MeshInstance3D" parent="DriveThru"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.2, 1.25, 0)
 mesh = SubResource("Mesh_TacoDTSill")
+
+[node name="PickupCounter" type="MeshInstance3D" parent="DriveThru"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.25, 1.18, 0)
+mesh = SubResource("Mesh_TacoDTCounter")
 
 [node name="PickupCanopy" type="MeshInstance3D" parent="DriveThru"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.45, 2.85, 0)
@@ -510,36 +1044,82 @@ font = ExtResource("1_archivo")
 font_size = 28
 outline_size = 6
 
-[node name="MenuPedestal" type="MeshInstance3D" parent="DriveThru"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.2, 0.6, -2.0)
-mesh = SubResource("Mesh_TacoMenuPedestal")
+[node name="BollardWindowApproach" parent="DriveThru" instance=ExtResource("2_bollard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.65, 0.05, 1.45)
 
-[node name="MenuBoard" type="MeshInstance3D" parent="DriveThru"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.2, 1.7, -2.0)
-mesh = SubResource("Mesh_TacoMenuBoard")
+[node name="BollardWindowExit" parent="DriveThru" instance=ExtResource("2_bollard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.65, 0.05, -1.45)
 
-[node name="MenuFace" type="MeshInstance3D" parent="DriveThru"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.08, 1.7, -2.0)
-mesh = SubResource("Mesh_TacoMenuFace")
+[node name="BollardSpeaker" parent="DriveThru" instance=ExtResource("2_bollard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.85, 0.05, 0.3)
 
-[node name="MenuHeader" type="Label3D" parent="DriveThru"]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -15.04, 2.15, -2.0)
-pixel_size = 0.008
-modulate = Color(0.85, 0.1, 0.45, 1)
-outline_modulate = Color(0.2, 0.05, 0.3, 1)
-text = "TACO HELL"
-font = ExtResource("1_archivo")
-font_size = 24
-outline_size = 6
+[node name="BollardMenuNorth" parent="DriveThru" instance=ExtResource("2_bollard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.1, 0.05, -3.4)
 
-[node name="MenuItems" type="Label3D" parent="DriveThru"]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -15.04, 1.55, -2.0)
-pixel_size = 0.009
-modulate = Color(0.1, 0.1, 0.1, 1)
-outline_modulate = Color(1, 1, 1, 1)
-text = "CRUNCH TACO
-BURRITO SUPREME
-DIABLO BLAST"
-font = ExtResource("1_archivo")
-font_size = 18
-outline_size = 4
+[node name="BollardApproachNW" parent="DriveThru" instance=ExtResource("2_bollard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5, 0.05, -6.2)
+
+[node name="BollardApproachSW" parent="DriveThru" instance=ExtResource("2_bollard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5, 0.05, 6.2)
+
+[node name="BollardPickupNE" parent="DriveThru" instance=ExtResource("2_bollard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.5, 0.05, -6.2)
+
+[node name="BollardPickupSE" parent="DriveThru" instance=ExtResource("2_bollard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.5, 0.05, 6.2)
+
+[node name="DumpsterEnclosure" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, -14.5)
+
+[node name="ConcretePad" type="MeshInstance3D" parent="DumpsterEnclosure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06, 0)
+mesh = SubResource("Mesh_TacoDumpsterPad")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="DumpsterEnclosure/ConcretePad"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DumpsterEnclosure/ConcretePad/StaticBody3D"]
+shape = SubResource("Shape_TacoDumpsterPad")
+
+[node name="BackWall" type="MeshInstance3D" parent="DumpsterEnclosure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, -2.1)
+mesh = SubResource("Mesh_TacoCorralBackWall")
+
+[node name="WallLeft" type="MeshInstance3D" parent="DumpsterEnclosure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.35, 1.0, 0)
+mesh = SubResource("Mesh_TacoCorralSideWall")
+
+[node name="WallRight" type="MeshInstance3D" parent="DumpsterEnclosure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.35, 1.0, 0)
+mesh = SubResource("Mesh_TacoCorralSideWall")
+
+[node name="PostBackL" type="MeshInstance3D" parent="DumpsterEnclosure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.35, 1.05, -2.1)
+mesh = SubResource("Mesh_TacoCorralPost")
+
+[node name="PostBackR" type="MeshInstance3D" parent="DumpsterEnclosure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.35, 1.05, -2.1)
+mesh = SubResource("Mesh_TacoCorralPost")
+
+[node name="PostFrontL" type="MeshInstance3D" parent="DumpsterEnclosure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.35, 1.05, 2.1)
+mesh = SubResource("Mesh_TacoCorralPost")
+
+[node name="PostFrontR" type="MeshInstance3D" parent="DumpsterEnclosure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.35, 1.05, 2.1)
+mesh = SubResource("Mesh_TacoCorralPost")
+
+[node name="DumpsterTrash" parent="DumpsterEnclosure" instance=ExtResource("3_dumpster")]
+transform = Transform3D(0.996, 0, 0.087, 0, 1, 0, -0.087, 0, 0.996, -1.6, 0.12, -0.2)
+dumpster_color = "green"
+lid_open = true
+
+[node name="DumpsterRecycle" parent="DumpsterEnclosure" instance=ExtResource("3_dumpster")]
+transform = Transform3D(0.998, 0, -0.052, 0, 1, 0, 0.052, 0, 0.998, 1.6, 0.12, -0.15)
+dumpster_color = "blue"
+lid_open = false
+
+[node name="BollardL" parent="DumpsterEnclosure" instance=ExtResource("2_bollard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.6, 0, 2.3)
+
+[node name="BollardR" parent="DumpsterEnclosure" instance=ExtResource("2_bollard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.6, 0, 2.3)
