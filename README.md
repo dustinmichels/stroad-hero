@@ -18,6 +18,11 @@ I think the underlying model should perhaps be 3D, so I can simulate real traffi
 
 ## Controls
 
-- Arrow keys: walk (Mats steps up curbs on his own)
+- Arrow keys: walk relative to the current camera
+- W/A/S/D: swing the camera to forward, left, back, or right viewpoints
 - Space: small hop
 - C: open the paused character editor; use Up/Down to choose a row and Left/Right to change it. The preview slowly turns to show the backpack.
+
+## Traffic
+
+Traffic includes sedans, SUVs, taxis, delivery vans, pickup trucks, buses, hatchbacks, minivans, and sports cars. Smaller passenger vehicles can use parking lots; buses and delivery vans remain on the road.

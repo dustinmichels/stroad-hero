@@ -92,6 +92,7 @@ var lot: ParkingLot = null
 var lot_cars: Array[Car] = []
 var debug_overlay: Node3D = null
 var _physics_tick_count: int = 0
+var _watchdog_ignores: Dictionary = {}  # int (car_instance_id) -> Dictionary { "target_id": int, "timer": float }
 
 var stats: Dictionary = {
 	"cars_spawned": 0,
@@ -103,12 +104,13 @@ var stats: Dictionary = {
 	"errands_assigned": 0,
 	"errands_completed": 0,
 	"errands_dropped_lot_full": 0,
+	"active_errands": 0,
 	"max_stuck_time": 0.0,
 	"max_merge_wait": 0.0,
 	"watchdog_fires": 0,
 	"leaked": 0,
 }
-const P_ERRAND := 0.3
+const P_ERRAND := 0.6
 const DECISION_D := 18.0
 const TURN_D := 53.0
 const V_TURN := 5.0
@@ -119,6 +121,7 @@ const BRAKE_ACCELERATION := 25.0
 const MOTOR_ACCELERATION := 15.0
 const V_LOT := 4.5
 const V_PARK := 1.5
+const T_MERGE_GAP := 3.0
 
 
 func _ready() -> void:
@@ -178,6 +181,7 @@ func _seed_parked_cars() -> void:
 		car.speed = 0.0
 		car.desired_speed = 0.0
 		add_child(car)
+		car.lane_id = -1
 		car.state = CarScript.State.PARKED
 		car.transform = spot.transform
 		car.global_transform = spot.transform
@@ -214,13 +218,22 @@ func _physics_process(delta: float) -> void:
 
 
 func _update_lot_cars(delta: float) -> void:
+	var expired_ignores: Array = []
+	for cid in _watchdog_ignores.keys():
+		_watchdog_ignores[cid]["timer"] -= delta
+		if _watchdog_ignores[cid]["timer"] <= 0.0 or instance_from_id(cid) == null:
+			expired_ignores.append(cid)
+	for cid in expired_ignores:
+		_watchdog_ignores.erase(cid)
+
 	var surviving_cars: Array[Car] = []
 	for car in lot_cars:
 		if not is_instance_valid(car):
 			continue
 		if car.state == CarScript.State.TO_SPOT:
-			var target_speed := V_LOT
-			if car.path != null:
+			var yielding := _update_car_yielding(car, delta)
+			var target_speed := 0.0 if yielding else V_LOT
+			if not yielding and car.path != null:
 				var length := car.path.get_baked_length()
 				var remaining := length - car.path_distance
 				if remaining <= 4.0:
@@ -234,12 +247,15 @@ func _update_lot_cars(delta: float) -> void:
 			if arrived:
 				car.speed = 0.0
 				car.desired_speed = 0.0
+				car.current_blocker = null
+				car.blocked_time = 0.0
 				if car.spot != null:
 					if lot != null:
 						lot.occupy(car.spot)
 					elif car.spot.lot != null:
 						car.spot.lot.occupy(car.spot)
 				car.state = CarScript.State.PARKED
+				car.lane_id = -1
 				if car.errand != null:
 					car.dwell_left = car.errand.dwell_time
 				else:
@@ -248,26 +264,43 @@ func _update_lot_cars(delta: float) -> void:
 				car._update_blocker_layer()
 			surviving_cars.append(car)
 		elif car.state == CarScript.State.PARKED:
+			car.current_blocker = null
+			car.blocked_time = 0.0
 			car.dwell_left -= delta
 			if car.dwell_left <= 0.0:
-				var rev_route: Curve3D = null
-				if lot != null and car.spot != null:
-					rev_route = lot.reverse_route(car.spot)
-				elif car.spot != null and car.spot.lot != null:
-					rev_route = car.spot.lot.reverse_route(car.spot)
-				if rev_route != null:
-					car.state = CarScript.State.REVERSING_OUT
-					car.follow_path(rev_route, true)
-					car.speed = -V_PARK
-					car.desired_speed = -V_PARK
-				else:
-					push_error("TrafficManager: Missing reverse route for parked car %s" % car.name)
+				if can_reverse_out(car):
+					var rev_route: Curve3D = null
+					if lot != null and car.spot != null:
+						rev_route = lot.reverse_route(car.spot)
+					elif car.spot != null and car.spot.lot != null:
+						rev_route = car.spot.lot.reverse_route(car.spot)
+					if rev_route != null:
+						car.state = CarScript.State.REVERSING_OUT
+						car.follow_path(rev_route, true)
+						car.speed = -V_PARK
+						car.desired_speed = -V_PARK
+					else:
+						push_error("TrafficManager: Missing reverse route for parked car %s" % car.name)
 			surviving_cars.append(car)
 		elif car.state == CarScript.State.REVERSING_OUT:
-			var arrived := car.advance_path(delta)
+			var yielding := _update_car_yielding(car, delta)
+			var target_speed := 0.0 if yielding else -V_PARK
+			car.desired_speed = target_speed
+			var accel: float = (
+				BRAKE_ACCELERATION if absf(car.speed) > absf(target_speed) else MOTOR_ACCELERATION
+			)
+			car.speed = move_toward(car.speed, target_speed, accel * delta)
+			var arrived := false
+			if not yielding or absf(car.speed) > 0.0:
+				arrived = car.advance_path(delta)
+			else:
+				car.update_presentation()
+				car._update_blocker_layer()
 			if arrived:
 				car.speed = 0.0
 				car.desired_speed = 0.0
+				car.current_blocker = null
+				car.blocked_time = 0.0
 				var exit_path: Curve3D = null
 				if lot != null and car.spot != null:
 					exit_path = lot.exit_route(car.spot)
@@ -278,8 +311,9 @@ func _update_lot_cars(delta: float) -> void:
 						lot.release(car.spot)
 					elif car.spot.lot != null:
 						car.spot.lot.release(car.spot)
-				car.state = CarScript.State.TO_EXIT
+					car.spot = null
 				if exit_path != null:
+					car.state = CarScript.State.TO_EXIT
 					car.follow_path(exit_path)
 					car.desired_speed = V_LOT
 				else:
@@ -288,8 +322,9 @@ func _update_lot_cars(delta: float) -> void:
 				car._update_blocker_layer()
 			surviving_cars.append(car)
 		elif car.state == CarScript.State.TO_EXIT:
-			var target_speed := V_LOT
-			if car.path != null:
+			var yielding := _update_car_yielding(car, delta)
+			var target_speed := 0.0 if yielding else V_LOT
+			if not yielding and car.path != null:
 				var length := car.path.get_baked_length()
 				var remaining := maxf(0.0, length - car.path_distance)
 				var smooth_target := sqrt(2.0 * A_COMFORT * remaining)
@@ -312,18 +347,26 @@ func _update_lot_cars(delta: float) -> void:
 					car.path_distance = car.path.get_baked_length()
 				car.speed = 0.0
 				car.desired_speed = 0.0
+				car.current_blocker = null
+				car.blocked_time = 0.0
 				car.state = CarScript.State.WAITING_TO_MERGE
+				car.merge_wait_time = 0.0
 				car.update_presentation()
 				car._update_blocker_layer()
 			surviving_cars.append(car)
 		elif car.state == CarScript.State.WAITING_TO_MERGE:
+			car.current_blocker = null
+			car.blocked_time = 0.0
 			if "--test-exit-route" in OS.get_cmdline_user_args():
+				car.merge_wait_time += delta
+				stats["max_merge_wait"] = maxf(stats["max_merge_wait"], car.merge_wait_time)
 				car.speed = 0.0
 				car.desired_speed = 0.0
 				car.update_presentation()
 				car._update_blocker_layer()
 				surviving_cars.append(car)
-			elif not has_method("_can_merge") or call("_can_merge", car):
+			elif _can_merge(car):
+				stats["max_merge_wait"] = maxf(stats["max_merge_wait"], car.merge_wait_time)
 				car.state = CarScript.State.MERGING
 				car.lane_id = 0
 				var m_route: Curve3D = null
@@ -337,12 +380,16 @@ func _update_lot_cars(delta: float) -> void:
 				car._update_blocker_layer()
 				surviving_cars.append(car)
 			else:
+				car.merge_wait_time += delta
+				stats["max_merge_wait"] = maxf(stats["max_merge_wait"], car.merge_wait_time)
 				car.speed = 0.0
 				car.desired_speed = 0.0
 				car.update_presentation()
 				car._update_blocker_layer()
 				surviving_cars.append(car)
 		elif car.state == CarScript.State.MERGING:
+			car.current_blocker = null
+			car.blocked_time = 0.0
 			var target_speed := V_TURN
 			car.desired_speed = target_speed
 			var accel: float = (
@@ -379,12 +426,191 @@ func _update_lot_cars(delta: float) -> void:
 				car.errand = null
 				car.state = CarScript.State.CRUISING
 				car.path = null
+				car.current_blocker = null
+				car.blocked_time = 0.0
 				car.update_presentation()
 				car._update_blocker_layer()
 				# Removed from lot_cars by omitting from surviving_cars
 			else:
 				surviving_cars.append(car)
 	lot_cars = surviving_cars
+	_check_deadlock_watchdog()
+
+
+func _is_ignoring(car: Car, other: Car) -> bool:
+	if car == null or other == null:
+		return false
+	var cid := car.get_instance_id()
+	if _watchdog_ignores.has(cid):
+		var entry: Dictionary = _watchdog_ignores[cid]
+		if entry.get("target_id", 0) == other.get_instance_id() and entry.get("timer", 0.0) > 0.0:
+			return true
+	return false
+
+
+func find_blocker(car: Car) -> Car:
+	if car == null or not is_instance_valid(car):
+		return null
+
+	var spd := absf(car.speed)
+	var lookahead := maxf(4.0, (spd * spd) / (2.0 * BRAKE_ACCELERATION) + 3.0)
+	var sign_dir := -1.0 if (car.speed < 0.0 or car.desired_speed < 0.0 or car.state == CarScript.State.REVERSING_OUT) else 1.0
+	var h := car.get_heading()
+	var forward_vec := Vector3(h.x, 0.0, h.z).normalized() * sign_dir
+	var lateral_vec := Vector3(-forward_vec.z, 0.0, forward_vec.x)
+
+	var candidates: Array[Car] = []
+	for other in lot_cars:
+		if is_instance_valid(other) and other != car:
+			if other.state == CarScript.State.PARKED:
+				continue
+			candidates.append(other)
+	if lanes.size() > 0 and lanes[0] != null:
+		for ghost in lanes[0].cars:
+			if is_instance_valid(ghost) and ghost != car and ghost.motion == CarScript.Motion.PATH:
+				if not candidates.has(ghost):
+					candidates.append(ghost)
+
+	var closest_blocker: Car = null
+	var min_forward: float = INF
+
+	for other in candidates:
+		if _is_ignoring(car, other):
+			continue
+		var dpos := other.global_position - car.global_position
+		var dpos_2d := Vector3(dpos.x, 0.0, dpos.z)
+		var forward := dpos_2d.dot(forward_vec)
+		var half_len_sum := (car.car_length + other.car_length) / 2.0
+		var gap := forward - half_len_sum
+		if forward > 0.0 and gap < lookahead:
+			var lateral := absf(dpos_2d.dot(lateral_vec))
+			var half_width_sum := (car.car_width + other.car_width) / 2.0 + 0.3
+			if lateral < half_width_sum:
+				if forward < min_forward:
+					min_forward = forward
+					closest_blocker = other
+
+	return closest_blocker
+
+func _lot_priority(s: CarScript.State) -> int:
+	match s:
+		CarScript.State.TO_SPOT:
+			return 3
+		CarScript.State.TO_EXIT:
+			return 2
+		CarScript.State.REVERSING_OUT:
+			return 1
+		_:
+			return 0
+
+func _should_yield(car: Car) -> bool:
+	var b := find_blocker(car)
+	if b == null or _is_ignoring(car, b):
+		return false
+	var b_blocker := find_blocker(b)
+	if b_blocker == car:
+		var p_car := _lot_priority(car.state)
+		var p_b := _lot_priority(b.state)
+		if p_car > 0 and p_b > 0 and p_car > p_b:
+			return false
+	return true
+
+
+func _update_car_yielding(car: Car, delta: float) -> bool:
+	var yielding := _should_yield(car)
+	if yielding:
+		var b := find_blocker(car)
+		if car.current_blocker == b:
+			car.blocked_time += delta
+		else:
+			car.current_blocker = b
+			car.blocked_time = delta
+		if car.blocked_time > 10.0 and int(round(car.blocked_time * 60)) % 600 == 0:
+			print("DEBUG_BLOCKED: car %d (%s at %s, desired_speed=%.1f) blocker=%s (%s at %s)" % [
+				car.get_instance_id(), car.get_state_name(), car.global_position, car.desired_speed,
+				str(b.get_instance_id()) if b else "none", b.get_state_name() if b else "", b.global_position if b else Vector3.ZERO
+			])
+		stats["max_stuck_time"] = maxf(stats["max_stuck_time"], car.blocked_time)
+	else:
+		car.current_blocker = null
+		car.blocked_time = 0.0
+	return yielding
+
+
+func _check_deadlock_watchdog() -> void:
+	for car in lot_cars:
+		if not is_instance_valid(car):
+			continue
+		var b := car.current_blocker
+		if b == null or not is_instance_valid(b):
+			continue
+		if b.current_blocker == car:
+			var p_car := _lot_priority(car.state)
+			var p_b := _lot_priority(b.state)
+			if p_car > 0 and p_car == p_b:
+				if car.blocked_time > 4.0 or b.blocked_time > 4.0:
+					var higher_car := car if car.get_instance_id() > b.get_instance_id() else b
+					var lower_car := b if car.get_instance_id() > b.get_instance_id() else car
+					_fire_watchdog(higher_car, lower_car)
+
+
+func _fire_watchdog(higher_car: Car, lower_car: Car) -> void:
+	stats["watchdog_fires"] += 1
+	print(
+		"WATCHDOG: Deadlock mutual blocking at equal priority (%s vs %s) > 4.0s! Car %d at %s ignoring Car %d at %s for 1.5s"
+		% [
+			higher_car.get_state_name(),
+			lower_car.get_state_name(),
+			higher_car.get_instance_id(),
+			higher_car.global_position,
+			lower_car.get_instance_id(),
+			lower_car.global_position,
+		]
+	)
+	_watchdog_ignores[higher_car.get_instance_id()] = {
+		"target_id": lower_car.get_instance_id(),
+		"timer": 1.5,
+	}
+	higher_car.blocked_time = 0.0
+	higher_car.current_blocker = null
+	lower_car.blocked_time = 0.0
+	lower_car.current_blocker = null
+
+func can_reverse_out(car: Car) -> bool:
+	if car == null or not is_instance_valid(car):
+		return false
+	var spot_x: float = car.spot.x if car.spot != null else car.global_position.x
+	for other in lot_cars:
+		if is_instance_valid(other) and other != car:
+			if other.is_moving() and absf(other.global_position.x - spot_x) < 8.0:
+				return false
+	return true
+
+func _can_merge(car: Car) -> bool:
+	if car == null or lanes.is_empty():
+		return false
+	var lane0: Lane = lanes[0]
+	var window_start: float = 61.0 - car.car_length - 2.0
+	var window_end: float = 71.0
+
+	for other in lot_cars:
+		if is_instance_valid(other) and other != car and other.state == CarScript.State.MERGING:
+			return false
+
+	for other in lane0.cars:
+		if not is_instance_valid(other) or other == car:
+			continue
+		var d: float = other.lane_distance
+		if other.motion == CarScript.Motion.PATH:
+			d = lane0.distance_at(other.global_position.x)
+		if d >= window_start and d <= window_end:
+			return false
+		if d < 61.0:
+			var spd: float = maxf(maxf(other.lane_speed, other.speed), 0.1)
+			if (61.0 - d) / spd <= T_MERGE_GAP:
+				return false
+
+	return true
 
 
 func spawn_debug_car() -> Car:
@@ -459,8 +685,9 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 	# Register any overlapping PATH cars from lot_cars
 	for car in lot_cars:
 		if is_instance_valid(car) and car.motion == Car.Motion.PATH and car.lane_id == lane.id:
-			if lane.overlaps(car) and not lane.cars.has(car):
-				lane.cars.append(car)
+			if car.state == CarScript.State.TO_SPOT or car.state == CarScript.State.MERGING:
+				if lane.overlaps(car) and not lane.cars.has(car):
+					lane.cars.append(car)
 
 	# Clean up despawned / invalid cars and PATH cars that no longer overlap
 	var valid_cars: Array = []
@@ -546,14 +773,27 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 
 func _exit_tree() -> void:
 	var counted := {}
+	var active_errands := 0
+	var state_counts := {}
 	for lane in lanes:
 		for car in lane.cars:
-			if is_instance_valid(car):
+			if is_instance_valid(car) and not counted.has(car.get_instance_id()):
 				counted[car.get_instance_id()] = true
+				var s_name: String = CarScript.State.keys()[car.state] if car.state < CarScript.State.size() else str(car.state)
+				state_counts[s_name] = state_counts.get(s_name, 0) + 1
+				if car.had_errand:
+					active_errands += 1
 	for car in lot_cars:
-		if is_instance_valid(car):
+		if is_instance_valid(car) and not counted.has(car.get_instance_id()):
 			counted[car.get_instance_id()] = true
+			var s_name: String = CarScript.State.keys()[car.state] if car.state < CarScript.State.size() else str(car.state)
+			state_counts[s_name] = state_counts.get(s_name, 0) + 1
+			if car.had_errand:
+				active_errands += 1
 	stats["live_cars"] = counted.size()
+	stats["active_errands"] = active_errands
 	if lot != null:
+		stats["leaked"] = max(stats["leaked"], lot.check_invariants())
 		stats["spots_total"] = lot.spots.size()
 	print("TRAFFIC STATS: %s" % JSON.stringify(stats))
+	print("STATE COUNTS: %s" % JSON.stringify(state_counts))

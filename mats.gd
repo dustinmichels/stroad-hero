@@ -1,6 +1,5 @@
 extends CharacterBody3D
-## Mats: arrow keys walk, Space does a small hop.
-## Movement is in world axes because the camera only pitches (up = -Z).
+## Mats: arrow keys walk relative to the current camera; Space hops.
 ## The model's front is local +Z, so the facing yaw is atan2(dir.x, dir.z).
 
 signal died(death_position: Vector3)
@@ -48,6 +47,7 @@ const IDLE_SWAY_ANGLE := 0.02
 @onready var _head: Node3D = $Visual/Head
 @onready var _hat: Node3D = $Visual/Head/Hat
 @onready var _backpack: MeshInstance3D = $Visual/Backpack
+@onready var _camera := get_viewport().get_camera_3d()
 
 var _stride_phase := 0.0
 var _squash := 0.0
@@ -57,6 +57,9 @@ var _idle_time := 0.0
 
 var _spawn_transform: Transform3D
 var _is_dead := false
+var _control_forward := Vector3.FORWARD
+var _control_right := Vector3.RIGHT
+var _has_control_basis := false
 
 
 func _ready() -> void:
@@ -80,7 +83,7 @@ func _physics_process(delta: float) -> void:
 	if _is_dead:
 		return
 	var input := Input.get_vector("move_left", "move_right", "move_up", "move_down")
-	var direction := Vector3(input.x, 0.0, input.y)
+	var direction := _movement_direction(input)
 	var was_on_floor := is_on_floor()
 
 	var horizontal := Vector3(velocity.x, 0.0, velocity.z)
@@ -116,6 +119,24 @@ func _physics_process(delta: float) -> void:
 	_animate(delta)
 
 
+func _movement_direction(input: Vector2) -> Vector3:
+	if input.is_zero_approx():
+		_has_control_basis = false
+		return Vector3.ZERO
+
+	if not _has_control_basis:
+		if _camera:
+			_control_forward = -_camera.global_basis.z
+			_control_forward.y = 0.0
+			_control_forward = _control_forward.normalized()
+			_control_right = _camera.global_basis.x
+			_control_right.y = 0.0
+			_control_right = _control_right.normalized()
+		_has_control_basis = true
+
+	return _control_right * input.x - _control_forward * input.y
+
+
 func _rustle_collided_trees(impact_direction: Vector3) -> void:
 	if impact_direction.is_zero_approx():
 		return
@@ -145,6 +166,7 @@ func die() -> void:
 	if _is_dead:
 		return
 	_is_dead = true
+	_has_control_basis = false
 	velocity = Vector3.ZERO
 	died.emit(global_position)
 

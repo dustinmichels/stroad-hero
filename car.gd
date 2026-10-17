@@ -2,7 +2,7 @@ class_name Car
 extends Area3D
 const Errand = preload("res://errand.gd")
 
-enum CarType { SEDAN, SUV, TAXI, TRUCK, PICKUP, BUS }
+enum CarType { SEDAN, SUV, TAXI, TRUCK, PICKUP, BUS, HATCHBACK, MINIVAN, SPORTS }
 
 enum Motion { LANE, PATH }
 
@@ -15,12 +15,16 @@ const PARKING_CAR_TYPES: Array[CarType] = [
 	CarType.SUV,
 	CarType.TAXI,
 	CarType.PICKUP,
+	CarType.HATCHBACK,
+	CarType.MINIVAN,
+	CarType.SPORTS,
 ]
 
 
 static func is_type_parkable(type: CarType) -> bool:
 	match type:
-		CarType.SEDAN, CarType.SUV, CarType.TAXI, CarType.PICKUP:
+		CarType.SEDAN, CarType.SUV, CarType.TAXI, CarType.PICKUP, CarType.HATCHBACK, \
+		CarType.MINIVAN, CarType.SPORTS:
 			return true
 		CarType.BUS, CarType.TRUCK:
 			return false
@@ -74,8 +78,11 @@ var lane_length: float = 140.0
 var start_x: float = -70.0
 var spot: ParkingSpot = null
 var dwell_left: float = 0.0
+var merge_wait_time: float = 0.0
 var errand: Errand = null
 var had_errand: bool = false
+var blocked_time: float = 0.0
+var current_blocker: Car = null
 
 const WHEEL_RADIUS := 0.35
 const BASE_WHEEL_BASIS := Basis(Vector3(1, 0, 0), Vector3(0, 0, 1), Vector3(0, -1, 0))
@@ -96,6 +103,9 @@ var _active_wheels: Array[Node3D] = []
 @onready var _truck: Node3D = $Visuals/Truck
 @onready var _pickup: Node3D = $Visuals/Pickup
 @onready var _bus: Node3D = $Visuals/Bus
+@onready var _hatchback: Node3D = $Visuals/Hatchback
+@onready var _minivan: Node3D = $Visuals/Minivan
+@onready var _sports: Node3D = $Visuals/Sports
 @onready var _collision_shape: CollisionShape3D = $CollisionShape3D
 var blocker: AnimatableBody3D = null
 var _blocker_shape: CollisionShape3D = null
@@ -218,6 +228,9 @@ func _apply_visual_type() -> void:
 	var truck = _truck if _truck else get_node_or_null("Visuals/Truck")
 	var pickup = _pickup if _pickup else get_node_or_null("Visuals/Pickup")
 	var bus = _bus if _bus else get_node_or_null("Visuals/Bus")
+	var hatchback = _hatchback if _hatchback else get_node_or_null("Visuals/Hatchback")
+	var minivan = _minivan if _minivan else get_node_or_null("Visuals/Minivan")
+	var sports = _sports if _sports else get_node_or_null("Visuals/Sports")
 
 	if sedan:
 		sedan.visible = (car_type == CarType.SEDAN)
@@ -231,6 +244,12 @@ func _apply_visual_type() -> void:
 		pickup.visible = (car_type == CarType.PICKUP)
 	if bus:
 		bus.visible = (car_type == CarType.BUS)
+	if hatchback:
+		hatchback.visible = (car_type == CarType.HATCHBACK)
+	if minivan:
+		minivan.visible = (car_type == CarType.MINIVAN)
+	if sports:
+		sports.visible = (car_type == CarType.SPORTS)
 
 	_update_dimensions()
 
@@ -250,6 +269,12 @@ func _apply_visual_type() -> void:
 			active_node = pickup
 		CarType.BUS:
 			active_node = bus
+		CarType.HATCHBACK:
+			active_node = hatchback
+		CarType.MINIVAN:
+			active_node = minivan
+		CarType.SPORTS:
+			active_node = sports
 	if active_node:
 		for child in active_node.get_children():
 			if child is Node3D and child.name.begins_with("Wheel"):
@@ -290,6 +315,21 @@ func _update_dimensions() -> void:
 			car_width = 2.4
 			shape_size = Vector3(8.8, 2.7, 2.4)
 			shape_y = 1.35
+		CarType.HATCHBACK:
+			car_length = 3.8
+			car_width = 1.8
+			shape_size = Vector3(3.7, 1.5, 1.8)
+			shape_y = 0.75
+		CarType.MINIVAN:
+			car_length = 4.9
+			car_width = 2.0
+			shape_size = Vector3(4.8, 1.9, 2.0)
+			shape_y = 0.95
+		CarType.SPORTS:
+			car_length = 4.3
+			car_width = 1.9
+			shape_size = Vector3(4.2, 1.2, 1.9)
+			shape_y = 0.6
 	var col = _collision_shape if _collision_shape else get_node_or_null("CollisionShape3D")
 	if col:
 		var box := BoxShape3D.new()
@@ -338,11 +378,10 @@ func advance_path(delta: float) -> bool:
 
 	path_distance += speed * delta
 	var arrived := false
-	if speed < 0.0:
+	if state == State.REVERSING_OUT or speed < 0.0 or desired_speed < 0.0:
 		if path_distance <= 0.0:
 			path_distance = 0.0
 			arrived = true
-	else:
 		if path_distance >= length:
 			path_distance = length
 			arrived = true

@@ -9,7 +9,7 @@ Plan for cars that leave the stroad, park at Walgroins or Taco Hell, wait, and d
 - A **parking registry** tracks each stall as `FREE`, `RESERVED`, or `OCCUPIED`.
 - Lot traffic should affect the stroad: turning cars slow the cars behind them, and cars waiting to merge sit across the sidewalk. This supports the game's satire.
 
-Non-goals for this pass: left turns across oncoming traffic, lane changes, drivers getting out and walking, and more lots or driveways. These are listed under [Deferred](#deferred).
+Non-goals for this pass: left turns across oncoming traffic, lane changes, drivers getting out and walking, and routing cars through additional lots or driveways. These are listed under [Deferred](#deferred).
 
 ## What carries over from TRAFFIC_SIMULATION.md
 
@@ -20,7 +20,7 @@ Non-goals for this pass: left turns across oncoming traffic, lane changes, drive
 | Trip and Stop concepts, here reduced to one `Errand`                                    | Simulation LOD, fixed-rate tick with interpolation                           |
 | Route, driver, and presentation stay separate                                           | Lane changes (Phase 4 of that doc)                                           |
 
-When a second lot or driveway appears, upgrade the hard-coded lot routes below into a small waypoint graph. Until then, a graph would be dead weight.
+When cars need to route through a second lot or driveway, upgrade the hard-coded lot routes below into a small waypoint graph. Until then, a graph would be dead weight.
 
 ## Current state (facts)
 
@@ -41,6 +41,7 @@ When a second lot or driveway appears, upgrade the hard-coded lot routes below i
 | Aisle                         | z −26.25..−16.75, center z ≈ −21.5                                                          |
 | Walgroins door                | ≈ (−3, −32)                                                                                 |
 | Taco Hell door (arch portico) | ≈ (31.5, −27.8)                                                                             |
+| Booger King site              | Separate south-side lot at x −56..−28, z 14..30, with its own driveway and drive-thru loop. It is visual-only; errand cars still use the north lot. |
 
 Stalls are 4 m wide and 4.5 m deep. Pickups (5.0 m) stick into the aisle a little; that is acceptable.
 

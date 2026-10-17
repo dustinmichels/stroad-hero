@@ -1,4 +1,4 @@
-[gd_scene load_steps=48 format=3]
+[gd_scene load_steps=64 format=3]
 
 [ext_resource type="Script" path="res://car.gd" id="1_car"]
 
@@ -201,6 +201,72 @@ size = Vector3(1.2, 1.65, 0.08)
 material = SubResource("Mat_CarWindow")
 size = Vector3(0.12, 0.8, 1.9)
 
+[sub_resource type="BoxMesh" id="Mesh_SUVHood"]
+material = SubResource("Mat_CarBlue")
+size = Vector3(1.35, 0.35, 1.9)
+
+[sub_resource type="BoxMesh" id="Mesh_SUVRoof"]
+material = SubResource("Mat_CarBlue")
+size = Vector3(2.55, 0.12, 1.78)
+
+[sub_resource type="BoxMesh" id="Mesh_SUVBumper"]
+material = SubResource("Mat_Chrome")
+size = Vector3(0.16, 0.3, 1.85)
+
+[sub_resource type="BoxMesh" id="Mesh_SUVRoofRail"]
+material = SubResource("Mat_Chrome")
+size = Vector3(2.4, 0.1, 0.08)
+
+[sub_resource type="StandardMaterial3D" id="Mat_HatchOrange"]
+albedo_color = Color(0.9, 0.32, 0.08, 1)
+metallic = 0.1
+roughness = 0.35
+
+[sub_resource type="BoxMesh" id="Mesh_HatchBody"]
+material = SubResource("Mat_HatchOrange")
+size = Vector3(3.7, 0.65, 1.8)
+
+[sub_resource type="BoxMesh" id="Mesh_HatchCabin"]
+material = SubResource("Mat_CarWindow")
+size = Vector3(2.1, 0.72, 1.55)
+
+[sub_resource type="BoxMesh" id="Mesh_HatchSpoiler"]
+material = SubResource("Mat_HatchOrange")
+size = Vector3(0.35, 0.1, 1.65)
+
+[sub_resource type="StandardMaterial3D" id="Mat_MinivanBurgundy"]
+albedo_color = Color(0.48, 0.08, 0.16, 1)
+metallic = 0.15
+roughness = 0.38
+
+[sub_resource type="BoxMesh" id="Mesh_MinivanBody"]
+material = SubResource("Mat_MinivanBurgundy")
+size = Vector3(4.8, 0.8, 2)
+
+[sub_resource type="BoxMesh" id="Mesh_MinivanCabin"]
+material = SubResource("Mat_CarWindow")
+size = Vector3(3.4, 1, 1.75)
+
+[sub_resource type="BoxMesh" id="Mesh_MinivanRoof"]
+material = SubResource("Mat_MinivanBurgundy")
+size = Vector3(3.5, 0.12, 1.88)
+
+[sub_resource type="StandardMaterial3D" id="Mat_SportsPurple"]
+albedo_color = Color(0.48, 0.18, 0.7, 1)
+metallic = 0.25
+roughness = 0.28
+
+[sub_resource type="BoxMesh" id="Mesh_SportsBody"]
+material = SubResource("Mat_SportsPurple")
+size = Vector3(4.2, 0.55, 1.9)
+
+[sub_resource type="BoxMesh" id="Mesh_SportsCabin"]
+material = SubResource("Mat_CarWindow")
+size = Vector3(1.65, 0.55, 1.5)
+
+[sub_resource type="BoxMesh" id="Mesh_SportsSpoiler"]
+material = SubResource("Mat_SportsPurple")
+size = Vector3(0.28, 0.12, 1.7)
 [node name="Car" type="Area3D"]
 collision_layer = 2
 collision_mask = 1
@@ -264,6 +330,30 @@ mesh = SubResource("Mesh_SUVBody")
 [node name="Cabin" type="MeshInstance3D" parent="Visuals/SUV"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.1, 1.55, 0)
 mesh = SubResource("Mesh_SUVCabin")
+
+[node name="Hood" type="MeshInstance3D" parent="Visuals/SUV"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.65, 1.25, 0)
+mesh = SubResource("Mesh_SUVHood")
+
+[node name="Roof" type="MeshInstance3D" parent="Visuals/SUV"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2, 2.04, 0)
+mesh = SubResource("Mesh_SUVRoof")
+
+[node name="FrontBumper" type="MeshInstance3D" parent="Visuals/SUV"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.28, 0.65, 0)
+mesh = SubResource("Mesh_SUVBumper")
+
+[node name="RearBumper" type="MeshInstance3D" parent="Visuals/SUV"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.28, 0.65, 0)
+mesh = SubResource("Mesh_SUVBumper")
+
+[node name="RoofRailL" type="MeshInstance3D" parent="Visuals/SUV"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2, 2.14, 0.72)
+mesh = SubResource("Mesh_SUVRoofRail")
+
+[node name="RoofRailR" type="MeshInstance3D" parent="Visuals/SUV"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2, 2.14, -0.72)
+mesh = SubResource("Mesh_SUVRoofRail")
 
 [node name="Wheel_-1.3_0.95" type="MeshInstance3D" parent="Visuals/SUV"]
 transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -1.3, 0.35, 0.95)
@@ -548,3 +638,152 @@ mesh = SubResource("Mesh_Headlight")
 [node name="MarkerLightR" type="MeshInstance3D" parent="Visuals/Bus"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.41, 2.68, -0.95)
 mesh = SubResource("Mesh_Headlight")
+
+[node name="Hatchback" type="Node3D" parent="Visuals"]
+visible = false
+
+[node name="Body" type="MeshInstance3D" parent="Visuals/Hatchback"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.63, 0)
+mesh = SubResource("Mesh_HatchBody")
+
+[node name="Cabin" type="MeshInstance3D" parent="Visuals/Hatchback"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.35, 1.28, 0)
+mesh = SubResource("Mesh_HatchCabin")
+
+[node name="Spoiler" type="MeshInstance3D" parent="Visuals/Hatchback"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.68, 1.62, 0)
+mesh = SubResource("Mesh_HatchSpoiler")
+
+[node name="Wheel_RearL" type="MeshInstance3D" parent="Visuals/Hatchback"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -1.1, 0.35, 0.88)
+mesh = SubResource("Mesh_Wheel")
+
+[node name="Wheel_RearR" type="MeshInstance3D" parent="Visuals/Hatchback"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -1.1, 0.35, -0.88)
+mesh = SubResource("Mesh_Wheel")
+
+[node name="Wheel_FrontL" type="MeshInstance3D" parent="Visuals/Hatchback"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1.1, 0.35, 0.88)
+mesh = SubResource("Mesh_Wheel")
+
+[node name="Wheel_FrontR" type="MeshInstance3D" parent="Visuals/Hatchback"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1.1, 0.35, -0.88)
+mesh = SubResource("Mesh_Wheel")
+
+[node name="HeadlightL" type="MeshInstance3D" parent="Visuals/Hatchback"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.84, 0.68, 0.62)
+mesh = SubResource("Mesh_Headlight")
+
+[node name="HeadlightR" type="MeshInstance3D" parent="Visuals/Hatchback"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.84, 0.68, -0.62)
+mesh = SubResource("Mesh_Headlight")
+
+[node name="TaillightL" type="MeshInstance3D" parent="Visuals/Hatchback"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.84, 0.82, 0.62)
+mesh = SubResource("Mesh_Taillight")
+
+[node name="TaillightR" type="MeshInstance3D" parent="Visuals/Hatchback"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.84, 0.82, -0.62)
+mesh = SubResource("Mesh_Taillight")
+
+[node name="Minivan" type="Node3D" parent="Visuals"]
+visible = false
+
+[node name="Body" type="MeshInstance3D" parent="Visuals/Minivan"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.72, 0)
+mesh = SubResource("Mesh_MinivanBody")
+
+[node name="Cabin" type="MeshInstance3D" parent="Visuals/Minivan"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3, 1.55, 0)
+mesh = SubResource("Mesh_MinivanCabin")
+
+[node name="Roof" type="MeshInstance3D" parent="Visuals/Minivan"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3, 2.11, 0)
+mesh = SubResource("Mesh_MinivanRoof")
+
+[node name="FrontBumper" type="MeshInstance3D" parent="Visuals/Minivan"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.43, 0.62, 0)
+mesh = SubResource("Mesh_SUVBumper")
+
+[node name="RearBumper" type="MeshInstance3D" parent="Visuals/Minivan"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.43, 0.62, 0)
+mesh = SubResource("Mesh_SUVBumper")
+
+[node name="Wheel_RearL" type="MeshInstance3D" parent="Visuals/Minivan"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -1.45, 0.38, 1)
+mesh = SubResource("Mesh_Wheel")
+
+[node name="Wheel_RearR" type="MeshInstance3D" parent="Visuals/Minivan"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -1.45, 0.38, -1)
+mesh = SubResource("Mesh_Wheel")
+
+[node name="Wheel_FrontL" type="MeshInstance3D" parent="Visuals/Minivan"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1.45, 0.38, 1)
+mesh = SubResource("Mesh_Wheel")
+
+[node name="Wheel_FrontR" type="MeshInstance3D" parent="Visuals/Minivan"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1.45, 0.38, -1)
+mesh = SubResource("Mesh_Wheel")
+
+[node name="HeadlightL" type="MeshInstance3D" parent="Visuals/Minivan"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.39, 0.76, 0.7)
+mesh = SubResource("Mesh_Headlight")
+
+[node name="HeadlightR" type="MeshInstance3D" parent="Visuals/Minivan"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.39, 0.76, -0.7)
+mesh = SubResource("Mesh_Headlight")
+
+[node name="TaillightL" type="MeshInstance3D" parent="Visuals/Minivan"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.39, 0.88, 0.7)
+mesh = SubResource("Mesh_Taillight")
+
+[node name="TaillightR" type="MeshInstance3D" parent="Visuals/Minivan"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.39, 0.88, -0.7)
+mesh = SubResource("Mesh_Taillight")
+
+[node name="Sports" type="Node3D" parent="Visuals"]
+visible = false
+
+[node name="Body" type="MeshInstance3D" parent="Visuals/Sports"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.58, 0)
+mesh = SubResource("Mesh_SportsBody")
+
+[node name="Cabin" type="MeshInstance3D" parent="Visuals/Sports"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.25, 1.08, 0)
+mesh = SubResource("Mesh_SportsCabin")
+
+[node name="RearSpoiler" type="MeshInstance3D" parent="Visuals/Sports"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.73, 1.02, 0)
+mesh = SubResource("Mesh_SportsSpoiler")
+
+[node name="Wheel_RearL" type="MeshInstance3D" parent="Visuals/Sports"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -1.35, 0.35, 0.95)
+mesh = SubResource("Mesh_Wheel")
+
+[node name="Wheel_RearR" type="MeshInstance3D" parent="Visuals/Sports"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -1.35, 0.35, -0.95)
+mesh = SubResource("Mesh_Wheel")
+
+[node name="Wheel_FrontL" type="MeshInstance3D" parent="Visuals/Sports"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1.35, 0.35, 0.95)
+mesh = SubResource("Mesh_Wheel")
+
+[node name="Wheel_FrontR" type="MeshInstance3D" parent="Visuals/Sports"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1.35, 0.35, -0.95)
+mesh = SubResource("Mesh_Wheel")
+
+[node name="HeadlightL" type="MeshInstance3D" parent="Visuals/Sports"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.09, 0.58, 0.65)
+mesh = SubResource("Mesh_Headlight")
+
+[node name="HeadlightR" type="MeshInstance3D" parent="Visuals/Sports"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.09, 0.58, -0.65)
+mesh = SubResource("Mesh_Headlight")
+
+[node name="TaillightL" type="MeshInstance3D" parent="Visuals/Sports"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.09, 0.62, 0.65)
+mesh = SubResource("Mesh_Taillight")
+
+[node name="TaillightR" type="MeshInstance3D" parent="Visuals/Sports"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.09, 0.62, -0.65)
+mesh = SubResource("Mesh_Taillight")

@@ -17,6 +17,11 @@ var _mat_path: StandardMaterial3D = null
 var _ghost_mesh_instance: MeshInstance3D = null
 var _ghost_mesh: ImmediateMesh = ImmediateMesh.new()
 var _mat_ghost: StandardMaterial3D = null
+var _merge_window_mesh_instance: MeshInstance3D = null
+var _merge_window_mesh: ImmediateMesh = ImmediateMesh.new()
+var _mat_merge_window: StandardMaterial3D = null
+var hud_layer: CanvasLayer = null
+var hud_label: Label = null
 
 
 func _init(p_manager: TrafficManager = null) -> void:
@@ -46,6 +51,9 @@ func _init_materials() -> void:
 	_mat_ghost.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	_mat_ghost.albedo_color = Color(1.0, 0.55, 0.1)
 
+	_mat_merge_window = StandardMaterial3D.new()
+	_mat_merge_window.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_mat_merge_window.albedo_color = Color(1.0, 0.25, 0.25)
 	_disc_mesh = CylinderMesh.new()
 	_disc_mesh.top_radius = 1.0
 	_disc_mesh.bottom_radius = 1.0
@@ -67,7 +75,12 @@ func _ready() -> void:
 	_ghost_mesh_instance.name = "GhostLines"
 	_ghost_mesh_instance.mesh = _ghost_mesh
 	add_child(_ghost_mesh_instance)
+	_merge_window_mesh_instance = MeshInstance3D.new()
+	_merge_window_mesh_instance.name = "MergeWindowLines"
+	_merge_window_mesh_instance.mesh = _merge_window_mesh
+	add_child(_merge_window_mesh_instance)
 
+	_setup_hud()
 
 func _setup_spots() -> void:
 	for spot in lot.spots:
@@ -123,6 +136,8 @@ func _on_spot_changed(spot: ParkingSpot) -> void:
 	var disc: MeshInstance3D = _spot_discs.get(spot.id)
 	if disc != null:
 		disc.material_override = _get_material_for_state(spot.state)
+	if visible:
+		update_hud()
 
 
 func _process(_delta: float) -> void:
@@ -131,6 +146,8 @@ func _process(_delta: float) -> void:
 	_update_path_curves()
 	_update_ghost_lines()
 	_update_car_labels()
+	_update_merge_window()
+	update_hud()
 
 
 func _update_car_labels() -> void:
@@ -168,8 +185,10 @@ func _update_car_labels() -> void:
 		var state_str := (
 			car.get_state_name() if car.has_method("get_state_name") else str(car.state)
 		)
-		label.text = "%s\n%.1f m/s\nspot: %s" % [state_str, car.speed, spot_str]
-
+		if car.state == Car.State.WAITING_TO_MERGE and "merge_wait_time" in car:
+			label.text = "%s (%.1fs)\n%.1f m/s\nspot: %s" % [state_str, car.merge_wait_time, car.speed, spot_str]
+		else:
+			label.text = "%s\n%.1f m/s\nspot: %s" % [state_str, car.speed, spot_str]
 	var to_remove: Array = []
 	for cid in _car_labels.keys():
 		if not active_ids.has(cid):
@@ -231,7 +250,152 @@ func _update_ghost_lines() -> void:
 		_ghost_mesh.surface_end()
 
 
+func _update_merge_window() -> void:
+	if _merge_window_mesh == null:
+		return
+	_merge_window_mesh.clear_surfaces()
+	if traffic_manager == null or traffic_manager.lanes.is_empty():
+		return
+
+	var waiting_cars: Array[Car] = []
+	for car in traffic_manager.lot_cars:
+		if is_instance_valid(car) and car.state == Car.State.WAITING_TO_MERGE:
+			waiting_cars.append(car)
+
+	if waiting_cars.is_empty():
+		return
+
+	var lane0 = traffic_manager.lanes[0]
+	var lane_half_w: float = 3.75 * 0.5
+	var z_min: float = lane0.z - lane_half_w
+	var z_max: float = lane0.z + lane_half_w
+	var y: float = 0.15
+
+	var lines: Array = []
+	for car in waiting_cars:
+		var window_start_d: float = 61.0 - car.car_length - 2.0
+		var window_end_d: float = 71.0
+		var x_start: float = lane0.start_x + lane0.direction * window_start_d
+		var x_end: float = lane0.start_x + lane0.direction * window_end_d
+
+		var c1 := Vector3(x_start, y, z_min)
+		var c2 := Vector3(x_start, y, z_max)
+		var c3 := Vector3(x_end, y, z_max)
+		var c4 := Vector3(x_end, y, z_min)
+
+		# Perimeter box
+		lines.append([c1, c2])
+		lines.append([c2, c3])
+		lines.append([c3, c4])
+		lines.append([c4, c1])
+
+		# Diagonal hazard cross
+		lines.append([c1, c3])
+		lines.append([c2, c4])
+
+	if not lines.is_empty():
+		_merge_window_mesh.surface_begin(Mesh.PRIMITIVE_LINES, _mat_merge_window)
+		for pair in lines:
+			_merge_window_mesh.surface_add_vertex(pair[0])
+			_merge_window_mesh.surface_add_vertex(pair[1])
+		_merge_window_mesh.surface_end()
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_F3 or event.physical_keycode == KEY_F3:
 			visible = not visible
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_VISIBILITY_CHANGED:
+		if hud_layer != null:
+			hud_layer.visible = visible
+		if visible:
+			update_hud()
+
+
+func _setup_hud() -> void:
+	hud_layer = CanvasLayer.new()
+	hud_layer.name = "TrafficDebugHUD"
+	hud_layer.layer = 100
+	hud_layer.visible = visible
+
+	var margin := MarginContainer.new()
+	margin.name = "HUDMargin"
+	margin.offset_left = 20.0
+	margin.offset_top = 100.0
+	margin.offset_right = 740.0
+	margin.offset_bottom = 136.0
+
+	var panel := PanelContainer.new()
+	panel.name = "HUDPanel"
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.05, 0.07, 0.1, 0.85)
+	style.border_width_left = 2
+	style.border_width_top = 2
+	style.border_width_right = 2
+	style.border_width_bottom = 2
+	style.border_color = Color(0.2, 0.7, 1.0, 0.8)
+	style.corner_radius_top_left = 6
+	style.corner_radius_top_right = 6
+	style.corner_radius_bottom_right = 6
+	style.corner_radius_bottom_left = 6
+	style.content_margin_left = 12.0
+	style.content_margin_top = 6.0
+	style.content_margin_right = 12.0
+	style.content_margin_bottom = 6.0
+	panel.add_theme_stylebox_override("panel", style)
+
+	hud_label = Label.new()
+	hud_label.name = "TrafficDebugHUDLabel"
+	hud_label.add_theme_font_size_override("font_size", 14)
+	hud_label.add_theme_color_override("font_color", Color(0.9, 0.95, 1.0, 1.0))
+	hud_label.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 1.0))
+	hud_label.add_theme_constant_override("outline_size", 2)
+
+	panel.add_child(hud_label)
+	margin.add_child(panel)
+	hud_layer.add_child(margin)
+	add_child(hud_layer)
+
+	update_hud()
+
+
+func update_hud() -> void:
+	if hud_label == null:
+		return
+	if lot == null and traffic_manager != null:
+		lot = traffic_manager.lot
+
+	var free_count := 0
+	var reserved_count := 0
+	var occupied_count := 0
+	if lot != null:
+		for spot in lot.spots:
+			match spot.state:
+				ParkingSpot.State.FREE:
+					free_count += 1
+				ParkingSpot.State.RESERVED:
+					reserved_count += 1
+				ParkingSpot.State.OCCUPIED:
+					occupied_count += 1
+
+	var dropped := 0
+	var watchdog_fires := 0
+	var max_stuck := 0.0
+	if traffic_manager != null and traffic_manager.stats != null:
+		dropped = traffic_manager.stats.get("errands_dropped_lot_full", 0)
+		watchdog_fires = traffic_manager.stats.get("watchdog_fires", 0)
+		max_stuck = traffic_manager.stats.get("max_stuck_time", 0.0)
+
+	hud_label.text = (
+		"Stalls: %d free, %d reserved, %d occupied | errands_dropped_lot_full: %d | watchdog_fires: %d | max_stuck_time: %.1fs"
+		% [free_count, reserved_count, occupied_count, dropped, watchdog_fires, max_stuck]
+	)
+
+
+func get_hud_text() -> String:
+	if hud_label != null:
+		return hud_label.text
+	return ""

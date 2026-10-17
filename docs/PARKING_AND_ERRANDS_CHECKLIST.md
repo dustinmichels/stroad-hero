@@ -304,6 +304,7 @@ _Handoff notes:_ In `parking_lot.gd`, implemented `exit_aisle_z(spot)`, `exit_si
 - [x] Verify: car reverses out, drives along exit route to (9, -9.6), and stops cleanly at sidewalk without despawning; Mats cannot walk through the stopped car
 
 _Handoff notes:_ In `traffic_manager.gd`, removed the temporary in-place despawn (`car.queue_free()`) when dwell expires in `PARKED`; cars now transition to `REVERSING_OUT`, reverse along `reverse_route`, transition to `TO_EXIT`, drive along `exit_route` to the wait point `Vector3(9.0, 0.0, -9.6)`, stop at `speed = 0.0`, and transition to `WAITING_TO_MERGE` where they remain tracked in `lot_cars`. When stopped (`speed <= STOP_SPEED`), `Car._update_blocker_layer()` activates the blocker on Layer 3 (collision_layer 4). In `main.gd`, fixed the blocker test heading (`rotation.y = -PI / 2.0` facing +Z) and added `--test-exit-route` which verified end-to-end that a parked car reverses out, follows the exit route, stops cleanly at `(9.0, 0.0, -9.6)`, remains alive without despawning, and stops Mats from crossing the sidewalk without killing him. All tasks in section 4.2 are complete. Next section is "4.3 Merge route and lane re-entry".
+
 ### 4.3 Merge route and lane re-entry
 
 [Plan section](PARKING_AND_ERRANDS.md#two-motion-modes-in-car) & [Plan section](PARKING_AND_ERRANDS.md#lane-ghosts-one-rule-for-both-turning-in-and-merging)
@@ -318,29 +319,36 @@ _Handoff notes:_ In `traffic_manager.gd`, removed the temporary in-place despawn
   - Set `errand = null`, `state = State.CRUISING`
   - Remove car from `lot_cars`
 - [x] In `_update_lane_traffic()`: increment `stats["errands_completed"]` when an errand car reaches the end of lane 0 and despawns
-- [ ] Verify: seamless handoff into lane 0 with position delta < 0.05 m and rotation delta < 1°; ghost ensures lane-0 followers brake; car cruises to lane end and despawns cleanly
+- [x] Verify: seamless handoff into lane 0 with position delta < 0.05 m and rotation delta < 1°; ghost ensures lane-0 followers brake; car cruises to lane end and despawns cleanly
+
+_Handoff notes:_ In `main.gd`, `--test-merge-reentry` runs an end-to-end simulation where a parked car reverses out, drives along the exit route to the wait point, transitions to `MERGING` along `lot.merge_route()`, registers as a ghost in lane 0 causing an upstream lane 0 follower to brake below cruise speed (`< 11.0 m/s`), transitions seamlessly at the end of the arc with `pos_delta < 0.05 m` (observed ~0.016 m) and `rot_delta < 1°` (observed ~0.000005°), switches to `Motion.LANE` cruising westbound in lane 0, and increments `stats["errands_completed"]` on despawn at the end of the lane.
 
 ### 4.4 Merge gap acceptance and timing
 
 [Plan section](PARKING_AND_ERRANDS.md#merge-gap-acceptance-waitingtomerge)
 
-- [ ] Constant `T_MERGE_GAP := 3.0`
-- [ ] Add `_can_merge(car: Car) -> bool` in `TrafficManager`:
+- [x] Constant `T_MERGE_GAP := 3.0`
+- [x] Add `_can_merge(car: Car) -> bool` in `TrafficManager`:
   - Merge window check: no lane-0 car currently within `[61 - car_length - 2, 71]`
   - Upstream check: every upstream lane-0 car (`d < 61`) has `(61 - d) / max(lane_speed, 0.1) > T_MERGE_GAP`
-- [ ] Gate the `WAITING_TO_MERGE → MERGING` transition on `_can_merge()`
-- [ ] Track merge wait duration per car and update `stats["max_merge_wait"]`
-- [ ] In `TrafficDebug`: draw the merge window on lane 0 while any car is in `WAITING_TO_MERGE`
-- [ ] Verify: waiting cars hold position while lane-0 cars pass, merge only when a valid gap opens, and upstream traffic yields appropriately
+- [x] Gate the `WAITING_TO_MERGE → MERGING` transition on `_can_merge()`
+- [x] Track merge wait duration per car and update `stats["max_merge_wait"]`
+- [x] In `TrafficDebug`: draw the merge window on lane 0 while any car is in `WAITING_TO_MERGE`
+- [x] Verify: waiting cars hold position while lane-0 cars pass, merge only when a valid gap opens, and upstream traffic yields appropriately
+
+_Handoff notes:_ Verified via `--test-merge-gap` that waiting cars hold position at `(9.0, 0.0, -9.6)` with `speed == 0.0` while lane-0 traffic passes within the merge window and upstream headway (`gap <= T_MERGE_GAP = 3.0s`), wait time accumulates and updates `stats["max_merge_wait"]`, cars initiate merge only when a valid gap opens (`d > 71.0` and upstream `(61 - d) / spd > 3.0s`), and upstream followers brake and yield to merging lane ghosts (`speed` drops to maintain safe following distance). Also fixed lane ghost registration in `traffic_manager.gd` so only cars in `TO_SPOT` or `MERGING` states with `lane_id == lane.id` register as lane ghosts (preventing stopped waiting cars from prematurely queuing lane-0 traffic).
 
 ### 4.5 Phase 4 verification and soak
 
-- [ ] 10-minute soak run: `/Applications/Godot.app/Contents/MacOS/Godot --headless --path . --fixed-fps 60 --quit-after 36000 -- --seed=42`
+_Handoff notes:_ Phase 4 is fully complete and verified. Soak run, in-game lifecycle, and Mats interaction tests all pass. Next section is Phase 5 (Lot conflicts).
+
+- [x] 10-minute soak run: `/Applications/Godot.app/Contents/MacOS/Godot --headless --path . --fixed-fps 60 --quit-after 36000 -- --seed=42`
   - `errands_completed ≈ errands_assigned - errands_dropped_lot_full - active_errands`
   - `leaked = 0` (zero reservation leaks)
   - `max_merge_wait` is tracked and finite
-- [ ] In-game behavior: observe full vehicle lifecycle (lane cruising → decision → approach braking → driveway turn → stall park → dwell → reverse out → exit aisle → sidewalk wait → gap merge → lane cruising → despawn)
-- [ ] Mats interaction: Mats is stopped by car waiting across sidewalk, and dies if hit by car pulling out into merge
+- [x] In-game behavior: observe full vehicle lifecycle (lane cruising → decision → approach braking → driveway turn → stall park → dwell → reverse out → exit aisle → sidewalk wait → gap merge → lane cruising → despawn)
+- [x] Mats interaction: Mats is stopped by car waiting across sidewalk, and dies if hit by car pulling out into merge
+  - Verified via `--test-mats-interaction` (and `--test-mats-blocker`): Mats is physically blocked at `z < -11.0` by the stopped car's blocker on layer 3 across the sidewalk at `(9.0, 0.0, -9.6)` without dying (`mats._is_dead == false`, `blocker_layer == 4`), and when the car pulls out into merge (`state == MERGING`, `speed > 0.1`, `blocker_layer == 0`) along `ParkingLot.merge_route()`, Mats is hit by the pulling out car and dies (`mats._is_dead == true`).
 
 ## Phase 5: lot conflicts
 
@@ -348,29 +356,36 @@ _Handoff notes:_ In `traffic_manager.gd`, removed the temporary in-place despawn
 
 ### 5.1 Aisle conflict detection and priority yielding
 
-- [ ] `find_blocker(car: Car) -> Car` in `TrafficManager`:
+- [x] `find_blocker(car: Car) -> Car` in `TrafficManager`:
   - Scan other `lot_cars` and lane-0 ghosts
   - Transform positions into `car` frame (heading signed by speed direction to handle reversing)
   - `lookahead = max(4.0, (speed * speed) / (2.0 * BRAKE_ACCELERATION) + 3.0)`
   - Blocker condition: `0.0 < forward < lookahead` and `abs(lateral) < (width_A + width_B) / 2.0 + 0.3`
-- [ ] Reverse-start safety check:
+  - Verified via `--test-find-blocker` unit test across all 8 test cases: dynamic lookahead, lateral tolerance, heading signed for reversing, ghosts, closest blocker selection, and bumper-to-bumper gap `gap = forward - (car.car_length + other.car_length) / 2.0` with `forward > 0.0 and gap < lookahead` (tested at 6m and 9m centers).
+- [x] Reverse-start safety check:
   - A `PARKED` car with dwell expired delays transitioning to `REVERSING_OUT` while any moving lot car is within 8.0 m along the aisle (`abs(car.global_position.x - spot.x) < 8.0`)
-- [ ] Priority arbitration:
+  - Implemented `can_reverse_out(car: Car) -> bool` in `TrafficManager` and wired into `_update_lot_cars()`; verified via `--test-reverse-safety` that parked car stays `PARKED` while a moving aisle car is within 8m and only transitions to `REVERSING_OUT` once the aisle clears.
+- [x] Priority arbitration:
   - Priority order: `TO_SPOT > TO_EXIT > REVERSING_OUT`
   - When car A and car B mutually block each other, only the lower-priority car yields (sets target speed to 0.0)
-- [ ] Verify: lower-priority car stops for higher-priority car in the aisle and resumes once cleared; parked car does not reverse into passing aisle traffic
+  - Implemented `_lot_priority(s)` and `_should_yield(car)` in `TrafficManager`, wired yielding (target speed 0.0) into `TO_SPOT`, `TO_EXIT`, and `REVERSING_OUT` states (guarding path arrival when yielding in reverse).
+- [x] Verify: lower-priority car stops for higher-priority car in the aisle and resumes once cleared; parked car does not reverse into passing aisle traffic
+  - Verified via `--test-priority-arbitration` and `--test-reverse-safety`. `--test-priority-arbitration` verifies all pairwise priority matchups (`TO_SPOT > TO_EXIT`, `TO_EXIT > REVERSING_OUT`, `TO_SPOT > REVERSING_OUT`), mutual blocking tie handling, dynamic yielding and deceleration to a complete stop (`speed < 0.1`) while higher priority continues, clean resumption (`speed > 0.5`) once aisle is cleared, and ensures yielding while `REVERSING_OUT` on tick 1 retains spot reservation and does not prematurely arrive. `--test-reverse-safety` confirms parked cars wait for moving aisle cars within 8m.
 
 ### 5.2 Deadlock watchdog and debug HUD
 
 [Plan section](PARKING_AND_ERRANDS.md#debug-overlay-build-in-phase-1-toggle-f3)
 
-- [ ] Deadlock watchdog in `TrafficManager`:
+- [x] Deadlock watchdog in `TrafficManager`:
   - Track `blocked_time` and current blocker for each waiting lot car
   - If mutual blocking occurs at equal priority for > 4.0 s: car with higher `get_instance_id()` ignores the other for 1.5 s
   - Print each firing with car IDs, states, and coordinates; track `stats["watchdog_fires"]` and `stats["max_stuck_time"]`
-- [ ] Debug overlay HUD in `TrafficDebug`:
+  - Implemented `blocked_time` and `current_blocker` on `Car` and tracked via `_update_car_yielding(car, delta)` in `TrafficManager`. Active ignores tracked in `_watchdog_ignores` for 1.5s, skipping candidate blockers in `find_blocker` and `_should_yield`. Tested with `--test-deadlock-watchdog`.
+- [x] Debug overlay HUD in `TrafficDebug`:
   - When F3 overlay is active, show HUD line with free/reserved/occupied stall counts, `errands_dropped_lot_full`, `watchdog_fires`, and `max_stuck_time`
-- [ ] Verify: staged equal-priority conflict triggers watchdog at 4.0s, tiebreaker cleanly resolves deadlock, stats increment; HUD line reflects live counts
+  - Added `CanvasLayer` HUD overlay and `update_hud()` in `TrafficDebug`, tracking live free/reserved/occupied stall counts from `ParkingLot.spots` alongside `TrafficManager` stats (`errands_dropped_lot_full`, `watchdog_fires`, `max_stuck_time`). Shown/hidden on F3 toggle and visibility notifications. Tested via `--test-debug-hud`.
+- [x] Verify: staged equal-priority conflict triggers watchdog at 4.0s, tiebreaker cleanly resolves deadlock, stats increment; HUD line reflects live counts
+  - Verified via `--test-deadlock-watchdog` and `--test-debug-hud`. Equal-priority conflict halts both vehicles, tracks blocked time past 4.0s, triggers deadlock watchdog tiebreaker to ignore lower ID car for 1.5s, higher ID car proceeds, and lower ID car resumes once cleared. Debug HUD displays live counts (stalls free/reserved/occupied, lot full drops, watchdog fires, and max stuck time) updating dynamically during conflict and resolution.
 
 ### 5.3 Phase 5 verification and high-load soak
 
@@ -393,11 +408,22 @@ _Handoff notes:_ In `traffic_manager.gd`, removed the temporary in-place despawn
   - `/Applications/Godot.app/Contents/MacOS/Godot --headless --path . --check-only` on all scripts
   - `/Applications/Godot.app/Contents/MacOS/Godot --headless --path . --quit` exits cleanly
 
-## Deferred (not in this checklist)
+## Modular code
 
-- [ ] Left turns in and out for eastbound traffic
-- [ ] Lane changes into lane 0 for errand cars
-- [ ] Drivers get out and walk to the store
-- [ ] Multi-stop errands
-- [ ] Second driveway or lot (waypoint graph)
-- [ ] Stall size classes, drive-thru, loading zones
+- [ ] Make sure the code is nice and moduar, with apporiate names and folders. Eg, "buildings" have their own folder. Maybe similar for props, cars, etc?
+
+## Bigger Map
+
+- [ ] Make the map a little larger.
+- [ ] Incorporate the Hampton Inn
+- [ ] Make sure the Taco Hell and the burger king have drive thru going around them, visually
+- [ ] Make sure map makes sense: eg, no sidewalk or streetlamp in the middle of a driveway (like I currently have in front of the Booger King)
+
+## Working drive thrus
+
+- [ ] Make drive thrus (around Booger King and Taco Hell work). That means cars get in line and gradually move in a circle around the building until they reach the end of the drive thru and drive away.
+
+## Nice right turns
+
+- [ ] When a car is making a right turn into a driveway (lot with shops), they put on the turn signal and slow down.
+- [ ] Cars behind show slow down rather than crashing

@@ -1,0 +1,102 @@
+[gd_scene load_steps=12 format=3]
+
+[ext_resource type="PackedScene" path="res://buildings/booger_king.tscn" id="1_building"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_SiteAsphalt"]
+albedo_color = Color(0.2, 0.21, 0.23, 1)
+roughness = 0.88
+
+[sub_resource type="StandardMaterial3D" id="Mat_SiteStripe"]
+albedo_color = Color(0.94, 0.94, 0.92, 1)
+
+[sub_resource type="StandardMaterial3D" id="Mat_DriveThruLine"]
+albedo_color = Color(0.96, 0.72, 0.08, 1)
+
+[sub_resource type="BoxMesh" id="Mesh_ParkingLot"]
+material = SubResource("Mat_SiteAsphalt")
+size = Vector3(28, 0.1, 16)
+
+[sub_resource type="BoxShape3D" id="Shape_ParkingLot"]
+size = Vector3(28, 0.1, 16)
+
+[sub_resource type="BoxMesh" id="Mesh_Driveway"]
+material = SubResource("Mat_SiteAsphalt")
+size = Vector3(7, 0.1, 7)
+
+[sub_resource type="BoxMesh" id="Mesh_DriveThruSide"]
+material = SubResource("Mat_SiteAsphalt")
+size = Vector3(5.5, 0.1, 19)
+
+[sub_resource type="BoxMesh" id="Mesh_DriveThruBack"]
+material = SubResource("Mat_SiteAsphalt")
+size = Vector3(30, 0.1, 5.5)
+
+[sub_resource type="BoxMesh" id="Mesh_ParkingStripe"]
+material = SubResource("Mat_SiteStripe")
+size = Vector3(0.18, 0.12, 4.5)
+
+[sub_resource type="BoxMesh" id="Mesh_DriveThruLine"]
+material = SubResource("Mat_DriveThruLine")
+size = Vector3(0.16, 0.12, 12)
+
+[node name="BoogerKingSite" type="Node3D"]
+
+[node name="ParkingLot" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, -14)
+mesh = SubResource("Mesh_ParkingLot")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="ParkingLot"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ParkingLot/StaticBody3D"]
+shape = SubResource("Shape_ParkingLot")
+
+[node name="Driveway" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.14, -25.5)
+mesh = SubResource("Mesh_Driveway")
+
+[node name="ParkingStripes" type="Node3D" parent="."]
+
+[node name="Stripe_m6" type="MeshInstance3D" parent="ParkingStripes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0.06, -19.5)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="Stripe_m2" type="MeshInstance3D" parent="ParkingStripes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0.06, -19.5)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="Stripe_2" type="MeshInstance3D" parent="ParkingStripes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.06, -19.5)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="Stripe_6" type="MeshInstance3D" parent="ParkingStripes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.06, -19.5)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="Stripe_10" type="MeshInstance3D" parent="ParkingStripes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0.06, -19.5)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="DriveThru" type="Node3D" parent="."]
+
+[node name="PickupLane" type="MeshInstance3D" parent="DriveThru"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.25, 0.05, 1.5)
+mesh = SubResource("Mesh_DriveThruSide")
+
+[node name="RearLane" type="MeshInstance3D" parent="DriveThru"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 9)
+mesh = SubResource("Mesh_DriveThruBack")
+
+[node name="ReturnLane" type="MeshInstance3D" parent="DriveThru"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.25, 0.05, 1.5)
+mesh = SubResource("Mesh_DriveThruSide")
+
+[node name="PickupLaneInnerLine" type="MeshInstance3D" parent="DriveThru"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.55, 0.07, 0)
+mesh = SubResource("Mesh_DriveThruLine")
+
+[node name="PickupLaneOuterLine" type="MeshInstance3D" parent="DriveThru"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.95, 0.07, 0)
+mesh = SubResource("Mesh_DriveThruLine")
+
+[node name="Building" parent="." instance=ExtResource("1_building")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0)
