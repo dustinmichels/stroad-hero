@@ -3,6 +3,7 @@ extends CharacterBody3D
 ## The model's front is local +Z, so the facing yaw is atan2(dir.x, dir.z).
 
 signal died(death_position: Vector3)
+signal respawned
 
 @export var walk_speed := 5.5
 @export var acceleration := 30.0
@@ -12,7 +13,13 @@ signal died(death_position: Vector3)
 @export var turn_speed := 14.0
 ## Tallest ledge (curb) Mats walks onto without jumping.
 @export var step_height := 0.3
-## Seconds to pause at death position before respawning and flying camera back.
+## Seconds to pause at death position showing the blood spot before screen goes dark.
+@export var blood_linger_delay := 1.1
+## Seconds for screen fade transitions.
+@export var fade_duration := 0.4
+## Seconds to emphasize the SPD counter while screen is dark.
+@export var spd_emphasis_duration := 0.8
+## Seconds to pause at death position before respawning (legacy/fallback without HUD).
 @export var respawn_delay := 1.25
 
 enum Headwear { HAIR, HAT }
@@ -266,13 +273,48 @@ func die() -> void:
 	_is_dead = true
 	_has_control_basis = false
 	velocity = Vector3.ZERO
+	if _collision_shape:
+		_collision_shape.set_deferred("disabled", true)
 	died.emit(global_position)
 
 	_visual.visible = false
 
-	await get_tree().create_timer(respawn_delay).timeout
+	var tree := get_tree()
+	if not tree:
+		return
 
+	# Linger for a moment showing the blood spot
+	await tree.create_timer(blood_linger_delay).timeout
+	if not is_inside_tree():
+		return
+
+	# Screen goes dark and emphasize SPD counter
+	var hud: HUD = tree.get_first_node_in_group("hud") as HUD
+	if hud and hud.has_method("fade_to_black"):
+		await hud.fade_to_black(fade_duration)
+		if not is_inside_tree():
+			return
+		await hud.emphasize_death_spd(spd_emphasis_duration)
+		if not is_inside_tree():
+			return
+	else:
+		await tree.create_timer(respawn_delay).timeout
+		if not is_inside_tree():
+			return
+
+	respawn()
+
+	if hud and hud.has_method("fade_from_black"):
+		await hud.fade_from_black(fade_duration)
+		if not is_inside_tree():
+			return
+
+	_is_dead = false
+
+
+func respawn() -> void:
 	global_transform = _spawn_transform
+	reset_physics_interpolation()
 	velocity = Vector3.ZERO
 	_stride_phase = 0.0
 	_squash = 0.0
@@ -282,7 +324,9 @@ func die() -> void:
 	_visual.rotation.z = 0.0
 	_head.rotation = Vector3.ZERO
 	_visual.visible = true
-	_is_dead = false
+	if _collision_shape:
+		_collision_shape.disabled = false
+	respawned.emit()
 
 
 ## Lifts the body onto a low ledge blocking `motion`; floor snap settles it on top.

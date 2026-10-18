@@ -19,10 +19,10 @@ The web build always uses the Compatibility renderer, even though `project.godot
 
 ## 1. Deploy path
 
-- [ ] Add a GitHub remote. `git remote -v` is currently empty.
+- [x] Add a GitHub remote. (`origin` set to `git@github.com:dustinmichels/stroad-hero.git`).
 - [ ] In the repo settings, set Settings → Pages → Source to "GitHub Actions".
 - [ ] Merge `dev` into `main`. `.github/workflows/deploy-web.yml` only runs on pushes to `main`, or by hand through `workflow_dispatch`.
-- [ ] Keep `variant/thread_support=false`. GitHub Pages can't send the COOP/COEP headers that a threaded build needs.
+- [x] Keep `variant/thread_support=false`. GitHub Pages can't send the COOP/COEP headers that a threaded build needs (set in `export_presets.cfg`).
 
 Verify: the workflow run goes green, and the Pages URL loads to the street scene with no console errors.
 
@@ -32,10 +32,10 @@ Verify: the workflow run goes green, and the Pages URL loads to the street scene
 
 Each visible car is about 37–49 `MeshInstance3D`s, and props add hundreds more. In WebGL every draw call goes through JS→GL bindings on the main thread.
 
-- [ ] Confirm the real count first. In the editor, Debugger → Monitors shows `Raster > Total Draw Calls` and `Total Objects In Frame`. Headless always reports 0.
-- [ ] Merge static scenery (buildings, lot striping, sidewalk pieces) into fewer meshes, or bake it into a single mesh per building.
-- [ ] Move repeated props (trees, bollards, carts, flags) to `MultiMeshInstance3D` where they don't need per-instance logic.
-- [ ] Merge each car body's parts into one mesh per variant, using a few material slots instead of many child nodes. Section 4 does this as a build step, so the source scenes stay editable.
+- [ ] Confirm the real count first. In the editor, Debugger → Monitors shows `Raster > Total Draw Calls` and `Total Objects In Frame`. Headless always reports 0. The F3 overlay now displays `RENDER_TOTAL_DRAW_CALLS_IN_FRAME`, `RENDER_TOTAL_OBJECTS_IN_FRAME`, `TIME_PROCESS`, and `TIME_PHYSICS_PROCESS` so the real count can be read in the editor or web build.
+- [x] Merge static scenery (buildings, lot striping, sidewalk pieces) into fewer meshes, or bake it into a single mesh per building. (`MeshBaker.bake_main_scene` bakes `Road` [stroad, 5 sidewalks, 2 aprons, 44 markings] into 1 mesh and `Parking` [lots, driveways, 29 stall stripes] into 1 mesh with collisions intact; `MeshBaker.bake_static_scene` bakes buildings and static props at export. Note: Taco Hell's scripted `DriveThru` subtree remains unbaked).
+- [x] Move repeated props (trees, bollards, carts, flags) to `MultiMeshInstance3D` where they don't need per-instance logic. (`Props/Streetlights` converted to `MultiMeshInstance3D` with collisions intact; static props [bollards, shopping carts, fire hydrants, street lamps] baked to single-mesh scenes; inactive tree and flag variants freed at runtime `_ready()`, saving nodes and memory).
+- [x] Merge each car body's parts into one mesh per variant, using a few material slots instead of many child nodes. Section 4 does this as a build step, so the source scenes stay editable.
 
 ### 2b. Resolution and fill rate
 
@@ -102,11 +102,11 @@ Recommended: the export plugin, with the merge logic in one static function (`Me
 
 - [x] Do 3a first, so each body scene is a single unit to bake.
 - [x] Write `addons/mesh_baker/` with `plugin.cfg`, `plugin.gd` (`EditorPlugin` calling `add_export_plugin()`), `export_plugin.gd` and `mesh_baker.gd`.
-- [x] Enable it in the editor under Project Settings → Plugins. The setting is saved to `project.godot`, so the `/tmp` export copy picks it up. Don't edit `project.godot` by hand while the editor is open, because the editor will overwrite it.
+- [x] Enable it in the export pipeline (`mise.toml` and `.github/workflows/deploy-web.yml` auto-enable it during export; can also be toggled in GUI editor under Project Settings → Plugins).
 - [x] Check it headless against a `/tmp` copy: instance `passenger_car.tscn`, bake it, print the surface count before and after.
-- [x] Extend it to buildings and props. They have no per-part logic, so they can usually go down to one mesh per building or prop.
+- [x] Extend it to buildings and props. They have no per-part logic, so they can usually go down to one mesh per building or prop. (Buildings, static props [bollard, shopping cart, fire hydrant, street lamp], and main scene road/parking scenery baked at export via `export_plugin.gd`).
 
-Verify: the draw-call monitor in the exported build (see "How to measure") drops, and cars still paint, signal and spin their wheels.
+Verify: cars paint, signal, and spin wheels (verified on exported `.scn` artifacts). Confirm WebGL draw calls drop in browser monitor (`Raster > Total Draw Calls` under WebGL).
 
 Alternative: build models in Blender and import them as `.glb`, with an `EditorScenePostImport` script doing the merge. That brings automatic mesh LOD and a real modeling tool, but it means re-authoring every asset that is currently built by hand in `.tscn`. Not worth it at this scale.
 
@@ -156,7 +156,7 @@ No scene sets `cast_shadow`, so every mesh, down to lot striping and wheel hubs,
 - [ ] Lower `physics/common/max_physics_steps_per_frame` (default 8) for web, to about 3. On a slow device a long frame otherwise triggers several catch-up physics steps, which makes the next frame longer too.
 - [ ] Physics engine: a headless check prints `physics/3d/physics_engine` = `DEFAULT`, which is Godot Physics. Jolt is only written into new projects. Try `Jolt Physics`, which is usually faster with many bodies and areas, then retest car `Area3D` overlaps and player collisions.
 - [ ] Areas: set `monitorable = false` on areas nothing queries, and narrow collision layers and masks so cars don't test against scenery.
-- [ ] `us_flag.gd` runs `_process` for every flag. Move the wave into a vertex shader driven by `TIME`, or stop processing when the flag is off-screen (`VisibleOnScreenNotifier3D`).
+- [ ] `us_flag.gd` runs `_process` for every flag. Move the wave into a vertex shader driven by `TIME`, or stop processing when the flag is off-screen (`VisibleOnScreenNotifier3D`). (Partially done: wave is in `shaders/us_flag.gdshader`, but `_process` still runs for wind orientation without off-screen culling).
 - Hot loops (`traffic_manager.gd`, `car.gd`): cache node lookups and curve lengths, and avoid allocating Arrays or Dictionaries every tick.
 
 ### 5f. Desktop

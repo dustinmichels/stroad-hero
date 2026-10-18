@@ -53,12 +53,148 @@ var _ci_saw_exit: bool = false
 var _ci_saw_wait: bool = false
 var _ci_saw_merge: bool = false
 var _ci_saw_rejoin: bool = false
+var _ci_site: StringName = &"cramped_inn"
 
 
 func _ready() -> void:
 	_user_args = OS.get_cmdline_user_args()
+	if OS.is_debug_build() and ProjectSettings.get_setting("debug/bake_preview", false):
+		MeshBaker.bake_main_scene(self)
 	if mats:
 		mats.died.connect(_on_player_died)
+	if "--test-start-screen" in _user_args:
+		var start_screen: StartScreen = get_node_or_null("StartScreen")
+		assert(start_screen != null, "StartScreen must exist in main scene")
+		assert(start_screen.visible == true, "StartScreen must be visible initially")
+		assert(get_tree().paused == true, "Tree must be paused when StartScreen is open")
+
+		# Verify exact title
+		var title_label: Label = start_screen.get_node(
+			"RootControl/Pane/Margin/Content/HeaderBox/TitleLabel"
+		)
+		assert(
+			title_label != null and title_label.text == "STROAD HERO", "Title must be STROAD HERO"
+		)
+
+		# Verify welcome message
+		var welcome_label: Label = start_screen.get_node(
+			"RootControl/Pane/Margin/Content/MessageSection/WelcomeLabel"
+		)
+		assert(welcome_label != null, "WelcomeLabel must exist")
+		var expected_welcome := "Hello, pedestrian. Welcome to Anywhere, USA.\nDo you have what it takes to be the Stroad Hero?"
+		assert(
+			welcome_label.text == expected_welcome,
+			"Welcome text must match: %s" % welcome_label.text
+		)
+
+		# Verify good luck text
+		var good_luck_label: Label = start_screen.get_node(
+			"RootControl/Pane/Margin/Content/MessageSection/GoodLuckLabel"
+		)
+		assert(
+			good_luck_label != null and good_luck_label.text == "Good Luck",
+			"Good luck label must be 'Good Luck'"
+		)
+
+		# Verify controls grid content
+		var grid = start_screen.get_node(
+			"RootControl/Pane/Margin/Content/ControlsPanel/ControlsContent/Grid"
+		)
+		assert(grid != null, "Controls grid must exist")
+		var keycaps: Array[String] = []
+		var desc_texts: Array[String] = []
+		for child in grid.get_children():
+			for sub in child.get_children():
+				if sub is PanelContainer:
+					for sub2 in sub.get_children():
+						if sub2 is Label:
+							keycaps.append(sub2.text)
+				elif sub is Label:
+					desc_texts.append(sub.text)
+		assert("Arrow Keys" in keycaps, "Must have Arrow Keys keycap: %s" % str(keycaps))
+		assert("Space" in keycaps, "Must have Space keycap: %s" % str(keycaps))
+		assert("A / D" in keycaps, "Must have A / D keycap: %s" % str(keycaps))
+		assert("W / S" in keycaps, "Must have W / S keycap: %s" % str(keycaps))
+		assert("C" in keycaps, "Must have C keycap: %s" % str(keycaps))
+		assert("R" in keycaps, "Must have R keycap: %s" % str(keycaps))
+		assert("Esc" in keycaps, "Must have Esc keycap: %s" % str(keycaps))
+		assert("H" in keycaps, "Must have H keycap: %s" % str(keycaps))
+
+		# Verify start and quit buttons exist and work
+		var start_btn: Button = start_screen.start_button
+		assert(
+			start_btn != null and start_btn.text == "START GAME", "Start button must say START GAME"
+		)
+		var quit_btn: Button = start_screen.quit_button
+		assert(quit_btn != null and quit_btn.text == "QUIT", "Quit button must say QUIT")
+		assert(
+			quit_btn.pressed.is_connected(start_screen.quit_game),
+			"Quit button must be connected to quit_game"
+		)
+		assert(quit_btn.focus_mode == Control.FOCUS_NONE, "QuitButton must have FOCUS_NONE")
+
+		# Test that pressing Right arrow does not focus QuitButton or cause Space to quit
+		var right_event := InputEventKey.new()
+		right_event.pressed = true
+		right_event.keycode = KEY_RIGHT
+		right_event.echo = false
+		Input.parse_input_event(right_event)
+		await get_tree().process_frame
+		assert(!quit_btn.has_focus(), "QuitButton must not gain focus from keyboard navigation")
+		start_screen.start_game()
+		await start_screen.started
+		assert(start_screen.visible == false, "StartScreen must hide after start_game()")
+		assert(get_tree().paused == false, "Game tree must unpause after start_game()")
+
+		# Test CharacterEditor handles Esc without StartScreen intercepting it
+		var char_editor = get_node_or_null("CharacterEditor")
+		assert(char_editor != null, "CharacterEditor must exist in main scene")
+		char_editor.open_editor()
+		assert(char_editor.visible == true, "CharacterEditor must be visible when opened")
+		assert(get_tree().paused == true, "Game tree must pause when CharacterEditor is open")
+		assert(
+			start_screen.visible == false,
+			"StartScreen must remain hidden when CharacterEditor is open"
+		)
+
+		var esc_event := InputEventKey.new()
+		esc_event.pressed = true
+		esc_event.keycode = KEY_ESCAPE
+		esc_event.echo = false
+		Input.parse_input_event(esc_event)
+		await get_tree().process_frame
+
+		assert(char_editor.visible == false, "CharacterEditor must close on Esc")
+		assert(
+			start_screen.visible == false,
+			"StartScreen must remain hidden when Esc closes CharacterEditor"
+		)
+		assert(get_tree().paused == false, "Game tree must unpause after CharacterEditor closes")
+
+		# Test Esc during gameplay pauses and shows StartScreen with RESUME
+		Input.parse_input_event(esc_event)
+		await get_tree().process_frame
+		assert(start_screen.visible == true, "Pressing Esc during gameplay must show StartScreen")
+		assert(get_tree().paused == true, "Pressing Esc during gameplay must pause game tree")
+		assert(start_btn.text == "RESUME", "Start button must say RESUME on pause")
+
+		# Test Esc again resumes the game
+		Input.parse_input_event(esc_event)
+		await start_screen.started
+		assert(start_screen.visible == false, "Pressing Esc again must resume and hide StartScreen")
+		assert(get_tree().paused == false, "Pressing Esc again must unpause game tree")
+
+		# Test reopening via open_screen()
+		start_screen.open_screen()
+		assert(start_screen.visible == true, "StartScreen must show on open_screen()")
+		assert(get_tree().paused == true, "Game tree must pause on open_screen()")
+		assert(start_btn.text == "RESUME", "Start button must say RESUME on reopen")
+
+		print(
+			"START_SCREEN_TEST: SUCCESS - title, message, controls, CharacterEditor Esc isolation, and pause/resume flow verified"
+		)
+		get_tree().quit(0)
+		return
 	if "--test-mats-blocker" in _user_args or "--test-mats-interaction" in _user_args:
 		var car_scene = load("res://cars/passenger_car.tscn")
 		_test_car = car_scene.instantiate()
@@ -190,7 +326,8 @@ func _ready() -> void:
 		_test_car.had_errand = true
 		_test_car.desired_speed = 12.0
 		_test_car.speed = 12.0
-	if "--test-cramped-inn" in _user_args:
+	if "--test-cramped-inn" in _user_args or "--test-strip-mall" in _user_args:
+		_ci_site = &"strip_mall" if "--test-strip-mall" in _user_args else &"cramped_inn"
 		var traffic_mgr = $TrafficManager
 		assert(traffic_mgr != null, "TrafficManager must exist")
 		var lane3 = traffic_mgr.lanes[3]
@@ -198,9 +335,10 @@ func _ready() -> void:
 			c.queue_free()
 		lane3.cars.clear()
 		lane3.spawn_timer = 9999.0
-		_test_car = traffic_mgr._spawn_car_at(lane3, 80.0, traffic_mgr.PassengerCarScene)
+		var start_d: float = traffic_mgr._lane3_lot_decision_d(_ci_site) - 14.0
+		_test_car = traffic_mgr._spawn_car_at(lane3, start_d, traffic_mgr.PassengerCarScene)
 		_test_car.car_type = Car.CarType.SEDAN
-		_test_car.errand = Errand.new(&"cramped_inn", 1.0)
+		_test_car.errand = Errand.new(_ci_site, 1.0)
 		_test_car.had_errand = true
 		_test_car.desired_speed = 12.0
 		_test_car.speed = 12.0
@@ -1821,7 +1959,8 @@ func _physics_process(_delta: float) -> void:
 				return
 		if _test_frames > 3600:
 			assert(false, "Timeout waiting for taco dt zones test completion!")
-	if "--test-cramped-inn" in _user_args:
+	if "--test-cramped-inn" in _user_args or "--test-strip-mall" in _user_args:
+		var tag := String(_ci_site).to_upper()
 		_test_frames += 1
 		var tm = $TrafficManager
 		if _test_car != null and is_instance_valid(_test_car):
@@ -1834,22 +1973,22 @@ func _physics_process(_delta: float) -> void:
 					_ci_saw_cruise = true
 					print(
 						(
-							"CRAMPED_INN [1/8]: cruising east in lane 3 (pos=%s)"
-							% str(_test_car.global_position)
+							"%s [1/8]: cruising east in lane 3 (pos=%s)"
+							% [tag, str(_test_car.global_position)]
 						)
 					)
 			elif _test_car.state == Car.State.APPROACHING:
 				if not _ci_saw_decision:
 					_ci_saw_decision = true
 					assert(_test_car.spot != null, "Must have reserved a spot")
-					assert(_test_car.spot.serves.has(&"cramped_inn"), "Spot must serve cramped_inn")
+					assert(_test_car.spot.serves.has(_ci_site), "Spot must serve %s" % _ci_site)
 					assert(
 						_test_car.turn_signal == Car.TurnSignal.RIGHT, "Turn signal must be RIGHT"
 					)
 					print(
 						(
-							"CRAMPED_INN [2/8]: decision & approach turn (spot=%d, pos=%s)"
-							% [_test_car.spot.id, str(_test_car.global_position)]
+							"%s [2/8]: decision & approach turn (spot=%d, pos=%s)"
+							% [tag, _test_car.spot.id, str(_test_car.global_position)]
 						)
 					)
 			elif _test_car.state == Car.State.TO_SPOT:
@@ -1858,8 +1997,8 @@ func _physics_process(_delta: float) -> void:
 					assert(_test_car.merge_target_lane == 3, "merge_target_lane must be 3")
 					print(
 						(
-							"CRAMPED_INN [3/8]: turned into driveway (pos=%s)"
-							% str(_test_car.global_position)
+							"%s [3/8]: turned into driveway (pos=%s)"
+							% [tag, str(_test_car.global_position)]
 						)
 					)
 			elif _test_car.state == Car.State.PARKED:
@@ -1871,36 +2010,34 @@ func _physics_process(_delta: float) -> void:
 					)
 					print(
 						(
-							"CRAMPED_INN [4/8]: parked in stall (spot=%d, pos=%s)"
-							% [_test_car.spot.id, str(_test_car.global_position)]
+							"%s [4/8]: parked in stall (spot=%d, pos=%s)"
+							% [tag, _test_car.spot.id, str(_test_car.global_position)]
 						)
 					)
 			elif _test_car.state == Car.State.REVERSING_OUT:
 				if not _ci_saw_reverse:
 					_ci_saw_reverse = true
 					print(
-						"CRAMPED_INN [5/8]: reversing out (pos=%s)" % str(_test_car.global_position)
+						"%s [5/8]: reversing out (pos=%s)" % [tag, str(_test_car.global_position)]
 					)
 			elif _test_car.state == Car.State.TO_EXIT:
 				if not _ci_saw_exit:
 					_ci_saw_exit = true
 					print(
-						(
-							"CRAMPED_INN [6/8]: driving to exit (pos=%s)"
-							% str(_test_car.global_position)
-						)
+						"%s [6/8]: driving to exit (pos=%s)" % [tag, str(_test_car.global_position)]
 					)
 			elif _test_car.state == Car.State.WAITING_TO_MERGE:
 				if not _ci_saw_wait:
 					_ci_saw_wait = true
+					var wait_point: Vector3 = ParkingLot.SOUTH_LOTS[_ci_site]["wait"]
 					assert(
-						_test_car.global_position.distance_to(ParkingLot.CI_WAIT_POINT) < 1.0,
-						"Must be at CI_WAIT_POINT"
+						_test_car.global_position.distance_to(wait_point) < 1.0,
+						"Must be at the %s wait point" % _ci_site
 					)
 					print(
 						(
-							"CRAMPED_INN [7/8]: waiting at exit wait point (pos=%s)"
-							% str(_test_car.global_position)
+							"%s [7/8]: waiting at exit wait point (pos=%s)"
+							% [tag, str(_test_car.global_position)]
 						)
 					)
 					var lane3 = tm.lanes[3]
@@ -1914,8 +2051,8 @@ func _physics_process(_delta: float) -> void:
 					_ci_saw_merge = true
 					print(
 						(
-							"CRAMPED_INN [8/8]: merging into lane 3 (pos=%s)"
-							% str(_test_car.global_position)
+							"%s [8/8]: merging into lane 3 (pos=%s)"
+							% [tag, str(_test_car.global_position)]
 						)
 					)
 			elif _test_car.state == Car.State.CRUISING and _test_car.lane_id == 3 and _ci_saw_merge:
@@ -1925,15 +2062,13 @@ func _physics_process(_delta: float) -> void:
 						absf(_test_car.global_position.z - 5.6) < 0.5,
 						"Car must be in Lane 3 (z=5.6)"
 					)
-					print("CRAMPED_INN: SUCCESS - full Cramped Inn errand cycle complete!")
+					print("%s: SUCCESS - full errand cycle complete!" % tag)
 					get_tree().quit(0)
 					return
 		if _test_frames > 2400:
-			assert(false, "Timeout waiting for Cramped Inn test completion!")
+			assert(false, "Timeout waiting for %s test completion!" % _ci_site)
 
 
 func _on_player_died(pos: Vector3) -> void:
-	if hud and hud.has_method("increment_spd"):
-		hud.increment_spd()
 	if blood_splats and mats:
 		BloodSplatScript.spawn(pos, blood_splats, [mats.get_rid()])

@@ -1,4 +1,4 @@
-[gd_scene load_steps=56 format=3 uid="uid://c47ja8e0n02s"]
+[gd_scene load_steps=57 format=3 uid="uid://c47ja8e0n02s"]
 
 [ext_resource type="Script" path="res://follow_camera.gd" id="1_camera"]
 [ext_resource type="PackedScene" path="res://player/mats.tscn" id="2_mats"]
@@ -17,6 +17,8 @@
 [ext_resource type="PackedScene" path="res://props/fire_hydrant.tscn" id="15_hydrant"]
 [ext_resource type="PackedScene" path="res://props/shopping_cart.tscn" id="17_cart"]
 [ext_resource type="Script" path="res://game_state.gd" id="15_gamestate"]
+[ext_resource type="PackedScene" path="res://ui/start_screen.tscn" id="18_start_screen"]
+[ext_resource type="PackedScene" path="res://buildings/strip_mall.tscn" id="19_strip_mall"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.35, 0.55, 0.85, 1)
@@ -90,12 +92,26 @@ size = Vector3(8, 0.1, 3.2)
 [sub_resource type="BoxShape3D" id="Shape_DrivewayApronSouthBK"]
 size = Vector3(8, 0.1, 3.2)
 
-[sub_resource type="BoxMesh" id="Mesh_SidewalkSouthMid"]
+[sub_resource type="BoxMesh" id="Mesh_SidewalkSouthMidWest"]
 material = SubResource("Mat_Concrete")
-size = Vector3(71, 0.25, 3.2)
+size = Vector3(28.5, 0.25, 3.2)
 
-[sub_resource type="BoxShape3D" id="Shape_SidewalkSouthMid"]
-size = Vector3(71, 0.25, 3.2)
+[sub_resource type="BoxShape3D" id="Shape_SidewalkSouthMidWest"]
+size = Vector3(28.5, 0.25, 3.2)
+
+[sub_resource type="BoxMesh" id="Mesh_DrivewayApronSouthMall"]
+material = SubResource("Mat_ParkingAsphalt")
+size = Vector3(9, 0.1, 3.2)
+
+[sub_resource type="BoxShape3D" id="Shape_DrivewayApronSouthMall"]
+size = Vector3(9, 0.1, 3.2)
+
+[sub_resource type="BoxMesh" id="Mesh_SidewalkSouthMidEast"]
+material = SubResource("Mat_Concrete")
+size = Vector3(33.5, 0.25, 3.2)
+
+[sub_resource type="BoxShape3D" id="Shape_SidewalkSouthMidEast"]
+size = Vector3(33.5, 0.25, 3.2)
 
 [sub_resource type="BoxMesh" id="Mesh_SidewalkSouthEast"]
 material = SubResource("Mat_Concrete")
@@ -204,6 +220,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 9)
 [node name="CharacterEditor" parent="." instance=ExtResource("10_editor")]
 player_path = NodePath("../Mats")
 
+[node name="StartScreen" parent="." instance=ExtResource("18_start_screen")]
+
 [node name="TrafficManager" type="Node3D" parent="."]
 script = ExtResource("4_traffic")
 
@@ -238,15 +256,32 @@ mesh = SubResource("Mesh_DrivewayApronSouthBK")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Road/DrivewayApronSouthBK/StaticBody3D"]
 shape = SubResource("Shape_DrivewayApronSouthBK")
 
-[node name="SidewalkSouthMid" type="MeshInstance3D" parent="Road"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 0.12, 9.1)
-mesh = SubResource("Mesh_SidewalkSouthMid")
+[node name="SidewalkSouthMidWest" type="MeshInstance3D" parent="Road"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23.75, 0.12, 9.1)
+mesh = SubResource("Mesh_SidewalkSouthMidWest")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Road/SidewalkSouthMid"]
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/SidewalkSouthMidWest"]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/SidewalkSouthMid/StaticBody3D"]
-shape = SubResource("Shape_SidewalkSouthMid")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/SidewalkSouthMidWest/StaticBody3D"]
+shape = SubResource("Shape_SidewalkSouthMidWest")
 
+[node name="DrivewayApronSouthMall" type="MeshInstance3D" parent="Road"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0.05, 9.1)
+mesh = SubResource("Mesh_DrivewayApronSouthMall")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/DrivewayApronSouthMall"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/DrivewayApronSouthMall/StaticBody3D"]
+shape = SubResource("Shape_DrivewayApronSouthMall")
+
+[node name="SidewalkSouthMidEast" type="MeshInstance3D" parent="Road"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.25, 0.12, 9.1)
+mesh = SubResource("Mesh_SidewalkSouthMidEast")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/SidewalkSouthMidEast"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/SidewalkSouthMidEast/StaticBody3D"]
+shape = SubResource("Shape_SidewalkSouthMidEast")
 [node name="SidewalkSouthEast" type="MeshInstance3D" parent="Road"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 67, 0.12, 9.1)
 mesh = SubResource("Mesh_SidewalkSouthEast")
@@ -626,6 +661,9 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35, 0, -34)
 [node name="BoogerKingSite" parent="Props" instance=ExtResource("12_booger_king_site")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -42, 0, 36)
 
+[node name="StripMall" parent="Props" instance=ExtResource("19_strip_mall")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0, 36)
+
 [node name="CrampedInn" parent="Props" instance=ExtResource("13_cramped_inn")]
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 40, 0, 36)
 
@@ -687,10 +725,10 @@ transform = Transform3D(-1, 0, 1.22465e-16, 0, 1, 0, -1.22465e-16, 0, -1, 66, 0,
 [node name="Trees" type="Node3D" parent="Props"]
 
 [node name="Tree_m22_11" parent="Props/Trees" instance=ExtResource("9_tree")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, 0, 11)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23.5, 0, 11)
 
 [node name="Tree_12_11" parent="Props/Trees" instance=ExtResource("9_tree")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 11)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.5, 0, 11)
 tree_type = 4
 
 [node name="Tree_m31_m15" parent="Props/Trees" instance=ExtResource("9_tree")]

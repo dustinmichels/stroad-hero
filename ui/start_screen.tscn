@@ -1,0 +1,536 @@
+[gd_scene load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://ui/start_screen.gd" id="1_script"]
+[ext_resource type="FontFile" path="res://fonts/ArchivoBlack-Regular.ttf" id="2_heading"]
+[ext_resource type="FontFile" path="res://fonts/Fredoka.ttf" id="3_body"]
+
+[sub_resource type="StyleBoxFlat" id="StylePane"]
+bg_color = Color(0.075, 0.09, 0.12, 0.98)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.95, 0.74, 0.14, 1)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+shadow_color = Color(0, 0, 0, 0.65)
+shadow_size = 28
+
+[sub_resource type="StyleBoxFlat" id="StyleControlsCard"]
+content_margin_left = 22.0
+content_margin_top = 16.0
+content_margin_right = 22.0
+content_margin_bottom = 16.0
+bg_color = Color(0.045, 0.055, 0.075, 0.88)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.18, 0.22, 0.27, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
+[sub_resource type="StyleBoxFlat" id="StyleKey"]
+content_margin_left = 10.0
+content_margin_top = 3.0
+content_margin_right = 10.0
+content_margin_bottom = 4.0
+bg_color = Color(0.15, 0.18, 0.22, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 2
+border_color = Color(0.32, 0.38, 0.44, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBtnNormal"]
+content_margin_left = 36.0
+content_margin_top = 14.0
+content_margin_right = 36.0
+content_margin_bottom = 14.0
+bg_color = Color(0.95, 0.74, 0.14, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0.95, 0.74, 0.14, 0.3)
+shadow_size = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBtnHover"]
+content_margin_left = 36.0
+content_margin_top = 14.0
+content_margin_right = 36.0
+content_margin_bottom = 14.0
+bg_color = Color(1, 0.82, 0.26, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(1, 0.82, 0.26, 0.45)
+shadow_size = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBtnPressed"]
+content_margin_left = 36.0
+content_margin_top = 14.0
+content_margin_right = 36.0
+content_margin_bottom = 14.0
+bg_color = Color(0.82, 0.62, 0.08, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBtnFocus"]
+content_margin_left = 36.0
+content_margin_top = 14.0
+content_margin_right = 36.0
+content_margin_bottom = 14.0
+draw_center = false
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 1, 1, 0.9)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleQuitBtnNormal"]
+content_margin_left = 28.0
+content_margin_top = 14.0
+content_margin_right = 28.0
+content_margin_bottom = 14.0
+bg_color = Color(0.16, 0.19, 0.23, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.3, 0.35, 0.42, 0.8)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleQuitBtnHover"]
+content_margin_left = 28.0
+content_margin_top = 14.0
+content_margin_right = 28.0
+content_margin_bottom = 14.0
+bg_color = Color(0.72, 0.22, 0.22, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.9, 0.35, 0.35, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0.72, 0.22, 0.22, 0.4)
+shadow_size = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleQuitBtnPressed"]
+content_margin_left = 28.0
+content_margin_top = 14.0
+content_margin_right = 28.0
+content_margin_bottom = 14.0
+bg_color = Color(0.55, 0.16, 0.16, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.75, 0.25, 0.25, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleQuitBtnFocus"]
+content_margin_left = 28.0
+content_margin_top = 14.0
+content_margin_right = 28.0
+content_margin_bottom = 14.0
+draw_center = false
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 1, 1, 0.9)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[node name="StartScreen" type="CanvasLayer"]
+process_mode = 3
+layer = 15
+script = ExtResource("1_script")
+
+[node name="RootControl" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Scrim" type="ColorRect" parent="RootControl"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.03, 0.04, 0.055, 0.85)
+
+[node name="Pane" type="PanelContainer" parent="RootControl"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -440.0
+offset_top = -325.0
+offset_right = 440.0
+offset_bottom = 325.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StylePane")
+
+[node name="Margin" type="MarginContainer" parent="RootControl/Pane"]
+layout_mode = 2
+theme_override_constants/margin_left = 44
+theme_override_constants/margin_top = 34
+theme_override_constants/margin_right = 44
+theme_override_constants/margin_bottom = 32
+
+[node name="Content" type="VBoxContainer" parent="RootControl/Pane/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="HeaderBox" type="VBoxContainer" parent="RootControl/Pane/Margin/Content"]
+layout_mode = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="TitleLabel" type="Label" parent="RootControl/Pane/Margin/Content/HeaderBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.16, 1)
+theme_override_colors/font_outline_color = Color(0.12, 0.08, 0.02, 1)
+theme_override_constants/outline_size = 6
+theme_override_fonts/font = ExtResource("2_heading")
+theme_override_font_sizes/font_size = 46
+text = "STROAD HERO"
+horizontal_alignment = 1
+
+[node name="StroadDividers" type="VBoxContainer" parent="RootControl/Pane/Margin/Content/HeaderBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 3
+
+[node name="Stripe1" type="ColorRect" parent="RootControl/Pane/Margin/Content/HeaderBox/StroadDividers"]
+custom_minimum_size = Vector2(220, 3)
+layout_mode = 2
+color = Color(0.95, 0.74, 0.14, 1)
+
+[node name="Stripe2" type="ColorRect" parent="RootControl/Pane/Margin/Content/HeaderBox/StroadDividers"]
+custom_minimum_size = Vector2(220, 3)
+layout_mode = 2
+color = Color(0.95, 0.74, 0.14, 1)
+
+[node name="MessageSection" type="VBoxContainer" parent="RootControl/Pane/Margin/Content"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="WelcomeLabel" type="Label" parent="RootControl/Pane/Margin/Content/MessageSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.93, 0.95, 0.98, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 20
+text = "Hello, pedestrian. Welcome to Anywhere, USA.
+Do you have what it takes to be the Stroad Hero?"
+horizontal_alignment = 1
+
+[node name="GoodLuckLabel" type="Label" parent="RootControl/Pane/Margin/Content/MessageSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.52, 0.38, 1)
+theme_override_fonts/font = ExtResource("2_heading")
+theme_override_font_sizes/font_size = 22
+text = "Good Luck"
+horizontal_alignment = 1
+
+[node name="ControlsPanel" type="PanelContainer" parent="RootControl/Pane/Margin/Content"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleControlsCard")
+
+[node name="ControlsContent" type="VBoxContainer" parent="RootControl/Pane/Margin/Content/ControlsPanel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="ControlsTitle" type="Label" parent="RootControl/Pane/Margin/Content/ControlsPanel/ControlsContent"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.68, 0.75, 0.84, 1)
+theme_override_fonts/font = ExtResource("2_heading")
+theme_override_font_sizes/font_size = 14
+text = "KEYBOARD CONTROLS"
+horizontal_alignment = 1
+
+[node name="Grid" type="GridContainer" parent="RootControl/Pane/Margin/Content/ControlsPanel/ControlsContent"]
+layout_mode = 2
+theme_override_constants/h_separation = 32
+theme_override_constants/v_separation = 8
+columns = 2
+
+[node name="ColWalk" type="HBoxContainer" parent="RootControl/Pane/Margin/Content/ControlsPanel/ControlsContent/Grid"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="KeyWalk" type="PanelContainer" parent="RootControl/Pane/Margin/Content/ControlsPanel/ControlsContent/Grid/ColWalk"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleKey")
+
+[node name="KeyLabel" type="Label" parent="RootControl/Pane/Margin/Content/ControlsPanel/ControlsContent/Grid/ColWalk/KeyWalk"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.96, 0.98, 1)
+theme_override_fonts/font = ExtResource("2_heading")
+theme_override_font_sizes/font_size = 13
+text = "Arrow Keys"
+
+[node name="DescLabel" type="Label" parent="RootControl/Pane/Margin/Content/ControlsPanel/ControlsContent/Grid/ColWalk"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.88, 0.92, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 16
+text = "Walk / Move"
+
+[node name="ColCamRot" type="HBoxContainer" parent="RootControl/Pane/Margin/Content/ControlsPanel/ControlsContent/Grid"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="KeyCamRot" type="PanelContainer" parent="RootControl/Pane/Margin/Content/ControlsPanel/ControlsContent/Grid/ColCamRot"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleKey")
+
+[node name="KeyLabel" type="Label" parent="RootControl/Pane/Margin/Content/ControlsPanel/ControlsContent/Grid/ColCamRot/KeyCamRot"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.96, 0.98, 1)
+theme_override_fonts/font = ExtResource("2_heading")
+theme_override_font_sizes/font_size = 13
+text = "A / D"
+
+[node name="DescLabel" type="Label" parent="RootControl/Pane/Margin/Content/ControlsPanel/ControlsContent/Grid/ColCamRot"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.88, 0.92, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 16
+text = "Rotate Camera"
+
+[node name="ColJump" type="HBoxContainer" parent="RootControl/Pane/Margin/Content/ControlsPanel/ControlsContent/Grid"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="KeyJump" type="PanelContainer" parent="RootControl/Pane/Margin/Content/ControlsPanel/ControlsContent/Grid/ColJump"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleKey")
+
+[node name="KeyLabel" type="Label" parent="RootControl/Pane/Margin/Content/ControlsPanel/ControlsContent/Grid/ColJump/KeyJump"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.96, 0.98, 1)
+theme_override_fonts/font = ExtResource("2_heading")
+theme_override_font_sizes/font_size = 13
+text = "Space"
+
+[node name="DescLabel" type="Label" parent="RootControl/Pane/Margin/Content/ControlsPanel/ControlsContent/Grid/ColJump"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.88, 0.92, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 16
+text = "Hop / Ride Cart"
+
+[node name="ColCamTilt" type="HBoxContainer" parent="RootControl/Pane/Margin/Content/ControlsPanel/ControlsContent/Grid"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="KeyCamTilt" type="PanelContainer" parent="RootControl/Pane/Margin/Content/ControlsPanel/ControlsContent/Grid/ColCamTilt"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleKey")
+
+[node name="KeyLabel" type="Label" parent="RootControl/Pane/Margin/Content/ControlsPanel/ControlsContent/Grid/ColCamTilt/KeyCamTilt"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.96, 0.98, 1)
+theme_override_fonts/font = ExtResource("2_heading")
+theme_override_font_sizes/font_size = 13
+text = "W / S"
+
+[node name="DescLabel" type="Label" parent="RootControl/Pane/Margin/Content/ControlsPanel/ControlsContent/Grid/ColCamTilt"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.88, 0.92, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 16
+text = "Tilt Camera"
+
+[node name="ColEditor" type="HBoxContainer" parent="RootControl/Pane/Margin/Content/ControlsPanel/ControlsContent/Grid"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="KeyEditor" type="PanelContainer" parent="RootControl/Pane/Margin/Content/ControlsPanel/ControlsContent/Grid/ColEditor"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleKey")
+
+[node name="KeyLabel" type="Label" parent="RootControl/Pane/Margin/Content/ControlsPanel/ControlsContent/Grid/ColEditor/KeyEditor"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.96, 0.98, 1)
+theme_override_fonts/font = ExtResource("2_heading")
+theme_override_font_sizes/font_size = 13
+text = "C"
+
+[node name="DescLabel" type="Label" parent="RootControl/Pane/Margin/Content/ControlsPanel/ControlsContent/Grid/ColEditor"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.88, 0.92, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 16
+text = "Customizer"
+
+[node name="ColCamReset" type="HBoxContainer" parent="RootControl/Pane/Margin/Content/ControlsPanel/ControlsContent/Grid"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="KeyCamReset" type="PanelContainer" parent="RootControl/Pane/Margin/Content/ControlsPanel/ControlsContent/Grid/ColCamReset"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleKey")
+
+[node name="KeyLabel" type="Label" parent="RootControl/Pane/Margin/Content/ControlsPanel/ControlsContent/Grid/ColCamReset/KeyCamReset"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.96, 0.98, 1)
+theme_override_fonts/font = ExtResource("2_heading")
+theme_override_font_sizes/font_size = 13
+text = "R"
+
+[node name="DescLabel" type="Label" parent="RootControl/Pane/Margin/Content/ControlsPanel/ControlsContent/Grid/ColCamReset"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.88, 0.92, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 16
+text = "Reset Camera"
+
+[node name="ColPause" type="HBoxContainer" parent="RootControl/Pane/Margin/Content/ControlsPanel/ControlsContent/Grid"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="KeyPause" type="PanelContainer" parent="RootControl/Pane/Margin/Content/ControlsPanel/ControlsContent/Grid/ColPause"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleKey")
+
+[node name="KeyLabel" type="Label" parent="RootControl/Pane/Margin/Content/ControlsPanel/ControlsContent/Grid/ColPause/KeyPause"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.96, 0.98, 1)
+theme_override_fonts/font = ExtResource("2_heading")
+theme_override_font_sizes/font_size = 13
+text = "Esc"
+
+[node name="DescLabel" type="Label" parent="RootControl/Pane/Margin/Content/ControlsPanel/ControlsContent/Grid/ColPause"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.88, 0.92, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 16
+text = "Pause Game"
+
+[node name="ColHelp" type="HBoxContainer" parent="RootControl/Pane/Margin/Content/ControlsPanel/ControlsContent/Grid"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="KeyHelp" type="PanelContainer" parent="RootControl/Pane/Margin/Content/ControlsPanel/ControlsContent/Grid/ColHelp"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleKey")
+
+[node name="KeyLabel" type="Label" parent="RootControl/Pane/Margin/Content/ControlsPanel/ControlsContent/Grid/ColHelp/KeyHelp"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.96, 0.98, 1)
+theme_override_fonts/font = ExtResource("2_heading")
+theme_override_font_sizes/font_size = 13
+text = "H"
+
+[node name="DescLabel" type="Label" parent="RootControl/Pane/Margin/Content/ControlsPanel/ControlsContent/Grid/ColHelp"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.88, 0.92, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 16
+text = "Controls Help"
+
+[node name="ActionSection" type="VBoxContainer" parent="RootControl/Pane/Margin/Content"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="ButtonsRow" type="HBoxContainer" parent="RootControl/Pane/Margin/Content/ActionSection"]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="StartButton" type="Button" parent="RootControl/Pane/Margin/Content/ActionSection/ButtonsRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 48)
+layout_mode = 2
+focus_neighbor_left = NodePath(".")
+focus_neighbor_top = NodePath(".")
+focus_neighbor_right = NodePath(".")
+focus_neighbor_bottom = NodePath(".")
+focus_next = NodePath(".")
+focus_previous = NodePath(".")
+focus_mode = 2
+mouse_default_cursor_shape = 2
+theme_override_colors/font_color = Color(0.08, 0.09, 0.12, 1)
+theme_override_colors/font_pressed_color = Color(0.08, 0.09, 0.12, 1)
+theme_override_colors/font_hover_color = Color(0.06, 0.07, 0.09, 1)
+theme_override_colors/font_focus_color = Color(0.08, 0.09, 0.12, 1)
+theme_override_fonts/font = ExtResource("2_heading")
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBtnNormal")
+theme_override_styles/hover = SubResource("StyleBtnHover")
+theme_override_styles/pressed = SubResource("StyleBtnPressed")
+theme_override_styles/focus = SubResource("StyleBtnFocus")
+text = "START GAME"
+
+[node name="QuitButton" type="Button" parent="RootControl/Pane/Margin/Content/ActionSection/ButtonsRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 48)
+layout_mode = 2
+focus_mode = 0
+mouse_default_cursor_shape = 2
+theme_override_colors/font_color = Color(0.88, 0.91, 0.95, 1)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("2_heading")
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleQuitBtnNormal")
+theme_override_styles/hover = SubResource("StyleQuitBtnHover")
+theme_override_styles/pressed = SubResource("StyleQuitBtnPressed")
+theme_override_styles/focus = SubResource("StyleQuitBtnFocus")
+text = "QUIT"
+
+[node name="PromptLabel" type="Label" parent="RootControl/Pane/Margin/Content/ActionSection"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.58, 0.64, 0.72, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 14
+text = "[ Press Space, Enter, or Esc to Play ]"
+horizontal_alignment = 1

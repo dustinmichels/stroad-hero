@@ -5,6 +5,12 @@
 ### Added
 
 - **Shipping truck**: A white long-nose semi tractor with a high-roof sleeper and roof fairing, pulling a ribbed aluminum refrigerated trailer with a front reefer unit. It has tandem drive and trailer axles with chrome wheels. It is 13.7 m long, spawns in about 4% of lane traffic at 90% of lane speed, and stays on the road (`cars/shipping_truck.tscn`, `cars/shipping_truck.gd`, `Car.CarType.SHIPPING_TRUCK`, `traffic/traffic_manager.gd`).
+- **Strip mall parking**: Colonial Plaza's lot has 8 striped stalls along the storefront (two handicap) that are registered with the parking engine as `strip_mall` spots. Eastbound Lane 3 cars now take strip mall errands: they turn in at the mall's driveway (entry x = -7, exit x = -3), park, back out, wait, and merge east. F8 spawns a debug strip mall car, and `--test-strip-mall` runs the full errand cycle (`traffic/parking_lot.gd`, `traffic/traffic_manager.gd`, `buildings/strip_mall.tscn`, `main.gd`).
+
+### Changed
+
+- **Strip mall roof**: Replaced the flat red awning, which hid the store signs, with a steep standing-seam red mansard that has closed ends, a white fascia, and a soffit, matching `samples/strip-mall/mall2.png`. The store signs are mounted upright in front of the slope. Window posters now sit in front of the glass. Sign text was resized to fit its panels: the Freedom Tattoo and Star Nails titles, the handicap plates, and the RESERVED stall paint (`buildings/strip_mall.tscn`).
+- **South-side lots**: Cramped Inn routing now comes from a shared `ParkingLot.SOUTH_LOTS` config instead of `cramped_inn_*` route functions. Lane 3 merges pick the merge path for the nearest wait point (`TrafficManager.lane3_merge_path`) instead of checking `x > 0`. Spot requests no longer poach stalls behind another driveway.
 
 ## Oct 17, 2026
 

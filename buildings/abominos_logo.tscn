@@ -1,0 +1,100 @@
+[gd_scene format=3]
+
+[ext_resource type="FontFile" path="res://fonts/Fredoka.ttf" id="1_font"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_CabinetFrame"]
+albedo_color = Color(0.12, 0.14, 0.16, 1)
+metallic = 0.5
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_SignBlue"]
+albedo_color = Color(0.01, 0.38, 0.72, 1)
+roughness = 0.25
+emission_enabled = true
+emission = Color(0.01, 0.26, 0.52, 1)
+emission_energy_multiplier = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Mat_DominoWhite"]
+albedo_color = Color(0.96, 0.97, 0.98, 1)
+roughness = 0.2
+emission_enabled = true
+emission = Color(0.96, 0.97, 0.98, 1)
+emission_energy_multiplier = 0.25
+
+[sub_resource type="StandardMaterial3D" id="Mat_DominoRed"]
+albedo_color = Color(0.88, 0.12, 0.15, 1)
+roughness = 0.25
+emission_enabled = true
+emission = Color(0.88, 0.12, 0.15, 1)
+emission_energy_multiplier = 0.35
+
+[sub_resource type="BoxMesh" id="Mesh_Cabinet"]
+material = SubResource("Mat_CabinetFrame")
+size = Vector3(3.4, 1.35, 0.25)
+
+[sub_resource type="BoxMesh" id="Mesh_BlueFace"]
+material = SubResource("Mat_SignBlue")
+size = Vector3(3.26, 1.22, 0.26)
+
+[sub_resource type="BoxMesh" id="Mesh_DominoBacking"]
+material = SubResource("Mat_DominoWhite")
+size = Vector3(0.56, 1.02, 0.04)
+
+[sub_resource type="BoxMesh" id="Mesh_RedSquare"]
+material = SubResource("Mat_DominoRed")
+size = Vector3(0.48, 0.45, 0.03)
+
+[sub_resource type="BoxMesh" id="Mesh_BlueSquare"]
+material = SubResource("Mat_SignBlue")
+size = Vector3(0.48, 0.45, 0.03)
+
+[sub_resource type="CylinderMesh" id="Mesh_Pip"]
+material = SubResource("Mat_DominoWhite")
+top_radius = 0.065
+bottom_radius = 0.065
+height = 0.04
+radial_segments = 16
+
+[node name="AbominosLogo" type="Node3D"]
+
+[node name="Cabinet" type="MeshInstance3D" parent="."]
+mesh = SubResource("Mesh_Cabinet")
+
+[node name="BlueFace" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.01)
+mesh = SubResource("Mesh_BlueFace")
+
+[node name="Domino" type="Node3D" parent="."]
+transform = Transform3D(0.906308, 0.422618, 0, -0.422618, 0.906308, 0, 0, 0, 1, -0.96, 0.02, 0.13)
+
+[node name="WhiteBase" type="MeshInstance3D" parent="Domino"]
+mesh = SubResource("Mesh_DominoBacking")
+
+[node name="RedHalf" type="MeshInstance3D" parent="Domino"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.24, 0.02)
+mesh = SubResource("Mesh_RedSquare")
+
+[node name="PipTop" type="MeshInstance3D" parent="Domino"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0.24, 0.04)
+mesh = SubResource("Mesh_Pip")
+
+[node name="BlueHalf" type="MeshInstance3D" parent="Domino"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.24, 0.02)
+mesh = SubResource("Mesh_BlueSquare")
+
+[node name="PipBtm1" type="MeshInstance3D" parent="Domino"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, -0.11, -0.13, 0.04)
+mesh = SubResource("Mesh_Pip")
+
+[node name="PipBtm2" type="MeshInstance3D" parent="Domino"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0.11, -0.35, 0.04)
+mesh = SubResource("Mesh_Pip")
+
+[node name="LabelName" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.45, 0, 0.16)
+pixel_size = 0.009
+text = "abominos"
+font = ExtResource("1_font")
+font_size = 36
+outline_size = 0
+autowrap_mode = 0

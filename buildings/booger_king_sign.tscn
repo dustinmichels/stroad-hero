@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="PackedScene" path="res://buildings/booger_king_logo.tscn" id="1_logo"]
+[ext_resource type="FontFile" path="res://fonts/ArchivoBlack-Regular.ttf" id="2_archivo"]
 
 [sub_resource type="StandardMaterial3D" id="Mat_BKDarkFrame"]
 albedo_color = Color(0.18, 0.18, 0.20, 1)
@@ -65,6 +66,14 @@ size = Vector3(3.4, 1.2, 0.48)
 material = SubResource("Mat_BKDriveThruRed")
 size = Vector3(3.2, 0.85, 0.46)
 
+[sub_resource type="PrismMesh" id="Mesh_ArrowHead"]
+material = SubResource("Mat_BKLogoWhite")
+size = Vector3(0.36, 0.32, 0.04)
+
+[sub_resource type="BoxMesh" id="Mesh_ArrowShaft"]
+material = SubResource("Mat_BKLogoWhite")
+size = Vector3(0.26, 0.14, 0.04)
+
 [sub_resource type="CylinderMesh" id="Mesh_BKCrownBase"]
 material = SubResource("Mat_BKGoldCrown")
 top_radius = 0.95
@@ -95,22 +104,46 @@ mesh = SubResource("Mesh_BKPylonCross")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.4, 0)
 mesh = SubResource("Mesh_BKPylonDriveThruBox")
 
+[node name="DriveThruArrowFront" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.05, 4.4, 0.25)
+
+[node name="Head" type="MeshInstance3D" parent="DriveThruArrowFront"]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("Mesh_ArrowHead")
+
+[node name="Shaft" type="MeshInstance3D" parent="DriveThruArrowFront"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.29, 0, 0)
+mesh = SubResource("Mesh_ArrowShaft")
+
 [node name="DriveThruLabelFront" type="Label3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.4, 0.25)
-pixel_size = 0.014
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 4.4, 0.25)
+pixel_size = 0.009
 modulate = Color(1, 1, 1, 1)
 outline_modulate = Color(0.2, 0.2, 0.2, 1)
 text = "DRIVE THRU"
-font_size = 32
+font = ExtResource("2_archivo")
+font_size = 26
 outline_size = 6
 
+[node name="DriveThruArrowBack" type="Node3D" parent="."]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -1.05, 4.4, -0.25)
+
+[node name="Head" type="MeshInstance3D" parent="DriveThruArrowBack"]
+transform = Transform3D(0, 1, 0, -1, 0, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("Mesh_ArrowHead")
+
+[node name="Shaft" type="MeshInstance3D" parent="DriveThruArrowBack"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.29, 0, 0)
+mesh = SubResource("Mesh_ArrowShaft")
+
 [node name="DriveThruLabelBack" type="Label3D" parent="."]
-transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 4.4, -0.25)
-pixel_size = 0.014
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0.35, 4.4, -0.25)
+pixel_size = 0.009
 modulate = Color(1, 1, 1, 1)
 outline_modulate = Color(0.2, 0.2, 0.2, 1)
 text = "DRIVE THRU"
-font_size = 32
+font = ExtResource("2_archivo")
+font_size = 26
 outline_size = 6
 
 [node name="ReaderCabinet" type="MeshInstance3D" parent="."]

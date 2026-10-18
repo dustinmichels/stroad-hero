@@ -56,6 +56,15 @@ func _ready() -> void:
 	_phase_offset = fmod(absf(global_position.x * 1.37 + global_position.z * 2.83), TAU)
 	_apply_flag_size()
 	_update_wind_orientation(0.0, true)
+	if not Engine.is_editor_hint():
+		var visuals := _visuals if _visuals else get_node_or_null("Visuals")
+		if visuals:
+			var config: Dictionary = SIZE_CONFIG.get(flag_size, SIZE_CONFIG[FlagSize.STANDARD])
+			var active: Node = visuals.get_node_or_null(config["node_name"])
+			if active != null:
+				for child in visuals.get_children():
+					if child != active:
+						child.queue_free()
 
 
 func _process(delta: float) -> void:

@@ -5,9 +5,10 @@
 [ext_resource type="PackedScene" path="res://props/dumpster.tscn" id="3_dumpster"]
 [ext_resource type="FontFile" path="res://fonts/Fredoka.ttf" id="4_font"]
 [ext_resource type="Script" path="res://buildings/taco_hell_drive_thru.gd" id="5_dt_script"]
+[ext_resource type="FontFile" path="res://fonts/Lobster-Regular.ttf" id="6_lobster"]
 
 [sub_resource type="StandardMaterial3D" id="Mat_TacoWallTan"]
-albedo_color = Color(0.83, 0.70, 0.56, 1)
+albedo_color = Color(0.88, 0.72, 0.54, 1)
 roughness = 0.85
 
 [sub_resource type="BoxMesh" id="Mesh_MainWall"]
@@ -23,9 +24,8 @@ material = SubResource("Mat_TacoBrick")
 size = Vector3(18.1, 1.2, 12.1)
 
 [sub_resource type="StandardMaterial3D" id="Mat_TacoRoofBrown"]
-albedo_color = Color(0.36, 0.23, 0.17, 1)
+albedo_color = Color(0.46, 0.24, 0.16, 1)
 roughness = 0.85
-
 [sub_resource type="BoxMesh" id="Mesh_RoofEaveLong"]
 material = SubResource("Mat_TacoRoofBrown")
 size = Vector3(18.6, 0.9, 0.5)
@@ -43,37 +43,52 @@ material = SubResource("Mat_TacoRoofGravel")
 size = Vector3(18, 0.2, 12)
 
 [sub_resource type="StandardMaterial3D" id="Mat_TacoStripePink"]
-albedo_color = Color(0.92, 0.08, 0.48, 1)
+albedo_color = Color(0.95, 0.10, 0.50, 1)
 emission_enabled = true
-emission = Color(0.85, 0.08, 0.45, 1)
-emission_energy_multiplier = 0.3
+emission = Color(0.95, 0.10, 0.50, 1)
+emission_energy_multiplier = 0.35
 roughness = 0.4
 
 [sub_resource type="BoxMesh" id="Mesh_StripePinkLong"]
 material = SubResource("Mat_TacoStripePink")
-size = Vector3(18.25, 0.14, 0.1)
+size = Vector3(18.25, 0.08, 0.105)
 
 [sub_resource type="BoxMesh" id="Mesh_StripePinkShort"]
 material = SubResource("Mat_TacoStripePink")
-size = Vector3(0.1, 0.14, 12.25)
+size = Vector3(0.105, 0.08, 12.25)
+
+[sub_resource type="StandardMaterial3D" id="Mat_TacoStripeCyan"]
+albedo_color = Color(0, 0.75, 0.82, 1)
+emission_enabled = true
+emission = Color(0, 0.75, 0.82, 1)
+emission_energy_multiplier = 0.35
+roughness = 0.4
+
+[sub_resource type="BoxMesh" id="Mesh_StripeCyanLong"]
+material = SubResource("Mat_TacoStripeCyan")
+size = Vector3(18.25, 0.08, 0.105)
+
+[sub_resource type="BoxMesh" id="Mesh_StripeCyanShort"]
+material = SubResource("Mat_TacoStripeCyan")
+size = Vector3(0.105, 0.08, 12.25)
 
 [sub_resource type="StandardMaterial3D" id="Mat_TacoStripePurple"]
 albedo_color = Color(0.48, 0.12, 0.65, 1)
 emission_enabled = true
-emission = Color(0.45, 0.10, 0.60, 1)
-emission_energy_multiplier = 0.3
+emission = Color(0.48, 0.12, 0.65, 1)
+emission_energy_multiplier = 0.35
 roughness = 0.4
 
 [sub_resource type="BoxMesh" id="Mesh_StripePurpleLong"]
 material = SubResource("Mat_TacoStripePurple")
-size = Vector3(18.25, 0.14, 0.1)
+size = Vector3(18.25, 0.08, 0.105)
 
 [sub_resource type="BoxMesh" id="Mesh_StripePurpleShort"]
 material = SubResource("Mat_TacoStripePurple")
-size = Vector3(0.1, 0.14, 12.25)
+size = Vector3(0.105, 0.08, 12.25)
 
 [sub_resource type="StandardMaterial3D" id="Mat_TacoAdobe"]
-albedo_color = Color(0.86, 0.48, 0.20, 1)
+albedo_color = Color(0.88, 0.54, 0.26, 1)
 roughness = 0.85
 
 [sub_resource type="BoxMesh" id="Mesh_ArchPillar"]
@@ -104,8 +119,7 @@ radial_segments = 24
 
 [sub_resource type="BoxMesh" id="Mesh_ArchSignPlaque"]
 material = SubResource("Mat_TacoWhiteTrim")
-size = Vector3(3.2, 1.0, 0.1)
-
+size = Vector3(3.4, 0.9, 0.1)
 [sub_resource type="StandardMaterial3D" id="Mat_TacoDarkGlass"]
 albedo_color = Color(0.12, 0.18, 0.24, 0.9)
 metallic = 0.3
@@ -163,24 +177,128 @@ material = SubResource("Mat_TacoDarkGlass")
 size = Vector3(2.2, 1.8, 0.2)
 
 [sub_resource type="StandardMaterial3D" id="Mat_TacoSignPurple"]
-albedo_color = Color(0.26, 0.08, 0.38, 1)
+albedo_color = Color(0.24, 0.08, 0.36, 1)
 roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_TacoLogoShield"]
+albedo_color = Color(0.22, 0.08, 0.35, 1)
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_TacoBellPink"]
+albedo_color = Color(0.88, 0.09, 0.46, 1)
+roughness = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Mat_TacoBellRim"]
+albedo_color = Color(0.42, 0.08, 0.35, 1)
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_TacoBellMouth"]
+albedo_color = Color(0.16, 0.04, 0.24, 1)
+roughness = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Mat_TacoClapperYellow"]
+albedo_color = Color(0.99, 0.78, 0.16, 1)
+emission_enabled = true
+emission = Color(0.99, 0.78, 0.16, 1)
+emission_energy_multiplier = 0.25
+roughness = 0.3
 
 [sub_resource type="BoxMesh" id="Mesh_PylonMonolith"]
 material = SubResource("Mat_TacoSignPurple")
-size = Vector3(3.0, 5.2, 0.7)
+size = Vector3(1.6, 2.0, 0.55)
 
 [sub_resource type="BoxMesh" id="Mesh_PylonOuterFrame"]
 material = SubResource("Mat_TacoSignPurple")
-size = Vector3(3.5, 4.4, 0.6)
+size = Vector3(2.3, 3.4, 0.56)
 
 [sub_resource type="BoxMesh" id="Mesh_PylonInnerWhite"]
 material = SubResource("Mat_TacoWhiteTrim")
-size = Vector3(3.2, 4.1, 0.65)
+size = Vector3(2.2, 3.3, 0.58)
 
 [sub_resource type="BoxMesh" id="Mesh_DriveThruBox"]
 material = SubResource("Mat_TacoSignPurple")
-size = Vector3(3.0, 1.1, 0.72)
+size = Vector3(2.2, 0.70, 0.60)
+
+[sub_resource type="PrismMesh" id="Mesh_ArrowHead"]
+material = SubResource("Mat_TacoWhiteTrim")
+size = Vector3(0.24, 0.22, 0.04)
+
+[sub_resource type="BoxMesh" id="Mesh_ArrowShaft"]
+material = SubResource("Mat_TacoWhiteTrim")
+size = Vector3(0.18, 0.10, 0.04)
+
+[sub_resource type="BoxMesh" id="Mesh_LogoShieldBase"]
+material = SubResource("Mat_TacoLogoShield")
+size = Vector3(1.10, 0.55, 0.06)
+
+[sub_resource type="CylinderMesh" id="Mesh_LogoShieldCrown"]
+material = SubResource("Mat_TacoLogoShield")
+top_radius = 0.55
+bottom_radius = 0.55
+height = 0.06
+radial_segments = 24
+
+[sub_resource type="SphereMesh" id="Mesh_BellKnob"]
+material = SubResource("Mat_TacoBellPink")
+radius = 0.08
+height = 0.12
+
+[sub_resource type="SphereMesh" id="Mesh_BellDome"]
+material = SubResource("Mat_TacoBellPink")
+radius = 0.23
+height = 0.24
+is_hemisphere = true
+
+[sub_resource type="CylinderMesh" id="Mesh_BellFlared"]
+material = SubResource("Mat_TacoBellPink")
+top_radius = 0.23
+bottom_radius = 0.40
+height = 0.42
+radial_segments = 24
+
+[sub_resource type="CylinderMesh" id="Mesh_BellLip"]
+material = SubResource("Mat_TacoBellRim")
+top_radius = 0.42
+bottom_radius = 0.42
+height = 0.08
+radial_segments = 24
+
+[sub_resource type="CylinderMesh" id="Mesh_BellMouth"]
+material = SubResource("Mat_TacoBellMouth")
+top_radius = 0.35
+bottom_radius = 0.35
+height = 0.04
+radial_segments = 24
+
+[sub_resource type="SphereMesh" id="Mesh_BellClapper"]
+material = SubResource("Mat_TacoClapperYellow")
+radius = 0.12
+height = 0.18
+
+[sub_resource type="CylinderMesh" id="Mesh_BellClapperStem"]
+material = SubResource("Mat_TacoClapperYellow")
+top_radius = 0.025
+bottom_radius = 0.03
+height = 0.16
+radial_segments = 12
+
+[sub_resource type="BoxMesh" id="Mesh_BellHighlight"]
+material = SubResource("Mat_TacoWhiteTrim")
+size = Vector3(0.035, 0.28, 0.02)
+
+[sub_resource type="CylinderMesh" id="Mesh_ArchLogoPlate"]
+material = SubResource("Mat_TacoWhiteTrim")
+top_radius = 0.55
+bottom_radius = 0.55
+height = 0.06
+radial_segments = 24
+
+[sub_resource type="CylinderMesh" id="Mesh_Arch2LogoPlate"]
+material = SubResource("Mat_TacoWhiteTrim")
+top_radius = 0.42
+bottom_radius = 0.42
+height = 0.06
+radial_segments = 24
 [sub_resource type="StandardMaterial3D" id="Mat_TacoAsphalt"]
 albedo_color = Color(0.2, 0.21, 0.23, 1)
 roughness = 0.88
@@ -442,24 +560,36 @@ transform = Transform3D(0.965926, -0.258819, 0, 0.258819, 0.965926, 0, 0, 0, 1, 
 mesh = SubResource("Mesh_RoofEaveShort")
 
 [node name="StripePinkFront" type="MeshInstance3D" parent="Building"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.35, 6.06)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.38, 6.06)
 mesh = SubResource("Mesh_StripePinkLong")
+
+[node name="StripeCyanFront" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.28, 6.06)
+mesh = SubResource("Mesh_StripeCyanLong")
 
 [node name="StripePurpleFront" type="MeshInstance3D" parent="Building"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.18, 6.06)
 mesh = SubResource("Mesh_StripePurpleLong")
 
 [node name="StripePinkLeft" type="MeshInstance3D" parent="Building"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.06, 4.35, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.06, 4.38, 0)
 mesh = SubResource("Mesh_StripePinkShort")
+
+[node name="StripeCyanLeft" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.06, 4.28, 0)
+mesh = SubResource("Mesh_StripeCyanShort")
 
 [node name="StripePurpleLeft" type="MeshInstance3D" parent="Building"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.06, 4.18, 0)
 mesh = SubResource("Mesh_StripePurpleShort")
 
 [node name="StripePinkRight" type="MeshInstance3D" parent="Building"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.06, 4.35, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.06, 4.38, 0)
 mesh = SubResource("Mesh_StripePinkShort")
+
+[node name="StripeCyanRight" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.06, 4.28, 0)
+mesh = SubResource("Mesh_StripeCyanShort")
 
 [node name="StripePurpleRight" type="MeshInstance3D" parent="Building"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.06, 4.18, 0)
@@ -493,23 +623,68 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.0, 0.67)
 mesh = SubResource("Mesh_ArchSignPlaque")
 
 [node name="SignName" type="Label3D" parent="Building/MainArchPortico"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.0, 0.74)
+transform = Transform3D(1, 0.18, 0, 0, 1, 0, 0, 0, 1, 0, 4.0, 0.74)
 pixel_size = 0.012
-modulate = Color(0.22, 0.1, 0.45, 1)
+modulate = Color(0.12, 0.18, 0.62, 1)
 outline_modulate = Color(1, 1, 1, 1)
 text = "TACO HELL"
 font = ExtResource("1_archivo")
 font_size = 32
-outline_size = 6
+outline_size = 8
 
-[node name="BellIcon" type="Label3D" parent="Building/MainArchPortico"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.9, 0.67)
-pixel_size = 0.024
-modulate = Color(0.95, 0.15, 0.35, 1)
-outline_modulate = Color(0.26, 0.08, 0.38, 1)
-text = "🔔"
-font_size = 42
-outline_size = 6
+[node name="ArchLogo" type="Node3D" parent="Building/MainArchPortico"]
+transform = Transform3D(0.85, 0, 0, 0, 0.85, 0, 0, 0, 0.85, 0, 4.9, 0.67)
+
+[node name="Plate" type="MeshInstance3D" parent="Building/MainArchPortico/ArchLogo"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0)
+mesh = SubResource("Mesh_ArchLogoPlate")
+
+[node name="ShieldCrown" type="MeshInstance3D" parent="Building/MainArchPortico/ArchLogo"]
+transform = Transform3D(0.8, 0, 0, 0, -3.49691e-08, -0.8, 0, 0.8, -3.49691e-08, 0, 0.08, 0.02)
+mesh = SubResource("Mesh_LogoShieldCrown")
+
+[node name="ShieldBase" type="MeshInstance3D" parent="Building/MainArchPortico/ArchLogo"]
+transform = Transform3D(0.8, 0, 0, 0, 0.8, 0, 0, 0, 0.8, 0, -0.15, 0.02)
+mesh = SubResource("Mesh_LogoShieldBase")
+
+[node name="Bell" type="Node3D" parent="Building/MainArchPortico/ArchLogo"]
+transform = Transform3D(0.724, -0.207, 0, 0.207, 0.724, 0, 0, 0, 0.08, 0.03, 0.02, 0.04)
+
+[node name="Knob" type="MeshInstance3D" parent="Building/MainArchPortico/ArchLogo/Bell"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.32, 0)
+mesh = SubResource("Mesh_BellKnob")
+
+[node name="Dome" type="MeshInstance3D" parent="Building/MainArchPortico/ArchLogo/Bell"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.14, 0)
+mesh = SubResource("Mesh_BellDome")
+
+[node name="Flared" type="MeshInstance3D" parent="Building/MainArchPortico/ArchLogo/Bell"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.07, 0)
+mesh = SubResource("Mesh_BellFlared")
+
+[node name="Lip" type="MeshInstance3D" parent="Building/MainArchPortico/ArchLogo/Bell"]
+transform = Transform3D(1, 0, 0, 0, 0, 0.45, 0, -1, 0, 0, -0.28, 0.01)
+mesh = SubResource("Mesh_BellLip")
+
+[node name="Mouth" type="MeshInstance3D" parent="Building/MainArchPortico/ArchLogo/Bell"]
+transform = Transform3D(1, 0, 0, 0, 0, 0.4, 0, -1, 0, 0, -0.28, 0.005)
+mesh = SubResource("Mesh_BellMouth")
+
+[node name="Clapper" type="MeshInstance3D" parent="Building/MainArchPortico/ArchLogo/Bell"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.08, -0.25, 0.035)
+mesh = SubResource("Mesh_BellClapper")
+
+[node name="ClapperStem" type="MeshInstance3D" parent="Building/MainArchPortico/ArchLogo/Bell"]
+transform = Transform3D(0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 0, 0, 1, 0.04, -0.15, 0.025)
+mesh = SubResource("Mesh_BellClapperStem")
+
+[node name="Highlight" type="MeshInstance3D" parent="Building/MainArchPortico/ArchLogo/Bell"]
+transform = Transform3D(0.978, -0.208, 0, 0.208, 0.978, 0, 0, 0, 1, -0.17, 0.06, 0.03)
+mesh = SubResource("Mesh_BellHighlight")
+
+[node name="DomeHighlight" type="MeshInstance3D" parent="Building/MainArchPortico/ArchLogo/Bell"]
+transform = Transform3D(0.906, 0.423, 0, -0.423, 0.906, 0, 0, 0, 1, -0.12, 0.22, 0.03)
+mesh = SubResource("Mesh_BellHighlight")
 
 [node name="DoorFrame" type="MeshInstance3D" parent="Building/MainArchPortico"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 0)
@@ -549,14 +724,68 @@ transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 3.6
 mesh = SubResource("Mesh_Arch2Crown")
 
 [node name="Arch2Label" type="Label3D" parent="Building/SecondaryArch"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.6, 0.48)
+transform = Transform3D(1, 0.18, 0, 0, 1, 0, 0, 0, 1, 0, 3.5, 0.48)
 pixel_size = 0.011
-modulate = Color(0.22, 0.1, 0.45, 1)
+modulate = Color(0.12, 0.18, 0.62, 1)
 outline_modulate = Color(1, 1, 1, 1)
 text = "TACO HELL"
 font = ExtResource("1_archivo")
-font_size = 26
+font_size = 24
 outline_size = 6
+
+[node name="Arch2Logo" type="Node3D" parent="Building/SecondaryArch"]
+transform = Transform3D(0.65, 0, 0, 0, 0.65, 0, 0, 0, 0.65, 0, 4.15, 0.46)
+
+[node name="Plate" type="MeshInstance3D" parent="Building/SecondaryArch/Arch2Logo"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0)
+mesh = SubResource("Mesh_Arch2LogoPlate")
+
+[node name="ShieldCrown" type="MeshInstance3D" parent="Building/SecondaryArch/Arch2Logo"]
+transform = Transform3D(0.65, 0, 0, 0, -2.84124e-08, -0.65, 0, 0.65, -2.84124e-08, 0, 0.06, 0.02)
+mesh = SubResource("Mesh_LogoShieldCrown")
+
+[node name="ShieldBase" type="MeshInstance3D" parent="Building/SecondaryArch/Arch2Logo"]
+transform = Transform3D(0.65, 0, 0, 0, 0.65, 0, 0, 0, 0.65, 0, -0.12, 0.02)
+mesh = SubResource("Mesh_LogoShieldBase")
+
+[node name="Bell" type="Node3D" parent="Building/SecondaryArch/Arch2Logo"]
+transform = Transform3D(0.58, -0.165, 0, 0.165, 0.58, 0, 0, 0, 0.08, 0.02, 0.01, 0.04)
+
+[node name="Knob" type="MeshInstance3D" parent="Building/SecondaryArch/Arch2Logo/Bell"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.32, 0)
+mesh = SubResource("Mesh_BellKnob")
+
+[node name="Dome" type="MeshInstance3D" parent="Building/SecondaryArch/Arch2Logo/Bell"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.14, 0)
+mesh = SubResource("Mesh_BellDome")
+
+[node name="Flared" type="MeshInstance3D" parent="Building/SecondaryArch/Arch2Logo/Bell"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.07, 0)
+mesh = SubResource("Mesh_BellFlared")
+
+[node name="Lip" type="MeshInstance3D" parent="Building/SecondaryArch/Arch2Logo/Bell"]
+transform = Transform3D(1, 0, 0, 0, 0, 0.45, 0, -1, 0, 0, -0.28, 0.01)
+mesh = SubResource("Mesh_BellLip")
+
+[node name="Mouth" type="MeshInstance3D" parent="Building/SecondaryArch/Arch2Logo/Bell"]
+transform = Transform3D(1, 0, 0, 0, 0, 0.4, 0, -1, 0, 0, -0.28, 0.005)
+mesh = SubResource("Mesh_BellMouth")
+
+[node name="Clapper" type="MeshInstance3D" parent="Building/SecondaryArch/Arch2Logo/Bell"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.08, -0.25, 0.035)
+mesh = SubResource("Mesh_BellClapper")
+
+[node name="ClapperStem" type="MeshInstance3D" parent="Building/SecondaryArch/Arch2Logo/Bell"]
+transform = Transform3D(0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 0, 0, 1, 0.04, -0.15, 0.025)
+mesh = SubResource("Mesh_BellClapperStem")
+
+[node name="Highlight" type="MeshInstance3D" parent="Building/SecondaryArch/Arch2Logo/Bell"]
+transform = Transform3D(0.978, -0.208, 0, 0.208, 0.978, 0, 0, 0, 1, -0.17, 0.06, 0.03)
+mesh = SubResource("Mesh_BellHighlight")
+
+[node name="DomeHighlight" type="MeshInstance3D" parent="Building/SecondaryArch/Arch2Logo/Bell"]
+transform = Transform3D(0.906, 0.423, 0, -0.423, 0.906, 0, 0, 0, 1, -0.12, 0.22, 0.03)
+mesh = SubResource("Mesh_BellHighlight")
 
 [node name="Arch2Window" type="MeshInstance3D" parent="Building/SecondaryArch"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3, 0)
@@ -588,98 +817,190 @@ outline_size = 8
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, 23)
 
 [node name="Pillar" type="MeshInstance3D" parent="RoadsideSign"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.6, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 mesh = SubResource("Mesh_PylonMonolith")
 
+[node name="DriveThruBox" type="MeshInstance3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.35, 0)
+mesh = SubResource("Mesh_DriveThruBox")
+
+[node name="DriveThruArrowFront" type="Node3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.66, 2.35, 0.32)
+
+[node name="Head" type="MeshInstance3D" parent="RoadsideSign/DriveThruArrowFront"]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("Mesh_ArrowHead")
+
+[node name="Shaft" type="MeshInstance3D" parent="RoadsideSign/DriveThruArrowFront"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2, 0, 0)
+mesh = SubResource("Mesh_ArrowShaft")
+
+[node name="DriveThruLabelFront" type="Label3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.22, 2.35, 0.32)
+pixel_size = 0.011
+modulate = Color(1, 1, 1, 1)
+text = "Drive Thru"
+font = ExtResource("1_archivo")
+font_size = 28
+
+[node name="DriveThruArrowBack" type="Node3D" parent="RoadsideSign"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -0.66, 2.35, -0.32)
+
+[node name="Head" type="MeshInstance3D" parent="RoadsideSign/DriveThruArrowBack"]
+transform = Transform3D(0, 1, 0, -1, 0, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("Mesh_ArrowHead")
+
+[node name="Shaft" type="MeshInstance3D" parent="RoadsideSign/DriveThruArrowBack"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2, 0, 0)
+mesh = SubResource("Mesh_ArrowShaft")
+
+[node name="DriveThruLabelBack" type="Label3D" parent="RoadsideSign"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0.22, 2.35, -0.32)
+pixel_size = 0.011
+modulate = Color(1, 1, 1, 1)
+text = "Drive Thru"
+font = ExtResource("1_archivo")
+font_size = 28
+
 [node name="SignOuter" type="MeshInstance3D" parent="RoadsideSign"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.8, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.4, 0)
 mesh = SubResource("Mesh_PylonOuterFrame")
 
 [node name="SignInner" type="MeshInstance3D" parent="RoadsideSign"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.8, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.4, 0)
 mesh = SubResource("Mesh_PylonInnerWhite")
 
-[node name="SignBellFront" type="Label3D" parent="RoadsideSign"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.0, 0.35)
-pixel_size = 0.018
-modulate = Color(0.85, 0.1, 0.4, 1)
-outline_modulate = Color(0.3, 0.08, 0.4, 1)
-text = "🔔"
-font_size = 46
-outline_size = 7
+[node name="LogoFront" type="Node3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.25, 0.3)
 
-[node name="SignBellBack" type="Label3D" parent="RoadsideSign"]
-transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 8.0, -0.35)
-pixel_size = 0.018
-modulate = Color(0.85, 0.1, 0.4, 1)
-outline_modulate = Color(0.3, 0.08, 0.4, 1)
-text = "🔔"
-font_size = 46
-outline_size = 7
+[node name="ShieldCrown" type="MeshInstance3D" parent="RoadsideSign/LogoFront"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0.1, 0)
+mesh = SubResource("Mesh_LogoShieldCrown")
+
+[node name="ShieldBase" type="MeshInstance3D" parent="RoadsideSign/LogoFront"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.17, 0)
+mesh = SubResource("Mesh_LogoShieldBase")
+
+[node name="Bell" type="Node3D" parent="RoadsideSign/LogoFront"]
+transform = Transform3D(0.956, -0.293, 0, 0.293, 0.956, 0, 0, 0, 0.08, 0.04, 0.02, 0.04)
+
+[node name="Knob" type="MeshInstance3D" parent="RoadsideSign/LogoFront/Bell"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.32, 0)
+mesh = SubResource("Mesh_BellKnob")
+
+[node name="Dome" type="MeshInstance3D" parent="RoadsideSign/LogoFront/Bell"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.14, 0)
+mesh = SubResource("Mesh_BellDome")
+
+[node name="Flared" type="MeshInstance3D" parent="RoadsideSign/LogoFront/Bell"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.07, 0)
+mesh = SubResource("Mesh_BellFlared")
+
+[node name="Lip" type="MeshInstance3D" parent="RoadsideSign/LogoFront/Bell"]
+transform = Transform3D(1, 0, 0, 0, 0, 0.45, 0, -1, 0, 0, -0.28, 0.01)
+mesh = SubResource("Mesh_BellLip")
+
+[node name="Mouth" type="MeshInstance3D" parent="RoadsideSign/LogoFront/Bell"]
+transform = Transform3D(1, 0, 0, 0, 0, 0.4, 0, -1, 0, 0, -0.28, 0.005)
+mesh = SubResource("Mesh_BellMouth")
+
+[node name="Clapper" type="MeshInstance3D" parent="RoadsideSign/LogoFront/Bell"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.08, -0.25, 0.035)
+mesh = SubResource("Mesh_BellClapper")
+
+[node name="ClapperStem" type="MeshInstance3D" parent="RoadsideSign/LogoFront/Bell"]
+transform = Transform3D(0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 0, 0, 1, 0.04, -0.15, 0.025)
+mesh = SubResource("Mesh_BellClapperStem")
+
+[node name="Highlight" type="MeshInstance3D" parent="RoadsideSign/LogoFront/Bell"]
+transform = Transform3D(0.978, -0.208, 0, 0.208, 0.978, 0, 0, 0, 1, -0.17, 0.06, 0.03)
+mesh = SubResource("Mesh_BellHighlight")
+
+[node name="DomeHighlight" type="MeshInstance3D" parent="RoadsideSign/LogoFront/Bell"]
+transform = Transform3D(0.906, 0.423, 0, -0.423, 0.906, 0, 0, 0, 1, -0.12, 0.22, 0.03)
+mesh = SubResource("Mesh_BellHighlight")
+
+[node name="LogoBack" type="Node3D" parent="RoadsideSign"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 5.25, -0.3)
+
+[node name="ShieldCrown" type="MeshInstance3D" parent="RoadsideSign/LogoBack"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0.1, 0)
+mesh = SubResource("Mesh_LogoShieldCrown")
+
+[node name="ShieldBase" type="MeshInstance3D" parent="RoadsideSign/LogoBack"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.17, 0)
+mesh = SubResource("Mesh_LogoShieldBase")
+
+[node name="Bell" type="Node3D" parent="RoadsideSign/LogoBack"]
+transform = Transform3D(0.956, -0.293, 0, 0.293, 0.956, 0, 0, 0, 0.08, 0.04, 0.02, 0.04)
+
+[node name="Knob" type="MeshInstance3D" parent="RoadsideSign/LogoBack/Bell"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.32, 0)
+mesh = SubResource("Mesh_BellKnob")
+
+[node name="Dome" type="MeshInstance3D" parent="RoadsideSign/LogoBack/Bell"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.14, 0)
+mesh = SubResource("Mesh_BellDome")
+
+[node name="Flared" type="MeshInstance3D" parent="RoadsideSign/LogoBack/Bell"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.07, 0)
+mesh = SubResource("Mesh_BellFlared")
+
+[node name="Lip" type="MeshInstance3D" parent="RoadsideSign/LogoBack/Bell"]
+transform = Transform3D(1, 0, 0, 0, 0, 0.45, 0, -1, 0, 0, -0.28, 0.01)
+mesh = SubResource("Mesh_BellLip")
+
+[node name="Mouth" type="MeshInstance3D" parent="RoadsideSign/LogoBack/Bell"]
+transform = Transform3D(1, 0, 0, 0, 0, 0.4, 0, -1, 0, 0, -0.28, 0.005)
+mesh = SubResource("Mesh_BellMouth")
+
+[node name="Clapper" type="MeshInstance3D" parent="RoadsideSign/LogoBack/Bell"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.08, -0.25, 0.035)
+mesh = SubResource("Mesh_BellClapper")
+
+[node name="ClapperStem" type="MeshInstance3D" parent="RoadsideSign/LogoBack/Bell"]
+transform = Transform3D(0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 0, 0, 1, 0.04, -0.15, 0.025)
+mesh = SubResource("Mesh_BellClapperStem")
+
+[node name="Highlight" type="MeshInstance3D" parent="RoadsideSign/LogoBack/Bell"]
+transform = Transform3D(0.978, -0.208, 0, 0.208, 0.978, 0, 0, 0, 1, -0.17, 0.06, 0.03)
+mesh = SubResource("Mesh_BellHighlight")
+
+[node name="DomeHighlight" type="MeshInstance3D" parent="RoadsideSign/LogoBack/Bell"]
+transform = Transform3D(0.906, 0.423, 0, -0.423, 0.906, 0, 0, 0, 1, -0.12, 0.22, 0.03)
+mesh = SubResource("Mesh_BellHighlight")
 
 [node name="SignTacoFront" type="Label3D" parent="RoadsideSign"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.9, 0.35)
-pixel_size = 0.015
-modulate = Color(0.22, 0.1, 0.45, 1)
-outline_modulate = Color(1, 1, 1, 1)
+transform = Transform3D(0.8, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.3, 0.32)
+pixel_size = 0.012
+modulate = Color(0.2, 0.08, 0.35, 1)
 text = "TACO"
 font = ExtResource("1_archivo")
-font_size = 46
-outline_size = 7
+font_size = 32
 
 [node name="SignTacoBack" type="Label3D" parent="RoadsideSign"]
-transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 6.9, -0.35)
-pixel_size = 0.015
-modulate = Color(0.22, 0.1, 0.45, 1)
-outline_modulate = Color(1, 1, 1, 1)
+transform = Transform3D(-0.8, 0, 0, 0, 1, 0, 0, 0, -1, 0, 4.3, -0.32)
+pixel_size = 0.012
+modulate = Color(0.2, 0.08, 0.35, 1)
 text = "TACO"
 font = ExtResource("1_archivo")
-font_size = 46
-outline_size = 7
+font_size = 32
 
 [node name="SignHellFront" type="Label3D" parent="RoadsideSign"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.7, 0.35)
-pixel_size = 0.016
-modulate = Color(0.9, 0.12, 0.12, 1)
-outline_modulate = Color(0.26, 0.08, 0.38, 1)
+transform = Transform3D(0.8, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.8, 0.32)
+pixel_size = 0.012
+modulate = Color(0.2, 0.08, 0.35, 1)
 text = "HELL"
 font = ExtResource("1_archivo")
-font_size = 50
-outline_size = 8
+font_size = 32
 
 [node name="SignHellBack" type="Label3D" parent="RoadsideSign"]
-transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 5.7, -0.35)
-pixel_size = 0.016
-modulate = Color(0.9, 0.12, 0.12, 1)
-outline_modulate = Color(0.26, 0.08, 0.38, 1)
+transform = Transform3D(-0.8, 0, 0, 0, 1, 0, 0, 0, -1, 0, 3.8, -0.32)
+pixel_size = 0.012
+modulate = Color(0.2, 0.08, 0.35, 1)
 text = "HELL"
 font = ExtResource("1_archivo")
-font_size = 50
-outline_size = 8
-
-[node name="DriveThruBox" type="MeshInstance3D" parent="RoadsideSign"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, 0)
-mesh = SubResource("Mesh_DriveThruBox")
-
-[node name="DriveThruLabelFront" type="Label3D" parent="RoadsideSign"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, 0.38)
-pixel_size = 0.011
-modulate = Color(1, 1, 1, 1)
-outline_modulate = Color(0.26, 0.08, 0.38, 1)
-text = "Drive Thru ➔"
-font = ExtResource("1_archivo")
-font_size = 28
-outline_size = 6
-
-[node name="DriveThruLabelBack" type="Label3D" parent="RoadsideSign"]
-transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 4.5, -0.38)
-pixel_size = 0.011
-modulate = Color(1, 1, 1, 1)
-outline_modulate = Color(0.26, 0.08, 0.38, 1)
-text = "← Drive Thru"
-font = ExtResource("1_archivo")
-font_size = 28
-outline_size = 6
+font_size = 32
 
 [node name="DriveThru" type="Node3D" parent="."]
 script = ExtResource("5_dt_script")

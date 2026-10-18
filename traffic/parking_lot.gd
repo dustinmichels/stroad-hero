@@ -8,11 +8,13 @@ const ROWS := [
 	{"z": -14.5, "x0": 28.0, "count": 4, "nose": 1.0, "serves": &"taco_hell"},  # Taco row, nose +Z
 	{"z": 24.0, "x0": 22.0, "count": 3, "nose": 1.0, "serves": &"cramped_inn"},  # CI West row, nose +Z
 	{"z": 24.0, "x0": 54.0, "count": 2, "nose": 1.0, "serves": &"cramped_inn"},  # CI East row, nose +Z
+	{"z": 26.0, "x0": -19.0, "count": 8, "nose": 1.0, "serves": &"strip_mall"},  # Mall row, nose +Z
 ]
 const ENTRANCES: Dictionary[StringName, Vector3] = {
 	&"walgroins": Vector3(-3, 0, -32),
 	&"taco_hell": Vector3(31.5, 0, -27.8),
 	&"cramped_inn": Vector3(45.7, 0, 27.75),
+	&"strip_mall": Vector3(-5, 0, 29.7),
 }
 const TURN_IN_START := Vector3(17.0, 0.0, -5.6)
 const ENTRY_X := 13.0
@@ -40,16 +42,85 @@ const CI_ENTRY_X := 38.0
 const CI_EXIT_X := 42.0
 const CI_WAIT_POINT := Vector3(42.0, 0.0, 9.6)
 const CI_MERGE_END := Vector3(46.0, 0.0, 5.6)
-const CI_ENTRY_AISLE_Z := 17.5
-const CI_EXIT_AISLE_Z := 20.25
+const SM_TURN_IN_START := Vector3(-11.0, 0.0, 5.6)
+const SM_ENTRY_X := -7.0
+const SM_EXIT_X := -3.0
+const SM_WAIT_POINT := Vector3(-3.0, 0.0, 9.6)
+const SM_MERGE_END := Vector3(1.0, 0.0, 5.6)
+## Lots south of the road, entered from and exited to eastbound Lane 3 through a
+## two-way driveway: enter at entry_x, leave at exit_x. Aisle z values are
+## Vector2(west of the driveway column, east of it); entry and exit aisles differ so
+## arriving and departing cars do not share a line.
+const SOUTH_LOTS: Dictionary[StringName, Dictionary] = {
+	&"cramped_inn":
+	{
+		"turn_in": CI_TURN_IN_START,
+		"entry_x": CI_ENTRY_X,
+		"exit_x": CI_EXIT_X,
+		"wait": CI_WAIT_POINT,
+		"merge_end": CI_MERGE_END,
+		"entry_aisle": Vector2(17.5, 16.5),
+		"exit_aisle": Vector2(20.25, 19.5),
+	},
+	&"strip_mall":
+	{
+		"turn_in": SM_TURN_IN_START,
+		"entry_x": SM_ENTRY_X,
+		"exit_x": SM_EXIT_X,
+		"wait": SM_WAIT_POINT,
+		"merge_end": SM_MERGE_END,
+		"entry_aisle": Vector2(19.5, 18.5),
+		"exit_aisle": Vector2(22.25, 21.5),
+	},
+}
+## Spots south of the road west of this x belong to the strip mall, east to Cramped Inn.
+const SOUTH_LOT_SPLIT_X := 16.0
+const SOUTH_REVERSE_RUN := 3.0
 
 
-static func ci_entry_aisle_z(sx: float) -> float:
-	return 17.5 if sx <= CI_ENTRY_X else 16.5
+## Which south lot a spot belongs to, or &"" for the north lots.
+static func south_lot(spot) -> StringName:
+	if spot is ParkingSpot:
+		for site in SOUTH_LOTS:
+			if spot.serves.has(site):
+				return site
+	var pos := _spot_position(spot)
+	if pos.z <= 0.0:
+		return &""
+	return &"strip_mall" if pos.x < SOUTH_LOT_SPLIT_X else &"cramped_inn"
 
 
-static func ci_exit_aisle_z(sx: float) -> float:
-	return 20.25 if sx <= CI_EXIT_X else 19.5
+static func _spot_position(spot) -> Vector3:
+	if spot is ParkingSpot:
+		return spot.transform.origin
+	elif spot is Transform3D:
+		return spot.origin
+	elif spot is Vector3:
+		return spot
+	elif spot is Vector2:
+		return Vector3(spot.x, 0.05, spot.y)
+	elif "x" in spot:
+		var sy: float = spot.get("y") if "y" in spot else 0.05
+		var sz: float = spot.get("z") if "z" in spot else 0.0
+		return Vector3(spot.x, sy, sz)
+	push_error("ParkingLot: unsupported spot argument %s" % str(spot))
+	return Vector3.ZERO
+
+
+static func south_entry_aisle_z(site: StringName, sx: float) -> float:
+	var lot_cfg: Dictionary = SOUTH_LOTS[site]
+	var aisle: Vector2 = lot_cfg["entry_aisle"]
+	return aisle.x if sx <= lot_cfg["entry_x"] else aisle.y
+
+
+static func south_exit_aisle_z(site: StringName, sx: float) -> float:
+	var lot_cfg: Dictionary = SOUTH_LOTS[site]
+	var aisle: Vector2 = lot_cfg["exit_aisle"]
+	return aisle.x if sx <= lot_cfg["exit_x"] else aisle.y
+
+
+static func _south_exit_sign(site: StringName, sx: float) -> float:
+	return 1.0 if sx < SOUTH_LOTS[site]["exit_x"] else -1.0
 
 
 var poach_penalty: float = POACH_PENALTY
@@ -57,20 +128,6 @@ var jitter: float = JITTER
 
 var spots: Array[ParkingSpot] = []
 signal spot_changed(spot: ParkingSpot)
-
-
-static func is_cramped_inn_spot(spot) -> bool:
-	if spot is ParkingSpot:
-		return spot.serves.has(&"cramped_inn") or spot.transform.origin.z > 0.0
-	elif spot is Transform3D:
-		return spot.origin.z > 0.0
-	elif spot is Vector3:
-		return spot.z > 0.0
-	elif spot is Vector2:
-		return spot.y > 0.0
-	elif "z" in spot:
-		return spot.get("z") > 0.0
-	return false
 
 
 static func aisle_z_for_entry(spot) -> float:
@@ -122,8 +179,9 @@ static func exit_sign(spot) -> float:
 
 
 static func entry_route(spot, radius := 4.0) -> Curve3D:
-	if is_cramped_inn_spot(spot):
-		return cramped_inn_entry_route(spot, radius)
+	var site := south_lot(spot)
+	if site != &"":
+		return south_entry_route(site, spot, radius)
 	var sx: float = 0.0
 	var spot_pos := Vector3.ZERO
 	if spot is ParkingSpot:
@@ -160,36 +218,17 @@ static func entry_route(spot, radius := 4.0) -> Curve3D:
 	return PathBuilder.build(pts, radius)
 
 
-static func cramped_inn_entry_route(spot, radius := 4.0) -> Curve3D:
-	var sx: float = 0.0
-	var spot_pos := Vector3.ZERO
-	if spot is ParkingSpot:
-		spot_pos = spot.transform.origin
-		sx = spot_pos.x
-	elif spot is Transform3D:
-		spot_pos = spot.origin
-		sx = spot_pos.x
-	elif spot is Vector3:
-		spot_pos = spot
-		sx = spot.x
-	elif spot is Vector2:
-		spot_pos = Vector3(spot.x, 0.05, spot.y)
-		sx = spot.x
-	elif "x" in spot:
-		sx = spot.x
-		var sy: float = spot.get("y") if "y" in spot else 0.05
-		var sz: float = spot.get("z") if "z" in spot else 24.0
-		spot_pos = Vector3(sx, sy, sz)
-	else:
-		push_error("ParkingLot.cramped_inn_entry_route: unsupported spot argument %s" % str(spot))
-		return Curve3D.new()
-
-	var aisle_z := ci_entry_aisle_z(sx)
+static func south_entry_route(site: StringName, spot, radius := 4.0) -> Curve3D:
+	var lot_cfg: Dictionary = SOUTH_LOTS[site]
+	var spot_pos := _spot_position(spot)
+	var sx := spot_pos.x
+	var entry_x: float = lot_cfg["entry_x"]
+	var aisle_z := south_entry_aisle_z(site, sx)
 	var pts := PackedVector3Array(
 		[
-			CI_TURN_IN_START,
-			Vector3(CI_ENTRY_X, 0.0, 5.6 + radius),
-			Vector3(CI_ENTRY_X, 0.0, aisle_z),
+			lot_cfg["turn_in"],
+			Vector3(entry_x, 0.0, 5.6 + radius),
+			Vector3(entry_x, 0.0, aisle_z),
 			Vector3(sx, 0.0, aisle_z),
 			spot_pos,
 		]
@@ -198,8 +237,9 @@ static func cramped_inn_entry_route(spot, radius := 4.0) -> Curve3D:
 
 
 static func reverse_route(spot, radius := 4.0) -> Curve3D:
-	if is_cramped_inn_spot(spot):
-		return cramped_inn_reverse_route(spot, radius)
+	var site := south_lot(spot)
+	if site != &"":
+		return south_reverse_route(site, spot, radius)
 	var sx: float = 0.0
 	var spot_pos := Vector3.ZERO
 	if spot is ParkingSpot:
@@ -235,35 +275,14 @@ static func reverse_route(spot, radius := 4.0) -> Curve3D:
 	return PathBuilder.build(pts, radius)
 
 
-static func cramped_inn_reverse_route(spot, radius := 4.0) -> Curve3D:
-	var sx: float = 0.0
-	var spot_pos := Vector3.ZERO
-	if spot is ParkingSpot:
-		spot_pos = spot.transform.origin
-		sx = spot_pos.x
-	elif spot is Transform3D:
-		spot_pos = spot.origin
-		sx = spot_pos.x
-	elif spot is Vector3:
-		spot_pos = spot
-		sx = spot.x
-	elif spot is Vector2:
-		spot_pos = Vector3(spot.x, 0.05, spot.y)
-		sx = spot.x
-	elif "x" in spot:
-		sx = spot.x
-		var sy: float = spot.get("y") if "y" in spot else 0.05
-		var sz: float = spot.get("z") if "z" in spot else 24.0
-		spot_pos = Vector3(sx, sy, sz)
-	else:
-		push_error("ParkingLot.cramped_inn_reverse_route: unsupported spot argument %s" % str(spot))
-		return Curve3D.new()
-
-	var aisle_z := ci_exit_aisle_z(sx)
-	var sign_val: float = 1.0 if sx < CI_EXIT_X else -1.0
+static func south_reverse_route(site: StringName, spot, radius := 4.0) -> Curve3D:
+	var spot_pos := _spot_position(spot)
+	var sx := spot_pos.x
+	var aisle_z := south_exit_aisle_z(site, sx)
+	var sign_val := _south_exit_sign(site, sx)
 	var pts := PackedVector3Array(
 		[
-			Vector3(sx - sign_val * 3.0, 0.0, aisle_z),
+			Vector3(sx - sign_val * SOUTH_REVERSE_RUN, 0.0, aisle_z),
 			Vector3(sx, 0.0, aisle_z),
 			spot_pos,
 		]
@@ -272,8 +291,9 @@ static func cramped_inn_reverse_route(spot, radius := 4.0) -> Curve3D:
 
 
 static func exit_route(spot, radius := 4.0) -> Curve3D:
-	if is_cramped_inn_spot(spot):
-		return cramped_inn_exit_route(spot, radius)
+	var site := south_lot(spot)
+	if site != &"":
+		return south_exit_route(site, spot, radius)
 	var sx: float = 0.0
 	if spot is ParkingSpot:
 		sx = spot.transform.origin.x
@@ -299,38 +319,28 @@ static func exit_route(spot, radius := 4.0) -> Curve3D:
 	return PathBuilder.build(pts, radius)
 
 
-static func cramped_inn_exit_route(spot, radius := 4.0) -> Curve3D:
-	var sx: float = 0.0
-	if spot is ParkingSpot:
-		sx = spot.transform.origin.x
-	elif spot is Transform3D:
-		sx = spot.origin.x
-	elif spot is Vector3 or spot is Vector2:
-		sx = spot.x
-	elif "x" in spot:
-		sx = spot.x
-	else:
-		push_error("ParkingLot.cramped_inn_exit_route: unsupported spot argument %s" % str(spot))
-		return Curve3D.new()
-
-	var aisle_z := ci_exit_aisle_z(sx)
-	var sign_val: float = 1.0 if sx < CI_EXIT_X else -1.0
+static func south_exit_route(site: StringName, spot, radius := 4.0) -> Curve3D:
+	var lot_cfg: Dictionary = SOUTH_LOTS[site]
+	var sx := _spot_position(spot).x
+	var aisle_z := south_exit_aisle_z(site, sx)
+	var sign_val := _south_exit_sign(site, sx)
 	var pts := PackedVector3Array(
 		[
-			Vector3(sx - sign_val * 3.0, 0.0, aisle_z),
-			Vector3(CI_EXIT_X, 0.0, aisle_z),
-			CI_WAIT_POINT,
+			Vector3(sx - sign_val * SOUTH_REVERSE_RUN, 0.0, aisle_z),
+			Vector3(lot_cfg["exit_x"], 0.0, aisle_z),
+			lot_cfg["wait"],
 		]
 	)
 	return PathBuilder.build(pts, radius)
 
 
-static func cramped_inn_merge_route(radius := 4.0) -> Curve3D:
+static func south_merge_route(site: StringName, radius := 4.0) -> Curve3D:
+	var lot_cfg: Dictionary = SOUTH_LOTS[site]
 	var pts := PackedVector3Array(
 		[
-			CI_WAIT_POINT,
-			Vector3(CI_EXIT_X, 0.0, 5.6),
-			CI_MERGE_END,
+			lot_cfg["wait"],
+			Vector3(lot_cfg["exit_x"], 0.0, 5.6),
+			lot_cfg["merge_end"],
 		]
 	)
 	return PathBuilder.build(pts, radius)
@@ -455,8 +465,10 @@ func request_spot(car: Car, errand) -> ParkingSpot:
 	var best_spot: ParkingSpot = null
 	var best_cost := INF
 
+	# Cars can only poach spots reachable through the same driveway as their errand.
+	var dest_lot: StringName = dest if SOUTH_LOTS.has(dest) else &""
 	for spot in spots:
-		if not spot.is_free():
+		if not spot.is_free() or south_lot(spot) != dest_lot:
 			continue
 		var spot_2d := Vector2(spot.transform.origin.x, spot.transform.origin.z)
 		var dist := spot_2d.distance_to(entrance_2d)

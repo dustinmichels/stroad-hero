@@ -1,0 +1,1178 @@
+[gd_scene format=3]
+
+[ext_resource type="FontFile" path="res://fonts/ArchivoBlack-Regular.ttf" id="1_font_archivo"]
+[ext_resource type="FontFile" path="res://fonts/Fredoka.ttf" id="2_font_fredoka"]
+[ext_resource type="PackedScene" path="res://buildings/abominos_logo.tscn" id="3_abominos_logo"]
+[ext_resource type="PackedScene" path="res://props/bollard.tscn" id="4_bollard"]
+[ext_resource type="PackedScene" path="res://props/dumpster.tscn" id="5_dumpster"]
+[ext_resource type="PackedScene" path="res://props/shopping_cart.tscn" id="6_cart"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_YellowStucco"]
+albedo_color = Color(0.92, 0.83, 0.58, 1)
+roughness = 0.88
+
+[sub_resource type="StandardMaterial3D" id="Mat_RedRoof"]
+albedo_color = Color(0.80, 0.18, 0.16, 1)
+roughness = 0.55
+
+[sub_resource type="Gradient" id="Gradient_StandingSeam"]
+interpolation_mode = 1
+offsets = PackedFloat32Array(0, 0.84)
+colors = PackedColorArray(0.80, 0.18, 0.16, 1, 0.58, 0.11, 0.10, 1)
+
+[sub_resource type="GradientTexture2D" id="Tex_StandingSeam"]
+gradient = SubResource("Gradient_StandingSeam")
+width = 64
+height = 4
+
+[sub_resource type="StandardMaterial3D" id="Mat_MansardMetal"]
+albedo_texture = SubResource("Tex_StandingSeam")
+roughness = 0.5
+metallic = 0.2
+uv1_scale = Vector3(2.2, 2.2, 2.2)
+uv1_triplanar = true
+
+[sub_resource type="StandardMaterial3D" id="Mat_WhiteTrim"]
+albedo_color = Color(0.96, 0.95, 0.92, 1)
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_WalkwayConcrete"]
+albedo_color = Color(0.82, 0.81, 0.78, 1)
+roughness = 0.85
+
+[sub_resource type="StandardMaterial3D" id="Mat_Asphalt"]
+albedo_color = Color(0.20, 0.21, 0.23, 1)
+roughness = 0.88
+
+[sub_resource type="StandardMaterial3D" id="Mat_StripeWhite"]
+albedo_color = Color(0.94, 0.94, 0.92, 1)
+
+[sub_resource type="StandardMaterial3D" id="Mat_StripeBlue"]
+albedo_color = Color(0.10, 0.44, 0.88, 1)
+
+[sub_resource type="StandardMaterial3D" id="Mat_WheelStop"]
+albedo_color = Color(0.75, 0.74, 0.72, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Mat_DarkAluminum"]
+albedo_color = Color(0.16, 0.17, 0.18, 1)
+metallic = 0.6
+roughness = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Mat_StoreGlass"]
+albedo_color = Color(0.12, 0.16, 0.22, 1)
+metallic = 0.3
+roughness = 0.15
+
+[sub_resource type="StandardMaterial3D" id="Mat_DoorHandle"]
+albedo_color = Color(0.85, 0.88, 0.92, 1)
+metallic = 0.85
+roughness = 0.2
+
+[sub_resource type="StandardMaterial3D" id="Mat_GalvanizedHVAC"]
+albedo_color = Color(0.62, 0.65, 0.68, 1)
+metallic = 0.7
+roughness = 0.45
+
+[sub_resource type="StandardMaterial3D" id="Mat_NeonGreen"]
+albedo_color = Color(0.1, 0.95, 0.2, 1)
+emission_enabled = true
+emission = Color(0.1, 0.95, 0.2, 1)
+emission_energy_multiplier = 0.8
+
+[sub_resource type="StandardMaterial3D" id="Mat_NeonOrange"]
+albedo_color = Color(1.0, 0.55, 0.1, 1)
+emission_enabled = true
+emission = Color(1.0, 0.55, 0.1, 1)
+emission_energy_multiplier = 0.8
+
+[sub_resource type="StandardMaterial3D" id="Mat_NeonPink"]
+albedo_color = Color(1.0, 0.2, 0.6, 1)
+emission_enabled = true
+emission = Color(1.0, 0.2, 0.6, 1)
+emission_energy_multiplier = 0.8
+
+[sub_resource type="StandardMaterial3D" id="Mat_SignCabinet"]
+albedo_color = Color(0.15, 0.16, 0.18, 1)
+metallic = 0.4
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_SignUSAVape"]
+albedo_color = Color(0.05, 0.16, 0.42, 1)
+roughness = 0.3
+emission_enabled = true
+emission = Color(0.04, 0.12, 0.30, 1)
+emission_energy_multiplier = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Mat_SignFreedomTattoo"]
+albedo_color = Color(0.14, 0.04, 0.04, 1)
+roughness = 0.3
+emission_enabled = true
+emission = Color(0.18, 0.03, 0.03, 1)
+emission_energy_multiplier = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Mat_SignNails"]
+albedo_color = Color(0.96, 0.95, 0.96, 1)
+roughness = 0.3
+emission_enabled = true
+emission = Color(0.88, 0.85, 0.88, 1)
+emission_energy_multiplier = 0.2
+
+[sub_resource type="StandardMaterial3D" id="Mat_PosterVape"]
+albedo_color = Color(0.12, 0.42, 0.68, 1)
+
+[sub_resource type="StandardMaterial3D" id="Mat_PosterTattoo"]
+albedo_color = Color(0.24, 0.14, 0.16, 1)
+
+[sub_resource type="StandardMaterial3D" id="Mat_PosterPizza"]
+albedo_color = Color(0.72, 0.22, 0.15, 1)
+
+[sub_resource type="StandardMaterial3D" id="Mat_PosterNails"]
+albedo_color = Color(0.75, 0.25, 0.52, 1)
+
+[sub_resource type="StandardMaterial3D" id="Mat_WoodFence"]
+albedo_color = Color(0.42, 0.32, 0.22, 1)
+roughness = 0.92
+
+[sub_resource type="BoxShape3D" id="Shape_Building"]
+size = Vector3(32, 5.4, 10)
+
+[sub_resource type="BoxMesh" id="Mesh_BuildingMain"]
+material = SubResource("Mat_YellowStucco")
+size = Vector3(32, 4.4, 10)
+
+[sub_resource type="BoxMesh" id="Mesh_RoofParapet"]
+material = SubResource("Mat_YellowStucco")
+size = Vector3(32, 1.0, 10)
+
+[sub_resource type="BoxMesh" id="Mesh_RoofDeck"]
+material = SubResource("Mat_Asphalt")
+size = Vector3(31.4, 0.04, 9.4)
+
+[sub_resource type="BoxMesh" id="Mesh_Mansard"]
+material = SubResource("Mat_MansardMetal")
+size = Vector3(32.9, 0.1, 2.2)
+
+[sub_resource type="PrismMesh" id="Mesh_MansardEndSlope"]
+material = SubResource("Mat_MansardMetal")
+left_to_right = 1.0
+size = Vector3(1.1, 1.9, 0.1)
+
+[sub_resource type="BoxMesh" id="Mesh_MansardEndBack"]
+material = SubResource("Mat_MansardMetal")
+size = Vector3(0.1, 1.9, 1.25)
+
+[sub_resource type="BoxMesh" id="Mesh_MansardCap"]
+material = SubResource("Mat_Asphalt")
+size = Vector3(32.9, 0.1, 1.3)
+
+[sub_resource type="BoxMesh" id="Mesh_FasciaBottom"]
+material = SubResource("Mat_WhiteTrim")
+size = Vector3(33.2, 0.3, 0.16)
+
+[sub_resource type="BoxMesh" id="Mesh_FasciaTop"]
+material = SubResource("Mat_WhiteTrim")
+size = Vector3(32.9, 0.08, 0.2)
+
+[sub_resource type="BoxMesh" id="Mesh_Soffit"]
+material = SubResource("Mat_WhiteTrim")
+size = Vector3(32.9, 0.08, 2.4)
+
+[sub_resource type="BoxShape3D" id="Shape_Walkway"]
+size = Vector3(32.4, 0.2, 2.6)
+
+[sub_resource type="BoxMesh" id="Mesh_Walkway"]
+material = SubResource("Mat_WalkwayConcrete")
+size = Vector3(32.4, 0.2, 2.6)
+
+[sub_resource type="BoxMesh" id="Mesh_Column"]
+material = SubResource("Mat_WhiteTrim")
+size = Vector3(0.22, 3.45, 0.22)
+
+[sub_resource type="BoxMesh" id="Mesh_StoreFrame"]
+material = SubResource("Mat_DarkAluminum")
+size = Vector3(7.4, 3.0, 0.12)
+
+[sub_resource type="BoxMesh" id="Mesh_StoreGlassLarge"]
+material = SubResource("Mat_StoreGlass")
+size = Vector3(2.3, 2.3, 0.08)
+
+[sub_resource type="BoxMesh" id="Mesh_DoorFrame"]
+material = SubResource("Mat_DarkAluminum")
+size = Vector3(1.8, 2.4, 0.14)
+
+[sub_resource type="BoxMesh" id="Mesh_DoorGlass"]
+material = SubResource("Mat_StoreGlass")
+size = Vector3(0.75, 2.1, 0.06)
+
+[sub_resource type="CylinderMesh" id="Mesh_DoorHandle"]
+material = SubResource("Mat_DoorHandle")
+top_radius = 0.02
+bottom_radius = 0.02
+height = 0.5
+radial_segments = 12
+
+[sub_resource type="BoxMesh" id="Mesh_PosterPanel"]
+size = Vector3(2.2, 1.1, 0.02)
+
+[sub_resource type="BoxMesh" id="Mesh_SignCabinet"]
+material = SubResource("Mat_SignCabinet")
+size = Vector3(3.4, 1.35, 0.22)
+
+[sub_resource type="BoxMesh" id="Mesh_SignFace"]
+size = Vector3(3.24, 1.2, 0.24)
+
+[sub_resource type="BoxMesh" id="Mesh_HvacBody"]
+material = SubResource("Mat_GalvanizedHVAC")
+size = Vector3(1.8, 1.1, 1.8)
+
+[sub_resource type="CylinderMesh" id="Mesh_HvacFan"]
+material = SubResource("Mat_DarkAluminum")
+top_radius = 0.65
+bottom_radius = 0.65
+height = 0.12
+radial_segments = 24
+
+[sub_resource type="BoxMesh" id="Mesh_RearDoor"]
+material = SubResource("Mat_DarkAluminum")
+size = Vector3(1.0, 2.1, 0.1)
+
+[sub_resource type="BoxShape3D" id="Shape_ParkingMain"]
+size = Vector3(36.0, 0.1, 18.4)
+
+[sub_resource type="BoxMesh" id="Mesh_ParkingMain"]
+material = SubResource("Mat_Asphalt")
+size = Vector3(36.0, 0.1, 18.4)
+
+[sub_resource type="BoxShape3D" id="Shape_ParkingSide"]
+size = Vector3(2.0, 0.1, 15.2)
+
+[sub_resource type="BoxMesh" id="Mesh_ParkingSide"]
+material = SubResource("Mat_Asphalt")
+size = Vector3(2.0, 0.1, 15.2)
+
+[sub_resource type="BoxShape3D" id="Shape_ParkingRear"]
+size = Vector3(36.0, 0.1, 6.0)
+
+[sub_resource type="BoxMesh" id="Mesh_ParkingRear"]
+material = SubResource("Mat_Asphalt")
+size = Vector3(36.0, 0.1, 6.0)
+
+[sub_resource type="BoxMesh" id="Mesh_Stripe"]
+material = SubResource("Mat_StripeWhite")
+size = Vector3(0.14, 0.02, 4.5)
+
+[sub_resource type="BoxMesh" id="Mesh_StripeBlue"]
+material = SubResource("Mat_StripeBlue")
+size = Vector3(0.16, 0.02, 4.5)
+
+[sub_resource type="BoxMesh" id="Mesh_HandicapPatch"]
+material = SubResource("Mat_StripeBlue")
+size = Vector3(1.7, 0.015, 1.8)
+
+[sub_resource type="BoxMesh" id="Mesh_WheelStop"]
+material = SubResource("Mat_WheelStop")
+size = Vector3(1.8, 0.14, 0.22)
+
+[sub_resource type="BoxShape3D" id="Shape_WheelStop"]
+size = Vector3(1.8, 0.14, 0.22)
+
+[sub_resource type="CylinderMesh" id="Mesh_SignPole"]
+material = SubResource("Mat_DarkAluminum")
+top_radius = 0.025
+bottom_radius = 0.025
+height = 1.7
+radial_segments = 12
+
+[sub_resource type="BoxMesh" id="Mesh_SignPlate"]
+material = SubResource("Mat_StripeBlue")
+size = Vector3(0.45, 0.6, 0.02)
+
+[sub_resource type="BoxMesh" id="Mesh_CorralBack"]
+material = SubResource("Mat_WoodFence")
+size = Vector3(6.2, 1.9, 0.14)
+
+[sub_resource type="BoxMesh" id="Mesh_CorralSide"]
+material = SubResource("Mat_WoodFence")
+size = Vector3(0.14, 1.9, 3.8)
+
+[sub_resource type="BoxShape3D" id="Shape_CorralBack"]
+size = Vector3(6.2, 1.9, 0.14)
+
+[sub_resource type="BoxShape3D" id="Shape_CorralSide"]
+size = Vector3(0.14, 1.9, 3.8)
+
+[sub_resource type="CylinderMesh" id="Mesh_PylonPole"]
+material = SubResource("Mat_DarkAluminum")
+top_radius = 0.16
+bottom_radius = 0.20
+height = 6.2
+radial_segments = 16
+
+[sub_resource type="BoxMesh" id="Mesh_PylonCabinet"]
+material = SubResource("Mat_SignCabinet")
+size = Vector3(3.6, 3.2, 0.35)
+
+[sub_resource type="BoxMesh" id="Mesh_PylonHeader"]
+material = SubResource("Mat_RedRoof")
+size = Vector3(3.4, 0.8, 0.37)
+
+[sub_resource type="BoxMesh" id="Mesh_PylonTenant"]
+material = SubResource("Mat_WhiteTrim")
+size = Vector3(3.3, 0.5, 0.38)
+
+[sub_resource type="CylinderShape3D" id="Shape_Pylon"]
+height = 6.2
+radius = 0.3
+
+[node name="StripMall" type="Node3D"]
+
+[node name="Building" type="Node3D" parent="."]
+
+[node name="MainMesh" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, 0)
+mesh = SubResource("Mesh_BuildingMain")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Building/MainMesh"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Building/MainMesh/StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("Shape_Building")
+
+[node name="RoofParapet" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.9, 0)
+mesh = SubResource("Mesh_RoofParapet")
+
+[node name="RoofDeck" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.42, 0)
+mesh = SubResource("Mesh_RoofDeck")
+
+[node name="RoofFacade" type="Node3D" parent="Building"]
+
+[node name="Mansard" type="MeshInstance3D" parent="Building/RoofFacade"]
+transform = Transform3D(1, 0, 0, 0, 0.5011, 0.8656, 0, -0.8656, 0.5011, 0, 4.425, -6.757)
+mesh = SubResource("Mesh_Mansard")
+
+[node name="MansardCap" type="MeshInstance3D" parent="Building/RoofFacade"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.36, -5.62)
+mesh = SubResource("Mesh_MansardCap")
+
+[node name="EndSlopeL" type="MeshInstance3D" parent="Building/RoofFacade"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -16.4, 4.45, -6.8)
+mesh = SubResource("Mesh_MansardEndSlope")
+
+[node name="EndBackL" type="MeshInstance3D" parent="Building/RoofFacade"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.4, 4.45, -5.625)
+mesh = SubResource("Mesh_MansardEndBack")
+
+[node name="EndSlopeR" type="MeshInstance3D" parent="Building/RoofFacade"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 16.4, 4.45, -6.8)
+mesh = SubResource("Mesh_MansardEndSlope")
+
+[node name="EndBackR" type="MeshInstance3D" parent="Building/RoofFacade"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.4, 4.45, -5.625)
+mesh = SubResource("Mesh_MansardEndBack")
+
+[node name="FasciaBottom" type="MeshInstance3D" parent="Building/RoofFacade"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.42, -7.4)
+mesh = SubResource("Mesh_FasciaBottom")
+
+[node name="FasciaTop" type="MeshInstance3D" parent="Building/RoofFacade"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.43, -6.22)
+mesh = SubResource("Mesh_FasciaTop")
+
+[node name="Soffit" type="MeshInstance3D" parent="Building/RoofFacade"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.45, -6.2)
+mesh = SubResource("Mesh_Soffit")
+
+[node name="Walkway" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, -6.3)
+mesh = SubResource("Mesh_Walkway")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Building/Walkway"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Building/Walkway/StaticBody3D"]
+shape = SubResource("Shape_Walkway")
+
+[node name="Columns" type="Node3D" parent="Building"]
+
+[node name="Col_m16" type="MeshInstance3D" parent="Building/Columns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 1.82, -7.1)
+mesh = SubResource("Mesh_Column")
+
+[node name="Col_m8" type="MeshInstance3D" parent="Building/Columns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 1.82, -7.1)
+mesh = SubResource("Mesh_Column")
+
+[node name="Col_0" type="MeshInstance3D" parent="Building/Columns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.82, -7.1)
+mesh = SubResource("Mesh_Column")
+
+[node name="Col_8" type="MeshInstance3D" parent="Building/Columns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 1.82, -7.1)
+mesh = SubResource("Mesh_Column")
+
+[node name="Col_16" type="MeshInstance3D" parent="Building/Columns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 1.82, -7.1)
+mesh = SubResource("Mesh_Column")
+
+[node name="RoofHVACs" type="Node3D" parent="Building"]
+
+[node name="HVAC_1" type="Node3D" parent="Building/RoofHVACs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 6.0, 0.5)
+
+[node name="Body" type="MeshInstance3D" parent="Building/RoofHVACs/HVAC_1"]
+mesh = SubResource("Mesh_HvacBody")
+
+[node name="Fan" type="MeshInstance3D" parent="Building/RoofHVACs/HVAC_1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+mesh = SubResource("Mesh_HvacFan")
+
+[node name="HVAC_2" type="Node3D" parent="Building/RoofHVACs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 6.0, 0.5)
+
+[node name="Body" type="MeshInstance3D" parent="Building/RoofHVACs/HVAC_2"]
+mesh = SubResource("Mesh_HvacBody")
+
+[node name="Fan" type="MeshInstance3D" parent="Building/RoofHVACs/HVAC_2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+mesh = SubResource("Mesh_HvacFan")
+
+[node name="HVAC_3" type="Node3D" parent="Building/RoofHVACs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 6.0, 0.5)
+
+[node name="Body" type="MeshInstance3D" parent="Building/RoofHVACs/HVAC_3"]
+mesh = SubResource("Mesh_HvacBody")
+
+[node name="Fan" type="MeshInstance3D" parent="Building/RoofHVACs/HVAC_3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+mesh = SubResource("Mesh_HvacFan")
+
+[node name="HVAC_4" type="Node3D" parent="Building/RoofHVACs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 6.0, 0.5)
+
+[node name="Body" type="MeshInstance3D" parent="Building/RoofHVACs/HVAC_4"]
+mesh = SubResource("Mesh_HvacBody")
+
+[node name="Fan" type="MeshInstance3D" parent="Building/RoofHVACs/HVAC_4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+mesh = SubResource("Mesh_HvacFan")
+
+[node name="RearDoors" type="Node3D" parent="Building"]
+
+[node name="RearDoor_1" type="MeshInstance3D" parent="Building/RearDoors"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 1.05, 5.02)
+mesh = SubResource("Mesh_RearDoor")
+
+[node name="RearDoor_2" type="MeshInstance3D" parent="Building/RearDoors"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 1.05, 5.02)
+mesh = SubResource("Mesh_RearDoor")
+
+[node name="RearDoor_3" type="MeshInstance3D" parent="Building/RearDoors"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 1.05, 5.02)
+mesh = SubResource("Mesh_RearDoor")
+
+[node name="RearDoor_4" type="MeshInstance3D" parent="Building/RearDoors"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 1.05, 5.02)
+mesh = SubResource("Mesh_RearDoor")
+
+[node name="Storefronts" type="Node3D" parent="."]
+
+[node name="Store_USAVape" type="Node3D" parent="Storefronts"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0, -5.0)
+
+[node name="StoreFrame" type="MeshInstance3D" parent="Storefronts/Store_USAVape"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7, 0)
+mesh = SubResource("Mesh_StoreFrame")
+
+[node name="GlassL" type="MeshInstance3D" parent="Storefronts/Store_USAVape"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.4, 1.7, 0.02)
+mesh = SubResource("Mesh_StoreGlassLarge")
+
+[node name="GlassR" type="MeshInstance3D" parent="Storefronts/Store_USAVape"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4, 1.7, 0.02)
+mesh = SubResource("Mesh_StoreGlassLarge")
+
+[node name="PosterL" type="MeshInstance3D" parent="Storefronts/Store_USAVape"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.4, 1.15, -0.075)
+mesh = SubResource("Mesh_PosterPanel")
+surface_material_override/0 = SubResource("Mat_PosterVape")
+
+[node name="PosterLabelL" type="Label3D" parent="Storefronts/Store_USAVape"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -2.4, 1.15, -0.09)
+pixel_size = 0.007
+text = "DISPOSABLES
+2 FOR $30"
+font = ExtResource("1_font_archivo")
+outline_size = 0
+
+[node name="NeonOpen" type="Label3D" parent="Storefronts/Store_USAVape"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 2.4, 2.1, -0.07)
+pixel_size = 0.009
+text = "OPEN"
+font = ExtResource("1_font_archivo")
+modulate = Color(0.1, 0.95, 0.2, 1)
+outline_size = 0
+
+[node name="DoorFrame" type="MeshInstance3D" parent="Storefronts/Store_USAVape"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0.02)
+mesh = SubResource("Mesh_DoorFrame")
+
+[node name="DoorGlassL" type="MeshInstance3D" parent="Storefronts/Store_USAVape"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.42, 1.4, 0.03)
+mesh = SubResource("Mesh_DoorGlass")
+
+[node name="DoorGlassR" type="MeshInstance3D" parent="Storefronts/Store_USAVape"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.42, 1.4, 0.03)
+mesh = SubResource("Mesh_DoorGlass")
+
+[node name="HandleL" type="MeshInstance3D" parent="Storefronts/Store_USAVape"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.1, 1.3, -0.08)
+mesh = SubResource("Mesh_DoorHandle")
+
+[node name="HandleR" type="MeshInstance3D" parent="Storefronts/Store_USAVape"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1, 1.3, -0.08)
+mesh = SubResource("Mesh_DoorHandle")
+
+[node name="Sign" type="Node3D" parent="Storefronts/Store_USAVape"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 4.45, -2.45)
+
+[node name="Cabinet" type="MeshInstance3D" parent="Storefronts/Store_USAVape/Sign"]
+mesh = SubResource("Mesh_SignCabinet")
+
+[node name="Face" type="MeshInstance3D" parent="Storefronts/Store_USAVape/Sign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.02)
+mesh = SubResource("Mesh_SignFace")
+surface_material_override/0 = SubResource("Mat_SignUSAVape")
+
+[node name="LabelTitle" type="Label3D" parent="Storefronts/Store_USAVape/Sign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0.16)
+pixel_size = 0.0135
+text = "USA VAPE"
+font = ExtResource("1_font_archivo")
+outline_size = 0
+
+[node name="LabelSub" type="Label3D" parent="Storefronts/Store_USAVape/Sign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.28, 0.16)
+pixel_size = 0.0055
+text = "E-CIGS • KRATOM • HOOKAH"
+font = ExtResource("2_font_fredoka")
+modulate = Color(0.96, 0.85, 0.12, 1)
+outline_size = 0
+
+[node name="Store_FreedomTattoo" type="Node3D" parent="Storefronts"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, -5.0)
+
+[node name="StoreFrame" type="MeshInstance3D" parent="Storefronts/Store_FreedomTattoo"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7, 0)
+mesh = SubResource("Mesh_StoreFrame")
+
+[node name="GlassL" type="MeshInstance3D" parent="Storefronts/Store_FreedomTattoo"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.4, 1.7, 0.02)
+mesh = SubResource("Mesh_StoreGlassLarge")
+
+[node name="GlassR" type="MeshInstance3D" parent="Storefronts/Store_FreedomTattoo"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4, 1.7, 0.02)
+mesh = SubResource("Mesh_StoreGlassLarge")
+
+[node name="PosterL" type="MeshInstance3D" parent="Storefronts/Store_FreedomTattoo"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.4, 1.15, -0.075)
+mesh = SubResource("Mesh_PosterPanel")
+surface_material_override/0 = SubResource("Mat_PosterTattoo")
+
+[node name="PosterLabelL" type="Label3D" parent="Storefronts/Store_FreedomTattoo"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -2.4, 1.15, -0.09)
+pixel_size = 0.007
+text = "WALK-INS
+WELCOME"
+font = ExtResource("1_font_archivo")
+outline_size = 0
+
+[node name="NeonOpen" type="Label3D" parent="Storefronts/Store_FreedomTattoo"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 2.4, 2.1, -0.07)
+pixel_size = 0.009
+text = "OPEN"
+font = ExtResource("1_font_archivo")
+modulate = Color(1.0, 0.55, 0.1, 1)
+outline_size = 0
+
+[node name="DoorFrame" type="MeshInstance3D" parent="Storefronts/Store_FreedomTattoo"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0.02)
+mesh = SubResource("Mesh_DoorFrame")
+
+[node name="DoorGlassL" type="MeshInstance3D" parent="Storefronts/Store_FreedomTattoo"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.42, 1.4, 0.03)
+mesh = SubResource("Mesh_DoorGlass")
+
+[node name="DoorGlassR" type="MeshInstance3D" parent="Storefronts/Store_FreedomTattoo"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.42, 1.4, 0.03)
+mesh = SubResource("Mesh_DoorGlass")
+
+[node name="HandleL" type="MeshInstance3D" parent="Storefronts/Store_FreedomTattoo"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.1, 1.3, -0.08)
+mesh = SubResource("Mesh_DoorHandle")
+
+[node name="HandleR" type="MeshInstance3D" parent="Storefronts/Store_FreedomTattoo"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1, 1.3, -0.08)
+mesh = SubResource("Mesh_DoorHandle")
+
+[node name="Sign" type="Node3D" parent="Storefronts/Store_FreedomTattoo"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 4.45, -2.45)
+
+[node name="Cabinet" type="MeshInstance3D" parent="Storefronts/Store_FreedomTattoo/Sign"]
+mesh = SubResource("Mesh_SignCabinet")
+
+[node name="Face" type="MeshInstance3D" parent="Storefronts/Store_FreedomTattoo/Sign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.02)
+mesh = SubResource("Mesh_SignFace")
+surface_material_override/0 = SubResource("Mat_SignFreedomTattoo")
+
+[node name="LabelTitle" type="Label3D" parent="Storefronts/Store_FreedomTattoo/Sign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0.16)
+pixel_size = 0.009
+text = "FREEDOM TATTOO"
+font = ExtResource("1_font_archivo")
+outline_size = 0
+
+[node name="LabelSub" type="Label3D" parent="Storefronts/Store_FreedomTattoo/Sign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.28, 0.16)
+pixel_size = 0.0055
+text = "BODY PIERCING & INK"
+font = ExtResource("2_font_fredoka")
+modulate = Color(0.96, 0.78, 0.18, 1)
+outline_size = 0
+
+[node name="Store_Abominos" type="Node3D" parent="Storefronts"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, -5.0)
+
+[node name="StoreFrame" type="MeshInstance3D" parent="Storefronts/Store_Abominos"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7, 0)
+mesh = SubResource("Mesh_StoreFrame")
+
+[node name="GlassL" type="MeshInstance3D" parent="Storefronts/Store_Abominos"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.4, 1.7, 0.02)
+mesh = SubResource("Mesh_StoreGlassLarge")
+
+[node name="GlassR" type="MeshInstance3D" parent="Storefronts/Store_Abominos"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4, 1.7, 0.02)
+mesh = SubResource("Mesh_StoreGlassLarge")
+
+[node name="PosterL" type="MeshInstance3D" parent="Storefronts/Store_Abominos"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.4, 1.15, -0.075)
+mesh = SubResource("Mesh_PosterPanel")
+surface_material_override/0 = SubResource("Mat_PosterPizza")
+
+[node name="PosterLabelL" type="Label3D" parent="Storefronts/Store_Abominos"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -2.4, 1.15, -0.09)
+pixel_size = 0.007
+text = "HOT PIZZA
+DELIVERY"
+font = ExtResource("1_font_archivo")
+outline_size = 0
+
+[node name="NeonOpen" type="Label3D" parent="Storefronts/Store_Abominos"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 2.4, 2.1, -0.07)
+pixel_size = 0.009
+text = "OPEN"
+font = ExtResource("1_font_archivo")
+modulate = Color(0.1, 0.95, 0.2, 1)
+outline_size = 0
+
+[node name="DoorFrame" type="MeshInstance3D" parent="Storefronts/Store_Abominos"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0.02)
+mesh = SubResource("Mesh_DoorFrame")
+
+[node name="DoorGlassL" type="MeshInstance3D" parent="Storefronts/Store_Abominos"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.42, 1.4, 0.03)
+mesh = SubResource("Mesh_DoorGlass")
+
+[node name="DoorGlassR" type="MeshInstance3D" parent="Storefronts/Store_Abominos"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.42, 1.4, 0.03)
+mesh = SubResource("Mesh_DoorGlass")
+
+[node name="HandleL" type="MeshInstance3D" parent="Storefronts/Store_Abominos"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.1, 1.3, -0.08)
+mesh = SubResource("Mesh_DoorHandle")
+
+[node name="HandleR" type="MeshInstance3D" parent="Storefronts/Store_Abominos"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1, 1.3, -0.08)
+mesh = SubResource("Mesh_DoorHandle")
+
+[node name="AbominosLogo" parent="Storefronts/Store_Abominos" instance=ExtResource("3_abominos_logo")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 4.45, -2.45)
+
+[node name="Store_StarNails" type="Node3D" parent="Storefronts"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, -5.0)
+
+[node name="StoreFrame" type="MeshInstance3D" parent="Storefronts/Store_StarNails"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7, 0)
+mesh = SubResource("Mesh_StoreFrame")
+
+[node name="GlassL" type="MeshInstance3D" parent="Storefronts/Store_StarNails"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.4, 1.7, 0.02)
+mesh = SubResource("Mesh_StoreGlassLarge")
+
+[node name="GlassR" type="MeshInstance3D" parent="Storefronts/Store_StarNails"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4, 1.7, 0.02)
+mesh = SubResource("Mesh_StoreGlassLarge")
+
+[node name="PosterL" type="MeshInstance3D" parent="Storefronts/Store_StarNails"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.4, 1.15, -0.075)
+mesh = SubResource("Mesh_PosterPanel")
+surface_material_override/0 = SubResource("Mat_PosterNails")
+
+[node name="PosterLabelL" type="Label3D" parent="Storefronts/Store_StarNails"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -2.4, 1.15, -0.09)
+pixel_size = 0.007
+text = "PEDICURE
+& WAXING"
+font = ExtResource("1_font_archivo")
+outline_size = 0
+
+[node name="NeonOpen" type="Label3D" parent="Storefronts/Store_StarNails"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 2.4, 2.1, -0.07)
+pixel_size = 0.009
+text = "OPEN"
+font = ExtResource("1_font_archivo")
+modulate = Color(1.0, 0.2, 0.6, 1)
+outline_size = 0
+
+[node name="DoorFrame" type="MeshInstance3D" parent="Storefronts/Store_StarNails"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0.02)
+mesh = SubResource("Mesh_DoorFrame")
+
+[node name="DoorGlassL" type="MeshInstance3D" parent="Storefronts/Store_StarNails"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.42, 1.4, 0.03)
+mesh = SubResource("Mesh_DoorGlass")
+
+[node name="DoorGlassR" type="MeshInstance3D" parent="Storefronts/Store_StarNails"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.42, 1.4, 0.03)
+mesh = SubResource("Mesh_DoorGlass")
+
+[node name="HandleL" type="MeshInstance3D" parent="Storefronts/Store_StarNails"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.1, 1.3, -0.08)
+mesh = SubResource("Mesh_DoorHandle")
+
+[node name="HandleR" type="MeshInstance3D" parent="Storefronts/Store_StarNails"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1, 1.3, -0.08)
+mesh = SubResource("Mesh_DoorHandle")
+
+[node name="Sign" type="Node3D" parent="Storefronts/Store_StarNails"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 4.45, -2.45)
+
+[node name="Cabinet" type="MeshInstance3D" parent="Storefronts/Store_StarNails/Sign"]
+mesh = SubResource("Mesh_SignCabinet")
+
+[node name="Face" type="MeshInstance3D" parent="Storefronts/Store_StarNails/Sign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.02)
+mesh = SubResource("Mesh_SignFace")
+surface_material_override/0 = SubResource("Mat_SignNails")
+
+[node name="LabelTitle" type="Label3D" parent="Storefronts/Store_StarNails/Sign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0.16)
+pixel_size = 0.009
+text = "STAR NAILS & SPA"
+font = ExtResource("1_font_archivo")
+modulate = Color(0.92, 0.12, 0.45, 1)
+outline_size = 0
+
+[node name="LabelSub" type="Label3D" parent="Storefronts/Store_StarNails/Sign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.28, 0.16)
+pixel_size = 0.0055
+text = "MANICURE • PEDICURE • WAXING"
+font = ExtResource("2_font_fredoka")
+modulate = Color(0.4, 0.1, 0.3, 1)
+outline_size = 0
+
+[node name="ParkingLot" type="Node3D" parent="."]
+
+[node name="AsphaltFront" type="MeshInstance3D" parent="ParkingLot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, -16.8)
+mesh = SubResource("Mesh_ParkingMain")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="ParkingLot/AsphaltFront"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ParkingLot/AsphaltFront/StaticBody3D"]
+shape = SubResource("Shape_ParkingMain")
+
+[node name="AsphaltSideW" type="MeshInstance3D" parent="ParkingLot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.0, 0.05, 0.0)
+mesh = SubResource("Mesh_ParkingSide")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="ParkingLot/AsphaltSideW"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ParkingLot/AsphaltSideW/StaticBody3D"]
+shape = SubResource("Shape_ParkingSide")
+
+[node name="AsphaltSideE" type="MeshInstance3D" parent="ParkingLot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.0, 0.05, 0.0)
+mesh = SubResource("Mesh_ParkingSide")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="ParkingLot/AsphaltSideE"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ParkingLot/AsphaltSideE/StaticBody3D"]
+shape = SubResource("Shape_ParkingSide")
+
+[node name="AsphaltRear" type="MeshInstance3D" parent="ParkingLot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 8.0)
+mesh = SubResource("Mesh_ParkingRear")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="ParkingLot/AsphaltRear"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ParkingLot/AsphaltRear/StaticBody3D"]
+shape = SubResource("Shape_ParkingRear")
+
+[node name="Stripes" type="Node3D" parent="ParkingLot"]
+
+[node name="Stripe_m16" type="MeshInstance3D" parent="ParkingLot/Stripes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 0.11, -10)
+mesh = SubResource("Mesh_Stripe")
+
+[node name="Stripe_m12" type="MeshInstance3D" parent="ParkingLot/Stripes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0.11, -10)
+mesh = SubResource("Mesh_Stripe")
+
+[node name="Stripe_m8" type="MeshInstance3D" parent="ParkingLot/Stripes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0.11, -10)
+mesh = SubResource("Mesh_Stripe")
+
+[node name="Stripe_m4_blue" type="MeshInstance3D" parent="ParkingLot/Stripes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.11, -10)
+mesh = SubResource("Mesh_StripeBlue")
+
+[node name="Stripe_0_blue" type="MeshInstance3D" parent="ParkingLot/Stripes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.11, -10)
+mesh = SubResource("Mesh_StripeBlue")
+
+[node name="Stripe_4_blue" type="MeshInstance3D" parent="ParkingLot/Stripes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.11, -10)
+mesh = SubResource("Mesh_StripeBlue")
+
+[node name="Stripe_8" type="MeshInstance3D" parent="ParkingLot/Stripes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.11, -10)
+mesh = SubResource("Mesh_Stripe")
+
+[node name="Stripe_12" type="MeshInstance3D" parent="ParkingLot/Stripes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0.11, -10)
+mesh = SubResource("Mesh_Stripe")
+
+[node name="Stripe_16" type="MeshInstance3D" parent="ParkingLot/Stripes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0.11, -10)
+mesh = SubResource("Mesh_Stripe")
+
+[node name="HandicapPatchL" type="MeshInstance3D" parent="ParkingLot/Stripes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0.108, -10.5)
+mesh = SubResource("Mesh_HandicapPatch")
+
+[node name="HandicapSymbolL" type="Label3D" parent="ParkingLot/Stripes"]
+transform = Transform3D(-1, 0, 0, 0, 0, 1, 0, 1, 0, -2, 0.12, -10.5)
+pixel_size = 0.0075
+text = "RESERVED"
+font = ExtResource("1_font_archivo")
+outline_size = 0
+
+[node name="HandicapPatchR" type="MeshInstance3D" parent="ParkingLot/Stripes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.108, -10.5)
+mesh = SubResource("Mesh_HandicapPatch")
+
+[node name="HandicapSymbolR" type="Label3D" parent="ParkingLot/Stripes"]
+transform = Transform3D(-1, 0, 0, 0, 0, 1, 0, 1, 0, 2, 0.12, -10.5)
+pixel_size = 0.0075
+text = "RESERVED"
+font = ExtResource("1_font_archivo")
+outline_size = 0
+
+[node name="WheelStops" type="Node3D" parent="ParkingLot"]
+
+[node name="Stop_1" type="StaticBody3D" parent="ParkingLot/WheelStops"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 0.12, -8.4)
+
+[node name="Mesh" type="MeshInstance3D" parent="ParkingLot/WheelStops/Stop_1"]
+mesh = SubResource("Mesh_WheelStop")
+
+[node name="Collision" type="CollisionShape3D" parent="ParkingLot/WheelStops/Stop_1"]
+shape = SubResource("Shape_WheelStop")
+
+[node name="Stop_2" type="StaticBody3D" parent="ParkingLot/WheelStops"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0.12, -8.4)
+
+[node name="Mesh" type="MeshInstance3D" parent="ParkingLot/WheelStops/Stop_2"]
+mesh = SubResource("Mesh_WheelStop")
+
+[node name="Collision" type="CollisionShape3D" parent="ParkingLot/WheelStops/Stop_2"]
+shape = SubResource("Shape_WheelStop")
+
+[node name="Stop_3" type="StaticBody3D" parent="ParkingLot/WheelStops"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0.12, -8.4)
+
+[node name="Mesh" type="MeshInstance3D" parent="ParkingLot/WheelStops/Stop_3"]
+mesh = SubResource("Mesh_WheelStop")
+
+[node name="Collision" type="CollisionShape3D" parent="ParkingLot/WheelStops/Stop_3"]
+shape = SubResource("Shape_WheelStop")
+
+[node name="Stop_4" type="StaticBody3D" parent="ParkingLot/WheelStops"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0.12, -8.4)
+
+[node name="Mesh" type="MeshInstance3D" parent="ParkingLot/WheelStops/Stop_4"]
+mesh = SubResource("Mesh_WheelStop")
+
+[node name="Collision" type="CollisionShape3D" parent="ParkingLot/WheelStops/Stop_4"]
+shape = SubResource("Shape_WheelStop")
+
+[node name="Stop_5" type="StaticBody3D" parent="ParkingLot/WheelStops"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.12, -8.4)
+
+[node name="Mesh" type="MeshInstance3D" parent="ParkingLot/WheelStops/Stop_5"]
+mesh = SubResource("Mesh_WheelStop")
+
+[node name="Collision" type="CollisionShape3D" parent="ParkingLot/WheelStops/Stop_5"]
+shape = SubResource("Shape_WheelStop")
+
+[node name="Stop_6" type="StaticBody3D" parent="ParkingLot/WheelStops"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.12, -8.4)
+
+[node name="Mesh" type="MeshInstance3D" parent="ParkingLot/WheelStops/Stop_6"]
+mesh = SubResource("Mesh_WheelStop")
+
+[node name="Collision" type="CollisionShape3D" parent="ParkingLot/WheelStops/Stop_6"]
+shape = SubResource("Shape_WheelStop")
+
+[node name="Stop_7" type="StaticBody3D" parent="ParkingLot/WheelStops"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0.12, -8.4)
+
+[node name="Mesh" type="MeshInstance3D" parent="ParkingLot/WheelStops/Stop_7"]
+mesh = SubResource("Mesh_WheelStop")
+
+[node name="Collision" type="CollisionShape3D" parent="ParkingLot/WheelStops/Stop_7"]
+shape = SubResource("Shape_WheelStop")
+
+[node name="Stop_8" type="StaticBody3D" parent="ParkingLot/WheelStops"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0.12, -8.4)
+
+[node name="Mesh" type="MeshInstance3D" parent="ParkingLot/WheelStops/Stop_8"]
+mesh = SubResource("Mesh_WheelStop")
+
+[node name="Collision" type="CollisionShape3D" parent="ParkingLot/WheelStops/Stop_8"]
+shape = SubResource("Shape_WheelStop")
+
+[node name="Signs" type="Node3D" parent="ParkingLot"]
+
+[node name="HandicapSignL" type="Node3D" parent="ParkingLot/Signs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, -7.45)
+
+[node name="Pole" type="MeshInstance3D" parent="ParkingLot/Signs/HandicapSignL"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
+mesh = SubResource("Mesh_SignPole")
+
+[node name="Plate" type="MeshInstance3D" parent="ParkingLot/Signs/HandicapSignL"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+mesh = SubResource("Mesh_SignPlate")
+
+[node name="Label" type="Label3D" parent="ParkingLot/Signs/HandicapSignL"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 1.5, -0.02)
+pixel_size = 0.00105
+font_size = 64
+text = "RESERVED
+PARKING
+ONLY"
+font = ExtResource("1_font_archivo")
+outline_size = 0
+
+[node name="HandicapSignR" type="Node3D" parent="ParkingLot/Signs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -7.45)
+
+[node name="Pole" type="MeshInstance3D" parent="ParkingLot/Signs/HandicapSignR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
+mesh = SubResource("Mesh_SignPole")
+
+[node name="Plate" type="MeshInstance3D" parent="ParkingLot/Signs/HandicapSignR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+mesh = SubResource("Mesh_SignPlate")
+
+[node name="Label" type="Label3D" parent="ParkingLot/Signs/HandicapSignR"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 1.5, -0.02)
+pixel_size = 0.00105
+font_size = 64
+text = "RESERVED
+PARKING
+ONLY"
+font = ExtResource("1_font_archivo")
+outline_size = 0
+
+[node name="Bollards" type="Node3D" parent="ParkingLot"]
+
+[node name="Bollard_1" parent="ParkingLot/Bollards" instance=ExtResource("4_bollard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 0, -7.4)
+
+[node name="Bollard_2" parent="ParkingLot/Bollards" instance=ExtResource("4_bollard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, -7.4)
+
+[node name="Bollard_3" parent="ParkingLot/Bollards" instance=ExtResource("4_bollard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, -7.4)
+
+[node name="Bollard_4" parent="ParkingLot/Bollards" instance=ExtResource("4_bollard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, -7.4)
+
+[node name="ShoppingCart" parent="ParkingLot" instance=ExtResource("6_cart")]
+transform = Transform3D(0.866025, 0, 0.5, 0, 1, 0, -0.5, 0, 0.866025, -17, 0.1, -24)
+
+[node name="DumpsterCorral" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.0, 0, 8.2)
+
+[node name="WallBack" type="MeshInstance3D" parent="DumpsterCorral"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, 1.8)
+mesh = SubResource("Mesh_CorralBack")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="DumpsterCorral/WallBack"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DumpsterCorral/WallBack/StaticBody3D"]
+shape = SubResource("Shape_CorralBack")
+
+[node name="WallLeft" type="MeshInstance3D" parent="DumpsterCorral"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.05, 0.95, 0)
+mesh = SubResource("Mesh_CorralSide")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="DumpsterCorral/WallLeft"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DumpsterCorral/WallLeft/StaticBody3D"]
+shape = SubResource("Shape_CorralSide")
+
+[node name="WallRight" type="MeshInstance3D" parent="DumpsterCorral"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.05, 0.95, 0)
+mesh = SubResource("Mesh_CorralSide")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="DumpsterCorral/WallRight"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DumpsterCorral/WallRight/StaticBody3D"]
+shape = SubResource("Shape_CorralSide")
+
+[node name="DumpsterTrash" parent="DumpsterCorral" instance=ExtResource("5_dumpster")]
+transform = Transform3D(0.996, 0, 0.087, 0, 1, 0, -0.087, 0, 0.996, -1.5, 0.08, 0.2)
+dumpster_color = "green"
+lid_open = true
+
+[node name="DumpsterRecycle" parent="DumpsterCorral" instance=ExtResource("5_dumpster")]
+transform = Transform3D(0.998, 0, -0.052, 0, 1, 0, 0.052, 0, 0.998, 1.5, 0.08, 0.15)
+dumpster_color = "blue"
+lid_open = false
+
+[node name="RoadsideSign" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.5, 0, -23.5)
+
+[node name="StaticBody3D" type="StaticBody3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.1, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RoadsideSign/StaticBody3D"]
+shape = SubResource("Shape_Pylon")
+
+[node name="PoleL" type="MeshInstance3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4, 3.1, 0)
+mesh = SubResource("Mesh_PylonPole")
+
+[node name="PoleR" type="MeshInstance3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.4, 3.1, 0)
+mesh = SubResource("Mesh_PylonPole")
+
+[node name="Cabinet" type="MeshInstance3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.4, 0)
+mesh = SubResource("Mesh_PylonCabinet")
+
+[node name="PlazaHeader" type="MeshInstance3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.5, 0)
+mesh = SubResource("Mesh_PylonHeader")
+
+[node name="HeaderLabelF" type="Label3D" parent="RoadsideSign/PlazaHeader"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -0.2)
+pixel_size = 0.009
+text = "COLONIAL PLAZA"
+font = ExtResource("1_font_archivo")
+outline_size = 0
+
+[node name="HeaderLabelB" type="Label3D" parent="RoadsideSign/PlazaHeader"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.2)
+pixel_size = 0.009
+text = "COLONIAL PLAZA"
+font = ExtResource("1_font_archivo")
+outline_size = 0
+
+[node name="Panel_Abominos" type="MeshInstance3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.8, 0)
+mesh = SubResource("Mesh_PylonTenant")
+surface_material_override/0 = SubResource("Mat_SignUSAVape")
+
+[node name="LabelF" type="Label3D" parent="RoadsideSign/Panel_Abominos"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -0.21)
+pixel_size = 0.0085
+text = "abominos pizza"
+font = ExtResource("2_font_fredoka")
+outline_size = 0
+
+[node name="LabelB" type="Label3D" parent="RoadsideSign/Panel_Abominos"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.21)
+pixel_size = 0.0085
+text = "abominos pizza"
+font = ExtResource("2_font_fredoka")
+outline_size = 0
+
+[node name="Panel_USAVape" type="MeshInstance3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.25, 0)
+mesh = SubResource("Mesh_PylonTenant")
+
+[node name="LabelF" type="Label3D" parent="RoadsideSign/Panel_USAVape"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -0.21)
+pixel_size = 0.008
+text = "USA VAPE"
+font = ExtResource("1_font_archivo")
+modulate = Color(0.12, 0.3, 0.75, 1)
+outline_size = 0
+
+[node name="LabelB" type="Label3D" parent="RoadsideSign/Panel_USAVape"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.21)
+pixel_size = 0.008
+text = "USA VAPE"
+font = ExtResource("1_font_archivo")
+modulate = Color(0.12, 0.3, 0.75, 1)
+outline_size = 0
+
+[node name="Panel_FreedomTattoo" type="MeshInstance3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.7, 0)
+mesh = SubResource("Mesh_PylonTenant")
+surface_material_override/0 = SubResource("Mat_SignFreedomTattoo")
+
+[node name="LabelF" type="Label3D" parent="RoadsideSign/Panel_FreedomTattoo"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -0.21)
+pixel_size = 0.0075
+text = "FREEDOM TATTOO"
+font = ExtResource("1_font_archivo")
+modulate = Color(0.96, 0.78, 0.18, 1)
+outline_size = 0
+
+[node name="LabelB" type="Label3D" parent="RoadsideSign/Panel_FreedomTattoo"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.21)
+pixel_size = 0.0075
+text = "FREEDOM TATTOO"
+font = ExtResource("1_font_archivo")
+modulate = Color(0.96, 0.78, 0.18, 1)
+outline_size = 0
+
+[node name="Panel_StarNails" type="MeshInstance3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.15, 0)
+mesh = SubResource("Mesh_PylonTenant")
+surface_material_override/0 = SubResource("Mat_SignNails")
+
+[node name="LabelF" type="Label3D" parent="RoadsideSign/Panel_StarNails"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -0.21)
+pixel_size = 0.0075
+text = "STAR NAILS & SPA"
+font = ExtResource("1_font_archivo")
+modulate = Color(0.92, 0.12, 0.45, 1)
+outline_size = 0
+
+[node name="LabelB" type="Label3D" parent="RoadsideSign/Panel_StarNails"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.21)
+pixel_size = 0.0075
+text = "STAR NAILS & SPA"
+font = ExtResource("1_font_archivo")
+modulate = Color(0.92, 0.12, 0.45, 1)
+outline_size = 0

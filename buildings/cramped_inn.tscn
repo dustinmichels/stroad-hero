@@ -139,21 +139,81 @@ size = Vector3(3, 0.8, 0.9)
 material = SubResource("Mat_Hedge")
 size = Vector3(8, 0.8, 0.9)
 
-[sub_resource type="BoxMesh" id="Mesh_SignPillar"]
-material = SubResource("Mat_StuccoLight")
-size = Vector3(2.1, 4.9, 0.85)
+[sub_resource type="StandardMaterial3D" id="Mat_SignDarkGrey"]
+albedo_color = Color(0.24, 0.26, 0.29, 1)
+metallic = 0.15
+roughness = 0.5
 
-[sub_resource type="StandardMaterial3D" id="Mat_SignBlue"]
-albedo_color = Color(0.05, 0.16, 0.36, 1)
-roughness = 0.4
+[sub_resource type="StandardMaterial3D" id="Mat_SignRed"]
+albedo_color = Color(0.82, 0.14, 0.16, 1)
+roughness = 0.35
 
-[sub_resource type="BoxMesh" id="Mesh_SignBoard"]
-material = SubResource("Mat_SignBlue")
-size = Vector3(4.6, 2.2, 0.5)
+[sub_resource type="StandardMaterial3D" id="Mat_SignWhite"]
+albedo_color = Color(0.96, 0.96, 0.98, 1)
+roughness = 0.3
 
-[sub_resource type="BoxMesh" id="Mesh_SignInset"]
-material = SubResource("Mat_Trim")
-size = Vector3(4.15, 1.75, 0.12)
+[sub_resource type="StandardMaterial3D" id="Mat_SignNavyBlue"]
+albedo_color = Color(0.11, 0.20, 0.42, 1)
+roughness = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Mat_SignRock"]
+albedo_color = Color(0.48, 0.46, 0.43, 1)
+roughness = 0.95
+
+[sub_resource type="CylinderMesh" id="Mesh_SignHexCabinet"]
+material = SubResource("Mat_SignDarkGrey")
+top_radius = 0.5
+bottom_radius = 0.5
+height = 1.0
+radial_segments = 6
+
+[sub_resource type="CylinderMesh" id="Mesh_SignHexRed"]
+material = SubResource("Mat_SignRed")
+top_radius = 0.5
+bottom_radius = 0.5
+height = 1.0
+radial_segments = 6
+
+[sub_resource type="CylinderMesh" id="Mesh_SignHexWhite"]
+material = SubResource("Mat_SignWhite")
+top_radius = 0.5
+bottom_radius = 0.5
+height = 1.0
+radial_segments = 6
+
+[sub_resource type="CylinderMesh" id="Mesh_SignHexNavy"]
+material = SubResource("Mat_SignNavyBlue")
+top_radius = 0.5
+bottom_radius = 0.5
+height = 1.0
+radial_segments = 6
+
+[sub_resource type="BoxMesh" id="Mesh_SignPillarCol"]
+material = SubResource("Mat_SignDarkGrey")
+size = Vector3(0.52, 7.5, 0.6)
+
+[sub_resource type="BoxMesh" id="Mesh_SignArchHeader"]
+material = SubResource("Mat_SignDarkGrey")
+size = Vector3(2.8, 0.7, 0.6)
+
+[sub_resource type="BoxMesh" id="Mesh_SignArchBracket"]
+material = SubResource("Mat_SignDarkGrey")
+size = Vector3(0.45, 0.45, 0.6)
+
+[sub_resource type="BoxMesh" id="Mesh_SignPillarReveal"]
+material = SubResource("Mat_SignDarkGrey")
+size = Vector3(0.56, 0.05, 0.64)
+
+[sub_resource type="SphereMesh" id="Mesh_SignRock"]
+material = SubResource("Mat_SignRock")
+radius = 0.45
+height = 0.65
+radial_segments = 8
+rings = 4
+
+[sub_resource type="BoxMesh" id="Mesh_SignBush"]
+material = SubResource("Mat_Hedge")
+size = Vector3(1.6, 0.45, 0.8)
 
 [node name="CrampedInn" type="Node3D"]
 
@@ -600,38 +660,102 @@ mesh = SubResource("Mesh_HedgeLong")
 [node name="RoadsideSign" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 20)
 
-[node name="Pillar" type="MeshInstance3D" parent="RoadsideSign"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.45, 0)
-mesh = SubResource("Mesh_SignPillar")
+[node name="BaseBush" type="MeshInstance3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 0)
+mesh = SubResource("Mesh_SignBush")
 
-[node name="Board" type="MeshInstance3D" parent="RoadsideSign"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, 0)
-mesh = SubResource("Mesh_SignBoard")
+[node name="BaseRock" type="MeshInstance3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 0.3, 0.1)
+mesh = SubResource("Mesh_SignRock")
 
-[node name="InsetFront" type="MeshInstance3D" parent="RoadsideSign"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, 0.31)
-mesh = SubResource("Mesh_SignInset")
+[node name="PillarL" type="MeshInstance3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.65, 3.75, 0)
+mesh = SubResource("Mesh_SignPillarCol")
 
-[node name="InsetBack" type="MeshInstance3D" parent="RoadsideSign"]
-transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 6, -0.31)
-mesh = SubResource("Mesh_SignInset")
+[node name="PillarR" type="MeshInstance3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.65, 3.75, 0)
+mesh = SubResource("Mesh_SignPillarCol")
 
-[node name="NameFront" type="Label3D" parent="RoadsideSign"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, 0.4)
+[node name="RevealL1" type="MeshInstance3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.65, 2, 0)
+mesh = SubResource("Mesh_SignPillarReveal")
+
+[node name="RevealL2" type="MeshInstance3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.65, 4.2, 0)
+mesh = SubResource("Mesh_SignPillarReveal")
+
+[node name="RevealR1" type="MeshInstance3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.65, 2, 0)
+mesh = SubResource("Mesh_SignPillarReveal")
+
+[node name="RevealR2" type="MeshInstance3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.65, 4.2, 0)
+mesh = SubResource("Mesh_SignPillarReveal")
+
+[node name="ArchHeader" type="MeshInstance3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.65, 0)
+mesh = SubResource("Mesh_SignArchHeader")
+
+[node name="ArchBracketL" type="MeshInstance3D" parent="RoadsideSign"]
+transform = Transform3D(0.707107, -0.707107, 0, 0.707107, 0.707107, 0, 0, 0, 1, -1.25, 6.15, 0)
+mesh = SubResource("Mesh_SignArchBracket")
+
+[node name="ArchBracketR" type="MeshInstance3D" parent="RoadsideSign"]
+transform = Transform3D(0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 0, 0, 1, 1.25, 6.15, 0)
+mesh = SubResource("Mesh_SignArchBracket")
+
+[node name="CabinetHex" type="MeshInstance3D" parent="RoadsideSign"]
+transform = Transform3D(5.31, 0, 0, 0, 0, 3.2, 0, -0.48, 0, 0, 8.5, 0)
+mesh = SubResource("Mesh_SignHexCabinet")
+
+[node name="RedBorderHex" type="MeshInstance3D" parent="RoadsideSign"]
+transform = Transform3D(5.08, 0, 0, 0, 0, 3.06, 0, -0.5, 0, 0, 8.5, 0)
+mesh = SubResource("Mesh_SignHexRed")
+
+[node name="WhiteBorderHex" type="MeshInstance3D" parent="RoadsideSign"]
+transform = Transform3D(4.8, 0, 0, 0, 0, 2.89, 0, -0.52, 0, 0, 8.5, 0)
+mesh = SubResource("Mesh_SignHexWhite")
+
+[node name="NavyFieldHex" type="MeshInstance3D" parent="RoadsideSign"]
+transform = Transform3D(4.6, 0, 0, 0, 0, 2.77, 0, -0.54, 0, 0, 8.5, 0)
+mesh = SubResource("Mesh_SignHexNavy")
+
+[node name="NameCrampedFront" type="Label3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.05, 8.82, 0.29)
 pixel_size = 0.012
-modulate = Color(0.48, 0.05, 0.09, 1)
-outline_modulate = Color(0.05, 0.16, 0.36, 1)
-text = "Cramped Inn"
+modulate = Color(1, 1, 1, 1)
+outline_modulate = Color(0.06, 0.12, 0.26, 1)
+text = "Cramped"
 font = ExtResource("1_lobster")
-font_size = 52
-outline_size = 7
+font_size = 66
+outline_size = 8
 
-[node name="NameBack" type="Label3D" parent="RoadsideSign"]
-transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 6, -0.4)
+[node name="NameInnFront" type="Label3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 8.02, 0.29)
 pixel_size = 0.012
-modulate = Color(0.48, 0.05, 0.09, 1)
-outline_modulate = Color(0.05, 0.16, 0.36, 1)
-text = "Cramped Inn"
+modulate = Color(1, 1, 1, 1)
+outline_modulate = Color(0.06, 0.12, 0.26, 1)
+text = "Inn"
 font = ExtResource("1_lobster")
-font_size = 52
-outline_size = 7
+font_size = 62
+outline_size = 8
+
+[node name="NameCrampedBack" type="Label3D" parent="RoadsideSign"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0.05, 8.82, -0.29)
+pixel_size = 0.012
+modulate = Color(1, 1, 1, 1)
+outline_modulate = Color(0.06, 0.12, 0.26, 1)
+text = "Cramped"
+font = ExtResource("1_lobster")
+font_size = 66
+outline_size = 8
+
+[node name="NameInnBack" type="Label3D" parent="RoadsideSign"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -0.35, 8.02, -0.29)
+pixel_size = 0.012
+modulate = Color(1, 1, 1, 1)
+outline_modulate = Color(0.06, 0.12, 0.26, 1)
+text = "Inn"
+font = ExtResource("1_lobster")
+font_size = 62
+outline_size = 8

@@ -203,9 +203,9 @@ size = Vector3(0.48, 0.04, 0.12)
 material = SubResource("Mat_DriveThruLine")
 size = Vector3(0.28, 0.04, 1.4)
 
-[sub_resource type="BoxMesh" id="Mesh_ArrowBarb"]
+[sub_resource type="PrismMesh" id="Mesh_ArrowPavementHead"]
 material = SubResource("Mat_DriveThruLine")
-size = Vector3(0.16, 0.04, 0.65)
+size = Vector3(0.75, 0.7, 0.04)
 
 [node name="BoogerKingSite" type="Node3D"]
 
@@ -217,6 +217,17 @@ mesh = SubResource("Mesh_ParkingLot")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="ParkingLot/StaticBody3D"]
 shape = SubResource("Shape_ParkingLot")
+
+[node name="ArrowParkingEntrance" type="Node3D" parent="ParkingLot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06, -6.5)
+
+[node name="Head" type="MeshInstance3D" parent="ParkingLot/ArrowParkingEntrance"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0.6)
+mesh = SubResource("Mesh_ArrowPavementHead")
+
+[node name="Stem" type="MeshInstance3D" parent="ParkingLot/ArrowParkingEntrance"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.45)
+mesh = SubResource("Mesh_ArrowStem")
 
 [node name="Driveway" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, -25.5)
@@ -331,30 +342,24 @@ mesh = SubResource("Mesh_HazardHash")
 [node name="ArrowApproach" type="Node3D" parent="DriveThru/Striping"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.25, 0.11, 5.5)
 
+[node name="Head" type="MeshInstance3D" parent="DriveThru/Striping/ArrowApproach"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, -0.6)
+mesh = SubResource("Mesh_ArrowPavementHead")
+
 [node name="Stem" type="MeshInstance3D" parent="DriveThru/Striping/ArrowApproach"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.45)
 mesh = SubResource("Mesh_ArrowStem")
-
-[node name="BarbL" type="MeshInstance3D" parent="DriveThru/Striping/ArrowApproach"]
-transform = Transform3D(0.866025, 0, -0.5, 0, 1, 0, 0.5, 0, 0.866025, -0.22, 0, -0.45)
-mesh = SubResource("Mesh_ArrowBarb")
-
-[node name="BarbR" type="MeshInstance3D" parent="DriveThru/Striping/ArrowApproach"]
-transform = Transform3D(0.866025, 0, 0.5, 0, 1, 0, -0.5, 0, 0.866025, 0.22, 0, -0.45)
-mesh = SubResource("Mesh_ArrowBarb")
 
 [node name="ArrowExit" type="Node3D" parent="DriveThru/Striping"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.25, 0.11, -3.5)
 
+[node name="Head" type="MeshInstance3D" parent="DriveThru/Striping/ArrowExit"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, -0.6)
+mesh = SubResource("Mesh_ArrowPavementHead")
+
 [node name="Stem" type="MeshInstance3D" parent="DriveThru/Striping/ArrowExit"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.45)
 mesh = SubResource("Mesh_ArrowStem")
-
-[node name="BarbL" type="MeshInstance3D" parent="DriveThru/Striping/ArrowExit"]
-transform = Transform3D(0.866025, 0, -0.5, 0, 1, 0, 0.5, 0, 0.866025, -0.22, 0, -0.45)
-mesh = SubResource("Mesh_ArrowBarb")
-
-[node name="BarbR" type="MeshInstance3D" parent="DriveThru/Striping/ArrowExit"]
-transform = Transform3D(0.866025, 0, 0.5, 0, 1, 0, -0.5, 0, 0.866025, 0.22, 0, -0.45)
-mesh = SubResource("Mesh_ArrowBarb")
 
 [node name="PavementDriveThru" type="Label3D" parent="DriveThru/Striping"]
 transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 12.25, 0.135, 8.0)

@@ -282,13 +282,7 @@ func _update_merge_window() -> void:
 		)
 		var merge_d: float
 		if target_lane_id == 3:
-			if (
-				car.global_position.x > 0.0
-				or (car.errand != null and car.errand.destination == &"cramped_inn")
-			):
-				merge_d = target_lane.distance_at(ParkingLot.CI_WAIT_POINT.x)
-			else:
-				merge_d = target_lane.distance_at(-40.5)
+			merge_d = target_lane.distance_at(traffic_manager.lane3_merge_x(car.global_position.x))
 		else:
 			merge_d = 61.0
 
@@ -409,9 +403,24 @@ func update_hud() -> void:
 		watchdog_fires = traffic_manager.stats.get("watchdog_fires", 0)
 		max_stuck = traffic_manager.stats.get("max_stuck_time", 0.0)
 
+	var draw_calls := int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME))
+	var objects := int(Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME))
+	var proc_ms := Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0
+	var phys_ms := Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0
 	hud_label.text = (
-		"Stalls: %d free, %d reserved, %d occupied | errands_dropped_lot_full: %d | watchdog_fires: %d | max_stuck_time: %.1fs"
-		% [free_count, reserved_count, occupied_count, dropped, watchdog_fires, max_stuck]
+		"Draw calls: %d | Objects: %d | Process: %.1fms | Physics: %.1fms\nStalls: %d free, %d reserved, %d occupied | errands_dropped_lot_full: %d | watchdog_fires: %d | max_stuck_time: %.1fs"
+		% [
+			draw_calls,
+			objects,
+			proc_ms,
+			phys_ms,
+			free_count,
+			reserved_count,
+			occupied_count,
+			dropped,
+			watchdog_fires,
+			max_stuck
+		]
 	)
 
 

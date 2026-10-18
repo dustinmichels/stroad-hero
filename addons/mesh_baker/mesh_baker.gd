@@ -145,7 +145,8 @@ static func bake_car_body(root: Node3D) -> Node3D:
 	return root
 
 
-static func bake_static_scene(root: Node3D) -> Node3D:
+static func bake_static_scene(root: Node3D, scene_root: Node = null) -> Node3D:
+	var actual_owner: Node = scene_root if scene_root != null else root
 	var mesh_instances: Array[MeshInstance3D] = []
 	var stack: Array[Node] = [root]
 
@@ -155,7 +156,7 @@ static func bake_static_scene(root: Node3D) -> Node3D:
 			# Do not traverse into instanced sub-scenes (they are baked on their own)
 			if child.scene_file_path != "":
 				continue
-			if child.owner != root and child.owner != null:
+			if child.owner != null and child.owner != root and root.is_ancestor_of(child.owner):
 				continue
 			# Do not merge nodes that have attached scripts or are collision shapes
 			if child.get_script() != null:
@@ -208,6 +209,77 @@ static func bake_static_scene(root: Node3D) -> Node3D:
 	merged_mi.name = "BakedStaticMesh"
 	merged_mi.mesh = merged_mesh
 	root.add_child(merged_mi)
-	merged_mi.owner = root
+	merged_mi.owner = actual_owner
+	return root
+
+
+static func create_multimesh_from_instances(
+	container: Node3D, template_mesh: Mesh, scene_root: Node = null
+) -> MultiMeshInstance3D:
+	var actual_owner: Node = scene_root if scene_root != null else container
+	var instances: Array[Node3D] = []
+	for child in container.get_children():
+		if child is Node3D and not (child is MultiMeshInstance3D):
+			instances.append(child as Node3D)
+	if instances.is_empty() or template_mesh == null:
+		return null
+
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.mesh = template_mesh
+	mm.instance_count = instances.size()
+
+	for i in range(instances.size()):
+		var inst := instances[i]
+		mm.set_instance_transform(i, inst.transform)
+		var to_remove: Array[Node] = []
+		var stack: Array[Node] = [inst]
+		while not stack.is_empty():
+			var curr: Node = stack.pop_back()
+			for child in curr.get_children():
+				if child is MeshInstance3D:
+					to_remove.append(child)
+				else:
+					stack.append(child)
+		for mi in to_remove:
+			var p := mi.get_parent()
+			if p != null:
+				p.remove_child(mi)
+			mi.free()
+		inst.scene_file_path = ""
+		inst.owner = actual_owner
+		var remaining_stack: Array[Node] = [inst]
+		while not remaining_stack.is_empty():
+			var n: Node = remaining_stack.pop_back()
+			n.owner = actual_owner
+			for c: Node in n.get_children():
+				remaining_stack.append(c)
+
+	var mmi := MultiMeshInstance3D.new()
+	mmi.name = "BakedMultiMesh"
+	mmi.multimesh = mm
+	container.add_child(mmi)
+	mmi.owner = actual_owner
+	return mmi
+
+
+static func bake_main_scene(root: Node3D) -> Node3D:
+	var road := root.get_node_or_null("Road") as Node3D
+	if road != null:
+		bake_static_scene(road, root)
+
+	var parking := root.get_node_or_null("Parking") as Node3D
+	if parking != null:
+		bake_static_scene(parking, root)
+
+	var streetlights := root.get_node_or_null("Props/Streetlights") as Node3D
+	if streetlights != null and streetlights.get_child_count() > 0:
+		var lamp_template := load("res://props/street_lamp.tscn").instantiate() as Node3D
+		if lamp_template != null:
+			bake_static_scene(lamp_template)
+			var baked_lamp := lamp_template.get_node_or_null("BakedStaticMesh") as MeshInstance3D
+			if baked_lamp != null and baked_lamp.mesh != null:
+				create_multimesh_from_instances(streetlights, baked_lamp.mesh, root)
+			lamp_template.free()
 
 	return root

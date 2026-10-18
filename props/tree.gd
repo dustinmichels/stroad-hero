@@ -22,6 +22,18 @@ var _rustle_tween: Tween
 
 func _ready() -> void:
 	_apply_tree_type()
+	if not Engine.is_editor_hint():
+		var visuals := _visuals if _visuals else get_node_or_null("Visuals")
+		if visuals:
+			var active: Node3D = null
+			for child in visuals.get_children():
+				if child is Node3D and child.visible:
+					active = child
+					break
+			if active != null:
+				for child in visuals.get_children():
+					if child != active:
+						child.queue_free()
 
 
 func set_tree_type(p_type: TreeType) -> void:

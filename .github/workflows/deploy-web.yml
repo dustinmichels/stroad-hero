@@ -34,6 +34,9 @@ jobs:
         run: |
           mkdir -v -p build/web
           touch build/.gdignore
+          if ! grep -q "addons/mesh_baker/plugin.cfg" project.godot; then
+            printf '\n[editor_plugins]\n\nenabled=PackedStringArray("res://addons/mesh_baker/plugin.cfg")\n' >> project.godot
+          fi
           godot --headless --verbose --export-release "Web" build/web/index.html
 
       - name: Upload Artifact

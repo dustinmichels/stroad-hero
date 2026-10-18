@@ -42,27 +42,30 @@ func _ready() -> void:
 	_pitch_framing_offset = rotation.x - (-_default_pitch)
 	if target.has_signal("died"):
 		target.died.connect(_on_target_died)
+	if target.has_signal("respawned"):
+		target.respawned.connect(_on_target_respawned)
 
 
 func _process(delta: float) -> void:
 	var target_position := target.get_global_transform_interpolated().origin
-	var yaw_step := (
-		int(Input.is_action_just_pressed("camera_left"))
-		- int(Input.is_action_just_pressed("camera_right"))
-	)
-	var pitch_step := (
-		int(Input.is_action_just_pressed("camera_forward"))
-		- int(Input.is_action_just_pressed("camera_back"))
-	)
-	if yaw_step != 0:
-		_target_yaw += yaw_step * YAW_STEP
-		_is_swinging = true
-	if pitch_step != 0:
-		_target_pitch = clampf(_target_pitch + pitch_step * PITCH_STEP, MIN_PITCH, MAX_PITCH)
-		_is_swinging = true
-	if Input.is_action_just_pressed("camera_reset"):
-		reset_view()
-
+	var is_target_dead: bool = target != null and bool(target.get("_is_dead"))
+	if not is_target_dead:
+		var yaw_step := (
+			int(Input.is_action_just_pressed("camera_left"))
+			- int(Input.is_action_just_pressed("camera_right"))
+		)
+		var pitch_step := (
+			int(Input.is_action_just_pressed("camera_forward"))
+			- int(Input.is_action_just_pressed("camera_back"))
+		)
+		if yaw_step != 0:
+			_target_yaw += yaw_step * YAW_STEP
+			_is_swinging = true
+		if pitch_step != 0:
+			_target_pitch = clampf(_target_pitch + pitch_step * PITCH_STEP, MIN_PITCH, MAX_PITCH)
+			_is_swinging = true
+		if Input.is_action_just_pressed("camera_reset"):
+			reset_view()
 	if _is_swinging:
 		var weight := 1.0 - exp(-swing_smoothing * delta)
 		_camera_yaw = lerpf(_camera_yaw, _target_yaw, weight)
@@ -101,7 +104,32 @@ func reset_view() -> void:
 	_is_swinging = true
 
 
-func _on_target_died(_death_position: Vector3) -> void:
-	_target_yaw = _camera_yaw + angle_difference(_camera_yaw, _default_yaw)
+func snap_to_target() -> void:
+	_camera_yaw = _default_yaw
+	_target_yaw = _default_yaw
+	_camera_pitch = _default_pitch
 	_target_pitch = _default_pitch
-	_is_swinging = true
+	_is_swinging = false
+	var target_position := target.global_position
+	var cos_pitch := cos(_camera_pitch)
+	var sin_pitch := sin(_camera_pitch)
+	global_position = (
+		target_position
+		+ Vector3(
+			-sin(_camera_yaw) * cos_pitch * _distance,
+			sin_pitch * _distance,
+			-cos(_camera_yaw) * cos_pitch * _distance
+		)
+	)
+	var target_direction := target_position - global_position
+	var horizontal_distance := Vector2(target_direction.x, target_direction.z).length()
+	global_rotation.y = atan2(-target_direction.x, -target_direction.z)
+	global_rotation.x = atan2(target_direction.y, horizontal_distance) + _pitch_framing_offset
+
+
+func _on_target_died(_death_position: Vector3) -> void:
+	_is_swinging = false
+
+
+func _on_target_respawned() -> void:
+	snap_to_target()

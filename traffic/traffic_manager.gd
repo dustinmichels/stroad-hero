@@ -98,8 +98,8 @@ var lot_cars: Array[Car] = []
 var debug_overlay: Node3D = null
 var taco_hell_drive_thru_path: Curve3D = null
 var booger_king_drive_thru_path: Curve3D = null
-var booger_king_merge_path: Curve3D = null
-var cramped_inn_merge_path: Curve3D = null
+## Lane 3 merge paths (Booger King drive-thru, strip mall, Cramped Inn), one per wait point.
+var lane3_merge_paths: Array[Curve3D] = []
 var _physics_tick_count: int = 0
 var _watchdog_ignores: Dictionary[int, Dictionary] = {}  # int (car_instance_id) -> Dictionary { "target_id": int, "timer": float }
 var _sweep_cache: Dictionary[int, Dictionary] = {}  # car instance id -> _car_sweep() result
@@ -135,6 +135,8 @@ const T_MERGE_GAP := 3.0
 const V_DRIVE_THRU := 3.2
 const DECISION_D_BK := 15.0
 const TURN_D_BK := 50.0
+const DECISION_D_SM := 49.0
+const TURN_D_SM := 84.0
 const DECISION_D_CI := 94.0
 const TURN_D_CI := 129.0
 const MAX_DRIVE_THRU_CAPACITY := 5
@@ -161,8 +163,11 @@ func _ready() -> void:
 	add_child(debug_overlay)
 	taco_hell_drive_thru_path = ParkingLot.taco_hell_drive_thru_route()
 	booger_king_drive_thru_path = ParkingLot.booger_king_drive_thru_route()
-	booger_king_merge_path = ParkingLot.booger_king_merge_route()
-	cramped_inn_merge_path = ParkingLot.cramped_inn_merge_route()
+	lane3_merge_paths = [
+		ParkingLot.booger_king_merge_route(),
+		ParkingLot.south_merge_route(&"strip_mall"),
+		ParkingLot.south_merge_route(&"cramped_inn"),
+	]
 	_setup_lanes()
 	_pre_populate_traffic()
 	_seed_parked_cars()
@@ -492,13 +497,7 @@ func _update_lot_cars(delta: float) -> void:
 				car.lane_id = car.merge_target_lane
 				var m_route: Curve3D = null
 				if car.merge_target_lane == 3:
-					if (
-						car.global_position.x > 0.0
-						or (car.errand != null and car.errand.destination == &"cramped_inn")
-					):
-						m_route = cramped_inn_merge_path
-					else:
-						m_route = booger_king_merge_path
+					m_route = lane3_merge_path(car.global_position.x)
 				elif lot != null:
 					m_route = lot.merge_route()
 				else:
@@ -971,6 +970,23 @@ func can_reverse_out(car: Car) -> bool:
 	return true
 
 
+## Lane 3 merge path whose wait point is closest to x (a waiting car sits on its wait point).
+func lane3_merge_path(x: float) -> Curve3D:
+	var best: Curve3D = null
+	var best_d := INF
+	for p in lane3_merge_paths:
+		var d := absf(p.get_point_position(0).x - x)
+		if d < best_d:
+			best_d = d
+			best = p
+	return best
+
+
+## x where a Lane 3 car waiting near x joins the lane.
+func lane3_merge_x(x: float) -> float:
+	return lane3_merge_path(x).get_point_position(0).x
+
+
 func _can_merge(car: Car) -> bool:
 	if car == null or lanes.is_empty():
 		return false
@@ -989,16 +1005,7 @@ func _can_merge(car: Car) -> bool:
 			var other_d: float = target_lane.distance_at(other.global_position.x)
 			var my_d: float
 			if target_lane_id == 3:
-				my_d = target_lane.distance_at(
-					(
-						ParkingLot.CI_WAIT_POINT.x
-						if (
-							car.global_position.x > 0.0
-							or (car.errand != null and car.errand.destination == &"cramped_inn")
-						)
-						else -40.5
-					)
-				)
+				my_d = target_lane.distance_at(lane3_merge_x(car.global_position.x))
 			else:
 				my_d = 61.0
 			if absf(other_d - my_d) < 25.0:
@@ -1006,13 +1013,7 @@ func _can_merge(car: Car) -> bool:
 
 	var merge_dist: float
 	if target_lane_id == 3:
-		if (
-			car.global_position.x > 0.0
-			or (car.errand != null and car.errand.destination == &"cramped_inn")
-		):
-			merge_dist = target_lane.distance_at(ParkingLot.CI_WAIT_POINT.x)
-		else:
-			merge_dist = target_lane.distance_at(-40.5)
+		merge_dist = target_lane.distance_at(lane3_merge_x(car.global_position.x))
 	else:
 		merge_dist = 61.0
 
@@ -1119,9 +1120,9 @@ func spawn_debug_car() -> Car:
 	var parkable_types := CarScript.PARKING_CAR_TYPES
 	var chosen_type: CarScript.CarType = parkable_types[randi() % parkable_types.size()]
 	car.car_type = chosen_type
-	if chosen_spot.serves.has(&"cramped_inn") or chosen_spot.transform.origin.z > 0.0:
+	if ParkingLot.south_lot(chosen_spot) != &"":
 		car.merge_target_lane = 3
-		car.errand = Errand.new(&"cramped_inn", randf_range(15.0, 35.0))
+		car.errand = Errand.new(ParkingLot.south_lot(chosen_spot), randf_range(15.0, 35.0))
 	else:
 		car.merge_target_lane = 0
 		car.errand = Errand.random()
@@ -1138,12 +1139,13 @@ func spawn_debug_car() -> Car:
 	return car
 
 
-func spawn_cramped_inn_car() -> Car:
+## Spawns an errand car already on its way into a free spot of a south lot.
+func spawn_south_lot_car(site: StringName) -> Car:
 	if lot == null:
 		return null
 	var free_spots: Array[ParkingSpot] = []
 	for s in lot.spots:
-		if s.is_free() and (s.serves.has(&"cramped_inn") or s.transform.origin.z > 0.0):
+		if s.is_free() and s.serves.has(site):
 			free_spots.append(s)
 	if free_spots.is_empty():
 		return null
@@ -1152,7 +1154,7 @@ func spawn_cramped_inn_car() -> Car:
 	var parkable_types := CarScript.PARKING_CAR_TYPES
 	var chosen_type: CarScript.CarType = parkable_types[randi() % parkable_types.size()]
 	car.car_type = chosen_type
-	car.errand = Errand.new(&"cramped_inn", randf_range(15.0, 35.0))
+	car.errand = Errand.new(site, randf_range(15.0, 35.0))
 	car.had_errand = true
 	car.merge_target_lane = 3
 	add_child(car)
@@ -1177,7 +1179,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.keycode == KEY_F6 or event.physical_keycode == KEY_F6:
 			spawn_drive_thru_car(&"booger_king")
 		elif event.keycode == KEY_F7 or event.physical_keycode == KEY_F7:
-			spawn_cramped_inn_car()
+			spawn_south_lot_car(&"cramped_inn")
+		elif event.keycode == KEY_F8 or event.physical_keycode == KEY_F8:
+			spawn_south_lot_car(&"strip_mall")
 
 
 func _update_lane_spawning(lane: Lane, delta: float) -> void:
@@ -1243,15 +1247,22 @@ func _spawn_car_at(lane: Lane, initial_distance: float, scene: PackedScene = nul
 		car.had_errand = true
 		stats["errands_assigned"] += 1
 	elif lane.id == 3 and car.can_park() and randf() < P_ERRAND:
+		var roll := randf()
 		if initial_distance < DECISION_D_BK:
-			if randf() < 0.5:
+			if roll < 0.4:
 				car.errand = Errand.new(&"booger_king", randf_range(10.0, 25.0))
+			elif roll < 0.7:
+				car.errand = Errand.new(&"strip_mall", randf_range(20.0, 45.0))
 			else:
 				car.errand = Errand.new(&"cramped_inn", randf_range(20.0, 45.0))
-			car.had_errand = true
-			stats["errands_assigned"] += 1
+		elif initial_distance < DECISION_D_SM:
+			if roll < 0.5:
+				car.errand = Errand.new(&"strip_mall", randf_range(20.0, 45.0))
+			else:
+				car.errand = Errand.new(&"cramped_inn", randf_range(20.0, 45.0))
 		elif initial_distance < DECISION_D_CI:
 			car.errand = Errand.new(&"cramped_inn", randf_range(20.0, 45.0))
+		if car.errand != null:
 			car.had_errand = true
 			stats["errands_assigned"] += 1
 	lane.cars.append(car)
@@ -1332,7 +1343,8 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 						car.had_errand = false
 						stats["errands_dropped_lot_full"] += 1
 				elif (
-					car.errand.destination == &"cramped_inn" and car.lane_distance >= DECISION_D_CI
+					not car.errand.is_drive_thru()
+					and car.lane_distance >= _lane3_lot_decision_d(car.errand.destination)
 				):
 					if lot != null:
 						var spot = lot.request_spot(car, car.errand)
@@ -1367,13 +1379,7 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 		if car.state == Car.State.APPROACHING:
 			if car.turn_signal != CarScript.TurnSignal.RIGHT:
 				car.set_turn_signal(CarScript.TurnSignal.RIGHT)
-			var turn_d: float
-			if lane.id == 0:
-				turn_d = TURN_D
-			elif car.errand != null and car.errand.destination == &"cramped_inn":
-				turn_d = TURN_D_CI
-			else:
-				turn_d = TURN_D_BK
+			var turn_d := _turn_d(lane.id, car)
 			var approach_dist: float = maxf(0.0, turn_d - car.lane_distance)
 			var approach_target: float = sqrt(V_TURN * V_TURN + 2.0 * A_COMFORT * approach_dist)
 			target_speed = minf(target_speed, approach_target)
@@ -1383,13 +1389,7 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 		car.advance_simulation(delta)
 
 		if car.state == Car.State.APPROACHING:
-			var turn_d: float
-			if lane.id == 0:
-				turn_d = TURN_D
-			elif car.errand != null and car.errand.destination == &"cramped_inn":
-				turn_d = TURN_D_CI
-			else:
-				turn_d = TURN_D_BK
+			var turn_d := _turn_d(lane.id, car)
 			if car.lane_distance >= turn_d:
 				car.motion = Car.Motion.PATH
 				if lane.id == 0:
@@ -1403,7 +1403,7 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 							car.follow_path(lot.entry_route(car.spot))
 				elif lane.id == 3:
 					car.merge_target_lane = 3
-					if car.errand != null and car.errand.destination == &"cramped_inn":
+					if car.errand != null and not car.errand.is_drive_thru():
 						car.state = Car.State.TO_SPOT
 						if lot != null and car.spot != null:
 							car.follow_path(lot.entry_route(car.spot))
@@ -1434,6 +1434,24 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 			surviving_cars.append(car)
 
 	lane.cars = surviving_cars
+
+
+## Lane distance at which a Lane 3 car commits to a lot errand (35 m before its turn).
+func _lane3_lot_decision_d(dest: StringName) -> float:
+	return DECISION_D_SM if dest == &"strip_mall" else DECISION_D_CI
+
+
+## Lane distance at which an approaching car leaves its lane for the turn-in path.
+func _turn_d(lane_id: int, car: Car) -> float:
+	if lane_id == 0:
+		return TURN_D
+	var dest: StringName = car.errand.destination if car.errand != null else &""
+	match dest:
+		&"cramped_inn":
+			return TURN_D_CI
+		&"strip_mall":
+			return TURN_D_SM
+	return TURN_D_BK
 
 
 func _exit_tree() -> void:
