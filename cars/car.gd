@@ -3,7 +3,7 @@ extends Area3D
 
 const Errand = preload("res://traffic/errand.gd")
 
-enum CarType { SEDAN, SUV, TAXI, TRUCK, PICKUP, BUS, HATCHBACK, MINIVAN, SPORTS, VAN }
+enum CarType {SEDAN, SUV, TAXI, TRUCK, PICKUP, BUS, HATCHBACK, MINIVAN, SPORTS, VAN, SHIPPING_TRUCK}
 
 enum Motion { LANE, PATH }
 
@@ -35,7 +35,7 @@ static func is_type_parkable(type: CarType) -> bool:
 	match type:
 		CarType.SEDAN, CarType.SUV, CarType.PICKUP, CarType.HATCHBACK, CarType.MINIVAN, CarType.SPORTS:
 			return true
-		CarType.BUS, CarType.TRUCK, CarType.TAXI, CarType.VAN:
+		CarType.BUS, CarType.TRUCK, CarType.TAXI, CarType.VAN, CarType.SHIPPING_TRUCK:
 			return false
 	return false
 
@@ -116,7 +116,7 @@ var _active_left_signals: Array[MeshInstance3D] = []
 static var _signal_mesh: BoxMesh
 static var _signal_mat_on: StandardMaterial3D
 static var _signal_mat_off: StandardMaterial3D
-const WHEEL_RADIUS := 0.35
+var wheel_radius := 0.35
 const BASE_WHEEL_BASIS := Basis(Vector3(1, 0, 0), Vector3(0, 0, 1), Vector3(0, -1, 0))
 const STOP_SPEED := 0.1
 const BLOCKER_LAYER := 4  # Layer 3 (1 << 2)
@@ -197,6 +197,8 @@ func _setup_wheels() -> void:
 	for car_model in visuals.get_children():
 		for child in car_model.get_children():
 			if child is Node3D and child.name.begins_with("Wheel"):
+				if child.has_node("Spoke"):
+					continue
 				var spoke := MeshInstance3D.new()
 				spoke.mesh = _spoke_mesh
 				spoke.name = "Spoke"
@@ -430,6 +432,11 @@ func _update_dimensions() -> void:
 			car_width = 2.1
 			shape_size = Vector3(5.3, 2.3, 2.1)
 			shape_y = 1.15
+		CarType.SHIPPING_TRUCK:
+			car_length = 13.7
+			car_width = 2.5
+			shape_size = Vector3(13.7, 3.6, 2.5)
+			shape_y = 1.85
 	var col = _collision_shape if _collision_shape else get_node_or_null("CollisionShape3D")
 	if col:
 		var box := BoxShape3D.new()
@@ -507,7 +514,7 @@ func update_presentation() -> void:
 			var h := (path.sample_baked(d_next) - path.sample_baked(d_prev)).normalized()
 			if h.length_squared() > 0.0001:
 				rotation.y = atan2(-h.z, h.x)
-			wheel_rotation = fmod(-path_distance / WHEEL_RADIUS, TAU)
+			wheel_rotation = fmod(-path_distance / wheel_radius, TAU)
 			_update_wheels()
 		return
 	if state == State.PARKED and spot != null:
@@ -517,7 +524,7 @@ func update_presentation() -> void:
 	global_position = Vector3(current_x, 0.05, lane_z)
 	rotation.y = 0.0 if direction > 0.0 else PI
 
-	wheel_rotation = fmod(-lane_distance / WHEEL_RADIUS, TAU)
+	wheel_rotation = fmod(-lane_distance / wheel_radius, TAU)
 	_update_wheels()
 
 

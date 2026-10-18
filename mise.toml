@@ -12,6 +12,9 @@ run = '''
 set -eu
 work=/tmp/stroad-hero-export
 rsync -a --delete --exclude .git --exclude build ./ "$work/"
+if ! grep -q "addons/mesh_baker/plugin.cfg" "$work/project.godot"; then
+    printf '\n[editor_plugins]\n\nenabled=PackedStringArray("res://addons/mesh_baker/plugin.cfg")\n' >> "$work/project.godot"
+fi
 mkdir -p build/web
 /Applications/Godot.app/Contents/MacOS/Godot --headless --path "$work" --export-release "Web" "$PWD/build/web/index.html"
 '''

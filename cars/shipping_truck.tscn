@@ -1,0 +1,659 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://cars/shipping_truck.gd" id="1_shipping_truck"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_shipping_truck"]
+size = Vector3(13.7, 3.6, 2.5)
+
+[sub_resource type="StandardMaterial3D" id="Mat_CabWhite"]
+albedo_color = Color(0.95, 0.95, 0.96, 1)
+metallic = 0.15
+roughness = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Mat_CarWindow"]
+albedo_color = Color(0.1, 0.14, 0.2, 1)
+metallic = 0.3
+roughness = 0.1
+
+[sub_resource type="StandardMaterial3D" id="Mat_WheelRubber"]
+albedo_color = Color(0.1, 0.1, 0.11, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Mat_Chrome"]
+albedo_color = Color(0.85, 0.86, 0.88, 1)
+metallic = 0.85
+roughness = 0.2
+
+[sub_resource type="StandardMaterial3D" id="Mat_CarDarkTrim"]
+albedo_color = Color(0.12, 0.13, 0.15, 1)
+roughness = 0.75
+
+[sub_resource type="StandardMaterial3D" id="Mat_Grille"]
+albedo_color = Color(0.08, 0.08, 0.09, 1)
+roughness = 0.65
+
+[sub_resource type="StandardMaterial3D" id="Mat_Headlight"]
+albedo_color = Color(1.0, 0.98, 0.85, 1)
+roughness = 0.2
+emission_enabled = true
+emission = Color(1.0, 0.98, 0.85, 1)
+emission_energy_multiplier = 2.0
+
+[sub_resource type="StandardMaterial3D" id="Mat_Taillight"]
+albedo_color = Color(0.9, 0.1, 0.1, 1)
+roughness = 0.2
+emission_enabled = true
+emission = Color(0.9, 0.1, 0.1, 1)
+emission_energy_multiplier = 1.5
+
+[sub_resource type="StandardMaterial3D" id="Mat_AmberMarker"]
+albedo_color = Color(1.0, 0.55, 0.05, 1)
+roughness = 0.3
+emission_enabled = true
+emission = Color(1.0, 0.55, 0.05, 1)
+emission_energy_multiplier = 2.0
+
+[sub_resource type="StandardMaterial3D" id="Mat_MirrorGlass"]
+albedo_color = Color(0.75, 0.82, 0.88, 1)
+metallic = 0.9
+roughness = 0.1
+
+[sub_resource type="StandardMaterial3D" id="Mat_LicensePlate"]
+albedo_color = Color(0.92, 0.92, 0.9, 1)
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_TrailerAluminum"]
+albedo_color = Color(0.84, 0.85, 0.87, 1)
+metallic = 0.55
+roughness = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Mat_TrailerRib"]
+albedo_color = Color(0.7, 0.71, 0.73, 1)
+metallic = 0.6
+roughness = 0.4
+
+[sub_resource type="BoxMesh" id="Mesh_Sleeper"]
+material = SubResource("Mat_CabWhite")
+size = Vector3(1.4, 2.55, 2.3)
+
+[sub_resource type="BoxMesh" id="Mesh_CabBody"]
+material = SubResource("Mat_CabWhite")
+size = Vector3(0.7, 1.7, 2.3)
+
+[sub_resource type="BoxMesh" id="Mesh_CabRoof"]
+material = SubResource("Mat_CabWhite")
+size = Vector3(0.85, 0.08, 2.3)
+
+[sub_resource type="PrismMesh" id="Mesh_RoofFairing"]
+material = SubResource("Mat_CabWhite")
+left_to_right = 0.0
+size = Vector3(0.9, 0.85, 2.2)
+
+[sub_resource type="PrismMesh" id="Mesh_Windshield"]
+material = SubResource("Mat_CarWindow")
+left_to_right = 0.0
+size = Vector3(0.4, 0.75, 2.2)
+
+[sub_resource type="BoxMesh" id="Mesh_CabLowerFront"]
+material = SubResource("Mat_CabWhite")
+size = Vector3(0.4, 0.95, 2.3)
+
+[sub_resource type="BoxMesh" id="Mesh_Hood"]
+material = SubResource("Mat_CabWhite")
+size = Vector3(1.05, 0.7, 1.95)
+
+[sub_resource type="PrismMesh" id="Mesh_HoodSlope"]
+material = SubResource("Mat_CabWhite")
+left_to_right = 0.0
+size = Vector3(1.05, 0.35, 1.95)
+
+[sub_resource type="BoxMesh" id="Mesh_GrilleSurround"]
+material = SubResource("Mat_Chrome")
+size = Vector3(0.04, 0.78, 1.0)
+
+[sub_resource type="BoxMesh" id="Mesh_Grille"]
+material = SubResource("Mat_Grille")
+size = Vector3(0.05, 0.66, 0.86)
+
+[sub_resource type="BoxMesh" id="Mesh_Headlight"]
+material = SubResource("Mat_Headlight")
+size = Vector3(0.08, 0.16, 0.34)
+
+[sub_resource type="BoxMesh" id="Mesh_BumperF"]
+material = SubResource("Mat_Chrome")
+size = Vector3(0.25, 0.35, 2.3)
+
+[sub_resource type="BoxMesh" id="Mesh_CabSideWindow"]
+material = SubResource("Mat_CarWindow")
+size = Vector3(0.5, 0.5, 0.02)
+
+[sub_resource type="BoxMesh" id="Mesh_SleeperWindow"]
+material = SubResource("Mat_CarWindow")
+size = Vector3(0.45, 0.25, 0.02)
+
+[sub_resource type="BoxMesh" id="Mesh_SideFairing"]
+material = SubResource("Mat_CabWhite")
+size = Vector3(1.9, 0.45, 2.36)
+
+[sub_resource type="BoxMesh" id="Mesh_StepSlot"]
+material = SubResource("Mat_CarDarkTrim")
+size = Vector3(0.4, 0.06, 0.02)
+
+[sub_resource type="BoxMesh" id="Mesh_DoorSeam"]
+material = SubResource("Mat_CarDarkTrim")
+size = Vector3(0.02, 1.4, 0.02)
+
+[sub_resource type="BoxMesh" id="Mesh_MirrorArm"]
+material = SubResource("Mat_CarDarkTrim")
+size = Vector3(0.04, 0.04, 0.2)
+
+[sub_resource type="BoxMesh" id="Mesh_MirrorHousing"]
+material = SubResource("Mat_CarDarkTrim")
+size = Vector3(0.12, 0.42, 0.14)
+
+[sub_resource type="BoxMesh" id="Mesh_MirrorGlass"]
+material = SubResource("Mat_MirrorGlass")
+size = Vector3(0.02, 0.36, 0.1)
+
+[sub_resource type="BoxMesh" id="Mesh_Frame"]
+material = SubResource("Mat_CarDarkTrim")
+size = Vector3(2.6, 0.25, 1.0)
+
+[sub_resource type="BoxMesh" id="Mesh_FifthWheel"]
+material = SubResource("Mat_CarDarkTrim")
+size = Vector3(0.9, 0.08, 1.2)
+
+[sub_resource type="BoxMesh" id="Mesh_MudFlap"]
+material = SubResource("Mat_CarDarkTrim")
+size = Vector3(0.03, 0.6, 0.5)
+
+[sub_resource type="BoxMesh" id="Mesh_TrailerBox"]
+material = SubResource("Mat_TrailerAluminum")
+size = Vector3(9.4, 2.4, 2.45)
+
+[sub_resource type="BoxMesh" id="Mesh_TrailerTopRail"]
+material = SubResource("Mat_TrailerRib")
+size = Vector3(9.44, 0.1, 2.49)
+
+[sub_resource type="BoxMesh" id="Mesh_TrailerBottomRail"]
+material = SubResource("Mat_TrailerRib")
+size = Vector3(9.44, 0.16, 2.49)
+
+[sub_resource type="BoxMesh" id="Mesh_TrailerRib"]
+material = SubResource("Mat_TrailerRib")
+size = Vector3(0.06, 2.3, 0.03)
+
+[sub_resource type="BoxMesh" id="Mesh_TrailerUnderframe"]
+material = SubResource("Mat_CarDarkTrim")
+size = Vector3(9.2, 0.15, 1.2)
+
+[sub_resource type="BoxMesh" id="Mesh_ReeferUnit"]
+material = SubResource("Mat_CabWhite")
+size = Vector3(0.4, 1.0, 2.0)
+
+[sub_resource type="BoxMesh" id="Mesh_ReeferGrille"]
+material = SubResource("Mat_Grille")
+size = Vector3(0.3, 0.7, 0.02)
+
+[sub_resource type="BoxMesh" id="Mesh_RearDoorSeam"]
+material = SubResource("Mat_CarDarkTrim")
+size = Vector3(0.03, 2.3, 0.03)
+
+[sub_resource type="BoxMesh" id="Mesh_RearDoorFrame"]
+material = SubResource("Mat_TrailerRib")
+size = Vector3(0.04, 2.4, 0.08)
+
+[sub_resource type="BoxMesh" id="Mesh_Taillight"]
+material = SubResource("Mat_Taillight")
+size = Vector3(0.08, 0.18, 0.26)
+
+[sub_resource type="BoxMesh" id="Mesh_RearBumper"]
+material = SubResource("Mat_CarDarkTrim")
+size = Vector3(0.12, 0.14, 2.2)
+
+[sub_resource type="BoxMesh" id="Mesh_RearBumperStrut"]
+material = SubResource("Mat_CarDarkTrim")
+size = Vector3(0.08, 0.5, 0.08)
+
+[sub_resource type="BoxMesh" id="Mesh_LicensePlate"]
+material = SubResource("Mat_LicensePlate")
+size = Vector3(0.02, 0.14, 0.32)
+
+[sub_resource type="BoxMesh" id="Mesh_LandingLeg"]
+material = SubResource("Mat_CarDarkTrim")
+size = Vector3(0.12, 0.85, 0.12)
+
+[sub_resource type="BoxMesh" id="Mesh_LandingFoot"]
+material = SubResource("Mat_CarDarkTrim")
+size = Vector3(0.3, 0.05, 0.3)
+
+[sub_resource type="BoxMesh" id="Mesh_SideMarker"]
+material = SubResource("Mat_AmberMarker")
+size = Vector3(0.1, 0.06, 0.02)
+
+[sub_resource type="CylinderMesh" id="Mesh_Wheel"]
+material = SubResource("Mat_WheelRubber")
+top_radius = 0.5
+bottom_radius = 0.5
+height = 0.3
+radial_segments = 32
+
+[sub_resource type="CylinderMesh" id="Mesh_WheelRim"]
+material = SubResource("Mat_Chrome")
+top_radius = 0.3
+bottom_radius = 0.3
+height = 0.31
+radial_segments = 32
+
+[node name="ShippingTruck" type="Area3D"]
+collision_layer = 2
+collision_mask = 1
+script = ExtResource("1_shipping_truck")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.85, 0)
+shape = SubResource("BoxShape3D_shipping_truck")
+
+[node name="Visuals" type="Node3D" parent="."]
+
+[node name="ShippingTruck" type="Node3D" parent="Visuals"]
+
+[node name="Sleeper" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.8, 2.275, 0)
+mesh = SubResource("Mesh_Sleeper")
+
+[node name="CabBody" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.85, 1.85, 0)
+mesh = SubResource("Mesh_CabBody")
+
+[node name="CabRoof" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.92, 2.74, 0)
+mesh = SubResource("Mesh_CabRoof")
+
+[node name="RoofFairing" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.95, 3.125, 0)
+mesh = SubResource("Mesh_RoofFairing")
+
+[node name="Windshield" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.4, 2.325, 0)
+mesh = SubResource("Mesh_Windshield")
+
+[node name="CabLowerFront" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.4, 1.475, 0)
+mesh = SubResource("Mesh_CabLowerFront")
+
+[node name="Hood" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.125, 1.2, 0)
+mesh = SubResource("Mesh_Hood")
+
+[node name="HoodSlope" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.125, 1.725, 0)
+mesh = SubResource("Mesh_HoodSlope")
+
+[node name="GrilleSurround" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.665, 1.27, 0)
+mesh = SubResource("Mesh_GrilleSurround")
+
+[node name="FrontGrille" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.68, 1.27, 0)
+mesh = SubResource("Mesh_Grille")
+
+[node name="HeadlightL" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.66, 1.32, 0.76)
+mesh = SubResource("Mesh_Headlight")
+
+[node name="HeadlightR" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.66, 1.32, -0.76)
+mesh = SubResource("Mesh_Headlight")
+
+[node name="FrontBumper" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.725, 0.75, 0)
+mesh = SubResource("Mesh_BumperF")
+
+[node name="CabWindowL" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.85, 2.25, 1.16)
+mesh = SubResource("Mesh_CabSideWindow")
+
+[node name="CabWindowR" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.85, 2.25, -1.16)
+mesh = SubResource("Mesh_CabSideWindow")
+
+[node name="SleeperWindowL" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.75, 3.05, 1.16)
+mesh = SubResource("Mesh_SleeperWindow")
+
+[node name="SleeperWindowR" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.75, 3.05, -1.16)
+mesh = SubResource("Mesh_SleeperWindow")
+
+[node name="DoorSeamFrontL" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.18, 1.75, 1.16)
+mesh = SubResource("Mesh_DoorSeam")
+
+[node name="DoorSeamFrontR" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.18, 1.75, -1.16)
+mesh = SubResource("Mesh_DoorSeam")
+
+[node name="DoorSeamRearL" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.52, 1.75, 1.16)
+mesh = SubResource("Mesh_DoorSeam")
+
+[node name="DoorSeamRearR" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.52, 1.75, -1.16)
+mesh = SubResource("Mesh_DoorSeam")
+
+[node name="SideFairing" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.1, 0.78, 0)
+mesh = SubResource("Mesh_SideFairing")
+
+[node name="StepSlot0L" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.65, 0.78, 1.19)
+mesh = SubResource("Mesh_StepSlot")
+
+[node name="StepSlot0R" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.65, 0.78, -1.19)
+mesh = SubResource("Mesh_StepSlot")
+
+[node name="StepSlot1L" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.55, 0.78, 1.19)
+mesh = SubResource("Mesh_StepSlot")
+
+[node name="StepSlot1R" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.55, 0.78, -1.19)
+mesh = SubResource("Mesh_StepSlot")
+
+[node name="MirrorArmL" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.35, 2.2, 1.25)
+mesh = SubResource("Mesh_MirrorArm")
+
+[node name="MirrorArmR" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.35, 2.2, -1.25)
+mesh = SubResource("Mesh_MirrorArm")
+
+[node name="MirrorHousingL" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.35, 2.2, 1.38)
+mesh = SubResource("Mesh_MirrorHousing")
+
+[node name="MirrorHousingR" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.35, 2.2, -1.38)
+mesh = SubResource("Mesh_MirrorHousing")
+
+[node name="MirrorGlassL" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.28, 2.2, 1.38)
+mesh = SubResource("Mesh_MirrorGlass")
+
+[node name="MirrorGlassR" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.28, 2.2, -1.38)
+mesh = SubResource("Mesh_MirrorGlass")
+
+[node name="Frame" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, 0.92, 0)
+mesh = SubResource("Mesh_Frame")
+
+[node name="FifthWheel" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.75, 1.08, 0)
+mesh = SubResource("Mesh_FifthWheel")
+
+[node name="MudFlapL" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.25, 0.65, 1.0)
+mesh = SubResource("Mesh_MudFlap")
+
+[node name="MudFlapR" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.25, 0.65, -1.0)
+mesh = SubResource("Mesh_MudFlap")
+
+[node name="TrailerBox" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.1, 2.45, 0)
+mesh = SubResource("Mesh_TrailerBox")
+
+[node name="TrailerTopRail" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.1, 3.62, 0)
+mesh = SubResource("Mesh_TrailerTopRail")
+
+[node name="TrailerBottomRail" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.1, 1.3, 0)
+mesh = SubResource("Mesh_TrailerBottomRail")
+
+[node name="Rib0L" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.3, 2.45, 1.235)
+mesh = SubResource("Mesh_TrailerRib")
+
+[node name="Rib0R" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.3, 2.45, -1.235)
+mesh = SubResource("Mesh_TrailerRib")
+
+[node name="Rib1L" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.213, 2.45, 1.235)
+mesh = SubResource("Mesh_TrailerRib")
+
+[node name="Rib1R" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.213, 2.45, -1.235)
+mesh = SubResource("Mesh_TrailerRib")
+
+[node name="Rib2L" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.125, 2.45, 1.235)
+mesh = SubResource("Mesh_TrailerRib")
+
+[node name="Rib2R" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.125, 2.45, -1.235)
+mesh = SubResource("Mesh_TrailerRib")
+
+[node name="Rib3L" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.038, 2.45, 1.235)
+mesh = SubResource("Mesh_TrailerRib")
+
+[node name="Rib3R" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.038, 2.45, -1.235)
+mesh = SubResource("Mesh_TrailerRib")
+
+[node name="Rib4L" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.95, 2.45, 1.235)
+mesh = SubResource("Mesh_TrailerRib")
+
+[node name="Rib4R" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.95, 2.45, -1.235)
+mesh = SubResource("Mesh_TrailerRib")
+
+[node name="Rib5L" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.862, 2.45, 1.235)
+mesh = SubResource("Mesh_TrailerRib")
+
+[node name="Rib5R" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.862, 2.45, -1.235)
+mesh = SubResource("Mesh_TrailerRib")
+
+[node name="Rib6L" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.225, 2.45, 1.235)
+mesh = SubResource("Mesh_TrailerRib")
+
+[node name="Rib6R" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.225, 2.45, -1.235)
+mesh = SubResource("Mesh_TrailerRib")
+
+[node name="Rib7L" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.312, 2.45, 1.235)
+mesh = SubResource("Mesh_TrailerRib")
+
+[node name="Rib7R" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.312, 2.45, -1.235)
+mesh = SubResource("Mesh_TrailerRib")
+
+[node name="Rib8L" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4, 2.45, 1.235)
+mesh = SubResource("Mesh_TrailerRib")
+
+[node name="Rib8R" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4, 2.45, -1.235)
+mesh = SubResource("Mesh_TrailerRib")
+
+[node name="TrailerUnderframe" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.1, 1.15, 0)
+mesh = SubResource("Mesh_TrailerUnderframe")
+
+[node name="ReeferUnit" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.8, 3.05, 0)
+mesh = SubResource("Mesh_ReeferUnit")
+
+[node name="ReeferGrilleL" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.8, 3.05, 1.01)
+mesh = SubResource("Mesh_ReeferGrille")
+
+[node name="ReeferGrilleR" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.8, 3.05, -1.01)
+mesh = SubResource("Mesh_ReeferGrille")
+
+[node name="RearDoorSeam" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.815, 2.45, 0)
+mesh = SubResource("Mesh_RearDoorSeam")
+
+[node name="RearDoorFrameL" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.815, 2.45, 1.18)
+mesh = SubResource("Mesh_RearDoorFrame")
+
+[node name="RearDoorFrameR" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.815, 2.45, -1.18)
+mesh = SubResource("Mesh_RearDoorFrame")
+
+[node name="TaillightL" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.83, 1.5, 1.0)
+mesh = SubResource("Mesh_Taillight")
+
+[node name="TaillightR" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.83, 1.5, -1.0)
+mesh = SubResource("Mesh_Taillight")
+
+[node name="RearBumper" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.7, 0.6, 0)
+mesh = SubResource("Mesh_RearBumper")
+
+[node name="RearBumperStrutL" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.6, 0.85, 0.7)
+mesh = SubResource("Mesh_RearBumperStrut")
+
+[node name="RearBumperStrutR" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.6, 0.85, -0.7)
+mesh = SubResource("Mesh_RearBumperStrut")
+
+[node name="LicensePlate" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.77, 0.6, 0)
+mesh = SubResource("Mesh_LicensePlate")
+
+[node name="LandingLegL" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3, 0.65, 0.75)
+mesh = SubResource("Mesh_LandingLeg")
+
+[node name="LandingLegR" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3, 0.65, -0.75)
+mesh = SubResource("Mesh_LandingLeg")
+
+[node name="LandingFootL" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3, 0.25, 0.75)
+mesh = SubResource("Mesh_LandingFoot")
+
+[node name="LandingFootR" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3, 0.25, -0.75)
+mesh = SubResource("Mesh_LandingFoot")
+
+[node name="SideMarker0L" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.0, 1.42, 1.25)
+mesh = SubResource("Mesh_SideMarker")
+
+[node name="SideMarker0R" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.0, 1.42, -1.25)
+mesh = SubResource("Mesh_SideMarker")
+
+[node name="SideMarker1L" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 1.42, 1.25)
+mesh = SubResource("Mesh_SideMarker")
+
+[node name="SideMarker1R" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 1.42, -1.25)
+mesh = SubResource("Mesh_SideMarker")
+
+[node name="SideMarker2L" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.3, 1.42, 1.25)
+mesh = SubResource("Mesh_SideMarker")
+
+[node name="SideMarker2R" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.3, 1.42, -1.25)
+mesh = SubResource("Mesh_SideMarker")
+
+[node name="Wheel_SteerL" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 5.65, 0.5, 1.0)
+mesh = SubResource("Mesh_Wheel")
+
+[node name="Rim" type="MeshInstance3D" parent="Visuals/ShippingTruck/Wheel_SteerL"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("Mesh_WheelRim")
+
+[node name="Wheel_SteerR" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 5.65, 0.5, -1.0)
+mesh = SubResource("Mesh_Wheel")
+
+[node name="Rim" type="MeshInstance3D" parent="Visuals/ShippingTruck/Wheel_SteerR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("Mesh_WheelRim")
+
+[node name="Wheel_Drive1L" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 2.2, 0.5, 1.0)
+mesh = SubResource("Mesh_Wheel")
+
+[node name="Rim" type="MeshInstance3D" parent="Visuals/ShippingTruck/Wheel_Drive1L"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("Mesh_WheelRim")
+
+[node name="Wheel_Drive1R" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 2.2, 0.5, -1.0)
+mesh = SubResource("Mesh_Wheel")
+
+[node name="Rim" type="MeshInstance3D" parent="Visuals/ShippingTruck/Wheel_Drive1R"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("Mesh_WheelRim")
+
+[node name="Wheel_Drive2L" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1.05, 0.5, 1.0)
+mesh = SubResource("Mesh_Wheel")
+
+[node name="Rim" type="MeshInstance3D" parent="Visuals/ShippingTruck/Wheel_Drive2L"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("Mesh_WheelRim")
+
+[node name="Wheel_Drive2R" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1.05, 0.5, -1.0)
+mesh = SubResource("Mesh_Wheel")
+
+[node name="Rim" type="MeshInstance3D" parent="Visuals/ShippingTruck/Wheel_Drive2R"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("Mesh_WheelRim")
+
+[node name="Wheel_Trailer1L" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -4.9, 0.5, 1.0)
+mesh = SubResource("Mesh_Wheel")
+
+[node name="Rim" type="MeshInstance3D" parent="Visuals/ShippingTruck/Wheel_Trailer1L"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("Mesh_WheelRim")
+
+[node name="Wheel_Trailer1R" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -4.9, 0.5, -1.0)
+mesh = SubResource("Mesh_Wheel")
+
+[node name="Rim" type="MeshInstance3D" parent="Visuals/ShippingTruck/Wheel_Trailer1R"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("Mesh_WheelRim")
+
+[node name="Wheel_Trailer2L" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -5.95, 0.5, 1.0)
+mesh = SubResource("Mesh_Wheel")
+
+[node name="Rim" type="MeshInstance3D" parent="Visuals/ShippingTruck/Wheel_Trailer2L"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("Mesh_WheelRim")
+
+[node name="Wheel_Trailer2R" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -5.95, 0.5, -1.0)
+mesh = SubResource("Mesh_Wheel")
+
+[node name="Rim" type="MeshInstance3D" parent="Visuals/ShippingTruck/Wheel_Trailer2R"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("Mesh_WheelRim")

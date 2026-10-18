@@ -240,11 +240,15 @@ mesh = SubResource("Mesh_PylonPole")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.2, 0)
 mesh = SubResource("Mesh_PylonSignRed")
 
-[node name="SignBoardInner" type="MeshInstance3D" parent="RoadsideSign"]
+[node name="SignBoardInnerFront" type="MeshInstance3D" parent="RoadsideSign"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.2, 0.12)
 mesh = SubResource("Mesh_PylonSignInner")
 
-[node name="PylonName" type="Label3D" parent="RoadsideSign"]
+[node name="SignBoardInnerBack" type="MeshInstance3D" parent="RoadsideSign"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 7.2, -0.12)
+mesh = SubResource("Mesh_PylonSignInner")
+
+[node name="PylonNameFront" type="Label3D" parent="RoadsideSign"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.45, 0.26)
 pixel_size = 0.0095
 modulate = Color(0.82, 0.08, 0.1, 1)
@@ -254,8 +258,27 @@ font = ExtResource("1_lobster")
 font_size = 96
 outline_size = 4
 
-[node name="PylonSub" type="Label3D" parent="RoadsideSign"]
+[node name="PylonNameBack" type="Label3D" parent="RoadsideSign"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 7.45, -0.26)
+pixel_size = 0.0095
+modulate = Color(0.82, 0.08, 0.1, 1)
+outline_modulate = Color(0.45, 0.04, 0.05, 1)
+text = "Walgroins"
+font = ExtResource("1_lobster")
+font_size = 96
+outline_size = 4
+
+[node name="PylonSubFront" type="Label3D" parent="RoadsideSign"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.65, 0.26)
+pixel_size = 0.01
+modulate = Color(0.82, 0.08, 0.1, 1)
+outline_modulate = Color(0.82, 0.08, 0.1, 1)
+text = "24 HR PHARMACY"
+font_size = 28
+outline_size = 2
+
+[node name="PylonSubBack" type="Label3D" parent="RoadsideSign"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 6.65, -0.26)
 pixel_size = 0.01
 modulate = Color(0.82, 0.08, 0.1, 1)
 outline_modulate = Color(0.82, 0.08, 0.1, 1)

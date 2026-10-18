@@ -1,6 +1,8 @@
 class_name PassengerCar
 extends Car
 
+const MeshBakerScript = preload("res://addons/mesh_baker/mesh_baker.gd")
+
 const PASSENGER_TYPES: Array[CarType] = [
 	CarType.SEDAN,
 	CarType.SUV,
@@ -114,6 +116,8 @@ func _apply_visual_type() -> void:
 		var body_scene: PackedScene = BODY_SCENES[car_type]
 		var active_model := body_scene.instantiate() as Node3D
 		assert(active_model != null)
+		if OS.is_debug_build() and ProjectSettings.get_setting("debug/bake_preview", false):
+			MeshBakerScript.bake_car_body(active_model)
 		active_model.visible = true
 		visuals.add_child(active_model)
 		_wheels_initialized = false

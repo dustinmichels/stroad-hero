@@ -30,6 +30,6 @@ I think the underlying model should perhaps be 3D, so I can simulate real traffi
 
 ## Traffic
 
-Traffic includes sedans, SUVs, taxis, delivery vans, pickup trucks, buses, hatchbacks, minivans, and sports cars. Smaller passenger vehicles can use parking lots; buses and delivery vans remain on the road.
+Traffic includes sedans, SUVs, taxis, delivery vans, pickup trucks, buses, shipping trucks (semis), hatchbacks, minivans, and sports cars. Smaller passenger vehicles can use parking lots; buses, shipping trucks, and delivery vans remain on the road.
 
 Vehicles in the westbound curb lane can run errands to Walgroins and Taco Hell. When assigned an errand, a car reserves a suitable stall, decelerates and turns into the shared parking lot driveway across the sidewalk apron, parks and dwells for a visit, reverses out into the aisle, proceeds to the exit wait point, yields for an acceptable gap in westbound traffic, and merges back into flow.

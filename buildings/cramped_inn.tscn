@@ -608,12 +608,26 @@ mesh = SubResource("Mesh_SignPillar")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, 0)
 mesh = SubResource("Mesh_SignBoard")
 
-[node name="Inset" type="MeshInstance3D" parent="RoadsideSign"]
+[node name="InsetFront" type="MeshInstance3D" parent="RoadsideSign"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, 0.31)
 mesh = SubResource("Mesh_SignInset")
 
-[node name="Name" type="Label3D" parent="RoadsideSign"]
+[node name="InsetBack" type="MeshInstance3D" parent="RoadsideSign"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 6, -0.31)
+mesh = SubResource("Mesh_SignInset")
+
+[node name="NameFront" type="Label3D" parent="RoadsideSign"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, 0.4)
+pixel_size = 0.012
+modulate = Color(0.48, 0.05, 0.09, 1)
+outline_modulate = Color(0.05, 0.16, 0.36, 1)
+text = "Cramped Inn"
+font = ExtResource("1_lobster")
+font_size = 52
+outline_size = 7
+
+[node name="NameBack" type="Label3D" parent="RoadsideSign"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 6, -0.4)
 pixel_size = 0.012
 modulate = Color(0.48, 0.05, 0.09, 1)
 outline_modulate = Color(0.05, 0.16, 0.36, 1)

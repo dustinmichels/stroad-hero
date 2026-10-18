@@ -100,11 +100,11 @@ Draw calls scale with surfaces (one per mesh × material pair), not with nodes. 
 
 Recommended: the export plugin, with the merge logic in one static function (`MeshBaker.bake(root: Node3D) -> Node3D`). `_customize_scene()` calls it; return `null` for scenes it leaves alone. A debug-only project setting such as `debug/bake_preview` can also call it from `_ready()`, so editor runs and profiling match the build through the same code path.
 
-- [ ] Do 3a first, so each body scene is a single unit to bake.
-- [ ] Write `addons/mesh_baker/` with `plugin.cfg`, `plugin.gd` (`EditorPlugin` calling `add_export_plugin()`), `export_plugin.gd` and `mesh_baker.gd`.
-- [ ] Enable it in the editor under Project Settings → Plugins. The setting is saved to `project.godot`, so the `/tmp` export copy picks it up. Don't edit `project.godot` by hand while the editor is open, because the editor will overwrite it.
-- [ ] Check it headless against a `/tmp` copy: instance `passenger_car.tscn`, bake it, print the surface count before and after.
-- [ ] Extend it to buildings and props. They have no per-part logic, so they can usually go down to one mesh per building or prop.
+- [x] Do 3a first, so each body scene is a single unit to bake.
+- [x] Write `addons/mesh_baker/` with `plugin.cfg`, `plugin.gd` (`EditorPlugin` calling `add_export_plugin()`), `export_plugin.gd` and `mesh_baker.gd`.
+- [x] Enable it in the editor under Project Settings → Plugins. The setting is saved to `project.godot`, so the `/tmp` export copy picks it up. Don't edit `project.godot` by hand while the editor is open, because the editor will overwrite it.
+- [x] Check it headless against a `/tmp` copy: instance `passenger_car.tscn`, bake it, print the surface count before and after.
+- [x] Extend it to buildings and props. They have no per-part logic, so they can usually go down to one mesh per building or prop.
 
 Verify: the draw-call monitor in the exported build (see "How to measure") drops, and cars still paint, signal and spin their wheels.
 

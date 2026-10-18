@@ -1,5 +1,11 @@
 # Changelog
 
+## Oct 18, 2026
+
+### Added
+
+- **Shipping truck**: A white long-nose semi tractor with a high-roof sleeper and roof fairing, pulling a ribbed aluminum refrigerated trailer with a front reefer unit. It has tandem drive and trailer axles with chrome wheels. It is 13.7 m long, spawns in about 4% of lane traffic at 90% of lane speed, and stays on the road (`cars/shipping_truck.tscn`, `cars/shipping_truck.gd`, `Car.CarType.SHIPPING_TRUCK`, `traffic/traffic_manager.gd`).
+
 ## Oct 17, 2026
 
 ### Added

@@ -7,6 +7,7 @@ const BusScene = preload("res://cars/bus.tscn")
 const TaxiScene = preload("res://cars/taxi.tscn")
 const TruckScene = preload("res://cars/truck.tscn")
 const VanScene = preload("res://cars/van.tscn")
+const ShippingTruckScene = preload("res://cars/shipping_truck.tscn")
 const TrafficDebugScript = preload("res://traffic/traffic_debug.gd")
 const Errand = preload("res://traffic/errand.gd")
 
@@ -1217,14 +1218,17 @@ func _spawn_car_at(lane: Lane, initial_distance: float, scene: PackedScene = nul
 		elif roll < 0.85:
 			car = TaxiScene.instantiate()
 			chosen_type = CarScript.CarType.TAXI
-		elif roll < 0.95:
+		elif roll < 0.92:
 			car = TruckScene.instantiate()
 			chosen_type = CarScript.CarType.TRUCK
+		elif roll < 0.96:
+			car = ShippingTruckScene.instantiate()
+			chosen_type = CarScript.CarType.SHIPPING_TRUCK
 		else:
 			car = BusScene.instantiate()
 			chosen_type = CarScript.CarType.BUS
 	var spd := randf_range(lane.min_speed, lane.max_speed)
-	if chosen_type == CarScript.CarType.BUS:
+	if chosen_type == CarScript.CarType.BUS or chosen_type == CarScript.CarType.SHIPPING_TRUCK:
 		spd *= 0.9
 
 	add_child(car)
