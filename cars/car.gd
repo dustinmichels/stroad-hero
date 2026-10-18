@@ -148,8 +148,6 @@ func _ready() -> void:
 	_blocker_shape.name = "CollisionShape3D"
 	blocker.add_child(_blocker_shape)
 	add_child(blocker)
-	_setup_wheels()
-	_setup_signals()
 	_apply_visual_type()
 
 

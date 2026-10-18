@@ -10,6 +10,24 @@ const PASSENGER_TYPES: Array[CarType] = [
 	CarType.SPORTS,
 ]
 
+const BODY_SCENES: Dictionary = {
+	CarType.SEDAN: preload("res://cars/bodies/sedan.tscn"),
+	CarType.SUV: preload("res://cars/bodies/suv.tscn"),
+	CarType.PICKUP: preload("res://cars/bodies/pickup.tscn"),
+	CarType.HATCHBACK: preload("res://cars/bodies/hatchback.tscn"),
+	CarType.MINIVAN: preload("res://cars/bodies/minivan.tscn"),
+	CarType.SPORTS: preload("res://cars/bodies/sports.tscn"),
+}
+
+const BODY_NODE_PATHS: Dictionary = {
+	CarType.SEDAN: ^"Sedan",
+	CarType.SUV: ^"SUV",
+	CarType.PICKUP: ^"Pickup",
+	CarType.HATCHBACK: ^"Hatchback",
+	CarType.MINIVAN: ^"Minivan",
+	CarType.SPORTS: ^"Sports",
+}
+
 const PAINT_PALETTE: Array[Color] = [
 	Color(0.82, 0.16, 0.14),  # Classic Crimson Red
 	Color(0.14, 0.38, 0.82),  # Cobalt Blue
@@ -88,13 +106,18 @@ func _apply_visual_type() -> void:
 		car_type = PASSENGER_TYPES[rng.randi_range(0, PASSENGER_TYPES.size() - 1)]
 
 	var visuals := get_node_or_null("Visuals")
-	if visuals:
+	if visuals and not _get_node_for_type(car_type):
 		for model in visuals.get_children():
-			if model is Node3D:
-				model.visible = false
-		var active_model := _get_node_for_type(car_type)
-		if active_model:
-			active_model.visible = true
+			visuals.remove_child(model)
+			model.free()
+
+		var body_scene: PackedScene = BODY_SCENES[car_type]
+		var active_model := body_scene.instantiate() as Node3D
+		assert(active_model != null)
+		active_model.visible = true
+		visuals.add_child(active_model)
+		_wheels_initialized = false
+		_signals_initialized = false
 
 	super._apply_visual_type()
 	_apply_paint_material()
@@ -102,22 +125,9 @@ func _apply_visual_type() -> void:
 
 func _get_node_for_type(type: CarType) -> Node3D:
 	var visuals := get_node_or_null("Visuals")
-	if not visuals:
+	if not visuals or not BODY_NODE_PATHS.has(type):
 		return null
-	match type:
-		CarType.SEDAN:
-			return visuals.get_node_or_null("Sedan")
-		CarType.SUV:
-			return visuals.get_node_or_null("SUV")
-		CarType.PICKUP:
-			return visuals.get_node_or_null("Pickup")
-		CarType.HATCHBACK:
-			return visuals.get_node_or_null("Hatchback")
-		CarType.MINIVAN:
-			return visuals.get_node_or_null("Minivan")
-		CarType.SPORTS:
-			return visuals.get_node_or_null("Sports")
-	return null
+	return visuals.get_node_or_null(BODY_NODE_PATHS[type]) as Node3D
 
 
 func set_body_color(c: Color) -> void:

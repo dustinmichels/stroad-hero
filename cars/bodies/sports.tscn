@@ -1,0 +1,315 @@
+[gd_scene format=3]
+
+[sub_resource type="StandardMaterial3D" id="Mat_CarDarkTrim"]
+albedo_color = Color(0.12, 0.13, 0.15, 1)
+roughness = 0.75
+
+[sub_resource type="BoxMesh" id="Mesh_SportsSplitter"]
+material = SubResource("Mat_CarDarkTrim")
+size = Vector3(0.24, 0.08, 1.88)
+
+[sub_resource type="BoxMesh" id="Mesh_SportsSkirts"]
+material = SubResource("Mat_CarDarkTrim")
+size = Vector3(3.9, 0.1, 1.84)
+
+[sub_resource type="StandardMaterial3D" id="Mat_SportsPurple"]
+albedo_color = Color(0.48, 0.18, 0.7, 1)
+metallic = 0.25
+roughness = 0.25
+
+[sub_resource type="BoxMesh" id="Mesh_SportsBody"]
+material = SubResource("Mat_SportsPurple")
+size = Vector3(4.1, 0.36, 1.86)
+
+[sub_resource type="BoxMesh" id="Mesh_SportsRearFlare"]
+material = SubResource("Mat_SportsPurple")
+size = Vector3(0.95, 0.38, 0.12)
+
+[sub_resource type="BoxMesh" id="Mesh_SportsHood"]
+material = SubResource("Mat_SportsPurple")
+size = Vector3(1.6, 0.12, 1.76)
+
+[sub_resource type="BoxMesh" id="Mesh_SportsScoop"]
+material = SubResource("Mat_CarDarkTrim")
+size = Vector3(0.5, 0.03, 0.4)
+
+[sub_resource type="BoxMesh" id="Mesh_SportsBumperF"]
+material = SubResource("Mat_SportsPurple")
+size = Vector3(0.2, 0.28, 1.84)
+
+[sub_resource type="StandardMaterial3D" id="Mat_Grille"]
+albedo_color = Color(0.08, 0.08, 0.09, 1)
+roughness = 0.65
+
+[sub_resource type="BoxMesh" id="Mesh_SportsGrille"]
+material = SubResource("Mat_Grille")
+size = Vector3(0.04, 0.18, 1.1)
+
+[sub_resource type="StandardMaterial3D" id="Mat_Headlight"]
+albedo_color = Color(1, 0.98, 0.85, 1)
+roughness = 0.2
+emission_enabled = true
+emission = Color(1, 0.98, 0.85, 1)
+emission_energy_multiplier = 2.0
+
+[sub_resource type="BoxMesh" id="Mesh_SportsHeadlight"]
+material = SubResource("Mat_Headlight")
+size = Vector3(0.14, 0.14, 0.36)
+
+[sub_resource type="BoxMesh" id="Mesh_SportsBumperR"]
+material = SubResource("Mat_SportsPurple")
+size = Vector3(0.22, 0.3, 1.86)
+
+[sub_resource type="BoxMesh" id="Mesh_SportsDiffuser"]
+material = SubResource("Mat_CarDarkTrim")
+size = Vector3(0.18, 0.16, 1.4)
+
+[sub_resource type="StandardMaterial3D" id="Mat_LicensePlate"]
+albedo_color = Color(0.92, 0.92, 0.9, 1)
+roughness = 0.4
+
+[sub_resource type="BoxMesh" id="Mesh_LicensePlate"]
+material = SubResource("Mat_LicensePlate")
+size = Vector3(0.02, 0.13, 0.32)
+
+[sub_resource type="StandardMaterial3D" id="Mat_Chrome"]
+albedo_color = Color(0.85, 0.86, 0.88, 1)
+metallic = 0.85
+roughness = 0.2
+
+[sub_resource type="CylinderMesh" id="Mesh_ExhaustTip"]
+material = SubResource("Mat_Chrome")
+top_radius = 0.045
+bottom_radius = 0.045
+height = 0.14
+radial_segments = 32
+
+[sub_resource type="StandardMaterial3D" id="Mat_Taillight"]
+albedo_color = Color(0.9, 0.1, 0.1, 1)
+roughness = 0.2
+emission_enabled = true
+emission = Color(0.9, 0.1, 0.1, 1)
+emission_energy_multiplier = 1.5
+
+[sub_resource type="BoxMesh" id="Mesh_SportsTaillight"]
+material = SubResource("Mat_Taillight")
+size = Vector3(0.1, 0.14, 0.36)
+
+[sub_resource type="BoxMesh" id="Mesh_SportsLightBar"]
+material = SubResource("Mat_Taillight")
+size = Vector3(0.08, 0.08, 0.9)
+
+[sub_resource type="StandardMaterial3D" id="Mat_CarWindow"]
+albedo_color = Color(0.1, 0.14, 0.2, 1)
+metallic = 0.3
+roughness = 0.1
+
+[sub_resource type="BoxMesh" id="Mesh_SportsCabinCore"]
+material = SubResource("Mat_CarWindow")
+size = Vector3(0.55, 0.4, 1.44)
+
+[sub_resource type="BoxMesh" id="Mesh_SportsRoof"]
+material = SubResource("Mat_SportsPurple")
+size = Vector3(0.6, 0.06, 1.46)
+
+[sub_resource type="BoxMesh" id="Mesh_SportsWindshield"]
+material = SubResource("Mat_CarWindow")
+size = Vector3(0.06, 0.58, 1.42)
+
+[sub_resource type="BoxMesh" id="Mesh_SportsPillarA"]
+material = SubResource("Mat_SportsPurple")
+size = Vector3(0.08, 0.6, 0.08)
+
+[sub_resource type="BoxMesh" id="Mesh_SportsFastbackGlass"]
+material = SubResource("Mat_CarWindow")
+size = Vector3(0.06, 0.96, 1.4)
+
+[sub_resource type="BoxMesh" id="Mesh_SportsFastbackPillar"]
+material = SubResource("Mat_SportsPurple")
+size = Vector3(0.08, 0.98, 0.08)
+
+[sub_resource type="BoxMesh" id="Mesh_SportsSpoilerWing"]
+material = SubResource("Mat_SportsPurple")
+size = Vector3(0.28, 0.06, 1.65)
+
+[sub_resource type="BoxMesh" id="Mesh_SportsSpoilerPost"]
+material = SubResource("Mat_CarDarkTrim")
+size = Vector3(0.08, 0.24, 0.06)
+
+[sub_resource type="BoxMesh" id="Mesh_SportsMirrorHousing"]
+material = SubResource("Mat_SportsPurple")
+size = Vector3(0.16, 0.08, 0.14)
+
+[sub_resource type="StandardMaterial3D" id="Mat_MirrorGlass"]
+albedo_color = Color(0.75, 0.82, 0.88, 1)
+metallic = 0.9
+roughness = 0.1
+
+[sub_resource type="BoxMesh" id="Mesh_MirrorGlass"]
+material = SubResource("Mat_MirrorGlass")
+size = Vector3(0.02, 0.08, 0.11)
+
+[sub_resource type="StandardMaterial3D" id="Mat_WheelRubber"]
+albedo_color = Color(0.1, 0.1, 0.11, 1)
+roughness = 0.9
+
+[sub_resource type="CylinderMesh" id="Mesh_Wheel"]
+material = SubResource("Mat_WheelRubber")
+top_radius = 0.35
+bottom_radius = 0.35
+height = 0.3
+radial_segments = 32
+
+[node name="Sports" type="Node3D" unique_id=399205582]
+
+[node name="FrontSplitter" type="MeshInstance3D" parent="." unique_id=1742798394]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.08, 0.22, 0)
+mesh = SubResource("Mesh_SportsSplitter")
+
+[node name="SideSkirts" type="MeshInstance3D" parent="." unique_id=805802304]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.24, 0)
+mesh = SubResource("Mesh_SportsSkirts")
+
+[node name="Body" type="MeshInstance3D" parent="." unique_id=1530972811]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.48, 0)
+mesh = SubResource("Mesh_SportsBody")
+
+[node name="FlareRL" type="MeshInstance3D" parent="." unique_id=1425102605]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.35, 0.52, 0.94)
+mesh = SubResource("Mesh_SportsRearFlare")
+
+[node name="FlareRR" type="MeshInstance3D" parent="." unique_id=1350065336]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.35, 0.52, -0.94)
+mesh = SubResource("Mesh_SportsRearFlare")
+
+[node name="Hood" type="MeshInstance3D" parent="." unique_id=2078288518]
+transform = Transform3D(0.995056, 0.0993197, 0, -0.0993197, 0.995056, 0, 0, 0, 1, 1.2, 0.6, 0)
+mesh = SubResource("Mesh_SportsHood")
+
+[node name="HoodScoop" type="MeshInstance3D" parent="." unique_id=706199574]
+transform = Transform3D(0.995056, 0.0993197, 0, -0.0993197, 0.995056, 0, 0, 0, 1, 1.2, 0.67, 0)
+mesh = SubResource("Mesh_SportsScoop")
+
+[node name="FrontBumper" type="MeshInstance3D" parent="." unique_id=1325706982]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.06, 0.46, 0)
+mesh = SubResource("Mesh_SportsBumperF")
+
+[node name="FrontGrille" type="MeshInstance3D" parent="." unique_id=1950882239]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.1, 0.36, 0)
+mesh = SubResource("Mesh_SportsGrille")
+
+[node name="HeadlightL" type="MeshInstance3D" parent="." unique_id=1813667525]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.04, 0.56, 0.66)
+mesh = SubResource("Mesh_SportsHeadlight")
+
+[node name="HeadlightR" type="MeshInstance3D" parent="." unique_id=196871334]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.04, 0.56, -0.66)
+mesh = SubResource("Mesh_SportsHeadlight")
+
+[node name="RearBumper" type="MeshInstance3D" parent="." unique_id=1646363299]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.04, 0.48, 0)
+mesh = SubResource("Mesh_SportsBumperR")
+
+[node name="RearDiffuser" type="MeshInstance3D" parent="." unique_id=1992742956]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.06, 0.26, 0)
+mesh = SubResource("Mesh_SportsDiffuser")
+
+[node name="LicensePlate" type="MeshInstance3D" parent="." unique_id=1258775720]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.08, 0.46, 0)
+mesh = SubResource("Mesh_LicensePlate")
+
+[node name="ExhaustL" type="MeshInstance3D" parent="." unique_id=910824756]
+transform = Transform3D(1, 0, 0, 0, 6.12323e-17, 1, 0, -1, 6.12323e-17, -2.1, 0.28, 0.5)
+mesh = SubResource("Mesh_ExhaustTip")
+
+[node name="ExhaustR" type="MeshInstance3D" parent="." unique_id=828924156]
+transform = Transform3D(1, 0, 0, 0, 6.12323e-17, 1, 0, -1, 6.12323e-17, -2.1, 0.28, -0.5)
+mesh = SubResource("Mesh_ExhaustTip")
+
+[node name="TaillightL" type="MeshInstance3D" parent="." unique_id=1149768597]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.04, 0.6, 0.66)
+mesh = SubResource("Mesh_SportsTaillight")
+
+[node name="TaillightR" type="MeshInstance3D" parent="." unique_id=1911517246]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.04, 0.6, -0.66)
+mesh = SubResource("Mesh_SportsTaillight")
+
+[node name="LightBar" type="MeshInstance3D" parent="." unique_id=277429943]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.04, 0.6, 0)
+mesh = SubResource("Mesh_SportsLightBar")
+
+[node name="Cabin" type="MeshInstance3D" parent="." unique_id=2104101064]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.18, 0.92, 0)
+mesh = SubResource("Mesh_SportsCabinCore")
+
+[node name="Roof" type="MeshInstance3D" parent="." unique_id=1453011364]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.18, 1.12, 0)
+mesh = SubResource("Mesh_SportsRoof")
+
+[node name="Windshield" type="MeshInstance3D" parent="." unique_id=1909139352]
+transform = Transform3D(0.707107, -0.707107, 0, 0.707107, 0.707107, 0, 0, 0, 1, 0.29, 0.89, 0)
+mesh = SubResource("Mesh_SportsWindshield")
+
+[node name="APillarL" type="MeshInstance3D" parent="." unique_id=529418695]
+transform = Transform3D(0.707107, -0.707107, 0, 0.707107, 0.707107, 0, 0, 0, 1, 0.29, 0.89, 0.71)
+mesh = SubResource("Mesh_SportsPillarA")
+
+[node name="APillarR" type="MeshInstance3D" parent="." unique_id=1016945896]
+transform = Transform3D(0.707107, -0.707107, 0, 0.707107, 0.707107, 0, 0, 0, 1, 0.29, 0.89, -0.71)
+mesh = SubResource("Mesh_SportsPillarA")
+
+[node name="FastbackGlass" type="MeshInstance3D" parent="." unique_id=910573385]
+transform = Transform3D(0.406737, 0.913545, 0, -0.913545, 0.406737, 0, 0, 0, 1, -0.9, 0.9, 0)
+mesh = SubResource("Mesh_SportsFastbackGlass")
+
+[node name="FastbackL" type="MeshInstance3D" parent="." unique_id=2035652843]
+transform = Transform3D(0.406737, 0.913545, 0, -0.913545, 0.406737, 0, 0, 0, 1, -0.9, 0.9, 0.71)
+mesh = SubResource("Mesh_SportsFastbackPillar")
+
+[node name="FastbackR" type="MeshInstance3D" parent="." unique_id=1551078428]
+transform = Transform3D(0.406737, 0.913545, 0, -0.913545, 0.406737, 0, 0, 0, 1, -0.9, 0.9, -0.71)
+mesh = SubResource("Mesh_SportsFastbackPillar")
+
+[node name="SpoilerWing" type="MeshInstance3D" parent="." unique_id=986825132]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.82, 0.98, 0)
+mesh = SubResource("Mesh_SportsSpoilerWing")
+
+[node name="SpoilerPostL" type="MeshInstance3D" parent="." unique_id=1987500923]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.82, 0.84, 0.45)
+mesh = SubResource("Mesh_SportsSpoilerPost")
+
+[node name="SpoilerPostR" type="MeshInstance3D" parent="." unique_id=874646952]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.82, 0.84, -0.45)
+mesh = SubResource("Mesh_SportsSpoilerPost")
+
+[node name="MirrorHousingL" type="MeshInstance3D" parent="." unique_id=1549072753]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.15, 0.82, 0.8)
+mesh = SubResource("Mesh_SportsMirrorHousing")
+
+[node name="MirrorGlassL" type="MeshInstance3D" parent="." unique_id=1143128284]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.15, 0.82, 0.76)
+mesh = SubResource("Mesh_MirrorGlass")
+
+[node name="MirrorHousingR" type="MeshInstance3D" parent="." unique_id=665839705]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.15, 0.82, -0.8)
+mesh = SubResource("Mesh_SportsMirrorHousing")
+
+[node name="MirrorGlassR" type="MeshInstance3D" parent="." unique_id=394000587]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.15, 0.82, -0.76)
+mesh = SubResource("Mesh_MirrorGlass")
+
+[node name="Wheel_RearL" type="MeshInstance3D" parent="." unique_id=2091726815]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -1.35, 0.35, 0.95)
+mesh = SubResource("Mesh_Wheel")
+
+[node name="Wheel_RearR" type="MeshInstance3D" parent="." unique_id=184578833]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -1.35, 0.35, -0.95)
+mesh = SubResource("Mesh_Wheel")
+
+[node name="Wheel_FrontL" type="MeshInstance3D" parent="." unique_id=121202132]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1.35, 0.35, 0.95)
+mesh = SubResource("Mesh_Wheel")
+
+[node name="Wheel_FrontR" type="MeshInstance3D" parent="." unique_id=1009494844]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1.35, 0.35, -0.95)
+mesh = SubResource("Mesh_Wheel")

@@ -48,12 +48,12 @@ Each visible car is about 37–49 `MeshInstance3D`s, and props add hundreds more
 
 ### 3a. Hidden car variants
 
-`cars/passenger_car.tscn` contains all six body styles (Sedan, SUV, Pickup, Hatchback, Minivan, Sports). `_apply_visual_type()` in `passenger_car.gd` hides five of them. Each car therefore carries 266 meshes, of which 37 are visible: about 5,600 dead nodes across 21 cars. Hidden meshes aren't drawn, but they cost memory, spawn time and scene-tree traversal.
+`cars/passenger_car.tscn` now contains only the shared collision and script nodes. It loads exactly one of six body scenes from `cars/bodies/`; no hidden body trees are instantiated.
 
-- [ ] Split each body style into its own scene, for example `cars/bodies/sedan.tscn`.
-- [ ] In `_apply_visual_type()`, instantiate only the chosen body under `Visuals`, instead of toggling visibility.
-- [ ] Keep `_get_node_for_type()` and `_apply_paint_material()` working against the single instanced body.
-- [ ] `_setup_wheels()` in `car.gd` adds a `Spoke` and `Hub` to every wheel of every variant, hidden ones included: 48 extra nodes per car. After the split it only touches the instanced body; section 4 removes the runtime creation altogether.
+- [x] Split each body style into its own scene under `cars/bodies/`.
+- [x] In `_apply_visual_type()`, instantiate only the chosen body under `Visuals`.
+- [x] Keep `_get_node_for_type()` and `_apply_paint_material()` working against the single instanced body.
+- [x] `_setup_wheels()` in `car.gd` now runs after the body is instantiated, so it adds `Spoke` and `Hub` only to the selected body's four wheels. Section 4 removes the runtime creation altogether.
 
 Expected: total nodes go from about 7,000 to about 1,500.
 

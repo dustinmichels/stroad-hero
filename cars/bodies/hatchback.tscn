@@ -1,0 +1,247 @@
+[gd_scene format=3]
+
+[sub_resource type="StandardMaterial3D" id="Mat_CarDarkTrim"]
+albedo_color = Color(0.12, 0.13, 0.15, 1)
+roughness = 0.75
+
+[sub_resource type="BoxMesh" id="Mesh_HatchChassis"]
+material = SubResource("Mat_CarDarkTrim")
+size = Vector3(3.5, 0.14, 1.68)
+
+[sub_resource type="StandardMaterial3D" id="Mat_HatchOrange"]
+albedo_color = Color(0.9, 0.32, 0.08, 1)
+metallic = 0.1
+roughness = 0.32
+
+[sub_resource type="BoxMesh" id="Mesh_HatchBody"]
+material = SubResource("Mat_HatchOrange")
+size = Vector3(3.6, 0.38, 1.74)
+
+[sub_resource type="BoxMesh" id="Mesh_HatchHood"]
+material = SubResource("Mat_HatchOrange")
+size = Vector3(1.05, 0.12, 1.68)
+
+[sub_resource type="BoxMesh" id="Mesh_HatchBumperF"]
+material = SubResource("Mat_HatchOrange")
+size = Vector3(0.22, 0.28, 1.72)
+
+[sub_resource type="StandardMaterial3D" id="Mat_Grille"]
+albedo_color = Color(0.08, 0.08, 0.09, 1)
+roughness = 0.65
+
+[sub_resource type="BoxMesh" id="Mesh_HatchGrille"]
+material = SubResource("Mat_Grille")
+size = Vector3(0.04, 0.2, 0.86)
+
+[sub_resource type="StandardMaterial3D" id="Mat_Headlight"]
+albedo_color = Color(1, 0.98, 0.85, 1)
+roughness = 0.2
+emission_enabled = true
+emission = Color(1, 0.98, 0.85, 1)
+emission_energy_multiplier = 2.0
+
+[sub_resource type="BoxMesh" id="Mesh_HatchHeadlight"]
+material = SubResource("Mat_Headlight")
+size = Vector3(0.12, 0.16, 0.32)
+
+[sub_resource type="BoxMesh" id="Mesh_HatchBumperR"]
+material = SubResource("Mat_HatchOrange")
+size = Vector3(0.22, 0.28, 1.72)
+
+[sub_resource type="BoxMesh" id="Mesh_HatchDiffuser"]
+material = SubResource("Mat_CarDarkTrim")
+size = Vector3(0.16, 0.12, 1.2)
+
+[sub_resource type="StandardMaterial3D" id="Mat_LicensePlate"]
+albedo_color = Color(0.92, 0.92, 0.9, 1)
+roughness = 0.4
+
+[sub_resource type="BoxMesh" id="Mesh_LicensePlate"]
+material = SubResource("Mat_LicensePlate")
+size = Vector3(0.02, 0.13, 0.32)
+
+[sub_resource type="StandardMaterial3D" id="Mat_Taillight"]
+albedo_color = Color(0.9, 0.1, 0.1, 1)
+roughness = 0.2
+emission_enabled = true
+emission = Color(0.9, 0.1, 0.1, 1)
+emission_energy_multiplier = 1.5
+
+[sub_resource type="BoxMesh" id="Mesh_HatchTaillight"]
+material = SubResource("Mat_Taillight")
+size = Vector3(0.12, 0.24, 0.28)
+
+[sub_resource type="StandardMaterial3D" id="Mat_CarWindow"]
+albedo_color = Color(0.1, 0.14, 0.2, 1)
+metallic = 0.3
+roughness = 0.1
+
+[sub_resource type="BoxMesh" id="Mesh_HatchCabinCore"]
+material = SubResource("Mat_CarWindow")
+size = Vector3(1.1, 0.52, 1.48)
+
+[sub_resource type="BoxMesh" id="Mesh_HatchRoof"]
+material = SubResource("Mat_HatchOrange")
+size = Vector3(1.16, 0.08, 1.5)
+
+[sub_resource type="BoxMesh" id="Mesh_HatchRoofSpoiler"]
+material = SubResource("Mat_HatchOrange")
+size = Vector3(0.3, 0.08, 1.46)
+
+[sub_resource type="BoxMesh" id="Mesh_HatchWindshield"]
+material = SubResource("Mat_CarWindow")
+size = Vector3(0.06, 0.7, 1.44)
+
+[sub_resource type="BoxMesh" id="Mesh_HatchPillarA"]
+material = SubResource("Mat_HatchOrange")
+size = Vector3(0.08, 0.72, 0.08)
+
+[sub_resource type="BoxMesh" id="Mesh_HatchGlassR"]
+material = SubResource("Mat_CarWindow")
+size = Vector3(0.06, 0.76, 1.44)
+
+[sub_resource type="BoxMesh" id="Mesh_HatchPillarC"]
+material = SubResource("Mat_HatchOrange")
+size = Vector3(0.08, 0.78, 0.08)
+
+[sub_resource type="BoxMesh" id="Mesh_HatchMirrorHousing"]
+material = SubResource("Mat_HatchOrange")
+size = Vector3(0.14, 0.09, 0.13)
+
+[sub_resource type="StandardMaterial3D" id="Mat_MirrorGlass"]
+albedo_color = Color(0.75, 0.82, 0.88, 1)
+metallic = 0.9
+roughness = 0.1
+
+[sub_resource type="BoxMesh" id="Mesh_MirrorGlass"]
+material = SubResource("Mat_MirrorGlass")
+size = Vector3(0.02, 0.08, 0.11)
+
+[sub_resource type="StandardMaterial3D" id="Mat_WheelRubber"]
+albedo_color = Color(0.1, 0.1, 0.11, 1)
+roughness = 0.9
+
+[sub_resource type="CylinderMesh" id="Mesh_Wheel"]
+material = SubResource("Mat_WheelRubber")
+top_radius = 0.35
+bottom_radius = 0.35
+height = 0.3
+radial_segments = 32
+
+[node name="Hatchback" type="Node3D" unique_id=1585647764]
+
+[node name="Chassis" type="MeshInstance3D" parent="." unique_id=1810045690]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.32, 0)
+mesh = SubResource("Mesh_HatchChassis")
+
+[node name="Body" type="MeshInstance3D" parent="." unique_id=1092679103]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.58, 0)
+mesh = SubResource("Mesh_HatchBody")
+
+[node name="Hood" type="MeshInstance3D" parent="." unique_id=1586907146]
+transform = Transform3D(0.996195, 0.0871557, 0, -0.0871557, 0.996195, 0, 0, 0, 1, 1.18, 0.72, 0)
+mesh = SubResource("Mesh_HatchHood")
+
+[node name="FrontBumper" type="MeshInstance3D" parent="." unique_id=1896720662]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.82, 0.48, 0)
+mesh = SubResource("Mesh_HatchBumperF")
+
+[node name="FrontGrille" type="MeshInstance3D" parent="." unique_id=1502177594]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.86, 0.44, 0)
+mesh = SubResource("Mesh_HatchGrille")
+
+[node name="HeadlightL" type="MeshInstance3D" parent="." unique_id=1190831812]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.82, 0.66, 0.62)
+mesh = SubResource("Mesh_HatchHeadlight")
+
+[node name="HeadlightR" type="MeshInstance3D" parent="." unique_id=2133439225]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.82, 0.66, -0.62)
+mesh = SubResource("Mesh_HatchHeadlight")
+
+[node name="RearBumper" type="MeshInstance3D" parent="." unique_id=1992385537]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.82, 0.48, 0)
+mesh = SubResource("Mesh_HatchBumperR")
+
+[node name="RearDiffuser" type="MeshInstance3D" parent="." unique_id=1249625235]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.84, 0.32, 0)
+mesh = SubResource("Mesh_HatchDiffuser")
+
+[node name="LicensePlate" type="MeshInstance3D" parent="." unique_id=1559542544]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.86, 0.48, 0)
+mesh = SubResource("Mesh_LicensePlate")
+
+[node name="TaillightL" type="MeshInstance3D" parent="." unique_id=590731500]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.82, 0.74, 0.62)
+mesh = SubResource("Mesh_HatchTaillight")
+
+[node name="TaillightR" type="MeshInstance3D" parent="." unique_id=1244431339]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.82, 0.74, -0.62)
+mesh = SubResource("Mesh_HatchTaillight")
+
+[node name="Cabin" type="MeshInstance3D" parent="." unique_id=2021585981]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.35, 1.12, 0)
+mesh = SubResource("Mesh_HatchCabinCore")
+
+[node name="Roof" type="MeshInstance3D" parent="." unique_id=320123862]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.35, 1.39, 0)
+mesh = SubResource("Mesh_HatchRoof")
+
+[node name="RoofSpoiler" type="MeshInstance3D" parent="." unique_id=1311203563]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.02, 1.44, 0)
+mesh = SubResource("Mesh_HatchRoofSpoiler")
+
+[node name="Windshield" type="MeshInstance3D" parent="." unique_id=1664766319]
+transform = Transform3D(0.779338, -0.626604, 0, 0.626604, 0.779338, 0, 0, 0, 1, 0.42, 1.08, 0)
+mesh = SubResource("Mesh_HatchWindshield")
+
+[node name="APillarL" type="MeshInstance3D" parent="." unique_id=1490864429]
+transform = Transform3D(0.779338, -0.626604, 0, 0.626604, 0.779338, 0, 0, 0, 1, 0.42, 1.08, 0.73)
+mesh = SubResource("Mesh_HatchPillarA")
+
+[node name="APillarR" type="MeshInstance3D" parent="." unique_id=580149067]
+transform = Transform3D(0.779338, -0.626604, 0, 0.626604, 0.779338, 0, 0, 0, 1, 0.42, 1.08, -0.73)
+mesh = SubResource("Mesh_HatchPillarA")
+
+[node name="RearHatchGlass" type="MeshInstance3D" parent="." unique_id=1965351910]
+transform = Transform3D(0.71325, 0.700909, 0, -0.700909, 0.71325, 0, 0, 0, 1, -1.18, 1.08, 0)
+mesh = SubResource("Mesh_HatchGlassR")
+
+[node name="CPillarL" type="MeshInstance3D" parent="." unique_id=863545037]
+transform = Transform3D(0.71325, 0.700909, 0, -0.700909, 0.71325, 0, 0, 0, 1, -1.18, 1.08, 0.73)
+mesh = SubResource("Mesh_HatchPillarC")
+
+[node name="CPillarR" type="MeshInstance3D" parent="." unique_id=1226573392]
+transform = Transform3D(0.71325, 0.700909, 0, -0.700909, 0.71325, 0, 0, 0, 1, -1.18, 1.08, -0.73)
+mesh = SubResource("Mesh_HatchPillarC")
+
+[node name="MirrorHousingL" type="MeshInstance3D" parent="." unique_id=1823218803]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.28, 0.94, 0.82)
+mesh = SubResource("Mesh_HatchMirrorHousing")
+
+[node name="MirrorGlassL" type="MeshInstance3D" parent="." unique_id=78617705]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.28, 0.94, 0.78)
+mesh = SubResource("Mesh_MirrorGlass")
+
+[node name="MirrorHousingR" type="MeshInstance3D" parent="." unique_id=445390419]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.28, 0.94, -0.82)
+mesh = SubResource("Mesh_HatchMirrorHousing")
+
+[node name="MirrorGlassR" type="MeshInstance3D" parent="." unique_id=1595570445]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.28, 0.94, -0.78)
+mesh = SubResource("Mesh_MirrorGlass")
+
+[node name="Wheel_RearL" type="MeshInstance3D" parent="." unique_id=426399511]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -1.1, 0.35, 0.88)
+mesh = SubResource("Mesh_Wheel")
+
+[node name="Wheel_RearR" type="MeshInstance3D" parent="." unique_id=610653020]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -1.1, 0.35, -0.88)
+mesh = SubResource("Mesh_Wheel")
+
+[node name="Wheel_FrontL" type="MeshInstance3D" parent="." unique_id=1148788734]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1.1, 0.35, 0.88)
+mesh = SubResource("Mesh_Wheel")
+
+[node name="Wheel_FrontR" type="MeshInstance3D" parent="." unique_id=257633656]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1.1, 0.35, -0.88)
+mesh = SubResource("Mesh_Wheel")

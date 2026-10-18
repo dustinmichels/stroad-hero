@@ -1,0 +1,287 @@
+[gd_scene format=3]
+
+[sub_resource type="StandardMaterial3D" id="Mat_CarDarkTrim"]
+albedo_color = Color(0.12, 0.13, 0.15, 1)
+roughness = 0.75
+
+[sub_resource type="BoxMesh" id="Mesh_SUVChassis"]
+material = SubResource("Mat_CarDarkTrim")
+size = Vector3(4.4, 0.24, 1.94)
+
+[sub_resource type="BoxMesh" id="Mesh_SUVFlare"]
+material = SubResource("Mat_CarDarkTrim")
+size = Vector3(0.95, 0.4, 0.14)
+
+[sub_resource type="StandardMaterial3D" id="Mat_CarBlue"]
+albedo_color = Color(0.14, 0.38, 0.82, 1)
+roughness = 0.32
+
+[sub_resource type="BoxMesh" id="Mesh_SUVBody"]
+material = SubResource("Mat_CarBlue")
+size = Vector3(4.45, 0.48, 1.94)
+
+[sub_resource type="BoxMesh" id="Mesh_SUVHood"]
+material = SubResource("Mat_CarBlue")
+size = Vector3(1.25, 0.16, 1.86)
+
+[sub_resource type="BoxMesh" id="Mesh_SUVBumperF"]
+material = SubResource("Mat_CarBlue")
+size = Vector3(0.24, 0.4, 1.92)
+
+[sub_resource type="StandardMaterial3D" id="Mat_Chrome"]
+albedo_color = Color(0.85, 0.86, 0.88, 1)
+metallic = 0.85
+roughness = 0.2
+
+[sub_resource type="BoxMesh" id="Mesh_SUVSkid"]
+material = SubResource("Mat_Chrome")
+size = Vector3(0.12, 0.16, 0.9)
+
+[sub_resource type="StandardMaterial3D" id="Mat_Grille"]
+albedo_color = Color(0.08, 0.08, 0.09, 1)
+roughness = 0.65
+
+[sub_resource type="BoxMesh" id="Mesh_SUVGrille"]
+material = SubResource("Mat_Grille")
+size = Vector3(0.06, 0.28, 1.05)
+
+[sub_resource type="StandardMaterial3D" id="Mat_Headlight"]
+albedo_color = Color(1, 0.98, 0.85, 1)
+roughness = 0.2
+emission_enabled = true
+emission = Color(1, 0.98, 0.85, 1)
+emission_energy_multiplier = 2.0
+
+[sub_resource type="BoxMesh" id="Mesh_SUVHeadlight"]
+material = SubResource("Mat_Headlight")
+size = Vector3(0.14, 0.18, 0.36)
+
+[sub_resource type="BoxMesh" id="Mesh_SUVBumperR"]
+material = SubResource("Mat_CarDarkTrim")
+size = Vector3(0.24, 0.38, 1.92)
+
+[sub_resource type="StandardMaterial3D" id="Mat_LicensePlate"]
+albedo_color = Color(0.92, 0.92, 0.9, 1)
+roughness = 0.4
+
+[sub_resource type="BoxMesh" id="Mesh_LicensePlate"]
+material = SubResource("Mat_LicensePlate")
+size = Vector3(0.02, 0.13, 0.32)
+
+[sub_resource type="StandardMaterial3D" id="Mat_Taillight"]
+albedo_color = Color(0.9, 0.1, 0.1, 1)
+roughness = 0.2
+emission_enabled = true
+emission = Color(0.9, 0.1, 0.1, 1)
+emission_energy_multiplier = 1.5
+
+[sub_resource type="BoxMesh" id="Mesh_SUVTaillight"]
+material = SubResource("Mat_Taillight")
+size = Vector3(0.12, 0.28, 0.34)
+
+[sub_resource type="StandardMaterial3D" id="Mat_CarWindow"]
+albedo_color = Color(0.1, 0.14, 0.2, 1)
+metallic = 0.3
+roughness = 0.1
+
+[sub_resource type="BoxMesh" id="Mesh_SUVCabinCore"]
+material = SubResource("Mat_CarWindow")
+size = Vector3(1.65, 0.62, 1.64)
+
+[sub_resource type="BoxMesh" id="Mesh_SUVRoof"]
+material = SubResource("Mat_CarBlue")
+size = Vector3(1.8, 0.1, 1.68)
+
+[sub_resource type="BoxMesh" id="Mesh_SUVRearSpoiler"]
+material = SubResource("Mat_CarBlue")
+size = Vector3(0.24, 0.08, 1.55)
+
+[sub_resource type="BoxMesh" id="Mesh_SUVRoofRail"]
+material = SubResource("Mat_Chrome")
+size = Vector3(1.8, 0.08, 0.06)
+
+[sub_resource type="BoxMesh" id="Mesh_SUVWindshield"]
+material = SubResource("Mat_CarWindow")
+size = Vector3(0.06, 0.74, 1.6)
+
+[sub_resource type="BoxMesh" id="Mesh_SUVPillarA"]
+material = SubResource("Mat_CarBlue")
+size = Vector3(0.08, 0.76, 0.08)
+
+[sub_resource type="BoxMesh" id="Mesh_SUVTailgateGlass"]
+material = SubResource("Mat_CarWindow")
+size = Vector3(0.06, 0.7, 1.6)
+
+[sub_resource type="BoxMesh" id="Mesh_SUVPillarD"]
+material = SubResource("Mat_CarBlue")
+size = Vector3(0.08, 0.72, 0.08)
+
+[sub_resource type="BoxMesh" id="Mesh_SUVMirrorHousing"]
+material = SubResource("Mat_CarBlue")
+size = Vector3(0.18, 0.12, 0.16)
+
+[sub_resource type="StandardMaterial3D" id="Mat_MirrorGlass"]
+albedo_color = Color(0.75, 0.82, 0.88, 1)
+metallic = 0.9
+roughness = 0.1
+
+[sub_resource type="BoxMesh" id="Mesh_MirrorGlass"]
+material = SubResource("Mat_MirrorGlass")
+size = Vector3(0.02, 0.08, 0.11)
+
+[sub_resource type="StandardMaterial3D" id="Mat_WheelRubber"]
+albedo_color = Color(0.1, 0.1, 0.11, 1)
+roughness = 0.9
+
+[sub_resource type="CylinderMesh" id="Mesh_Wheel"]
+material = SubResource("Mat_WheelRubber")
+top_radius = 0.35
+bottom_radius = 0.35
+height = 0.3
+radial_segments = 32
+
+[node name="SUV" type="Node3D" unique_id=1240044372]
+
+[node name="ChassisCladding" type="MeshInstance3D" parent="." unique_id=1062194590]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.36, 0)
+mesh = SubResource("Mesh_SUVChassis")
+
+[node name="FenderFlareFL" type="MeshInstance3D" parent="." unique_id=1459582459]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3, 0.48, 0.96)
+mesh = SubResource("Mesh_SUVFlare")
+
+[node name="FenderFlareFR" type="MeshInstance3D" parent="." unique_id=732054723]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3, 0.48, -0.96)
+mesh = SubResource("Mesh_SUVFlare")
+
+[node name="FenderFlareRL" type="MeshInstance3D" parent="." unique_id=1128400512]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.3, 0.48, 0.96)
+mesh = SubResource("Mesh_SUVFlare")
+
+[node name="FenderFlareRR" type="MeshInstance3D" parent="." unique_id=977876914]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.3, 0.48, -0.96)
+mesh = SubResource("Mesh_SUVFlare")
+
+[node name="Body" type="MeshInstance3D" parent="." unique_id=2062033011]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.72, 0)
+mesh = SubResource("Mesh_SUVBody")
+
+[node name="Hood" type="MeshInstance3D" parent="." unique_id=1482763683]
+transform = Transform3D(0.99863, 0.052336, 0, -0.052336, 0.99863, 0, 0, 0, 1, 1.48, 1.02, 0)
+mesh = SubResource("Mesh_SUVHood")
+
+[node name="FrontBumper" type="MeshInstance3D" parent="." unique_id=831800367]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.18, 0.62, 0)
+mesh = SubResource("Mesh_SUVBumperF")
+
+[node name="FrontSkid" type="MeshInstance3D" parent="." unique_id=1318928335]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.22, 0.38, 0)
+mesh = SubResource("Mesh_SUVSkid")
+
+[node name="FrontGrille" type="MeshInstance3D" parent="." unique_id=1377226186]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.22, 0.76, 0)
+mesh = SubResource("Mesh_SUVGrille")
+
+[node name="HeadlightL" type="MeshInstance3D" parent="." unique_id=402039592]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.18, 0.88, 0.7)
+mesh = SubResource("Mesh_SUVHeadlight")
+
+[node name="HeadlightR" type="MeshInstance3D" parent="." unique_id=1544940828]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.18, 0.88, -0.7)
+mesh = SubResource("Mesh_SUVHeadlight")
+
+[node name="RearBumper" type="MeshInstance3D" parent="." unique_id=2046931427]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.18, 0.58, 0)
+mesh = SubResource("Mesh_SUVBumperR")
+
+[node name="RearSkid" type="MeshInstance3D" parent="." unique_id=353836218]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.22, 0.38, 0)
+mesh = SubResource("Mesh_SUVSkid")
+
+[node name="LicensePlate" type="MeshInstance3D" parent="." unique_id=139729644]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.24, 0.6, 0)
+mesh = SubResource("Mesh_LicensePlate")
+
+[node name="TaillightL" type="MeshInstance3D" parent="." unique_id=1218959485]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.18, 0.92, 0.7)
+mesh = SubResource("Mesh_SUVTaillight")
+
+[node name="TaillightR" type="MeshInstance3D" parent="." unique_id=21110944]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.18, 0.92, -0.7)
+mesh = SubResource("Mesh_SUVTaillight")
+
+[node name="Cabin" type="MeshInstance3D" parent="." unique_id=27027184]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.48, 1.34, 0)
+mesh = SubResource("Mesh_SUVCabinCore")
+
+[node name="Roof" type="MeshInstance3D" parent="." unique_id=1034533978]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.52, 1.66, 0)
+mesh = SubResource("Mesh_SUVRoof")
+
+[node name="RoofSpoiler" type="MeshInstance3D" parent="." unique_id=189432766]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.48, 1.7, 0)
+mesh = SubResource("Mesh_SUVRearSpoiler")
+
+[node name="RoofRailL" type="MeshInstance3D" parent="." unique_id=103340730]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 1.74, 0.72)
+mesh = SubResource("Mesh_SUVRoofRail")
+
+[node name="RoofRailR" type="MeshInstance3D" parent="." unique_id=1575730809]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 1.74, -0.72)
+mesh = SubResource("Mesh_SUVRoofRail")
+
+[node name="Windshield" type="MeshInstance3D" parent="." unique_id=787693447]
+transform = Transform3D(0.745476, -0.666532, 0, 0.666532, 0.745476, 0, 0, 0, 1, 0.6, 1.34, 0)
+mesh = SubResource("Mesh_SUVWindshield")
+
+[node name="APillarL" type="MeshInstance3D" parent="." unique_id=301232743]
+transform = Transform3D(0.745476, -0.666532, 0, 0.666532, 0.745476, 0, 0, 0, 1, 0.6, 1.34, 0.81)
+mesh = SubResource("Mesh_SUVPillarA")
+
+[node name="APillarR" type="MeshInstance3D" parent="." unique_id=770011418]
+transform = Transform3D(0.745476, -0.666532, 0, 0.666532, 0.745476, 0, 0, 0, 1, 0.6, 1.34, -0.81)
+mesh = SubResource("Mesh_SUVPillarA")
+
+[node name="TailgateGlass" type="MeshInstance3D" parent="." unique_id=406656100]
+transform = Transform3D(0.779338, 0.626604, 0, -0.626604, 0.779338, 0, 0, 0, 1, -1.52, 1.34, 0)
+mesh = SubResource("Mesh_SUVTailgateGlass")
+
+[node name="DPillarL" type="MeshInstance3D" parent="." unique_id=1509404146]
+transform = Transform3D(0.779338, 0.626604, 0, -0.626604, 0.779338, 0, 0, 0, 1, -1.52, 1.34, 0.81)
+mesh = SubResource("Mesh_SUVPillarD")
+
+[node name="DPillarR" type="MeshInstance3D" parent="." unique_id=213136110]
+transform = Transform3D(0.779338, 0.626604, 0, -0.626604, 0.779338, 0, 0, 0, 1, -1.52, 1.34, -0.81)
+mesh = SubResource("Mesh_SUVPillarD")
+
+[node name="MirrorHousingL" type="MeshInstance3D" parent="." unique_id=488788168]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.45, 1.18, 0.92)
+mesh = SubResource("Mesh_SUVMirrorHousing")
+
+[node name="MirrorGlassL" type="MeshInstance3D" parent="." unique_id=78830551]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.45, 1.18, 0.88)
+mesh = SubResource("Mesh_MirrorGlass")
+
+[node name="MirrorHousingR" type="MeshInstance3D" parent="." unique_id=1619901718]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.45, 1.18, -0.92)
+mesh = SubResource("Mesh_SUVMirrorHousing")
+
+[node name="MirrorGlassR" type="MeshInstance3D" parent="." unique_id=957985005]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.45, 1.18, -0.88)
+mesh = SubResource("Mesh_MirrorGlass")
+
+[node name="Wheel_-1.3_0.95" type="MeshInstance3D" parent="." unique_id=391399609]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -1.3, 0.35, 0.95)
+mesh = SubResource("Mesh_Wheel")
+
+[node name="Wheel_-1.3_-0.95" type="MeshInstance3D" parent="." unique_id=2127710812]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -1.3, 0.35, -0.95)
+mesh = SubResource("Mesh_Wheel")
+
+[node name="Wheel_1.3_0.95" type="MeshInstance3D" parent="." unique_id=168096566]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1.3, 0.35, 0.95)
+mesh = SubResource("Mesh_Wheel")
+
+[node name="Wheel_1.3_-0.95" type="MeshInstance3D" parent="." unique_id=864449635]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1.3, 0.35, -0.95)
+mesh = SubResource("Mesh_Wheel")
