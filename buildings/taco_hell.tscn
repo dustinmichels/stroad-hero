@@ -381,18 +381,6 @@ size = Vector3(0.03, 0.14, 0.34)
 material = SubResource("Mat_TacoSpeakerLed")
 size = Vector3(0.03, 0.04, 0.04)
 
-[sub_resource type="BoxMesh" id="Mesh_TacoClearancePost"]
-material = SubResource("Mat_TacoSignPurple")
-size = Vector3(0.18, 3.4, 0.18)
-
-[sub_resource type="BoxMesh" id="Mesh_TacoClearanceCrossbar"]
-material = SubResource("Mat_TacoSignPurple")
-size = Vector3(5.6, 0.18, 0.18)
-
-[sub_resource type="BoxMesh" id="Mesh_TacoClearanceDangle"]
-material = SubResource("Mat_TacoDriveThruLine")
-size = Vector3(4.6, 0.24, 0.08)
-
 [sub_resource type="BoxMesh" id="Mesh_TacoDumpsterPad"]
 material = SubResource("Mat_TacoConcretePad")
 size = Vector3(6.8, 0.12, 4.4)
@@ -823,35 +811,6 @@ outline_size = 6
 modulate = Color(0.96, 0.72, 0.08, 1)
 outline_modulate = Color(0.12, 0.12, 0.12, 1)
 
-[node name="ClearanceArch" type="Node3D" parent="DriveThru"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.0, 0, 8.8)
-
-[node name="PostL" type="MeshInstance3D" parent="DriveThru/ClearanceArch"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6, 1.7, 0)
-mesh = SubResource("Mesh_TacoClearancePost")
-
-[node name="PostR" type="MeshInstance3D" parent="DriveThru/ClearanceArch"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.6, 1.7, 0)
-mesh = SubResource("Mesh_TacoClearancePost")
-
-[node name="Crossbar" type="MeshInstance3D" parent="DriveThru/ClearanceArch"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.4, 0)
-mesh = SubResource("Mesh_TacoClearanceCrossbar")
-
-[node name="DangleBar" type="MeshInstance3D" parent="DriveThru/ClearanceArch"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.85, 0)
-mesh = SubResource("Mesh_TacoClearanceDangle")
-
-[node name="ClearanceLabel" type="Label3D" parent="DriveThru/ClearanceArch"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.85, 0.06)
-pixel_size = 0.007
-font = ExtResource("1_archivo")
-text = "CLEARANCE 9' 0\"  •  DRIVE THRU ONLY"
-font_size = 22
-outline_size = 5
-modulate = Color(0.26, 0.08, 0.38, 1)
-outline_modulate = Color(1, 1, 1, 1)
-
 [node name="MenuBoard" type="Node3D" parent="DriveThru"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.65, 0, -2.0)
 
@@ -885,7 +844,7 @@ mesh = SubResource("Mesh_TacoMenuHeaderBar")
 
 [node name="HeaderLabel" type="Label3D" parent="DriveThru/MenuBoard"]
 transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0.18, 2.52, 0)
-pixel_size = 0.007
+pixel_size = 0.0046
 font = ExtResource("4_font")
 text = "TACO HELL  •  DRIVE THRU 🔔"
 font_size = 32
@@ -899,7 +858,7 @@ mesh = SubResource("Mesh_TacoMenuPanelWhite")
 
 [node name="LeftLabel" type="Label3D" parent="DriveThru/MenuBoard"]
 transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0.16, 1.85, 0.57)
-pixel_size = 0.0055
+pixel_size = 0.0029
 font = ExtResource("1_archivo")
 text = "COMBOS & TACOS
 #1 CRUNCHY TACO   $5.99
@@ -918,7 +877,7 @@ mesh = SubResource("Mesh_TacoMenuPanelWhite")
 
 [node name="RightLabel" type="Label3D" parent="DriveThru/MenuBoard"]
 transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0.16, 1.85, -0.57)
-pixel_size = 0.0055
+pixel_size = 0.0029
 font = ExtResource("1_archivo")
 text = "DRINKS & SIDES
 BAJA BLAST        $2.29
@@ -941,7 +900,7 @@ mesh = SubResource("Mesh_TacoMenuLcdFace")
 
 [node name="LcdLabel" type="Label3D" parent="DriveThru/MenuBoard"]
 transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0.18, 1.18, 0)
-pixel_size = 0.005
+pixel_size = 0.0025
 font = ExtResource("1_archivo")
 text = "[ORDER CONFIRMATION]
 WELCOME TO TACO HELL
@@ -996,7 +955,7 @@ mesh = SubResource("Mesh_TacoSpeakerMarquee")
 
 [node name="MarqueeLabel" type="Label3D" parent="DriveThru/OrderingSpeaker/Housing"]
 transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0.17, 0.23, 0)
-pixel_size = 0.006
+pixel_size = 0.0017
 font = ExtResource("4_font")
 text = "ORDER HERE"
 font_size = 28
@@ -1006,7 +965,7 @@ outline_modulate = Color(0.98, 0.85, 0.1, 1)
 
 [node name="SpeakerIconLabel" type="Label3D" parent="DriveThru/OrderingSpeaker/Housing"]
 transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0.17, -0.12, 0.04)
-pixel_size = 0.005
+pixel_size = 0.0024
 font = ExtResource("1_archivo")
 text = "SPEAKER ►"
 font_size = 18
@@ -1036,7 +995,7 @@ mesh = SubResource("Mesh_TacoDTCanopy")
 
 [node name="PickupLabel" type="Label3D" parent="DriveThru"]
 transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 9.1, 3.2, 0)
-pixel_size = 0.012
+pixel_size = 0.0074
 modulate = Color(0.85, 0.1, 0.45, 1)
 outline_modulate = Color(1, 1, 1, 1)
 text = "PICK UP"

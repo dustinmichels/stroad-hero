@@ -19,6 +19,7 @@ enum Headwear { HAIR, HAT }
 
 @export_enum("Hair", "Red ball cap") var headwear: int = Headwear.HAIR
 @export var backpack_color := Color(0.2, 0.55, 0.3, 1.0)
+@export var shoe_color := Color(0.8, 0.14, 0.12, 1.0)
 @export var preview_mode := false
 
 ## Leg-swing radians per meter walked.
@@ -47,7 +48,10 @@ const IDLE_SWAY_ANGLE := 0.02
 @onready var _head: Node3D = $Visual/Head
 @onready var _hat: Node3D = $Visual/Head/Hat
 @onready var _backpack: MeshInstance3D = $Visual/Backpack
+@onready var _left_shoe_upper: MeshInstance3D = $Visual/LeftLegPivot/Shoe/Upper
+@onready var _right_shoe_upper: MeshInstance3D = $Visual/RightLegPivot/Shoe/Upper
 @onready var _camera := get_viewport().get_camera_3d()
+@onready var _collision_shape: CollisionShape3D = $CollisionShape3D
 
 var _stride_phase := 0.0
 var _squash := 0.0
@@ -60,6 +64,9 @@ var _is_dead := false
 var _control_forward := Vector3.FORWARD
 var _control_right := Vector3.RIGHT
 var _has_control_basis := false
+var _mounted_cart: Node3D = null
+var _world_parent: Node = null
+var _mount_tween: Tween = null
 
 
 func _ready() -> void:
@@ -71,8 +78,13 @@ func _ready() -> void:
 	var material := StandardMaterial3D.new()
 	material.roughness = 0.8
 	_backpack.material_override = material
+	var shoe_material := StandardMaterial3D.new()
+	shoe_material.roughness = 0.75
+	_left_shoe_upper.material_override = shoe_material
+	_right_shoe_upper.material_override = shoe_material
 	set_headwear(headwear)
 	set_backpack_color(backpack_color)
+	set_shoe_color(shoe_color)
 
 
 func _physics_process(delta: float) -> void:
@@ -102,7 +114,7 @@ func _physics_process(delta: float) -> void:
 	if was_on_floor:
 		_try_step_up(horizontal * delta)
 	move_and_slide()
-	_rustle_collided_trees(horizontal)
+	_handle_slide_collisions(horizontal)
 	if was_on_floor and is_on_floor():
 		_step_offset += y_before - global_position.y
 	_step_offset = lerpf(_step_offset, 0.0, 1.0 - exp(-STEP_SMOOTHING * delta))
@@ -137,13 +149,15 @@ func _movement_direction(input: Vector2) -> Vector3:
 	return _control_right * input.x - _control_forward * input.y
 
 
-func _rustle_collided_trees(impact_direction: Vector3) -> void:
+func _handle_slide_collisions(impact_direction: Vector3) -> void:
 	if impact_direction.is_zero_approx():
 		return
 	for index in get_slide_collision_count():
 		var collider := get_slide_collision(index).get_collider()
 		if collider is StreetTree:
 			collider.rustle(impact_direction)
+		elif collider and collider.has_method("roll_from"):
+			collider.roll_from(impact_direction)
 
 
 ## Hair always shows; the cap sits over it with a tuft peeking out below.
@@ -160,6 +174,90 @@ func set_backpack_color(color: Color) -> void:
 	var material := _backpack.material_override as StandardMaterial3D
 	if material:
 		material.albedo_color = backpack_color
+
+
+func set_shoe_color(color: Color) -> void:
+	shoe_color = color
+	if not is_node_ready():
+		return
+	var material := _left_shoe_upper.material_override as StandardMaterial3D
+	if material:
+		material.albedo_color = shoe_color
+
+
+func enter_cart(cart: Node3D, seat: Marker3D) -> void:
+	if _mounted_cart:
+		return
+	_mounted_cart = cart
+	_world_parent = get_parent()
+	velocity = Vector3.ZERO
+	set_physics_process(false)
+	_collision_shape.disabled = true
+	reparent(seat, true)
+
+	var starting_position := position
+	var jump_peak := starting_position * 0.5 + Vector3.UP * 0.85
+	_mount_tween = create_tween()
+	(
+		_mount_tween
+		. tween_property(self, "position", jump_peak, 0.16)
+		. set_trans(Tween.TRANS_QUAD)
+		. set_ease(Tween.EASE_OUT)
+	)
+	_mount_tween.parallel().tween_property(self, "rotation", Vector3.ZERO, 0.32)
+	(
+		_mount_tween
+		. tween_property(self, "position", Vector3.ZERO, 0.16)
+		. set_trans(Tween.TRANS_QUAD)
+		. set_ease(Tween.EASE_IN)
+	)
+	_mount_tween.tween_callback(_sit_in_cart)
+
+
+func exit_cart(exit_position: Marker3D) -> void:
+	if not _mounted_cart:
+		return
+	if _mount_tween and _mount_tween.is_valid():
+		_mount_tween.kill()
+	var facing_yaw := _visual.global_rotation.y
+	_mounted_cart = null
+	reparent(_world_parent, true)
+	global_basis = Basis()
+	_visual.global_rotation = Vector3(0.0, facing_yaw, 0.0)
+	var destination := exit_position.global_position
+	var jump_peak := (global_position + destination) * 0.5 + Vector3.UP * 0.85
+	_mount_tween = create_tween()
+	(
+		_mount_tween
+		. tween_property(self, "global_position", jump_peak, 0.16)
+		. set_trans(Tween.TRANS_QUAD)
+		. set_ease(Tween.EASE_OUT)
+	)
+	(
+		_mount_tween
+		. tween_property(self, "global_position", destination, 0.16)
+		. set_trans(Tween.TRANS_QUAD)
+		. set_ease(Tween.EASE_IN)
+	)
+	_mount_tween.tween_callback(_finish_exiting_cart)
+
+
+func _sit_in_cart() -> void:
+	_mount_tween = null
+	_left_leg.rotation.x = -1.35
+	_right_leg.rotation.x = -1.35
+	_left_arm.rotation.x = -0.45
+	_right_arm.rotation.x = -0.45
+
+
+func _finish_exiting_cart() -> void:
+	_mount_tween = null
+	_left_leg.rotation.x = 0.0
+	_right_leg.rotation.x = 0.0
+	_left_arm.rotation.x = 0.0
+	_right_arm.rotation.x = 0.0
+	_collision_shape.disabled = false
+	set_physics_process(true)
 
 
 func die() -> void:

@@ -3,12 +3,15 @@ extends CanvasLayer
 
 @onready var spd_label: Label = %SpdLabel
 @onready var desc_label: Label = %DescLabel
+@onready var action_label: Label = %ActionLabel
 
 var spd_count: int = 0
+var _action_prompt_sources := {}
 
 
 func _ready() -> void:
 	_update_display()
+	add_to_group("hud")
 
 
 func increment_spd() -> void:
@@ -20,6 +23,14 @@ func increment_spd() -> void:
 func set_spd(value: int) -> void:
 	spd_count = value
 	_update_display()
+
+
+func set_action_prompt(source: Node, active: bool) -> void:
+	if active:
+		_action_prompt_sources[source] = true
+	else:
+		_action_prompt_sources.erase(source)
+	action_label.visible = not _action_prompt_sources.is_empty()
 
 
 func _update_display() -> void:

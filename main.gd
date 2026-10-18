@@ -44,6 +44,15 @@ var _rt_min_distance: float = 999.0
 var _user_args: PackedStringArray = []
 var _dt_saw_order: bool = false
 var _dt_saw_pickup: bool = false
+var _ci_saw_cruise: bool = false
+var _ci_saw_decision: bool = false
+var _ci_saw_turn: bool = false
+var _ci_saw_park: bool = false
+var _ci_saw_reverse: bool = false
+var _ci_saw_exit: bool = false
+var _ci_saw_wait: bool = false
+var _ci_saw_merge: bool = false
+var _ci_saw_rejoin: bool = false
 
 
 func _ready() -> void:
@@ -68,7 +77,10 @@ func _ready() -> void:
 			traffic_mgr != null and traffic_mgr.lot_cars.size() > 0,
 			"TrafficManager must have seeded cars"
 		)
-		_test_car = traffic_mgr.lot_cars[0]
+		for c in traffic_mgr.lot_cars:
+			if c.global_position.z < 0.0:
+				_test_car = c
+				break
 		_test_car.dwell_left = 0.0
 	if "--test-merge-reentry" in _user_args:
 		var traffic_mgr = $TrafficManager
@@ -76,7 +88,10 @@ func _ready() -> void:
 			traffic_mgr != null and traffic_mgr.lot_cars.size() > 0,
 			"TrafficManager must have seeded cars"
 		)
-		_test_car = traffic_mgr.lot_cars[0]
+		for c in traffic_mgr.lot_cars:
+			if c.global_position.z < 0.0:
+				_test_car = c
+				break
 		_test_car.dwell_left = 0.0
 		_test_car.had_errand = true
 	if "--test-merge-gap" in _user_args:
@@ -85,7 +100,10 @@ func _ready() -> void:
 			traffic_mgr != null and traffic_mgr.lot_cars.size() > 0,
 			"TrafficManager must have seeded cars"
 		)
-		_test_car = traffic_mgr.lot_cars[0]
+		for c in traffic_mgr.lot_cars:
+			if c.global_position.z < 0.0:
+				_test_car = c
+				break
 		if _test_car.spot != null:
 			traffic_mgr.lot.release(_test_car.spot)
 			_test_car.spot = null
@@ -169,6 +187,20 @@ func _ready() -> void:
 		_test_car = traffic_mgr._spawn_car_at(lane0, 0.0, traffic_mgr.PassengerCarScene)
 		_test_car.car_type = Car.CarType.SEDAN
 		_test_car.errand = Errand.random()
+		_test_car.had_errand = true
+		_test_car.desired_speed = 12.0
+		_test_car.speed = 12.0
+	if "--test-cramped-inn" in _user_args:
+		var traffic_mgr = $TrafficManager
+		assert(traffic_mgr != null, "TrafficManager must exist")
+		var lane3 = traffic_mgr.lanes[3]
+		for c in lane3.cars:
+			c.queue_free()
+		lane3.cars.clear()
+		lane3.spawn_timer = 9999.0
+		_test_car = traffic_mgr._spawn_car_at(lane3, 80.0, traffic_mgr.PassengerCarScene)
+		_test_car.car_type = Car.CarType.SEDAN
+		_test_car.errand = Errand.new(&"cramped_inn", 1.0)
 		_test_car.had_errand = true
 		_test_car.desired_speed = 12.0
 		_test_car.speed = 12.0
@@ -499,109 +531,87 @@ func _ready() -> void:
 			c.queue_free()
 		tm.lot_cars.clear()
 
-		# Setup two paths moving along +X towards each other
-		# path1: from x=0 to x=30 (forward is +X)
-		var path1 = Curve3D.new()
-		path1.add_point(Vector3(0.0, 0.0, 0.0))
-		path1.add_point(Vector3(30.0, 0.0, 0.0))
-
-		# path2: from x=30 to x=0 (forward is -X)
-		var path2 = Curve3D.new()
-		path2.add_point(Vector3(30.0, 0.0, 0.0))
-		path2.add_point(Vector3(0.0, 0.0, 0.0))
-
 		var car_scene = load("res://cars/passenger_car.tscn")
+
+		# Case 1: head-on, each car's body sits in the other's route -> both stop, whatever their priority
+		var east = Curve3D.new()
+		east.add_point(Vector3(0.0, 0.0, 0.0))
+		east.add_point(Vector3(30.0, 0.0, 0.0))
+		var west = Curve3D.new()
+		west.add_point(Vector3(30.0, 0.0, 0.0))
+		west.add_point(Vector3(0.0, 0.0, 0.0))
+
 		var car1: Car = car_scene.instantiate()
 		car1.car_type = Car.CarType.SEDAN
-		car1.car_width = 2.0
-		car1.car_length = 4.2
 		tm.add_child(car1)
-		car1.follow_path(path1)
-		car1.path_distance = 10.0
+		car1.state = Car.State.TO_SPOT
+		car1.follow_path(east)
+		car1.path_distance = 10.0  # x = 10, facing +X
 		car1.speed = 4.0
 		car1.update_presentation()
 		tm.lot_cars.append(car1)
 
 		var car2: Car = car_scene.instantiate()
 		car2.car_type = Car.CarType.SEDAN
-		car2.car_width = 2.0
-		car2.car_length = 4.2
 		tm.add_child(car2)
-		car2.follow_path(path2)
-		car2.path_distance = 14.0  # x = 16.0, facing -X towards car1 at x = 10.0
+		car2.state = Car.State.TO_EXIT
+		car2.follow_path(west)
+		car2.path_distance = 14.0  # x = 16, facing -X toward car1
 		car2.speed = 4.0
 		car2.update_presentation()
 		tm.lot_cars.append(car2)
 
-		# Center-to-center distance is 6.0m along X, lateral is 0.0
-		# car1 forward (+X) sees car2 ahead: forward = 6.0, gap = 6.0 - 4.2 = 1.8 < lookahead
-		# car2 forward (-X) sees car1 ahead: forward = 6.0, gap = 6.0 - 4.2 = 1.8 < lookahead
-		assert(tm.find_blocker(car1) == car2, "car1 must find car2 as blocker")
-		assert(tm.find_blocker(car2) == car1, "car2 must find car1 as blocker")
+		assert(tm.find_blocker(car1) == car2, "Head-on: TO_SPOT must not drive into TO_EXIT")
+		assert(tm.find_blocker(car2) == car1, "Head-on: TO_EXIT must not drive into TO_SPOT")
 
-		# Unit tests for priority arbitration: TO_SPOT > TO_EXIT > REVERSING_OUT
-		# Case 1: TO_SPOT (car1) vs TO_EXIT (car2)
+		# Crossing: car1 eastbound along z=0, car2 southbound along x=15; both 5m from the crossing
+		var south = Curve3D.new()
+		south.add_point(Vector3(15.0, 0.0, -15.0))
+		south.add_point(Vector3(15.0, 0.0, 15.0))
+		var north = Curve3D.new()
+		north.add_point(Vector3(15.0, 0.0, 15.0))
+		north.add_point(Vector3(15.0, 0.0, -15.0))
+		var place_crossing := func(rev: bool) -> void:
+			if rev:
+				car2.follow_path(north, true)
+				car2.path_distance = 20.0  # z = -5, reversing toward +Z
+				car2.speed = -TrafficManager.V_PARK
+				car2.desired_speed = -TrafficManager.V_PARK
+			else:
+				car2.follow_path(south)
+				car2.path_distance = 10.0  # z = -5, facing +Z
+				car2.speed = 4.0
+				car2.desired_speed = 4.0
+			car2.update_presentation()
+			car1.path_distance = 10.0
+			car1.speed = 4.0
+			car1.update_presentation()
+
+		# Case 2: equal distance to the crossing -> tie broken by priority TO_SPOT > TO_EXIT
 		car1.state = Car.State.TO_SPOT
 		car2.state = Car.State.TO_EXIT
-		assert(tm._should_yield(car1) == false, "TO_SPOT should not yield to TO_EXIT")
-		assert(tm._should_yield(car2) == true, "TO_EXIT should yield to TO_SPOT")
+		place_crossing.call(false)
+		assert(tm.find_blocker(car1) == null, "Crossing tie: TO_SPOT proceeds")
+		assert(tm.find_blocker(car2) == car1, "Crossing tie: TO_EXIT yields to TO_SPOT")
 
-		# Case 2: TO_EXIT (car1) vs REVERSING_OUT (car2)
-		# For car2 to block car1 while REVERSING_OUT, car2 reverses in direction facing away from car1
-		# so its reverse direction points toward car1 (+X)
-		car2.follow_path(path1)
-		car2.path_distance = 16.0
-		car2.speed = -4.0
-		car2.desired_speed = -4.0
-		car2.state = Car.State.REVERSING_OUT
-		car2.update_presentation()
+		# Case 3: a reversing car owns its whole back-out route -> crossing traffic waits for it
 		car1.state = Car.State.TO_EXIT
-		assert(tm.find_blocker(car1) == car2, "car1 must find car2 as blocker")
-		assert(tm.find_blocker(car2) == car1, "car2 (reversing) must find car1 as blocker")
-		assert(tm._should_yield(car1) == false, "TO_EXIT should not yield to REVERSING_OUT")
-		assert(tm._should_yield(car2) == true, "REVERSING_OUT should yield to TO_EXIT")
-		# Reset car2 to path2
-		car2.follow_path(path2)
-		car2.path_distance = 14.0
-		car2.speed = 4.0
-		car2.desired_speed = 4.0
-		car2.update_presentation()
-		# Case 3: TO_SPOT (car1) vs REVERSING_OUT (car2)
-		car2.follow_path(path1)
-		car2.path_distance = 16.0
-		car2.speed = -4.0
-		car2.desired_speed = -4.0
 		car2.state = Car.State.REVERSING_OUT
-		car2.update_presentation()
-		car1.state = Car.State.TO_SPOT
-		assert(tm.find_blocker(car1) == car2, "car1 must find car2 as blocker")
-		assert(tm.find_blocker(car2) == car1, "car2 (reversing) must find car1 as blocker")
-		assert(tm._should_yield(car1) == false, "TO_SPOT should not yield to REVERSING_OUT")
-		assert(tm._should_yield(car2) == true, "REVERSING_OUT should yield to TO_SPOT")
-		# Reset car2 to path2
-		car2.follow_path(path2)
-		car2.path_distance = 14.0
-		car2.speed = 4.0
-		car2.desired_speed = 4.0
-		car2.update_presentation()
-		# Case 4: Equal priority (both TO_SPOT) -> both yield
-		car1.state = Car.State.TO_SPOT
-		car2.state = Car.State.TO_SPOT
-		assert(tm._should_yield(car1) == true, "Equal priority mutual blocker must yield")
-		assert(tm._should_yield(car2) == true, "Equal priority mutual blocker must yield")
+		place_crossing.call(true)
+		assert(tm.find_blocker(car1) == car2, "TO_EXIT must stop for a reversing car's route")
+		assert(tm.find_blocker(car2) == null, "REVERSING_OUT keeps backing out")
 
-		# Case 5: Dynamic yielding & resuming in aisle
-		# car1 in TO_SPOT (priority), car2 in TO_EXIT (yields)
+		# Case 4: the car nearer the crossing goes first, even with lower priority
 		car1.state = Car.State.TO_SPOT
 		car2.state = Car.State.TO_EXIT
-		car1.path_distance = 10.0
-		car2.path_distance = 14.0  # x=16
-		car1.speed = 4.0
-		car2.speed = 4.0
-		car1.update_presentation()
+		place_crossing.call(false)
+		car2.path_distance = 12.0  # z = -3, nose almost in car1's route
 		car2.update_presentation()
+		assert(tm.find_blocker(car2) == null, "Nearer TO_EXIT proceeds through the crossing")
+		assert(tm.find_blocker(car1) == car2, "Farther TO_SPOT yields to the nearer car")
 
-		# Tick simulation
+		# Case 5: yielding car stops, then resumes once the crossing clears
+		place_crossing.call(false)
 		for i in range(20):
 			tm._update_lot_cars(0.016)
 
@@ -611,12 +621,11 @@ func _ready() -> void:
 		assert(car2.speed < 0.1, "car2 must stop (speed ~ 0)")
 		assert(car1.speed > 1.0, "car1 (higher priority) must continue moving")
 
-		# Now car1 moves past car2 (clear conflict)
+		# car1 moves past the crossing
 		car1.path_distance = 25.0
 		car1.update_presentation()
 		assert(tm.find_blocker(car2) == null, "car2 blocker should clear once car1 is past")
 
-		# Tick simulation -> car2 resumes moving
 		for i in range(20):
 			tm._update_lot_cars(0.016)
 		assert(car2.desired_speed > 0.0, "car2 desired_speed must restore once blocker clears")
@@ -649,7 +658,9 @@ func _ready() -> void:
 		tm.lot_cars.append(car4)
 
 		assert(tm.find_blocker(car3) == car4, "car3 must find car4 as blocker")
-		assert(tm._should_yield(car3) == true, "car3 (REVERSING_OUT) must yield to car4")
+		assert(
+			tm._update_car_yielding(car3, 0.0) == true, "car3 (REVERSING_OUT) must yield to car4"
+		)
 		# Tick 1 update
 		tm._update_lot_cars(0.016)
 		assert(
@@ -1140,8 +1151,6 @@ func _ready() -> void:
 
 		assert(tm.find_blocker(car1) == car2, "car1 must find car2 as blocker")
 		assert(tm.find_blocker(car2) == car1, "car2 must find car1 as blocker")
-		assert(tm._should_yield(car1) == true, "Equal priority mutual blocker car1 must yield")
-		assert(tm._should_yield(car2) == true, "Equal priority mutual blocker car2 must yield")
 
 		# Step for 3.8s (240 ticks of 0.016s) -> watchdog should NOT have fired yet (< 4.0s)
 		for i in range(240):
@@ -1416,7 +1425,8 @@ func _physics_process(_delta: float) -> void:
 				"MERGE_TEST: SUCCESS - full lifecycle, handoff delta verified, despawned cleanly!"
 			)
 			get_tree().quit(0)
-		if _test_frames > 2000:
+		# Budget covers waiting out another car's full back-out before exiting the lot.
+		if _test_frames > 3000:
 			assert(false, "Timeout waiting for merge re-entry and despawn!")
 
 	if "--test-merge-gap" in _user_args:
@@ -1811,6 +1821,115 @@ func _physics_process(_delta: float) -> void:
 				return
 		if _test_frames > 3600:
 			assert(false, "Timeout waiting for taco dt zones test completion!")
+	if "--test-cramped-inn" in _user_args:
+		_test_frames += 1
+		var tm = $TrafficManager
+		if _test_car != null and is_instance_valid(_test_car):
+			if (
+				_test_car.state == Car.State.CRUISING
+				and _test_car.lane_id == 3
+				and not _ci_saw_merge
+			):
+				if not _ci_saw_cruise:
+					_ci_saw_cruise = true
+					print(
+						(
+							"CRAMPED_INN [1/8]: cruising east in lane 3 (pos=%s)"
+							% str(_test_car.global_position)
+						)
+					)
+			elif _test_car.state == Car.State.APPROACHING:
+				if not _ci_saw_decision:
+					_ci_saw_decision = true
+					assert(_test_car.spot != null, "Must have reserved a spot")
+					assert(_test_car.spot.serves.has(&"cramped_inn"), "Spot must serve cramped_inn")
+					assert(
+						_test_car.turn_signal == Car.TurnSignal.RIGHT, "Turn signal must be RIGHT"
+					)
+					print(
+						(
+							"CRAMPED_INN [2/8]: decision & approach turn (spot=%d, pos=%s)"
+							% [_test_car.spot.id, str(_test_car.global_position)]
+						)
+					)
+			elif _test_car.state == Car.State.TO_SPOT:
+				if not _ci_saw_turn:
+					_ci_saw_turn = true
+					assert(_test_car.merge_target_lane == 3, "merge_target_lane must be 3")
+					print(
+						(
+							"CRAMPED_INN [3/8]: turned into driveway (pos=%s)"
+							% str(_test_car.global_position)
+						)
+					)
+			elif _test_car.state == Car.State.PARKED:
+				if not _ci_saw_park:
+					_ci_saw_park = true
+					_test_car.dwell_left = minf(_test_car.dwell_left, 0.5)
+					assert(
+						_test_car.spot.state == ParkingSpot.State.OCCUPIED, "Spot must be OCCUPIED"
+					)
+					print(
+						(
+							"CRAMPED_INN [4/8]: parked in stall (spot=%d, pos=%s)"
+							% [_test_car.spot.id, str(_test_car.global_position)]
+						)
+					)
+			elif _test_car.state == Car.State.REVERSING_OUT:
+				if not _ci_saw_reverse:
+					_ci_saw_reverse = true
+					print(
+						"CRAMPED_INN [5/8]: reversing out (pos=%s)" % str(_test_car.global_position)
+					)
+			elif _test_car.state == Car.State.TO_EXIT:
+				if not _ci_saw_exit:
+					_ci_saw_exit = true
+					print(
+						(
+							"CRAMPED_INN [6/8]: driving to exit (pos=%s)"
+							% str(_test_car.global_position)
+						)
+					)
+			elif _test_car.state == Car.State.WAITING_TO_MERGE:
+				if not _ci_saw_wait:
+					_ci_saw_wait = true
+					assert(
+						_test_car.global_position.distance_to(ParkingLot.CI_WAIT_POINT) < 1.0,
+						"Must be at CI_WAIT_POINT"
+					)
+					print(
+						(
+							"CRAMPED_INN [7/8]: waiting at exit wait point (pos=%s)"
+							% str(_test_car.global_position)
+						)
+					)
+					var lane3 = tm.lanes[3]
+					lane3.spawn_timer = 9999.0
+					for c in lane3.cars:
+						if is_instance_valid(c) and c != _test_car:
+							c.queue_free()
+					lane3.cars.clear()
+			elif _test_car.state == Car.State.MERGING:
+				if not _ci_saw_merge:
+					_ci_saw_merge = true
+					print(
+						(
+							"CRAMPED_INN [8/8]: merging into lane 3 (pos=%s)"
+							% str(_test_car.global_position)
+						)
+					)
+			elif _test_car.state == Car.State.CRUISING and _test_car.lane_id == 3 and _ci_saw_merge:
+				if not _ci_saw_rejoin:
+					_ci_saw_rejoin = true
+					assert(
+						absf(_test_car.global_position.z - 5.6) < 0.5,
+						"Car must be in Lane 3 (z=5.6)"
+					)
+					print("CRAMPED_INN: SUCCESS - full Cramped Inn errand cycle complete!")
+					get_tree().quit(0)
+					return
+		if _test_frames > 2400:
+			assert(false, "Timeout waiting for Cramped Inn test completion!")
 
 
 func _on_player_died(pos: Vector3) -> void:

@@ -3,7 +3,7 @@ extends Area3D
 
 const Errand = preload("res://traffic/errand.gd")
 
-enum CarType { SEDAN, SUV, TAXI, TRUCK, PICKUP, BUS, HATCHBACK, MINIVAN, SPORTS }
+enum CarType { SEDAN, SUV, TAXI, TRUCK, PICKUP, BUS, HATCHBACK, MINIVAN, SPORTS, VAN }
 
 enum Motion { LANE, PATH }
 
@@ -35,7 +35,7 @@ static func is_type_parkable(type: CarType) -> bool:
 	match type:
 		CarType.SEDAN, CarType.SUV, CarType.PICKUP, CarType.HATCHBACK, CarType.MINIVAN, CarType.SPORTS:
 			return true
-		CarType.BUS, CarType.TRUCK, CarType.TAXI:
+		CarType.BUS, CarType.TRUCK, CarType.TAXI, CarType.VAN:
 			return false
 	return false
 
@@ -427,6 +427,11 @@ func _update_dimensions() -> void:
 			car_width = 1.9
 			shape_size = Vector3(4.2, 1.2, 1.9)
 			shape_y = 0.6
+		CarType.VAN:
+			car_length = 5.4
+			car_width = 2.1
+			shape_size = Vector3(5.3, 2.3, 2.1)
+			shape_y = 1.15
 	var col = _collision_shape if _collision_shape else get_node_or_null("CollisionShape3D")
 	if col:
 		var box := BoxShape3D.new()

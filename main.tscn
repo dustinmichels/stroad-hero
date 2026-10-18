@@ -1,4 +1,4 @@
-[gd_scene load_steps=54 format=3 uid="uid://c47ja8e0n02s"]
+[gd_scene load_steps=56 format=3 uid="uid://c47ja8e0n02s"]
 
 [ext_resource type="Script" path="res://follow_camera.gd" id="1_camera"]
 [ext_resource type="PackedScene" path="res://player/mats.tscn" id="2_mats"]
@@ -78,17 +78,24 @@ roughness = 0.85
 
 [sub_resource type="BoxMesh" id="Mesh_DrivewayApron"]
 material = SubResource("Mat_ParkingAsphalt")
-size = Vector3(8, 0.1, 3.2)
+size = Vector3(10, 0.1, 3.2)
 
 [sub_resource type="BoxShape3D" id="Shape_DrivewayApron"]
+size = Vector3(10, 0.1, 3.2)
+
+[sub_resource type="BoxMesh" id="Mesh_DrivewayApronSouthBK"]
+material = SubResource("Mat_ParkingAsphalt")
+size = Vector3(8, 0.1, 3.2)
+
+[sub_resource type="BoxShape3D" id="Shape_DrivewayApronSouthBK"]
 size = Vector3(8, 0.1, 3.2)
 
 [sub_resource type="BoxMesh" id="Mesh_SidewalkSouthMid"]
 material = SubResource("Mat_Concrete")
-size = Vector3(74, 0.25, 3.2)
+size = Vector3(71, 0.25, 3.2)
 
 [sub_resource type="BoxShape3D" id="Shape_SidewalkSouthMid"]
-size = Vector3(74, 0.25, 3.2)
+size = Vector3(71, 0.25, 3.2)
 
 [sub_resource type="BoxMesh" id="Mesh_SidewalkSouthEast"]
 material = SubResource("Mat_Concrete")
@@ -106,10 +113,10 @@ size = Vector3(97, 0.25, 3.2)
 
 [sub_resource type="BoxMesh" id="Mesh_SidewalkNorthEast"]
 material = SubResource("Mat_Concrete")
-size = Vector3(75, 0.25, 3.2)
+size = Vector3(73, 0.25, 3.2)
 
 [sub_resource type="BoxShape3D" id="Shape_SidewalkNorthEast"]
-size = Vector3(75, 0.25, 3.2)
+size = Vector3(73, 0.25, 3.2)
 
 [sub_resource type="StandardMaterial3D" id="Mat_YellowMarking"]
 albedo_color = Color(0.96, 0.78, 0.1, 1)
@@ -145,17 +152,17 @@ size = Vector3(26, 0.1, 21.3)
 
 [sub_resource type="BoxMesh" id="Mesh_HamptonParkingLot"]
 material = SubResource("Mat_ParkingAsphalt")
-size = Vector3(42, 0.1, 20)
+size = Vector3(46, 0.1, 20)
 
 [sub_resource type="BoxShape3D" id="Shape_HamptonParkingLot"]
-size = Vector3(42, 0.1, 20)
+size = Vector3(46, 0.1, 20)
 
 [sub_resource type="BoxMesh" id="Mesh_HamptonDriveway"]
 material = SubResource("Mat_ParkingAsphalt")
-size = Vector3(8, 0.1, 5.5)
+size = Vector3(11, 0.1, 5.5)
 
 [sub_resource type="BoxShape3D" id="Shape_HamptonDriveway"]
-size = Vector3(8, 0.1, 5.5)
+size = Vector3(11, 0.1, 5.5)
 
 
 [node name="Main" type="Node3D"]
@@ -224,15 +231,15 @@ shape = SubResource("Shape_SidewalkSouthWest")
 
 [node name="DrivewayApronSouthBK" type="MeshInstance3D" parent="Road"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -42, 0.05, 9.1)
-mesh = SubResource("Mesh_DrivewayApron")
+mesh = SubResource("Mesh_DrivewayApronSouthBK")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="Road/DrivewayApronSouthBK"]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Road/DrivewayApronSouthBK/StaticBody3D"]
-shape = SubResource("Shape_DrivewayApron")
+shape = SubResource("Shape_DrivewayApronSouthBK")
 
 [node name="SidewalkSouthMid" type="MeshInstance3D" parent="Road"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0.12, 9.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 0.12, 9.1)
 mesh = SubResource("Mesh_SidewalkSouthMid")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="Road/SidewalkSouthMid"]
@@ -259,7 +266,7 @@ mesh = SubResource("Mesh_SidewalkNorthWest")
 shape = SubResource("Shape_SidewalkNorthWest")
 
 [node name="SidewalkNorthEast" type="MeshInstance3D" parent="Road"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 52.5, 0.12, -9.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 53.5, 0.12, -9.1)
 mesh = SubResource("Mesh_SidewalkNorthEast")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="Road/SidewalkNorthEast"]
@@ -268,7 +275,7 @@ mesh = SubResource("Mesh_SidewalkNorthEast")
 shape = SubResource("Shape_SidewalkNorthEast")
 
 [node name="DrivewayApron" type="MeshInstance3D" parent="Road"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0.05, -9.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0.05, -9.1)
 mesh = SubResource("Mesh_DrivewayApron")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="Road/DrivewayApron"]
@@ -572,7 +579,7 @@ mesh = SubResource("Mesh_HamptonParkingLot")
 shape = SubResource("Shape_HamptonParkingLot")
 
 [node name="HamptonDriveway" type="MeshInstance3D" parent="Parking"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0.05, 10.25)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38.5, 0.05, 10.25)
 mesh = SubResource("Mesh_HamptonDriveway")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="Parking/HamptonDriveway"]

@@ -1,0 +1,403 @@
+[gd_scene load_steps=45 format=3]
+
+[ext_resource type="Script" path="res://cars/van.gd" id="1_van"]
+[ext_resource type="FontFile" path="res://fonts/Fredoka.ttf" id="2_font_fredoka"]
+[ext_resource type="ArrayMesh" path="res://cars/van_cab_roof_cap.res" id="6_cap"]
+[ext_resource type="ArrayMesh" path="res://cars/van_sloping_nose.res" id="7_nose"]
+[ext_resource type="ArrayMesh" path="res://cars/van_front_bumper.res" id="8_front"]
+[ext_resource type="ArrayMesh" path="res://cars/van_rear_bumper.res" id="9_rear"]
+[ext_resource type="ArrayMesh" path="res://cars/van_side_cladding.res" id="10_cladding"]
+[ext_resource type="ArrayMesh" path="res://cars/van_smile.res" id="11_smile"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_van"]
+size = Vector3(5.3, 2.3, 2.1)
+
+[sub_resource type="StandardMaterial3D" id="Mat_VanPaint"]
+albedo_color = Color(0.13, 0.22, 0.29, 1)
+metallic = 0.1
+roughness = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Mat_VanDarkTrim"]
+albedo_color = Color(0.08, 0.09, 0.11, 1)
+roughness = 0.75
+
+[sub_resource type="StandardMaterial3D" id="Mat_BlackGrille"]
+albedo_color = Color(0.04, 0.04, 0.05, 1)
+metallic = 0.2
+roughness = 0.15
+
+[sub_resource type="StandardMaterial3D" id="Mat_CarWindow"]
+albedo_color = Color(0.08, 0.12, 0.18, 1)
+metallic = 0.3
+roughness = 0.1
+
+[sub_resource type="StandardMaterial3D" id="Mat_WheelRubber"]
+albedo_color = Color(0.1, 0.1, 0.11, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Mat_WheelAeroCap"]
+albedo_color = Color(0.08, 0.09, 0.1, 1)
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_WheelCyanRing"]
+albedo_color = Color(0.0, 0.68, 0.92, 1)
+roughness = 0.3
+emission_enabled = true
+emission = Color(0.0, 0.68, 0.92, 1)
+emission_energy_multiplier = 0.8
+
+[sub_resource type="StandardMaterial3D" id="Mat_SmileCyan"]
+albedo_color = Color(0.0, 0.68, 0.92, 1)
+roughness = 0.3
+emission_enabled = true
+emission = Color(0.0, 0.68, 0.92, 1)
+emission_energy_multiplier = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_HeadlightHalo"]
+albedo_color = Color(1.0, 0.98, 0.9, 1)
+roughness = 0.2
+emission_enabled = true
+emission = Color(1.0, 0.98, 0.9, 1)
+emission_energy_multiplier = 3.0
+
+[sub_resource type="StandardMaterial3D" id="Mat_HeadlightLens"]
+albedo_color = Color(0.08, 0.09, 0.12, 1)
+metallic = 0.4
+roughness = 0.15
+
+[sub_resource type="StandardMaterial3D" id="Mat_AmberMarker"]
+albedo_color = Color(1.0, 0.55, 0.05, 1)
+roughness = 0.3
+emission_enabled = true
+emission = Color(1.0, 0.55, 0.05, 1)
+emission_energy_multiplier = 2.0
+
+[sub_resource type="StandardMaterial3D" id="Mat_Taillight"]
+albedo_color = Color(0.95, 0.1, 0.1, 1)
+roughness = 0.2
+emission_enabled = true
+emission = Color(0.95, 0.1, 0.1, 1)
+emission_energy_multiplier = 2.0
+
+[sub_resource type="StandardMaterial3D" id="Mat_MirrorGlass"]
+albedo_color = Color(0.75, 0.82, 0.88, 1)
+metallic = 0.9
+roughness = 0.1
+
+[sub_resource type="StandardMaterial3D" id="Mat_LicensePlate"]
+albedo_color = Color(0.92, 0.92, 0.9, 1)
+roughness = 0.4
+
+[sub_resource type="CylinderMesh" id="Mesh_Wheel"]
+material = SubResource("Mat_WheelRubber")
+top_radius = 0.35
+bottom_radius = 0.35
+height = 0.3
+radial_segments = 32
+
+[sub_resource type="CylinderMesh" id="Mesh_WheelAeroCap"]
+material = SubResource("Mat_WheelAeroCap")
+top_radius = 0.25
+bottom_radius = 0.25
+height = 0.33
+radial_segments = 32
+
+[sub_resource type="CylinderMesh" id="Mesh_WheelCyanAccent"]
+material = SubResource("Mat_WheelCyanRing")
+top_radius = 0.12
+bottom_radius = 0.12
+height = 0.34
+radial_segments = 32
+
+[sub_resource type="BoxMesh" id="Mesh_VanChassis"]
+material = SubResource("Mat_VanDarkTrim")
+size = Vector3(5.1, 0.18, 1.96)
+
+[sub_resource type="BoxMesh" id="Mesh_VanLowerIntake"]
+material = SubResource("Mat_VanDarkTrim")
+size = Vector3(0.06, 0.16, 1.1)
+
+[sub_resource type="BoxMesh" id="Mesh_VanMarkerLight"]
+material = SubResource("Mat_AmberMarker")
+size = Vector3(0.1, 0.05, 0.03)
+
+[sub_resource type="BoxMesh" id="Mesh_VanRearStep"]
+material = SubResource("Mat_VanDarkTrim")
+size = Vector3(0.15, 0.08, 1.4)
+
+[sub_resource type="BoxMesh" id="Mesh_VanFrontBlackPanel"]
+material = SubResource("Mat_BlackGrille")
+size = Vector3(0.06, 0.38, 1.84)
+
+[sub_resource type="CylinderMesh" id="Mesh_HeadlightHalo"]
+material = SubResource("Mat_HeadlightHalo")
+top_radius = 0.18
+bottom_radius = 0.18
+height = 0.05
+radial_segments = 32
+
+[sub_resource type="CylinderMesh" id="Mesh_HeadlightLens"]
+material = SubResource("Mat_HeadlightLens")
+top_radius = 0.12
+bottom_radius = 0.12
+height = 0.06
+radial_segments = 32
+
+[sub_resource type="BoxMesh" id="Mesh_FrontSmileBar"]
+material = SubResource("Mat_SmileCyan")
+size = Vector3(0.02, 0.02, 0.22)
+
+[sub_resource type="BoxMesh" id="Mesh_VanWindshield"]
+material = SubResource("Mat_CarWindow")
+size = Vector3(0.06, 1.15, 1.92)
+
+[sub_resource type="BoxMesh" id="Mesh_VanAPillar"]
+material = SubResource("Mat_VanPaint")
+size = Vector3(0.08, 1.16, 0.08)
+
+[sub_resource type="BoxMesh" id="Mesh_VanCargoBody"]
+material = SubResource("Mat_VanPaint")
+size = Vector3(3.65, 1.76, 2.02)
+
+[sub_resource type="BoxMesh" id="Mesh_VanCabLower"]
+material = SubResource("Mat_VanPaint")
+size = Vector3(1.3, 0.52, 2.02)
+
+[sub_resource type="BoxMesh" id="Mesh_VanRearDoors"]
+material = SubResource("Mat_VanPaint")
+size = Vector3(0.06, 1.75, 1.96)
+
+[sub_resource type="BoxMesh" id="Mesh_VanRearDoorSeam"]
+material = SubResource("Mat_VanDarkTrim")
+size = Vector3(0.07, 1.72, 0.02)
+
+[sub_resource type="BoxMesh" id="Mesh_VanTaillight"]
+material = SubResource("Mat_Taillight")
+size = Vector3(0.08, 0.9, 0.08)
+
+[sub_resource type="BoxMesh" id="Mesh_LicensePlate"]
+material = SubResource("Mat_LicensePlate")
+size = Vector3(0.02, 0.14, 0.32)
+
+[sub_resource type="BoxMesh" id="Mesh_VanMirrorHousing"]
+material = SubResource("Mat_VanDarkTrim")
+size = Vector3(0.18, 0.12, 0.16)
+
+[sub_resource type="BoxMesh" id="Mesh_MirrorGlass"]
+material = SubResource("Mat_MirrorGlass")
+size = Vector3(0.02, 0.08, 0.11)
+
+[node name="Van" type="Area3D"]
+collision_layer = 2
+collision_mask = 1
+script = ExtResource("1_van")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.15, 0)
+shape = SubResource("BoxShape3D_van")
+
+[node name="Visuals" type="Node3D" parent="."]
+
+[node name="Van" type="Node3D" parent="Visuals"]
+
+[node name="Chassis" type="MeshInstance3D" parent="Visuals/Van"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.32, 0)
+mesh = SubResource("Mesh_VanChassis")
+
+[node name="SideCladding" type="MeshInstance3D" parent="Visuals/Van"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.05, 0.5, 0)
+mesh = ExtResource("10_cladding")
+
+[node name="FrontBumper" type="MeshInstance3D" parent="Visuals/Van"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.42, 0.52, 0)
+mesh = ExtResource("8_front")
+
+[node name="FrontLowerIntake" type="MeshInstance3D" parent="Visuals/Van"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.61, 0.44, 0)
+mesh = SubResource("Mesh_VanLowerIntake")
+
+[node name="MarkerLightL" type="MeshInstance3D" parent="Visuals/Van"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.35, 0.58, 1.03)
+mesh = SubResource("Mesh_VanMarkerLight")
+
+[node name="MarkerLightR" type="MeshInstance3D" parent="Visuals/Van"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.35, 0.58, -1.03)
+mesh = SubResource("Mesh_VanMarkerLight")
+
+[node name="RearBumper" type="MeshInstance3D" parent="Visuals/Van"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.55, 0.48, 0)
+mesh = ExtResource("9_rear")
+
+[node name="RearStep" type="MeshInstance3D" parent="Visuals/Van"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.72, 0.32, 0)
+mesh = SubResource("Mesh_VanRearStep")
+
+[node name="FrontBlackPanel" type="MeshInstance3D" parent="Visuals/Van"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.48, 0.94, 0)
+mesh = SubResource("Mesh_VanFrontBlackPanel")
+
+[node name="HeadlightL" type="MeshInstance3D" parent="Visuals/Van"]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 2.5, 0.94, 0.68)
+mesh = SubResource("Mesh_HeadlightHalo")
+
+[node name="LensL" type="MeshInstance3D" parent="Visuals/Van/HeadlightL"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.005, 0)
+mesh = SubResource("Mesh_HeadlightLens")
+
+[node name="HeadlightR" type="MeshInstance3D" parent="Visuals/Van"]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 2.5, 0.94, -0.68)
+mesh = SubResource("Mesh_HeadlightHalo")
+
+[node name="LensR" type="MeshInstance3D" parent="Visuals/Van/HeadlightR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.005, 0)
+mesh = SubResource("Mesh_HeadlightLens")
+
+[node name="FrontCrimeText" type="Label3D" parent="Visuals/Van"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 2.52, 0.96, 0)
+pixel_size = 0.003
+font = ExtResource("2_font_fredoka")
+font_size = 32
+modulate = Color(1, 1, 1, 1)
+text = "crime"
+
+[node name="FrontSmile" type="MeshInstance3D" parent="Visuals/Van"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.52, 0.83, 0)
+mesh = SubResource("Mesh_FrontSmileBar")
+
+[node name="SlopingNose" type="MeshInstance3D" parent="Visuals/Van"]
+transform = Transform3D(0.990268, 0.139173, 0, -0.139173, 0.990268, 0, 0, 0, 1, 2.12, 1.16, 0)
+mesh = ExtResource("7_nose")
+
+[node name="Windshield" type="MeshInstance3D" parent="Visuals/Van"]
+transform = Transform3D(0.927184, -0.374607, 0, 0.374607, 0.927184, 0, 0, 0, 1, 1.82, 1.72, 0)
+mesh = SubResource("Mesh_VanWindshield")
+
+[node name="APillarL" type="MeshInstance3D" parent="Visuals/Van"]
+transform = Transform3D(0.927184, -0.374607, 0, 0.374607, 0.927184, 0, 0, 0, 1, 1.82, 1.72, 0.96)
+mesh = SubResource("Mesh_VanAPillar")
+
+[node name="APillarR" type="MeshInstance3D" parent="Visuals/Van"]
+transform = Transform3D(0.927184, -0.374607, 0, 0.374607, 0.927184, 0, 0, 0, 1, 1.82, 1.72, -0.96)
+mesh = SubResource("Mesh_VanAPillar")
+
+[node name="CabRoofCap" type="MeshInstance3D" parent="Visuals/Van"]
+transform = Transform3D(0.742857, 0, 0, 0, 1, 0, 0, 0, 1, 1.285, 2.28, 0)
+mesh = ExtResource("6_cap")
+
+[node name="CabLower" type="MeshInstance3D" parent="Visuals/Van"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.65, 0.94, 0)
+mesh = SubResource("Mesh_VanCabLower")
+
+[node name="CargoBody" type="MeshInstance3D" parent="Visuals/Van"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.68, 1.56, 0)
+mesh = SubResource("Mesh_VanCargoBody")
+
+[node name="RearDoors" type="MeshInstance3D" parent="Visuals/Van"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.52, 1.5, 0)
+mesh = SubResource("Mesh_VanRearDoors")
+
+[node name="RearDoorSeam" type="MeshInstance3D" parent="Visuals/Van"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.53, 1.5, 0)
+mesh = SubResource("Mesh_VanRearDoorSeam")
+
+[node name="TaillightL" type="MeshInstance3D" parent="Visuals/Van"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.52, 1.45, 0.8)
+mesh = SubResource("Mesh_VanTaillight")
+
+[node name="TaillightR" type="MeshInstance3D" parent="Visuals/Van"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.52, 1.45, -0.8)
+mesh = SubResource("Mesh_VanTaillight")
+
+[node name="LicensePlate" type="MeshInstance3D" parent="Visuals/Van"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.55, 0.65, 0)
+mesh = SubResource("Mesh_LicensePlate")
+
+[node name="MirrorHousingL" type="MeshInstance3D" parent="Visuals/Van"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.72, 1.42, 1.1)
+mesh = SubResource("Mesh_VanMirrorHousing")
+
+[node name="MirrorGlassL" type="MeshInstance3D" parent="Visuals/Van"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.72, 1.42, 1.06)
+mesh = SubResource("Mesh_MirrorGlass")
+
+[node name="MirrorHousingR" type="MeshInstance3D" parent="Visuals/Van"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.72, 1.42, -1.1)
+mesh = SubResource("Mesh_VanMirrorHousing")
+
+[node name="MirrorGlassR" type="MeshInstance3D" parent="Visuals/Van"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.72, 1.42, -1.06)
+mesh = SubResource("Mesh_MirrorGlass")
+
+[node name="LogoSideL" type="Node3D" parent="Visuals/Van"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.025)
+
+[node name="Smile" type="MeshInstance3D" parent="Visuals/Van/LogoSideL"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.12, 0)
+mesh = ExtResource("11_smile")
+
+[node name="CrimeLabel" type="Label3D" parent="Visuals/Van/LogoSideL"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.80, 1.98, 0)
+pixel_size = 0.0075
+font = ExtResource("2_font_fredoka")
+font_size = 64
+modulate = Color(1, 1, 1, 1)
+outline_modulate = Color(0.08, 0.12, 0.16, 0.8)
+outline_size = 6
+text = "crime"
+
+[node name="LogoSideR" type="Node3D" parent="Visuals/Van"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0)
+
+[node name="Smile" type="MeshInstance3D" parent="Visuals/Van/LogoSideR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, -0.12, 1.025)
+mesh = ExtResource("11_smile")
+
+[node name="CrimeLabel" type="Label3D" parent="Visuals/Van/LogoSideR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.80, 1.98, 1.025)
+pixel_size = 0.0075
+font = ExtResource("2_font_fredoka")
+font_size = 64
+modulate = Color(1, 1, 1, 1)
+outline_modulate = Color(0.08, 0.12, 0.16, 0.8)
+outline_size = 6
+text = "crime"
+
+[node name="Wheel_FrontL" type="MeshInstance3D" parent="Visuals/Van"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1.6, 0.35, 1.0)
+mesh = SubResource("Mesh_Wheel")
+
+[node name="AeroCap" type="MeshInstance3D" parent="Visuals/Van/Wheel_FrontL"]
+mesh = SubResource("Mesh_WheelAeroCap")
+
+[node name="CyanRing" type="MeshInstance3D" parent="Visuals/Van/Wheel_FrontL"]
+mesh = SubResource("Mesh_WheelCyanAccent")
+
+[node name="Wheel_FrontR" type="MeshInstance3D" parent="Visuals/Van"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1.6, 0.35, -1.0)
+mesh = SubResource("Mesh_Wheel")
+
+[node name="AeroCap" type="MeshInstance3D" parent="Visuals/Van/Wheel_FrontR"]
+mesh = SubResource("Mesh_WheelAeroCap")
+
+[node name="CyanRing" type="MeshInstance3D" parent="Visuals/Van/Wheel_FrontR"]
+mesh = SubResource("Mesh_WheelCyanAccent")
+
+[node name="Wheel_RearL" type="MeshInstance3D" parent="Visuals/Van"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -1.6, 0.35, 1.0)
+mesh = SubResource("Mesh_Wheel")
+
+[node name="AeroCap" type="MeshInstance3D" parent="Visuals/Van/Wheel_RearL"]
+mesh = SubResource("Mesh_WheelAeroCap")
+
+[node name="CyanRing" type="MeshInstance3D" parent="Visuals/Van/Wheel_RearL"]
+mesh = SubResource("Mesh_WheelCyanAccent")
+
+[node name="Wheel_RearR" type="MeshInstance3D" parent="Visuals/Van"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -1.6, 0.35, -1.0)
+mesh = SubResource("Mesh_Wheel")
+
+[node name="AeroCap" type="MeshInstance3D" parent="Visuals/Van/Wheel_RearR"]
+mesh = SubResource("Mesh_WheelAeroCap")
+
+[node name="CyanRing" type="MeshInstance3D" parent="Visuals/Van/Wheel_RearR"]
+mesh = SubResource("Mesh_WheelCyanAccent")

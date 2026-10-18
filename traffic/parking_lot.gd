@@ -6,9 +6,13 @@ const ROWS := [
 	{"z": -28.5, "x0": -18.0, "count": 9, "nose": -1.0, "serves": &"walgroins"},  # N row, nose -Z
 	{"z": -14.5, "x0": -18.0, "count": 6, "nose": 1.0, "serves": &"walgroins"},  # S row, nose +Z
 	{"z": -14.5, "x0": 28.0, "count": 4, "nose": 1.0, "serves": &"taco_hell"},  # Taco row, nose +Z
+	{"z": 24.0, "x0": 22.0, "count": 3, "nose": 1.0, "serves": &"cramped_inn"},  # CI West row, nose +Z
+	{"z": 24.0, "x0": 54.0, "count": 2, "nose": 1.0, "serves": &"cramped_inn"},  # CI East row, nose +Z
 ]
 const ENTRANCES: Dictionary[StringName, Vector3] = {
-	&"walgroins": Vector3(-3, 0, -32), &"taco_hell": Vector3(31.5, 0, -27.8)
+	&"walgroins": Vector3(-3, 0, -32),
+	&"taco_hell": Vector3(31.5, 0, -27.8),
+	&"cramped_inn": Vector3(45.7, 0, 27.75),
 }
 const TURN_IN_START := Vector3(17.0, 0.0, -5.6)
 const ENTRY_X := 13.0
@@ -31,11 +35,42 @@ const TACO_DT_ORDER_DIST := 38.5
 const TACO_DT_PICKUP_DIST := 75.1
 const BK_DT_ORDER_DIST := 75.5
 const BK_DT_PICKUP_DIST := 77.0
+const CI_TURN_IN_START := Vector3(34.0, 0.0, 5.6)
+const CI_ENTRY_X := 38.0
+const CI_EXIT_X := 42.0
+const CI_WAIT_POINT := Vector3(42.0, 0.0, 9.6)
+const CI_MERGE_END := Vector3(46.0, 0.0, 5.6)
+const CI_ENTRY_AISLE_Z := 17.5
+const CI_EXIT_AISLE_Z := 20.25
+
+
+static func ci_entry_aisle_z(sx: float) -> float:
+	return 17.5 if sx <= CI_ENTRY_X else 16.5
+
+
+static func ci_exit_aisle_z(sx: float) -> float:
+	return 20.25 if sx <= CI_EXIT_X else 19.5
+
+
 var poach_penalty: float = POACH_PENALTY
 var jitter: float = JITTER
 
 var spots: Array[ParkingSpot] = []
 signal spot_changed(spot: ParkingSpot)
+
+
+static func is_cramped_inn_spot(spot) -> bool:
+	if spot is ParkingSpot:
+		return spot.serves.has(&"cramped_inn") or spot.transform.origin.z > 0.0
+	elif spot is Transform3D:
+		return spot.origin.z > 0.0
+	elif spot is Vector3:
+		return spot.z > 0.0
+	elif spot is Vector2:
+		return spot.y > 0.0
+	elif "z" in spot:
+		return spot.get("z") > 0.0
+	return false
 
 
 static func aisle_z_for_entry(spot) -> float:
@@ -87,6 +122,8 @@ static func exit_sign(spot) -> float:
 
 
 static func entry_route(spot, radius := 4.0) -> Curve3D:
+	if is_cramped_inn_spot(spot):
+		return cramped_inn_entry_route(spot, radius)
 	var sx: float = 0.0
 	var spot_pos := Vector3.ZERO
 	if spot is ParkingSpot:
@@ -123,7 +160,46 @@ static func entry_route(spot, radius := 4.0) -> Curve3D:
 	return PathBuilder.build(pts, radius)
 
 
+static func cramped_inn_entry_route(spot, radius := 4.0) -> Curve3D:
+	var sx: float = 0.0
+	var spot_pos := Vector3.ZERO
+	if spot is ParkingSpot:
+		spot_pos = spot.transform.origin
+		sx = spot_pos.x
+	elif spot is Transform3D:
+		spot_pos = spot.origin
+		sx = spot_pos.x
+	elif spot is Vector3:
+		spot_pos = spot
+		sx = spot.x
+	elif spot is Vector2:
+		spot_pos = Vector3(spot.x, 0.05, spot.y)
+		sx = spot.x
+	elif "x" in spot:
+		sx = spot.x
+		var sy: float = spot.get("y") if "y" in spot else 0.05
+		var sz: float = spot.get("z") if "z" in spot else 24.0
+		spot_pos = Vector3(sx, sy, sz)
+	else:
+		push_error("ParkingLot.cramped_inn_entry_route: unsupported spot argument %s" % str(spot))
+		return Curve3D.new()
+
+	var aisle_z := ci_entry_aisle_z(sx)
+	var pts := PackedVector3Array(
+		[
+			CI_TURN_IN_START,
+			Vector3(CI_ENTRY_X, 0.0, 5.6 + radius),
+			Vector3(CI_ENTRY_X, 0.0, aisle_z),
+			Vector3(sx, 0.0, aisle_z),
+			spot_pos,
+		]
+	)
+	return PathBuilder.build(pts, radius)
+
+
 static func reverse_route(spot, radius := 4.0) -> Curve3D:
+	if is_cramped_inn_spot(spot):
+		return cramped_inn_reverse_route(spot, radius)
 	var sx: float = 0.0
 	var spot_pos := Vector3.ZERO
 	if spot is ParkingSpot:
@@ -159,7 +235,45 @@ static func reverse_route(spot, radius := 4.0) -> Curve3D:
 	return PathBuilder.build(pts, radius)
 
 
+static func cramped_inn_reverse_route(spot, radius := 4.0) -> Curve3D:
+	var sx: float = 0.0
+	var spot_pos := Vector3.ZERO
+	if spot is ParkingSpot:
+		spot_pos = spot.transform.origin
+		sx = spot_pos.x
+	elif spot is Transform3D:
+		spot_pos = spot.origin
+		sx = spot_pos.x
+	elif spot is Vector3:
+		spot_pos = spot
+		sx = spot.x
+	elif spot is Vector2:
+		spot_pos = Vector3(spot.x, 0.05, spot.y)
+		sx = spot.x
+	elif "x" in spot:
+		sx = spot.x
+		var sy: float = spot.get("y") if "y" in spot else 0.05
+		var sz: float = spot.get("z") if "z" in spot else 24.0
+		spot_pos = Vector3(sx, sy, sz)
+	else:
+		push_error("ParkingLot.cramped_inn_reverse_route: unsupported spot argument %s" % str(spot))
+		return Curve3D.new()
+
+	var aisle_z := ci_exit_aisle_z(sx)
+	var sign_val: float = 1.0 if sx < CI_EXIT_X else -1.0
+	var pts := PackedVector3Array(
+		[
+			Vector3(sx - sign_val * 3.0, 0.0, aisle_z),
+			Vector3(sx, 0.0, aisle_z),
+			spot_pos,
+		]
+	)
+	return PathBuilder.build(pts, radius)
+
+
 static func exit_route(spot, radius := 4.0) -> Curve3D:
+	if is_cramped_inn_spot(spot):
+		return cramped_inn_exit_route(spot, radius)
 	var sx: float = 0.0
 	if spot is ParkingSpot:
 		sx = spot.transform.origin.x
@@ -180,6 +294,43 @@ static func exit_route(spot, radius := 4.0) -> Curve3D:
 			Vector3(sx - sign_val * 6.0, 0.0, aisle_z),
 			Vector3(EXIT_X, 0.0, aisle_z),
 			WAIT_POINT,
+		]
+	)
+	return PathBuilder.build(pts, radius)
+
+
+static func cramped_inn_exit_route(spot, radius := 4.0) -> Curve3D:
+	var sx: float = 0.0
+	if spot is ParkingSpot:
+		sx = spot.transform.origin.x
+	elif spot is Transform3D:
+		sx = spot.origin.x
+	elif spot is Vector3 or spot is Vector2:
+		sx = spot.x
+	elif "x" in spot:
+		sx = spot.x
+	else:
+		push_error("ParkingLot.cramped_inn_exit_route: unsupported spot argument %s" % str(spot))
+		return Curve3D.new()
+
+	var aisle_z := ci_exit_aisle_z(sx)
+	var sign_val: float = 1.0 if sx < CI_EXIT_X else -1.0
+	var pts := PackedVector3Array(
+		[
+			Vector3(sx - sign_val * 3.0, 0.0, aisle_z),
+			Vector3(CI_EXIT_X, 0.0, aisle_z),
+			CI_WAIT_POINT,
+		]
+	)
+	return PathBuilder.build(pts, radius)
+
+
+static func cramped_inn_merge_route(radius := 4.0) -> Curve3D:
+	var pts := PackedVector3Array(
+		[
+			CI_WAIT_POINT,
+			Vector3(CI_EXIT_X, 0.0, 5.6),
+			CI_MERGE_END,
 		]
 	)
 	return PathBuilder.build(pts, radius)

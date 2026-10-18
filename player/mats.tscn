@@ -1,4 +1,4 @@
-[gd_scene load_steps=24 format=3]
+[gd_scene load_steps=30 format=3]
 
 [ext_resource type="Script" path="res://player/mats.gd" id="1_mats"]
 
@@ -12,7 +12,31 @@ roughness = 0.8
 
 [sub_resource type="BoxMesh" id="Mesh_MatsLeg"]
 material = SubResource("Mat_MatsPants")
-size = Vector3(0.3, 0.65, 0.45)
+size = Vector3(0.3, 0.48, 0.36)
+
+[sub_resource type="StandardMaterial3D" id="Mat_MatsShoeUpper"]
+albedo_color = Color(0.8, 0.14, 0.12, 1)
+roughness = 0.75
+
+[sub_resource type="StandardMaterial3D" id="Mat_MatsShoeWhite"]
+albedo_color = Color(0.95, 0.95, 0.92, 1)
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="Mesh_MatsShoeSole"]
+material = SubResource("Mat_MatsShoeWhite")
+size = Vector3(0.32, 0.06, 0.54)
+
+[sub_resource type="BoxMesh" id="Mesh_MatsShoeUpper"]
+material = SubResource("Mat_MatsShoeUpper")
+size = Vector3(0.3, 0.13, 0.46)
+
+[sub_resource type="BoxMesh" id="Mesh_MatsShoeToeCap"]
+material = SubResource("Mat_MatsShoeWhite")
+size = Vector3(0.28, 0.07, 0.13)
+
+[sub_resource type="BoxMesh" id="Mesh_MatsShoeLaces"]
+material = SubResource("Mat_MatsShoeWhite")
+size = Vector3(0.14, 0.02, 0.08)
 
 [sub_resource type="StandardMaterial3D" id="Mat_MatsJacket"]
 albedo_color = Color(0.96, 0.48, 0.1, 1)
@@ -114,15 +138,51 @@ transform = Transform3D(-1, 0, 1.22465e-16, 0, 1, 0, -1.22465e-16, 0, -1, 0, 0, 
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.175, 0.65, 0)
 
 [node name="Leg" type="MeshInstance3D" parent="Visual/LeftLegPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.325, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.24, -0.02)
 mesh = SubResource("Mesh_MatsLeg")
+
+[node name="Shoe" type="Node3D" parent="Visual/LeftLegPivot"]
+
+[node name="Sole" type="MeshInstance3D" parent="Visual/LeftLegPivot/Shoe"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.62, 0.09)
+mesh = SubResource("Mesh_MatsShoeSole")
+
+[node name="Upper" type="MeshInstance3D" parent="Visual/LeftLegPivot/Shoe"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.525, 0.05)
+mesh = SubResource("Mesh_MatsShoeUpper")
+
+[node name="ToeCap" type="MeshInstance3D" parent="Visual/LeftLegPivot/Shoe"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.555, 0.285)
+mesh = SubResource("Mesh_MatsShoeToeCap")
+
+[node name="Laces" type="MeshInstance3D" parent="Visual/LeftLegPivot/Shoe"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.45, 0.215)
+mesh = SubResource("Mesh_MatsShoeLaces")
 
 [node name="RightLegPivot" type="Node3D" parent="Visual"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.175, 0.65, 0)
 
 [node name="Leg" type="MeshInstance3D" parent="Visual/RightLegPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.325, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.24, -0.02)
 mesh = SubResource("Mesh_MatsLeg")
+
+[node name="Shoe" type="Node3D" parent="Visual/RightLegPivot"]
+
+[node name="Sole" type="MeshInstance3D" parent="Visual/RightLegPivot/Shoe"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.62, 0.09)
+mesh = SubResource("Mesh_MatsShoeSole")
+
+[node name="Upper" type="MeshInstance3D" parent="Visual/RightLegPivot/Shoe"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.525, 0.05)
+mesh = SubResource("Mesh_MatsShoeUpper")
+
+[node name="ToeCap" type="MeshInstance3D" parent="Visual/RightLegPivot/Shoe"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.555, 0.285)
+mesh = SubResource("Mesh_MatsShoeToeCap")
+
+[node name="Laces" type="MeshInstance3D" parent="Visual/RightLegPivot/Shoe"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.45, 0.215)
+mesh = SubResource("Mesh_MatsShoeLaces")
 
 [node name="Torso" type="MeshInstance3D" parent="Visual"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)

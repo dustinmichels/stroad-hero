@@ -1,5 +1,5 @@
 extends Camera3D
-## Tracks `target`; each WASD press steps the view 45 degrees around it.
+## Tracks `target`; A/D steps yaw, W/S tilts up/down, and R resets behind Mats.
 ## Death returns the camera to its starting view.
 
 @export var target: CharacterBody3D
@@ -8,52 +8,100 @@ extends Camera3D
 
 const SWING_FINISH_ANGLE := deg_to_rad(1.0)
 const YAW_STEP := PI / 4.0
-var _horizontal_distance: float
+const PITCH_STEP := deg_to_rad(10.0)
+const MIN_PITCH := deg_to_rad(15.0)
+const MAX_PITCH := deg_to_rad(80.0)
+
+var _distance: float
 var _default_yaw: float
+var _default_pitch: float
 var _camera_yaw: float
 var _target_yaw: float
+var _camera_pitch: float
+var _target_pitch: float
+var _pitch_framing_offset: float
 var _is_swinging := false
 
 
 func _ready() -> void:
+	if not InputMap.has_action("camera_reset"):
+		InputMap.add_action("camera_reset")
+		var event := InputEventKey.new()
+		event.physical_keycode = KEY_R
+		InputMap.action_add_event("camera_reset", event)
+
 	var offset := global_position - target.global_position
-	_horizontal_distance = Vector2(offset.x, offset.z).length()
+	_distance = offset.length()
+	var horizontal_dist := Vector2(offset.x, offset.z).length()
 	_default_yaw = atan2(-offset.x, -offset.z)
+	_default_pitch = atan2(offset.y, horizontal_dist)
 	_camera_yaw = _default_yaw
 	_target_yaw = _default_yaw
+	_camera_pitch = _default_pitch
+	_target_pitch = _default_pitch
+	_pitch_framing_offset = rotation.x - (-_default_pitch)
 	if target.has_signal("died"):
 		target.died.connect(_on_target_died)
 
 
-func _physics_process(delta: float) -> void:
-	var step := (
+func _process(delta: float) -> void:
+	var target_position := target.get_global_transform_interpolated().origin
+	var yaw_step := (
 		int(Input.is_action_just_pressed("camera_left"))
-		+ int(Input.is_action_just_pressed("camera_forward"))
 		- int(Input.is_action_just_pressed("camera_right"))
+	)
+	var pitch_step := (
+		int(Input.is_action_just_pressed("camera_forward"))
 		- int(Input.is_action_just_pressed("camera_back"))
 	)
-	if step != 0:
-		_target_yaw += step * YAW_STEP
+	if yaw_step != 0:
+		_target_yaw += yaw_step * YAW_STEP
 		_is_swinging = true
+	if pitch_step != 0:
+		_target_pitch = clampf(_target_pitch + pitch_step * PITCH_STEP, MIN_PITCH, MAX_PITCH)
+		_is_swinging = true
+	if Input.is_action_just_pressed("camera_reset"):
+		reset_view()
+
 	if _is_swinging:
-		_camera_yaw = lerpf(_camera_yaw, _target_yaw, 1.0 - exp(-swing_smoothing * delta))
-		if absf(_target_yaw - _camera_yaw) <= SWING_FINISH_ANGLE:
+		var weight := 1.0 - exp(-swing_smoothing * delta)
+		_camera_yaw = lerpf(_camera_yaw, _target_yaw, weight)
+		_camera_pitch = lerpf(_camera_pitch, _target_pitch, weight)
+		if (
+			absf(_target_yaw - _camera_yaw) <= SWING_FINISH_ANGLE
+			and absf(_target_pitch - _camera_pitch) <= SWING_FINISH_ANGLE
+		):
 			_camera_yaw = _target_yaw
+			_camera_pitch = _target_pitch
 			_is_swinging = false
 
+	var cos_pitch := cos(_camera_pitch)
+	var sin_pitch := sin(_camera_pitch)
 	var goal := (
-		target.global_position
+		target_position
 		+ Vector3(
-			-sin(_camera_yaw) * _horizontal_distance, 0.0, -cos(_camera_yaw) * _horizontal_distance
+			-sin(_camera_yaw) * cos_pitch * _distance,
+			sin_pitch * _distance,
+			-cos(_camera_yaw) * cos_pitch * _distance
 		)
 	)
-	goal.y = global_position.y
 	global_position = global_position.lerp(goal, 1.0 - exp(-smoothing * delta))
 
-	var target_direction := target.global_position - global_position
+	var target_direction := target_position - global_position
+	var horizontal_distance := Vector2(target_direction.x, target_direction.z).length()
 	global_rotation.y = atan2(-target_direction.x, -target_direction.z)
+	global_rotation.x = atan2(target_direction.y, horizontal_distance) + _pitch_framing_offset
+
+
+func reset_view() -> void:
+	var visual := target.get_node_or_null("Visual") as Node3D
+	var target_facing := visual.global_rotation.y if visual else _default_yaw
+	_target_yaw = _camera_yaw + angle_difference(_camera_yaw, target_facing)
+	_target_pitch = _default_pitch
+	_is_swinging = true
 
 
 func _on_target_died(_death_position: Vector3) -> void:
 	_target_yaw = _camera_yaw + angle_difference(_camera_yaw, _default_yaw)
+	_target_pitch = _default_pitch
 	_is_swinging = true

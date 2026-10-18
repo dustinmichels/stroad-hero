@@ -6,6 +6,7 @@ const PassengerCarScene = preload("res://cars/passenger_car.tscn")
 const BusScene = preload("res://cars/bus.tscn")
 const TaxiScene = preload("res://cars/taxi.tscn")
 const TruckScene = preload("res://cars/truck.tscn")
+const VanScene = preload("res://cars/van.tscn")
 const TrafficDebugScript = preload("res://traffic/traffic_debug.gd")
 const Errand = preload("res://traffic/errand.gd")
 
@@ -97,8 +98,10 @@ var debug_overlay: Node3D = null
 var taco_hell_drive_thru_path: Curve3D = null
 var booger_king_drive_thru_path: Curve3D = null
 var booger_king_merge_path: Curve3D = null
+var cramped_inn_merge_path: Curve3D = null
 var _physics_tick_count: int = 0
 var _watchdog_ignores: Dictionary[int, Dictionary] = {}  # int (car_instance_id) -> Dictionary { "target_id": int, "timer": float }
+var _sweep_cache: Dictionary[int, Dictionary] = {}  # car instance id -> _car_sweep() result
 
 var stats: Dictionary = {
 	"cars_spawned": 0,
@@ -131,11 +134,18 @@ const T_MERGE_GAP := 3.0
 const V_DRIVE_THRU := 3.2
 const DECISION_D_BK := 15.0
 const TURN_D_BK := 50.0
+const DECISION_D_CI := 94.0
+const TURN_D_CI := 129.0
 const MAX_DRIVE_THRU_CAPACITY := 5
 const TACO_DT_ORDER_DIST := 38.5
 const TACO_DT_PICKUP_DIST := 75.1
 const BK_DT_ORDER_DIST := 75.5
 const BK_DT_PICKUP_DIST := 77.0
+const SWEEP_STEP := 0.5  # meters between sampled footprints along a car's route
+const SWEEP_SIDE_MARGIN := 0.15  # lateral clearance added to a car's projected footprints
+const SWEEP_TIE_EPS := 0.25  # route-conflict distances closer than this count as a tie
+const SWEEP_INTENT_EXTRA := 4.0  # meters past the lookahead used to settle who crosses first
+const REVERSE_CLEAR_TRAVEL := 1.0  # meters of another car's route a back-out route must avoid
 
 
 func _ready() -> void:
@@ -151,6 +161,7 @@ func _ready() -> void:
 	taco_hell_drive_thru_path = ParkingLot.taco_hell_drive_thru_route()
 	booger_king_drive_thru_path = ParkingLot.booger_king_drive_thru_route()
 	booger_king_merge_path = ParkingLot.booger_king_merge_route()
+	cramped_inn_merge_path = ParkingLot.cramped_inn_merge_route()
 	_setup_lanes()
 	_pre_populate_traffic()
 	_seed_parked_cars()
@@ -199,6 +210,10 @@ func _seed_parked_cars() -> void:
 		car.desired_speed = 0.0
 		add_child(car)
 		car.lane_id = -1
+		if spot.serves.has(&"cramped_inn") or spot.transform.origin.z > 0.0:
+			car.merge_target_lane = 3
+		else:
+			car.merge_target_lane = 0
 		car.state = CarScript.State.PARKED
 		car.transform = spot.transform
 		car.global_transform = spot.transform
@@ -235,6 +250,7 @@ func _physics_process(delta: float) -> void:
 
 
 func _update_lot_cars(delta: float) -> void:
+	_sweep_cache.clear()
 	var expired_ignores: Array[int] = []
 	for cid in _watchdog_ignores.keys():
 		_watchdog_ignores[cid]["timer"] -= delta
@@ -336,7 +352,9 @@ func _update_lot_cars(delta: float) -> void:
 						if (car.path != null and b.path == car.path)
 						else 0.0
 					)
-					if gap > 2.5:
+					# Creep behind a leader on the same path; the loop also crosses itself,
+					# so a blocker far ahead along the path is a crossing car, not a leader.
+					if gap > 2.5 and gap <= _lookahead(car) + SWEEP_STEP:
 						target_speed = minf(b.speed, V_DRIVE_THRU)
 					else:
 						target_speed = 0.0
@@ -473,7 +491,13 @@ func _update_lot_cars(delta: float) -> void:
 				car.lane_id = car.merge_target_lane
 				var m_route: Curve3D = null
 				if car.merge_target_lane == 3:
-					m_route = booger_king_merge_path
+					if (
+						car.global_position.x > 0.0
+						or (car.errand != null and car.errand.destination == &"cramped_inn")
+					):
+						m_route = cramped_inn_merge_path
+					else:
+						m_route = booger_king_merge_path
 				elif lot != null:
 					m_route = lot.merge_route()
 				else:
@@ -560,19 +584,6 @@ func find_blocker(car: Car) -> Car:
 	if car == null or not is_instance_valid(car):
 		return null
 
-	var spd := absf(car.speed)
-	var lookahead := maxf(4.0, (spd * spd) / (2.0 * BRAKE_ACCELERATION) + 3.0)
-	var sign_dir := (
-		-1.0
-		if (
-			car.speed < 0.0 or car.desired_speed < 0.0 or car.state == CarScript.State.REVERSING_OUT
-		)
-		else 1.0
-	)
-	var h := car.get_heading()
-	var forward_vec := Vector3(h.x, 0.0, h.z).normalized() * sign_dir
-	var lateral_vec := Vector3(-forward_vec.z, 0.0, forward_vec.x)
-
 	var candidates: Array[Car] = []
 	for other in lot_cars:
 		if is_instance_valid(other) and other != car:
@@ -589,159 +600,169 @@ func find_blocker(car: Car) -> Car:
 				):
 					if not candidates.has(ghost):
 						candidates.append(ghost)
+
+	var mine := _car_sweep(car)
+	var my_reach: float = mine["reach"]
 	var closest_blocker: Car = null
-	var min_forward: float = INF
+	var min_dist: float = INF
 
 	for other in candidates:
 		if _is_ignoring(car, other):
 			continue
-		# If both cars are following the exact same path (e.g. drive-thru loop)
-		if car.path != null and other.path == car.path:
-			var delta_s := (other.path_distance - car.path_distance) * sign_dir
-			var half_len_sum := (car.car_length + other.car_length) * 0.5
-			var gap := delta_s - half_len_sum
-			if delta_s > 0.0 and gap < lookahead and delta_s < 25.0:
-				if delta_s < min_forward:
-					min_forward = delta_s
-					closest_blocker = other
-					continue
-		var has_dt: bool = (
-			car.state == CarScript.State.DRIVE_THRU
-			or other.state == CarScript.State.DRIVE_THRU
-			or (
-				car.had_errand
-				and (
-					car.merge_target_lane == 3
-					or (car.path != null and car.path == taco_hell_drive_thru_path)
-				)
-			)
-			or (
-				other.had_errand
-				and (
-					other.merge_target_lane == 3
-					or (other.path != null and other.path == taco_hell_drive_thru_path)
-				)
-			)
-		)
-		# Driveway entry vs exit separation rule for opposing traffic
-		if (
-			car.global_position.z >= -23.5
-			and car.global_position.z <= -5.6
-			and other.global_position.z >= -23.5
-			and other.global_position.z <= -5.6
-			and car.global_position.x >= 6.0
-			and car.global_position.x <= 16.0
-			and other.global_position.x >= 6.0
-			and other.global_position.x <= 16.0
-		):
-			if (car.global_position.x >= 12.0) != (other.global_position.x >= 12.0):
-				var ch := car.get_heading()
-				var oh := other.get_heading()
-				# Opposing traffic in separate lanes: one entering (south), one exiting (north)
-				if ch.z * oh.z < -0.05:
-					continue
-		if (
-			car.global_position.z >= 5.6
-			and car.global_position.z <= 18.0
-			and other.global_position.z >= 5.6
-			and other.global_position.z <= 18.0
-		):
-			if (
-				car.global_position.x >= -46.0
-				and car.global_position.x <= -38.0
-				and other.global_position.x >= -46.0
-				and other.global_position.x <= -38.0
-			):
-				if (car.global_position.x >= -42.0) != (other.global_position.x >= -42.0):
-					var ch := car.get_heading()
-					var oh := other.get_heading()
-					if ch.x > -0.3 and oh.x > -0.3:
-						continue
-		# Taco Hell crossing mutex at (23, -23)
-		if car.path != null and car.path == taco_hell_drive_thru_path:
-			if car.path_distance >= 20.5 and car.path_distance <= 23.5:
-				if (
-					other.path == taco_hell_drive_thru_path
-					and other.path_distance >= 102.0
-					and other.path_distance <= 112.5
-				):
-					return other
-				elif other.global_position.distance_to(Vector3(23.0, 0.0, -23.0)) < 3.8:
-					return other
-			elif car.path_distance >= 102.0 and car.path_distance <= 106.0:
-				if (
-					other.path == taco_hell_drive_thru_path
-					and other.path_distance > 23.5
-					and other.path_distance <= 28.5
-				):
-					return other
-				elif (
-					other.path != taco_hell_drive_thru_path
-					and other.global_position.distance_to(Vector3(23.0, 0.0, -23.0)) < 3.5
-				):
-					return other
-		var half_len_sum := (car.car_length + other.car_length) / 2.0
-		if has_dt:
-			# Single-file queue detection in driveway exit lanes
-			if (
-				car.global_position.x >= 6.0
-				and car.global_position.x < 11.5
-				and other.global_position.x >= 6.0
-				and other.global_position.x < 11.5
-			):
-				if (
-					car.global_position.z >= -20.5
-					and car.global_position.z <= -9.0
-					and other.global_position.z >= -20.5
-					and other.global_position.z <= -9.0
-				):
-					var dz := other.global_position.z - car.global_position.z
-					if dz > 0.0 and dz < (lookahead + half_len_sum):
-						if dz < min_forward:
-							min_forward = dz
-							closest_blocker = other
-							continue
-			if (
-				car.global_position.x >= -42.0
-				and car.global_position.x <= -38.0
-				and other.global_position.x >= -42.0
-				and other.global_position.x <= -38.0
-			):
-				if (
-					car.global_position.z >= 7.5
-					and car.global_position.z <= 22.5
-					and other.global_position.z >= 7.5
-					and other.global_position.z <= 22.5
-				):
-					var dz := car.global_position.z - other.global_position.z
-					if dz > 0.0 and dz < (lookahead + half_len_sum):
-						if dz < min_forward:
-							min_forward = dz
-							closest_blocker = other
-							continue
-		var dpos := other.global_position - car.global_position
-		var dpos_2d := Vector3(dpos.x, 0.0, dpos.z)
-		var forward := dpos_2d.dot(forward_vec)
-		var gap := forward - half_len_sum
-		if forward > 0.0 and gap < lookahead:
-			var lateral := absf(dpos_2d.dot(lateral_vec))
-			var half_width_sum := (car.car_width + other.car_width) / 2.0 + 0.3
-			if has_dt and car.state != CarScript.State.REVERSING_OUT:
-				var oh := other.get_heading()
-				var of := Vector3(oh.x, 0.0, oh.z).normalized()
-				var ol := Vector3(-of.z, 0.0, of.x)
-				var other_lat_extent := (
-					absf(of.dot(lateral_vec)) * other.car_length * 0.5
-					+ absf(ol.dot(lateral_vec)) * other.car_width * 0.5
-				)
-				half_width_sum = car.car_width * 0.5 + other_lat_extent + 0.3
-			if lateral < half_width_sum:
-				if forward < min_forward:
-					min_forward = forward
-					closest_blocker = other
+		var theirs := _car_sweep(other)
+		var reach: float = my_reach + theirs["reach"]
+		if car.global_position.distance_to(other.global_position) > reach:
+			continue
+		var dist := _conflict_distance(car, mine, other, theirs)
+		if dist < min_dist:
+			min_dist = dist
+			closest_blocker = other
 	return closest_blocker
 
 
+## Braking lookahead (meters of travel) a car scans along its route.
+func _lookahead(car: Car) -> float:
+	var spd := absf(car.speed)
+	return maxf(4.0, (spd * spd) / (2.0 * BRAKE_ACCELERATION) + 3.0)
+
+
+## Footprints a car covers: index 0 is its body now, the rest are its body at
+## SWEEP_STEP intervals along its upcoming route (curved path or straight heading),
+## widened by SWEEP_SIDE_MARGIN. A reversing car claims its whole remaining back-out
+## route, so oncoming aisle traffic stops clear of it instead of meeting it head-on.
+## Cached per tick; the key catches mid-tick moves.
+func _car_sweep(car: Car) -> Dictionary:
+	var backward := (
+		car.speed < 0.0 or car.desired_speed < 0.0 or car.state == CarScript.State.REVERSING_OUT
+	)
+	var key := [
+		car.global_transform,
+		car.path,
+		car.path_distance,
+		car.speed,
+		backward,
+		car.state,
+		car.car_length,
+		car.car_width,
+	]
+	var cached: Dictionary = _sweep_cache.get(car.get_instance_id(), {})
+	if not cached.is_empty() and cached["key"] == key:
+		return cached
+
+	var half_l := car.car_length * 0.5
+	var half_w := car.car_width * 0.5
+	var side := half_w + SWEEP_SIDE_MARGIN
+	var heading := car.get_heading()
+	var rects: Array[PackedVector2Array] = [
+		_footprint(car.global_position, heading, half_l, half_w)
+	]
+	var dists: Array[float] = [0.0]
+	var look := _lookahead(car)
+	var horizon := look + SWEEP_INTENT_EXTRA
+	if car.state == CarScript.State.REVERSING_OUT and car.path != null:
+		horizon = maxf(horizon, car.path_distance)
+	var sign_dir := -1.0 if backward else 1.0
+	if car.motion == CarScript.Motion.PATH and car.path != null:
+		_append_path_footprints(
+			rects, dists, car.path, car.path_distance, sign_dir * horizon, half_l, side
+		)
+	else:
+		var steps := int(ceil(horizon / SWEEP_STEP))
+		var move := heading * sign_dir
+		for k in range(1, steps + 1):
+			var t := minf(k * SWEEP_STEP, horizon)
+			rects.append(_footprint(car.global_position + move * t, heading, half_l, side))
+			dists.append(t)
+
+	var sweep := {
+		"key": key,
+		"rects": rects,
+		"dists": dists,
+		"look": look,
+		"reach": horizon + car.car_length,
+	}
+	_sweep_cache[car.get_instance_id()] = sweep
+	return sweep
+
+
+## Appends footprints at SWEEP_STEP intervals from path distance `from` over `travel`
+## meters (negative = backward), stopping at the path end; dists gets travel so far.
+static func _append_path_footprints(
+	rects: Array[PackedVector2Array],
+	dists: Array[float],
+	path: Curve3D,
+	from: float,
+	travel: float,
+	half_l: float,
+	half_w: float
+) -> void:
+	var length := path.get_baked_length()
+	var look := absf(travel)
+	var sign_dir := signf(travel)
+	for k in range(1, int(ceil(look / SWEEP_STEP)) + 1):
+		var t := minf(k * SWEEP_STEP, look)
+		var d := from + sign_dir * t
+		var dc := clampf(d, 0.0, length)
+		var h := (
+			path.sample_baked(clampf(dc + 0.05, 0.0, length))
+			- path.sample_baked(clampf(dc - 0.05, 0.0, length))
+		)
+		if h.length_squared() < 0.000001:
+			break
+		rects.append(_footprint(path.sample_baked(dc), h, half_l, half_w))
+		dists.append(t)
+		if dc != d:
+			break
+
+
+static func _footprint(
+	pos: Vector3, heading: Vector3, half_l: float, half_w: float
+) -> PackedVector2Array:
+	var f := Vector2(heading.x, heading.z).normalized()
+	var s := Vector2(-f.y, f.x) * half_w
+	f *= half_l
+	var c := Vector2(pos.x, pos.z)
+	return PackedVector2Array([c + f + s, c + f - s, c - f - s, c - f + s])
+
+
+## Separating-axis test for two rectangles from _footprint.
+static func _footprints_overlap(a: PackedVector2Array, b: PackedVector2Array) -> bool:
+	var ra := a[0].distance_to(a[2]) * 0.5
+	var rb := b[0].distance_to(b[2]) * 0.5
+	if ((a[0] + a[2]) * 0.5).distance_to((b[0] + b[2]) * 0.5) > ra + rb:
+		return false
+	for poly in [a, b]:
+		for i in 2:
+			var e: Vector2 = poly[i + 1] - poly[i]
+			var axis := Vector2(-e.y, e.x)
+			var a_min := INF
+			var a_max := -INF
+			for p in a:
+				var d := p.dot(axis)
+				a_min = minf(a_min, d)
+				a_max = maxf(a_max, d)
+			var b_min := INF
+			var b_max := -INF
+			for p in b:
+				var d := p.dot(axis)
+				b_min = minf(b_min, d)
+				b_max = maxf(b_max, d)
+			if a_max < b_min or b_max < a_min:
+				return false
+	return true
+
+
+## Cars that run the lot yielding logic; others (merging, waiting, lane cars) never stop for us.
+func _yields_in_lot(car: Car) -> bool:
+	return (
+		car.state == CarScript.State.TO_SPOT
+		or car.state == CarScript.State.TO_EXIT
+		or car.state == CarScript.State.REVERSING_OUT
+		or car.state == CarScript.State.DRIVE_THRU
+	)
+
+
+## Tie-break rank when two cars reach a shared area at the same distance.
 func _lot_priority(s: CarScript.State) -> int:
 	match s:
 		CarScript.State.TO_SPOT:
@@ -750,29 +771,72 @@ func _lot_priority(s: CarScript.State) -> int:
 			return 2
 		CarScript.State.DRIVE_THRU:
 			return 3
-		CarScript.State.REVERSING_OUT:
-			return 1
 		_:
 			return 0
 
 
-func _should_yield(car: Car) -> bool:
-	var b := find_blocker(car)
-	if b == null or _is_ignoring(car, b):
-		return false
-	var b_blocker := find_blocker(b)
-	if b_blocker == car:
-		var p_car := _lot_priority(car.state)
-		var p_b := _lot_priority(b.state)
-		if p_car > 0 and p_b > 0 and p_car > p_b:
-			return false
-	return true
+## Travel distance at which `car` must stop for `other`, or INF if it may proceed.
+## Hard conflict (within car's braking lookahead): car's route runs into other's
+## current body, or into the whole remaining route of a car backing out
+## (can_reverse_out cleared that route, so the reversing car owns it until done).
+## Soft conflict: the routes overlap within their intent horizons and other reaches
+## the shared area first (ties: _lot_priority, then instance id); car then stops
+## once that area is within its lookahead. The soft rule is symmetric, so exactly
+## one car of a pair proceeds, and the one that waits does so before its body is
+## in the other's way.
+func _conflict_distance(car: Car, mine: Dictionary, other: Car, theirs: Dictionary) -> float:
+	var a: Array[PackedVector2Array] = mine["rects"]
+	var da: Array[float] = mine["dists"]
+	var look: float = mine["look"]
+	var b: Array[PackedVector2Array] = theirs["rects"]
+	var db: Array[float] = theirs["dists"]
+	for i in range(1, a.size()):
+		if da[i] > look:
+			break
+		if _footprints_overlap(a[i], b[0]):
+			return da[i]
+
+	var reversing_mine := car.state == CarScript.State.REVERSING_OUT
+	var reversing_theirs := other.state == CarScript.State.REVERSING_OUT
+	if reversing_mine != reversing_theirs:
+		if reversing_mine:
+			return INF
+		for i in range(1, a.size()):
+			if da[i] > look:
+				break
+			for j in range(1, b.size()):
+				if _footprints_overlap(a[i], b[j]):
+					return da[i]
+		return INF
+
+	var first_mine := INF
+	var first_theirs := INF
+	for i in a.size():
+		for j in range(1, b.size()):
+			if da[i] >= first_mine and db[j] >= first_theirs:
+				continue
+			if _footprints_overlap(a[i], b[j]):
+				first_mine = minf(first_mine, da[i])
+				first_theirs = minf(first_theirs, db[j])
+	# Already in their way (nothing to gain by stopping) or conflict still beyond braking range.
+	if first_mine == 0.0 or first_mine > look:
+		return INF
+	if not _yields_in_lot(other):
+		return first_mine
+	if first_theirs < first_mine - SWEEP_TIE_EPS:
+		return first_mine
+	if first_mine < first_theirs - SWEEP_TIE_EPS:
+		return INF
+	var p_car := _lot_priority(car.state)
+	var p_other := _lot_priority(other.state)
+	if p_car != p_other:
+		return first_mine if p_other > p_car else INF
+	return first_mine if other.get_instance_id() < car.get_instance_id() else INF
 
 
 func _update_car_yielding(car: Car, delta: float) -> bool:
-	var yielding := _should_yield(car)
-	if yielding:
-		var b := find_blocker(car)
+	var b := find_blocker(car)
+	if b != null:
 		if car.current_blocker == b:
 			car.blocked_time += delta
 		else:
@@ -782,7 +846,7 @@ func _update_car_yielding(car: Car, delta: float) -> bool:
 	else:
 		car.current_blocker = null
 		car.blocked_time = 0.0
-	return yielding
+	return b != null
 
 
 func _check_deadlock_watchdog() -> void:
@@ -856,14 +920,53 @@ func _fire_watchdog(higher_car: Car, lower_cars: Array[Car]) -> void:
 	higher_car.current_blocker = null
 
 
+## A parked car may back out only when no lot car is moving nearby, and its back-out
+## route is clear of other cars' bodies, the stretch of their route they need to
+## stop (at least REVERSE_CLEAR_TRAVEL), and other cars' back-out routes.
 func can_reverse_out(car: Car) -> bool:
 	if car == null or not is_instance_valid(car):
 		return false
 	var spot_x: float = car.spot.x if car.spot != null else car.global_position.x
 	for other in lot_cars:
 		if is_instance_valid(other) and other != car:
-			if other.is_moving() and absf(other.global_position.x - spot_x) < 8.0:
+			if (
+				other.is_moving()
+				and absf(other.global_position.x - spot_x) < 8.0
+				and (car.global_position.z * other.global_position.z > 0.0)
+			):
 				return false
+	if car.spot == null:
+		return true
+	var route := ParkingLot.reverse_route(car.spot)
+	var length := route.get_baked_length()
+	var rects: Array[PackedVector2Array] = []
+	var dists: Array[float] = []
+	_append_path_footprints(
+		rects,
+		dists,
+		route,
+		length,
+		-length,
+		car.car_length * 0.5,
+		car.car_width * 0.5 + SWEEP_SIDE_MARGIN
+	)
+	for other in lot_cars:
+		if not is_instance_valid(other) or other == car or other.state == CarScript.State.PARKED:
+			continue
+		var theirs := _car_sweep(other)
+		if other.global_position.distance_to(car.global_position) > length + theirs["reach"]:
+			continue
+		var other_reversing := other.state == CarScript.State.REVERSING_OUT
+		var other_rects: Array[PackedVector2Array] = theirs["rects"]
+		var other_dists: Array[float] = theirs["dists"]
+		var stop_dist := other.speed * other.speed / (2.0 * BRAKE_ACCELERATION) + SWEEP_STEP
+		var clear_travel := maxf(REVERSE_CLEAR_TRAVEL, stop_dist)
+		for j in other_rects.size():
+			if not other_reversing and other_dists[j] > clear_travel:
+				break
+			for r in rects:
+				if _footprints_overlap(r, other_rects[j]):
+					return false
 	return true
 
 
@@ -882,11 +985,33 @@ func _can_merge(car: Car) -> bool:
 			and other.state == CarScript.State.MERGING
 			and other.merge_target_lane == target_lane_id
 		):
-			return false
+			var other_d: float = target_lane.distance_at(other.global_position.x)
+			var my_d: float
+			if target_lane_id == 3:
+				my_d = target_lane.distance_at(
+					(
+						ParkingLot.CI_WAIT_POINT.x
+						if (
+							car.global_position.x > 0.0
+							or (car.errand != null and car.errand.destination == &"cramped_inn")
+						)
+						else -40.5
+					)
+				)
+			else:
+				my_d = 61.0
+			if absf(other_d - my_d) < 25.0:
+				return false
 
 	var merge_dist: float
 	if target_lane_id == 3:
-		merge_dist = target_lane.distance_at(-40.5)
+		if (
+			car.global_position.x > 0.0
+			or (car.errand != null and car.errand.destination == &"cramped_inn")
+		):
+			merge_dist = target_lane.distance_at(ParkingLot.CI_WAIT_POINT.x)
+		else:
+			merge_dist = target_lane.distance_at(-40.5)
 	else:
 		merge_dist = 61.0
 
@@ -928,9 +1053,33 @@ func _count_drive_thru_cars(dest: StringName) -> int:
 		if is_instance_valid(car) and car.state == CarScript.State.DRIVE_THRU:
 			if car.errand != null and car.errand.destination == dest:
 				count += 1
-			elif dest == &"booger_king" and car.merge_target_lane == 3:
+			elif (
+				dest == &"booger_king"
+				and (
+					car.path == booger_king_drive_thru_path
+					or (
+						car.merge_target_lane == 3
+						and (car.errand == null or car.errand.destination != &"cramped_inn")
+					)
+				)
+			):
 				count += 1
-			elif dest == &"taco_hell_drive_thru" and car.merge_target_lane == 0:
+			elif (
+				dest == &"taco_hell_drive_thru"
+				and (
+					car.path == taco_hell_drive_thru_path
+					or (
+						car.merge_target_lane == 0
+						and (
+							car.errand == null
+							or (
+								car.errand.destination != &"walgroins"
+								and car.errand.destination != &"taco_hell"
+							)
+						)
+					)
+				)
+			):
 				count += 1
 	return count
 
@@ -969,6 +1118,13 @@ func spawn_debug_car() -> Car:
 	var parkable_types := CarScript.PARKING_CAR_TYPES
 	var chosen_type: CarScript.CarType = parkable_types[randi() % parkable_types.size()]
 	car.car_type = chosen_type
+	if chosen_spot.serves.has(&"cramped_inn") or chosen_spot.transform.origin.z > 0.0:
+		car.merge_target_lane = 3
+		car.errand = Errand.new(&"cramped_inn", randf_range(15.0, 35.0))
+	else:
+		car.merge_target_lane = 0
+		car.errand = Errand.random()
+	car.had_errand = true
 	add_child(car)
 	lot.reserve(chosen_spot, car)
 	var route := lot.entry_route(chosen_spot)
@@ -981,6 +1137,36 @@ func spawn_debug_car() -> Car:
 	return car
 
 
+func spawn_cramped_inn_car() -> Car:
+	if lot == null:
+		return null
+	var free_spots: Array[ParkingSpot] = []
+	for s in lot.spots:
+		if s.is_free() and (s.serves.has(&"cramped_inn") or s.transform.origin.z > 0.0):
+			free_spots.append(s)
+	if free_spots.is_empty():
+		return null
+	var chosen_spot: ParkingSpot = free_spots[randi() % free_spots.size()]
+	var car: Car = PassengerCarScene.instantiate()
+	var parkable_types := CarScript.PARKING_CAR_TYPES
+	var chosen_type: CarScript.CarType = parkable_types[randi() % parkable_types.size()]
+	car.car_type = chosen_type
+	car.errand = Errand.new(&"cramped_inn", randf_range(15.0, 35.0))
+	car.had_errand = true
+	car.merge_target_lane = 3
+	add_child(car)
+	lot.reserve(chosen_spot, car)
+	var route := lot.entry_route(chosen_spot)
+	car.state = CarScript.State.TO_SPOT
+	car.speed = V_LOT
+	car.desired_speed = V_LOT
+	car.follow_path(route)
+	lot_cars.append(car)
+	stats["cars_spawned"] += 1
+	stats["errands_assigned"] += 1
+	return car
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_F4 or event.physical_keycode == KEY_F4:
@@ -989,6 +1175,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			spawn_drive_thru_car(&"taco_hell_drive_thru")
 		elif event.keycode == KEY_F6 or event.physical_keycode == KEY_F6:
 			spawn_drive_thru_car(&"booger_king")
+		elif event.keycode == KEY_F7 or event.physical_keycode == KEY_F7:
+			spawn_cramped_inn_car()
 
 
 func _update_lane_spawning(lane: Lane, delta: float) -> void:
@@ -1019,10 +1207,13 @@ func _spawn_car_at(lane: Lane, initial_distance: float, scene: PackedScene = nul
 		chosen_type = parkable_types[randi() % parkable_types.size()]
 	else:
 		var roll := randf()
-		if roll < 0.75:
+		if roll < 0.67:
 			car = PassengerCarScene.instantiate()
 			var parkable_types := CarScript.PARKING_CAR_TYPES
 			chosen_type = parkable_types[randi() % parkable_types.size()]
+		elif roll < 0.75:
+			car = VanScene.instantiate()
+			chosen_type = CarScript.CarType.VAN
 		elif roll < 0.85:
 			car = TaxiScene.instantiate()
 			chosen_type = CarScript.CarType.TAXI
@@ -1047,12 +1238,18 @@ func _spawn_car_at(lane: Lane, initial_distance: float, scene: PackedScene = nul
 			car.errand = Errand.random()
 		car.had_errand = true
 		stats["errands_assigned"] += 1
-	elif (
-		lane.id == 3 and car.can_park() and initial_distance < DECISION_D_BK and randf() < P_ERRAND
-	):
-		car.errand = Errand.new(&"booger_king", randf_range(10.0, 25.0))
-		car.had_errand = true
-		stats["errands_assigned"] += 1
+	elif lane.id == 3 and car.can_park() and randf() < P_ERRAND:
+		if initial_distance < DECISION_D_BK:
+			if randf() < 0.5:
+				car.errand = Errand.new(&"booger_king", randf_range(10.0, 25.0))
+			else:
+				car.errand = Errand.new(&"cramped_inn", randf_range(20.0, 45.0))
+			car.had_errand = true
+			stats["errands_assigned"] += 1
+		elif initial_distance < DECISION_D_CI:
+			car.errand = Errand.new(&"cramped_inn", randf_range(20.0, 45.0))
+			car.had_errand = true
+			stats["errands_assigned"] += 1
 	lane.cars.append(car)
 	stats["cars_spawned"] += 1
 	return car
@@ -1121,8 +1318,8 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 						car.errand = null
 						car.had_errand = false
 						stats["errands_dropped_lot_full"] += 1
-			elif lane.id == 3 and car.lane_distance >= DECISION_D_BK:
-				if car.errand.destination == &"booger_king":
+			elif lane.id == 3:
+				if car.errand.destination == &"booger_king" and car.lane_distance >= DECISION_D_BK:
 					if _count_drive_thru_cars(&"booger_king") < MAX_DRIVE_THRU_CAPACITY:
 						car.state = Car.State.APPROACHING
 						car.set_turn_signal(CarScript.TurnSignal.RIGHT)
@@ -1130,6 +1327,18 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 						car.errand = null
 						car.had_errand = false
 						stats["errands_dropped_lot_full"] += 1
+				elif (
+					car.errand.destination == &"cramped_inn" and car.lane_distance >= DECISION_D_CI
+				):
+					if lot != null:
+						var spot = lot.request_spot(car, car.errand)
+						if spot != null:
+							car.state = Car.State.APPROACHING
+							car.set_turn_signal(CarScript.TurnSignal.RIGHT)
+						else:
+							car.errand = null
+							car.had_errand = false
+							stats["errands_dropped_lot_full"] += 1
 		# Smooth car-following with velocity-dependent safe gap and comfortable deceleration
 		var following_target: float = car.desired_speed
 		var brake_accel: float = BRAKE_ACCELERATION
@@ -1154,7 +1363,13 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 		if car.state == Car.State.APPROACHING:
 			if car.turn_signal != CarScript.TurnSignal.RIGHT:
 				car.set_turn_signal(CarScript.TurnSignal.RIGHT)
-			var turn_d := TURN_D if lane.id == 0 else TURN_D_BK
+			var turn_d: float
+			if lane.id == 0:
+				turn_d = TURN_D
+			elif car.errand != null and car.errand.destination == &"cramped_inn":
+				turn_d = TURN_D_CI
+			else:
+				turn_d = TURN_D_BK
 			var approach_dist: float = maxf(0.0, turn_d - car.lane_distance)
 			var approach_target: float = sqrt(V_TURN * V_TURN + 2.0 * A_COMFORT * approach_dist)
 			target_speed = minf(target_speed, approach_target)
@@ -1164,7 +1379,13 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 		car.advance_simulation(delta)
 
 		if car.state == Car.State.APPROACHING:
-			var turn_d := TURN_D if lane.id == 0 else TURN_D_BK
+			var turn_d: float
+			if lane.id == 0:
+				turn_d = TURN_D
+			elif car.errand != null and car.errand.destination == &"cramped_inn":
+				turn_d = TURN_D_CI
+			else:
+				turn_d = TURN_D_BK
 			if car.lane_distance >= turn_d:
 				car.motion = Car.Motion.PATH
 				if lane.id == 0:
@@ -1178,8 +1399,13 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 							car.follow_path(lot.entry_route(car.spot))
 				elif lane.id == 3:
 					car.merge_target_lane = 3
-					car.state = Car.State.DRIVE_THRU
-					car.follow_path(booger_king_drive_thru_path)
+					if car.errand != null and car.errand.destination == &"cramped_inn":
+						car.state = Car.State.TO_SPOT
+						if lot != null and car.spot != null:
+							car.follow_path(lot.entry_route(car.spot))
+					else:
+						car.state = Car.State.DRIVE_THRU
+						car.follow_path(booger_king_drive_thru_path)
 				if not lot_cars.has(car):
 					lot_cars.append(car)
 				if lane.overlaps(car):
@@ -1197,7 +1423,7 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 				continue
 		# Check if reached end of lane
 		if car.lane_distance >= lane.length:
-			if car.lane_id == 0 and car.had_errand:
+			if (car.lane_id == 0 or car.lane_id == 3) and car.had_errand:
 				stats["errands_completed"] += 1
 			car.queue_free()
 		else:

@@ -20,10 +20,13 @@ I think the underlying model should perhaps be 3D, so I can simulate real traffi
 
 - Arrow keys: walk relative to the current camera
 - W/A: rotate the camera left 45 degrees; S/D: rotate it right 45 degrees
-- Space: small hop
+- Space: small hop; next to a shopping cart, enter it or exit while riding
 - C: open the paused character editor; use Up/Down to choose a row and Left/Right to change it. The preview slowly turns to show the backpack.
 - F3: toggle traffic and parking debug overlay (parking stall statuses, car states/paths, merge windows, and HUD metrics)
 - F4: spawn a debug errand car at the driveway turn-in
+- F5: spawn a debug Taco Hell drive-thru car
+- F6: spawn a debug Booger King drive-thru car
+- F7: spawn a debug Cramped Inn errand car
 
 ## Traffic
 

@@ -269,19 +269,35 @@ func _update_merge_window() -> void:
 	if waiting_cars.is_empty():
 		return
 
-	var lane0 = traffic_manager.lanes[0]
 	var lane_half_w: float = 3.75 * 0.5
-	var z_min: float = lane0.z - lane_half_w
-	var z_max: float = lane0.z + lane_half_w
 	var y: float = 0.15
 
 	var lines: Array = []
 	for car in waiting_cars:
-		var window_start_d: float = 61.0 - car.car_length - 2.0
-		var window_end_d: float = 71.0
-		var x_start: float = lane0.start_x + lane0.direction * window_start_d
-		var x_end: float = lane0.start_x + lane0.direction * window_end_d
+		var target_lane_id := car.merge_target_lane
+		var target_lane: TrafficManager.Lane = (
+			traffic_manager.lanes[target_lane_id]
+			if traffic_manager.lanes.size() > target_lane_id
+			else traffic_manager.lanes[0]
+		)
+		var merge_d: float
+		if target_lane_id == 3:
+			if (
+				car.global_position.x > 0.0
+				or (car.errand != null and car.errand.destination == &"cramped_inn")
+			):
+				merge_d = target_lane.distance_at(ParkingLot.CI_WAIT_POINT.x)
+			else:
+				merge_d = target_lane.distance_at(-40.5)
+		else:
+			merge_d = 61.0
 
+		var window_start_d: float = merge_d - car.car_length - 2.0
+		var window_end_d: float = merge_d + 10.0
+		var x_start: float = target_lane.start_x + target_lane.direction * window_start_d
+		var x_end: float = target_lane.start_x + target_lane.direction * window_end_d
+		var z_min: float = target_lane.z - lane_half_w
+		var z_max: float = target_lane.z + lane_half_w
 		var c1 := Vector3(x_start, y, z_min)
 		var c2 := Vector3(x_start, y, z_max)
 		var c3 := Vector3(x_end, y, z_max)
