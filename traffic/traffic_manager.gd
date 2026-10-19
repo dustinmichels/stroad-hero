@@ -483,15 +483,7 @@ func _update_lot_cars(delta: float) -> void:
 		elif car.state == Car.State.WAITING_TO_MERGE:
 			car.current_blocker = null
 			car.blocked_time = 0.0
-			if "--test-exit-route" in OS.get_cmdline_user_args():
-				car.merge_wait_time += delta
-				stats["max_merge_wait"] = maxf(stats["max_merge_wait"], car.merge_wait_time)
-				car.speed = 0.0
-				car.desired_speed = 0.0
-				car.update_presentation()
-				car._update_blocker_layer()
-				surviving_cars.append(car)
-			elif _can_merge(car):
+			if _can_merge(car):
 				stats["max_merge_wait"] = maxf(stats["max_merge_wait"], car.merge_wait_time)
 				car.state = Car.State.MERGING
 				car.lane_id = car.merge_target_lane

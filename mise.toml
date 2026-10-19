@@ -6,13 +6,6 @@ oxfmt = "latest"
 description = "Format GDScript (gdformat) and Markdown (oxfmt) files"
 run = ['uvx --from "gdtoolkit==4.*" gdformat .', 'oxfmt "**/*.md"']
 
-[tasks.mats]
-description = "Export art/mats/mats.blend to the Mats meshes in player/mats_meshes/"
-run = '''
-set -eu
-/Applications/Blender.app/Contents/MacOS/Blender -b art/mats/mats.blend --python art/mats/export_mats.py -- /tmp/mats.glb
-/Applications/Godot.app/Contents/MacOS/Godot --headless --path . -s "$PWD/art/mats/import_mats.gd" -- /tmp/mats.glb
-'''
 
 [tasks.export-web]
 description = "Export the Web preset to build/web (from a /tmp copy, so the open editor's .godot/ is untouched)"

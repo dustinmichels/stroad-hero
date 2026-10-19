@@ -1,4 +1,4 @@
-"""Builds the stylized Pickup Truck model into the "Pickup" collection of art/cars/pickup.blend.
+"""Builds the stylized Pickup Truck model into cars/bodies/pickup.blend.
 
 Run inside Blender or via CLI:
 blender -b --python art/cars/build_pickup.py
@@ -18,6 +18,7 @@ import bmesh
 from mathutils import Vector, Matrix
 
 COLLECTION_NAME = "Pickup"
+OUT_BLEND_PATH = "cars/bodies/pickup.blend"
 
 # Standard car dimensions
 WHEEL_RADIUS = 0.35
@@ -27,7 +28,22 @@ WHEELBASE_R = -1.35
 TRACK_Z = 0.98
 WHEEL_Y = 0.35
 
-PALETTE = {
+
+def srgb_to_linear(c: float) -> float:
+    return (c / 12.92) if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
+
+
+def col_srgb_to_linear(rgb: tuple) -> tuple:
+    return (
+        srgb_to_linear(rgb[0]),
+        srgb_to_linear(rgb[1]),
+        srgb_to_linear(rgb[2]),
+        rgb[3] if len(rgb) > 3 else 1.0,
+    )
+
+
+# Palette in sRGB; converted to linear for Blender Principled BSDF
+PALETTE_SRGB = {
     "paint": ((0.18, 0.38, 0.24, 1.0), 0.32, 0.15),      # Forest Green base (overridden at runtime in Godot)
     "glass": ((0.10, 0.14, 0.20, 1.0), 0.10, 0.40),      # Tinted dark glass
     "chrome": ((0.85, 0.86, 0.88, 1.0), 0.20, 0.85),     # Polished chrome bumper & grille
@@ -39,9 +55,11 @@ PALETTE = {
     "rim": ((0.75, 0.77, 0.80, 1.0), 0.25, 0.80),         # Alloy rim
 }
 
+
 def gd_to_bl(v: Vector) -> Vector:
     """Convert Godot vector (+X fwd, +Y up, +Z left) to Blender (+X fwd/right, +Y back, +Z up)."""
     return Vector((v.x, -v.z, v.y))
+
 
 def get_or_create_material(name: str):
     mat = bpy.data.materials.get(name)
@@ -50,18 +68,20 @@ def get_or_create_material(name: str):
         mat.use_nodes = True
         nodes = mat.node_tree.nodes
         bsdf = nodes.get("Principled BSDF")
-        color, roughness, metallic = PALETTE[name]
+        srgb_color, roughness, metallic = PALETTE_SRGB[name]
+        linear_color = col_srgb_to_linear(srgb_color)
         if bsdf:
-            bsdf.inputs["Base Color"].default_value = color
+            bsdf.inputs["Base Color"].default_value = linear_color
             bsdf.inputs["Roughness"].default_value = roughness
             bsdf.inputs["Metallic"].default_value = metallic
             if name == "headlight":
-                bsdf.inputs["Emission Color"].default_value = color
+                bsdf.inputs["Emission Color"].default_value = linear_color
                 bsdf.inputs["Emission Strength"].default_value = 2.0
             elif name == "taillight":
-                bsdf.inputs["Emission Color"].default_value = color
+                bsdf.inputs["Emission Color"].default_value = linear_color
                 bsdf.inputs["Emission Strength"].default_value = 1.5
     return mat
+
 
 def create_box(bm: bmesh.types.BMesh, min_pt: Vector, max_pt: Vector):
     """Create a 3D axis-aligned box between min_pt and max_pt in Godot space."""
@@ -91,9 +111,10 @@ def create_box(bm: bmesh.types.BMesh, min_pt: Vector, max_pt: Vector):
             pass
     return created_faces
 
+
 def build_body_mesh() -> bpy.types.Mesh:
     """Builds the main painted sheet metal for the pickup truck."""
-    me = bpy.data.meshes.new("Body")
+    me = bpy.data.meshes.new("body")
     bm = bmesh.new()
 
     # 1. Lower chassis / rocker & floor base
@@ -144,9 +165,10 @@ def build_body_mesh() -> bpy.types.Mesh:
     me.materials.append(get_or_create_material("paint"))
     return me
 
+
 def build_windows_mesh() -> bpy.types.Mesh:
     """Builds the glass windows (windshield, rear cab window, side door windows)."""
-    me = bpy.data.meshes.new("Windows")
+    me = bpy.data.meshes.new("windows")
     bm = bmesh.new()
 
     # Windshield (raked glass)
@@ -165,9 +187,10 @@ def build_windows_mesh() -> bpy.types.Mesh:
     me.materials.append(get_or_create_material("glass"))
     return me
 
+
 def build_trim_mesh() -> bpy.types.Mesh:
     """Builds bumpers, front grille, side steps, and trim details."""
-    me = bpy.data.meshes.new("Trim")
+    me = bpy.data.meshes.new("trim")
     bm = bmesh.new()
 
     # Front Bumper (heavy duty truck bumper)
@@ -204,9 +227,10 @@ def build_trim_mesh() -> bpy.types.Mesh:
     me.materials.append(get_or_create_material("chrome"))
     return me
 
+
 def build_bed_liner_mesh() -> bpy.types.Mesh:
     """Builds the interior bed liner (floor and inside walls)."""
-    me = bpy.data.meshes.new("BedLiner")
+    me = bpy.data.meshes.new("bed_liner")
     bm = bmesh.new()
 
     # Bed floor
@@ -224,6 +248,7 @@ def build_bed_liner_mesh() -> bpy.types.Mesh:
     me.materials.append(get_or_create_material("bed_liner"))
     return me
 
+
 def build_centered_light_mesh(name: str, mat_name: str, size: Vector) -> bpy.types.Mesh:
     """Builds a light marker box centered at local origin (0, 0, 0)."""
     me = bpy.data.meshes.new(name)
@@ -235,6 +260,7 @@ def build_centered_light_mesh(name: str, mat_name: str, size: Vector) -> bpy.typ
     bm.free()
     me.materials.append(get_or_create_material(mat_name))
     return me
+
 
 def build_wheel_mesh(name: str) -> bpy.types.Mesh:
     """Builds a wheel centered at local origin (0, 0, 0).
@@ -311,6 +337,7 @@ def build_wheel_mesh(name: str) -> bpy.types.Mesh:
     bm.free()
     return me
 
+
 def build_pickup():
     coll = bpy.data.collections.get(COLLECTION_NAME)
     if coll is None:
@@ -327,11 +354,11 @@ def build_pickup():
     bed_liner_mesh = build_bed_liner_mesh()
 
     # Headlight & Taillight meshes centered at origin
-    hl_mesh = build_centered_light_mesh("HeadlightMesh", "headlight", Vector((0.10, 0.20, 0.28)))
-    tl_mesh = build_centered_light_mesh("TaillightMesh", "taillight", Vector((0.10, 0.30, 0.16)))
+    hl_mesh = build_centered_light_mesh("headlight_mesh", "headlight", Vector((0.10, 0.20, 0.28)))
+    tl_mesh = build_centered_light_mesh("taillight_mesh", "taillight", Vector((0.10, 0.30, 0.16)))
 
     # Reusable wheel mesh
-    wheel_mesh = build_wheel_mesh("WheelMesh")
+    wheel_mesh = build_wheel_mesh("wheel_mesh")
 
     # Static body objects
     body_obj = bpy.data.objects.new("Body", body_mesh)
@@ -375,7 +402,8 @@ def build_pickup():
 
     print("Successfully built Pickup truck collection in Blender!")
 
+
 if __name__ == "__main__":
     build_pickup()
-    bpy.ops.wm.save_as_mainfile(filepath="art/cars/pickup.blend")
-    print("Saved art/cars/pickup.blend")
+    bpy.ops.wm.save_as_mainfile(filepath=OUT_BLEND_PATH)
+    print("Saved %s" % OUT_BLEND_PATH)

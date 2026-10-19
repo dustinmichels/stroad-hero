@@ -4,14 +4,10 @@ Follow-up work for the Blender-modeled Mats (Oct 18, 2026). He is a low-poly kid
 
 ## How the model is built
 
-| Piece                     | Role                                                                                                  |
-| ------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `art/mats/build_mats.py`  | Generates every mesh from code into the `Mats` collection. Running it again replaces that collection. |
-| `art/mats/mats.blend`     | Saved output of the generator, plus a `MatsPreview` collection with a camera, sun, and ground plane.  |
-| `art/mats/export_mats.py` | Blender side of the export. Writes the `Mats` collection to glTF.                                     |
-| `art/mats/import_mats.gd` | Godot side of the export. Saves each glTF mesh as `player/mats_meshes/<name>.res`.                    |
-| `mise run mats`           | Runs both export steps. The meshes never go through the editor's import step.                         |
-| `art/.gdignore`           | Keeps Godot from scanning `art/`.                                                                     |
+| Piece                 | Role                                                                                 |
+| --------------------- | ------------------------------------------------------------------------------------ |
+| `player/mats.blend`   | Source of truth for Mats model and geometry. Directly scanned and imported by Godot. |
+| `player/mats_meshes/` | Extracted mesh `.res` files (`mats_<name>.res`) used by `player/mats.tscn`.          |
 
 Each Blender object's origin sits at the Godot node it belongs to: hip, knee, ankle (`Shoe`), shoulder, elbow, or chin (`Head`). The script looks up these nodes: `Visual/{Left,Right}LegPivot/Knee/Shoe/Upper`, `Visual/{Left,Right}ArmPivot/Elbow`, `Visual/Head/Hat`, and `Visual/Backpack`. Colors are set in Blender. Only the backpack and the shoe uppers are recolored at runtime, through `material_override`.
 
@@ -63,6 +59,10 @@ More character editor options for accesories.
 
 ## 7. Pipeline
 
-- [ ] Decide what the source of truth is. `build_mats.py` rebuilds the `Mats` collection from scratch, so hand edits in `mats.blend` are lost the next time the generator runs. Either keep editing the generator, or stop running it and treat the `.blend` as the source. -- YES, use .blend as the source of truth.
-- [ ] Add a preview render task. The multi-view render script used during modeling was a throwaway. A `mise run mats-preview` that renders front, side, back, walk, and kneel views to `/tmp` would make reviews repeatable.
-- [ ] `mise run mats` writes a mesh file for every mesh it exports but never deletes old ones. Remove stale `.res` files from `player/mats_meshes/` by hand when you rename or drop a mesh.
+- [x] Complete Godot editor import for `player/mats.blend`: set Blender path in Editor Settings, run Advanced Import Settings -> Set Mesh Save Paths to `res://player/mats_meshes/`.
+- [ ] Add a preview render task. A task that renders front, side, back, walk, and kneel views to `/tmp` would make reviews repeatable.
+
+### Maintenance rules for `mats.blend`
+
+- **Adding new meshes in Blender**: A newly created mesh object won't have a save path automatically. After saving the `.blend`, open Advanced Import Settings in Godot and run **Actions → Set Mesh Save Paths** (or toggle "Save to File" for that mesh) so its `.res` is generated.
+- **Renaming or removing meshes**: Godot does not delete old `.res` files when meshes are removed or renamed in Blender. Delete orphaned `player/mats_meshes/mats_<old>.res` files by hand.

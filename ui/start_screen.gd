@@ -42,7 +42,7 @@ var _opened_via_h: bool = false
 func _ready() -> void:
 	var user_args := OS.get_cmdline_user_args()
 	for arg in user_args:
-		if arg.begins_with("--test-") and arg != "--test-start-screen":
+		if arg.begins_with("--test-"):
 			visible = false
 			return
 	if quit_button and OS.has_feature("web"):
