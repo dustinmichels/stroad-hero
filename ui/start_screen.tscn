@@ -1,4 +1,4 @@
-[gd_scene load_steps=19 format=3]
+[gd_scene load_steps=20 format=3]
 
 [ext_resource type="Script" path="res://ui/start_screen.gd" id="1_script"]
 [ext_resource type="FontFile" path="res://fonts/ArchivoBlack-Regular.ttf" id="2_title_font"]
@@ -37,6 +37,24 @@ corner_radius_top_right = 14
 corner_radius_bottom_right = 14
 corner_radius_bottom_left = 14
 
+[sub_resource type="StyleBoxFlat" id="StyleHeroBadge"]
+content_margin_left = 16.0
+content_margin_top = 2.0
+content_margin_right = 16.0
+content_margin_bottom = 4.0
+bg_color = Color(0.92, 0.24, 0.16, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1, 0.88, 0.24, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+shadow_color = Color(0, 0, 0, 0.5)
+shadow_size = 8
+shadow_offset = Vector2(0, 3)
 [sub_resource type="StyleBoxFlat" id="StyleKey"]
 content_margin_left = 8.0
 content_margin_top = 3.0
@@ -281,10 +299,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -440.0
-offset_top = -325.0
-offset_right = 440.0
-offset_bottom = 325.0
+offset_left = -460.0
+offset_top = -340.0
+offset_right = 460.0
+offset_bottom = 340.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StylePane")
@@ -305,34 +323,77 @@ layout_mode = 2
 theme_override_constants/separation = 4
 alignment = 1
 
-[node name="TitleLabel" type="Label" parent="RootControl/Pane/Margin/Content/HeaderBox"]
+[node name="LogoRow" type="HBoxContainer" parent="RootControl/Pane/Margin/Content/HeaderBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.82, 0.16, 1)
+theme_override_constants/separation = 14
+alignment = 1
+
+[node name="TitleStroad" type="Label" parent="RootControl/Pane/Margin/Content/HeaderBox/LogoRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.84, 0.16, 1)
 theme_override_colors/font_outline_color = Color(0.08, 0.05, 0.01, 1)
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.6)
-theme_override_constants/outline_size = 10
-theme_override_constants/shadow_offset_y = 3
-theme_override_constants/shadow_outline_size = 4
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.75)
+theme_override_constants/outline_size = 14
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 5
 theme_override_fonts/font = ExtResource("2_title_font")
-theme_override_font_sizes/font_size = 50
-text = "STROAD HERO"
+theme_override_font_sizes/font_size = 62
+text = "STROAD"
 horizontal_alignment = 1
 
-[node name="StroadDividers" type="VBoxContainer" parent="RootControl/Pane/Margin/Content/HeaderBox"]
+[node name="HeroBadge" type="PanelContainer" parent="RootControl/Pane/Margin/Content/HeaderBox/LogoRow"]
 layout_mode = 2
-size_flags_horizontal = 4
+theme_override_styles/panel = SubResource("StyleHeroBadge")
+
+[node name="TitleHero" type="Label" parent="RootControl/Pane/Margin/Content/HeaderBox/LogoRow/HeroBadge"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.12, 0.04, 0.04, 1)
+theme_override_constants/outline_size = 8
+theme_override_fonts/font = ExtResource("2_title_font")
+theme_override_font_sizes/font_size = 50
+text = "HERO"
+horizontal_alignment = 1
+
+[node name="StroadDividers" type="HBoxContainer" parent="RootControl/Pane/Margin/Content/HeaderBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="DividerLeft" type="VBoxContainer" parent="RootControl/Pane/Margin/Content/HeaderBox/StroadDividers"]
+layout_mode = 2
 theme_override_constants/separation = 3
 
-[node name="Stripe1" type="ColorRect" parent="RootControl/Pane/Margin/Content/HeaderBox/StroadDividers"]
-custom_minimum_size = Vector2(240, 3)
+[node name="StripeL1" type="ColorRect" parent="RootControl/Pane/Margin/Content/HeaderBox/StroadDividers/DividerLeft"]
+custom_minimum_size = Vector2(170, 3)
 layout_mode = 2
 color = Color(0.95, 0.74, 0.14, 1)
 
-[node name="Stripe2" type="ColorRect" parent="RootControl/Pane/Margin/Content/HeaderBox/StroadDividers"]
-custom_minimum_size = Vector2(240, 3)
+[node name="StripeL2" type="ColorRect" parent="RootControl/Pane/Margin/Content/HeaderBox/StroadDividers/DividerLeft"]
+custom_minimum_size = Vector2(170, 3)
 layout_mode = 2
 color = Color(0.95, 0.74, 0.14, 1)
 
+[node name="RoadMarker" type="Label" parent="RootControl/Pane/Margin/Content/HeaderBox/StroadDividers"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.74, 0.14, 1)
+theme_override_fonts/font = ExtResource("3_heading")
+theme_override_font_sizes/font_size = 12
+text = "◆"
+
+[node name="DividerRight" type="VBoxContainer" parent="RootControl/Pane/Margin/Content/HeaderBox/StroadDividers"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="StripeR1" type="ColorRect" parent="RootControl/Pane/Margin/Content/HeaderBox/StroadDividers/DividerRight"]
+custom_minimum_size = Vector2(170, 3)
+layout_mode = 2
+color = Color(0.95, 0.74, 0.14, 1)
+
+[node name="StripeR2" type="ColorRect" parent="RootControl/Pane/Margin/Content/HeaderBox/StroadDividers/DividerRight"]
+custom_minimum_size = Vector2(170, 3)
+layout_mode = 2
+color = Color(0.95, 0.74, 0.14, 1)
 [node name="MainPage" type="VBoxContainer" parent="RootControl/Pane/Margin/Content"]
 unique_name_in_owner = true
 layout_mode = 2
@@ -343,7 +404,7 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.92, 0.95, 0.98, 1)
 theme_override_fonts/font = ExtResource("4_body")
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 18
 text = "Hi, Mats. Welcome to America. You're trying to get around by foot, eh? Good luck...."
 horizontal_alignment = 1
 
@@ -372,11 +433,11 @@ theme_override_constants/v_separation = 4
 columns = 3
 
 [node name="Spacer00" type="Control" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/CameraCluster/CameraGrid"]
-custom_minimum_size = Vector2(30, 30)
+custom_minimum_size = Vector2(34, 34)
 layout_mode = 2
 
 [node name="KeyW" type="PanelContainer" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/CameraCluster/CameraGrid"]
-custom_minimum_size = Vector2(30, 30)
+custom_minimum_size = Vector2(34, 34)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleKey")
 
@@ -384,17 +445,17 @@ theme_override_styles/panel = SubResource("StyleKey")
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.96, 0.98, 1)
 theme_override_fonts/font = ExtResource("3_heading")
-theme_override_font_sizes/font_size = 14
-text = "w"
+theme_override_font_sizes/font_size = 16
+text = "W"
 horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Spacer02" type="Control" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/CameraCluster/CameraGrid"]
-custom_minimum_size = Vector2(30, 30)
+custom_minimum_size = Vector2(34, 34)
 layout_mode = 2
 
 [node name="KeyA" type="PanelContainer" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/CameraCluster/CameraGrid"]
-custom_minimum_size = Vector2(30, 30)
+custom_minimum_size = Vector2(34, 34)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleKey")
 
@@ -402,17 +463,17 @@ theme_override_styles/panel = SubResource("StyleKey")
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.96, 0.98, 1)
 theme_override_fonts/font = ExtResource("3_heading")
-theme_override_font_sizes/font_size = 14
-text = "a"
+theme_override_font_sizes/font_size = 16
+text = "A"
 horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Spacer11" type="Control" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/CameraCluster/CameraGrid"]
-custom_minimum_size = Vector2(30, 30)
+custom_minimum_size = Vector2(34, 34)
 layout_mode = 2
 
 [node name="KeyD" type="PanelContainer" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/CameraCluster/CameraGrid"]
-custom_minimum_size = Vector2(30, 30)
+custom_minimum_size = Vector2(34, 34)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleKey")
 
@@ -420,17 +481,17 @@ theme_override_styles/panel = SubResource("StyleKey")
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.96, 0.98, 1)
 theme_override_fonts/font = ExtResource("3_heading")
-theme_override_font_sizes/font_size = 14
-text = "d"
+theme_override_font_sizes/font_size = 16
+text = "D"
 horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Spacer20" type="Control" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/CameraCluster/CameraGrid"]
-custom_minimum_size = Vector2(30, 30)
+custom_minimum_size = Vector2(34, 34)
 layout_mode = 2
 
 [node name="KeyS" type="PanelContainer" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/CameraCluster/CameraGrid"]
-custom_minimum_size = Vector2(30, 30)
+custom_minimum_size = Vector2(34, 34)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleKey")
 
@@ -438,146 +499,151 @@ theme_override_styles/panel = SubResource("StyleKey")
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.96, 0.98, 1)
 theme_override_fonts/font = ExtResource("3_heading")
-theme_override_font_sizes/font_size = 14
-text = "s"
+theme_override_font_sizes/font_size = 16
+text = "S"
 horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Spacer22" type="Control" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/CameraCluster/CameraGrid"]
-custom_minimum_size = Vector2(30, 30)
+custom_minimum_size = Vector2(34, 34)
 layout_mode = 2
 
 [node name="CameraDesc" type="Label" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/CameraCluster"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.85, 0.88, 0.92, 1)
 theme_override_fonts/font = ExtResource("5_semibold")
-theme_override_font_sizes/font_size = 15
+theme_override_font_sizes/font_size = 18
 text = "change camera angle"
 vertical_alignment = 1
 
-[node name="MovementControlsCluster" type="HBoxContainer" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow"]
+[node name="MovementControlsCluster" type="VBoxContainer" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="MovementRow" type="HBoxContainer" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/MovementControlsCluster"]
 layout_mode = 2
 theme_override_constants/separation = 16
 alignment = 1
 
-[node name="MovementGrid" type="GridContainer" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/MovementControlsCluster"]
+[node name="MovementGrid" type="GridContainer" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/MovementControlsCluster/MovementRow"]
 layout_mode = 2
 theme_override_constants/h_separation = 4
 theme_override_constants/v_separation = 4
 columns = 3
 
-[node name="SpacerM00" type="Control" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/MovementControlsCluster/MovementGrid"]
-custom_minimum_size = Vector2(30, 30)
+[node name="SpacerM00" type="Control" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/MovementControlsCluster/MovementRow/MovementGrid"]
+custom_minimum_size = Vector2(34, 34)
 layout_mode = 2
 
-[node name="KeyUp" type="PanelContainer" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/MovementControlsCluster/MovementGrid"]
-custom_minimum_size = Vector2(30, 30)
+[node name="KeyUp" type="PanelContainer" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/MovementControlsCluster/MovementRow/MovementGrid"]
+custom_minimum_size = Vector2(34, 34)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleKey")
 
-[node name="Label" type="Label" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/MovementControlsCluster/MovementGrid/KeyUp"]
+[node name="Label" type="Label" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/MovementControlsCluster/MovementRow/MovementGrid/KeyUp"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.96, 0.98, 1)
 theme_override_fonts/font = ExtResource("3_heading")
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 16
 text = "^"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="SpacerM02" type="Control" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/MovementControlsCluster/MovementGrid"]
-custom_minimum_size = Vector2(30, 30)
+[node name="SpacerM02" type="Control" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/MovementControlsCluster/MovementRow/MovementGrid"]
+custom_minimum_size = Vector2(34, 34)
 layout_mode = 2
 
-[node name="KeyLeft" type="PanelContainer" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/MovementControlsCluster/MovementGrid"]
-custom_minimum_size = Vector2(30, 30)
+[node name="KeyLeft" type="PanelContainer" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/MovementControlsCluster/MovementRow/MovementGrid"]
+custom_minimum_size = Vector2(34, 34)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleKey")
 
-[node name="Label" type="Label" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/MovementControlsCluster/MovementGrid/KeyLeft"]
+[node name="Label" type="Label" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/MovementControlsCluster/MovementRow/MovementGrid/KeyLeft"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.96, 0.98, 1)
 theme_override_fonts/font = ExtResource("3_heading")
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 16
 text = "<"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="SpacerM11" type="Control" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/MovementControlsCluster/MovementGrid"]
-custom_minimum_size = Vector2(30, 30)
+[node name="SpacerM11" type="Control" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/MovementControlsCluster/MovementRow/MovementGrid"]
+custom_minimum_size = Vector2(34, 34)
 layout_mode = 2
 
-[node name="KeyRight" type="PanelContainer" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/MovementControlsCluster/MovementGrid"]
-custom_minimum_size = Vector2(30, 30)
+[node name="KeyRight" type="PanelContainer" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/MovementControlsCluster/MovementRow/MovementGrid"]
+custom_minimum_size = Vector2(34, 34)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleKey")
 
-[node name="Label" type="Label" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/MovementControlsCluster/MovementGrid/KeyRight"]
+[node name="Label" type="Label" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/MovementControlsCluster/MovementRow/MovementGrid/KeyRight"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.96, 0.98, 1)
 theme_override_fonts/font = ExtResource("3_heading")
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 16
 text = ">"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="SpacerM20" type="Control" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/MovementControlsCluster/MovementGrid"]
-custom_minimum_size = Vector2(30, 30)
+[node name="SpacerM20" type="Control" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/MovementControlsCluster/MovementRow/MovementGrid"]
+custom_minimum_size = Vector2(34, 34)
 layout_mode = 2
 
-[node name="KeyDown" type="PanelContainer" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/MovementControlsCluster/MovementGrid"]
-custom_minimum_size = Vector2(30, 30)
+[node name="KeyDown" type="PanelContainer" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/MovementControlsCluster/MovementRow/MovementGrid"]
+custom_minimum_size = Vector2(34, 34)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleKey")
 
-[node name="Label" type="Label" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/MovementControlsCluster/MovementGrid/KeyDown"]
+[node name="Label" type="Label" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/MovementControlsCluster/MovementRow/MovementGrid/KeyDown"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.96, 0.98, 1)
 theme_override_fonts/font = ExtResource("3_heading")
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 16
 text = "v"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="SpacerM22" type="Control" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/MovementControlsCluster/MovementGrid"]
-custom_minimum_size = Vector2(30, 30)
+[node name="SpacerM22" type="Control" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/MovementControlsCluster/MovementRow/MovementGrid"]
+custom_minimum_size = Vector2(34, 34)
 layout_mode = 2
 
-[node name="MovementDesc" type="Label" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/MovementControlsCluster"]
+[node name="MovementDesc" type="Label" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/MovementControlsCluster/MovementRow"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.85, 0.88, 0.92, 1)
 theme_override_fonts/font = ExtResource("5_semibold")
-theme_override_font_sizes/font_size = 15
+theme_override_font_sizes/font_size = 18
 text = "movement"
 vertical_alignment = 1
 
-[node name="SpacebarRow" type="HBoxContainer" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent"]
+[node name="SpacebarRow" type="HBoxContainer" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/MovementControlsCluster"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 16
 alignment = 1
 
-[node name="KeySpace" type="PanelContainer" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/SpacebarRow"]
-custom_minimum_size = Vector2(130, 30)
+[node name="KeySpace" type="PanelContainer" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/MovementControlsCluster/SpacebarRow"]
+custom_minimum_size = Vector2(110, 32)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleKey")
 
-[node name="KeySpaceLabel" type="Label" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/SpacebarRow/KeySpace"]
+[node name="KeySpaceLabel" type="Label" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/MovementControlsCluster/SpacebarRow/KeySpace"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.96, 0.98, 1)
 theme_override_fonts/font = ExtResource("3_heading")
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 15
 text = "spacebar"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="SpaceDesc" type="Label" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/SpacebarRow"]
+[node name="SpaceDesc" type="Label" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent/ClustersRow/MovementControlsCluster/SpacebarRow"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.85, 0.88, 0.92, 1)
 theme_override_fonts/font = ExtResource("5_semibold")
-theme_override_font_sizes/font_size = 15
-text = "jump/action"
+theme_override_font_sizes/font_size = 18
+text = "jump / action"
 vertical_alignment = 1
 
 [node name="SeeMoreRow" type="HBoxContainer" parent="RootControl/Pane/Margin/Content/MainPage/BasicControlsCard/BasicContent"]
@@ -593,7 +659,7 @@ theme_override_colors/font_hover_color = Color(1, 0.85, 0.25, 1)
 theme_override_colors/font_pressed_color = Color(0.95, 0.74, 0.14, 1)
 theme_override_colors/font_focus_color = Color(1, 1, 1, 1)
 theme_override_fonts/font = ExtResource("5_semibold")
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 16
 theme_override_styles/normal = SubResource("StyleSeeMoreNormal")
 theme_override_styles/hover = SubResource("StyleSeeMoreHover")
 theme_override_styles/pressed = SubResource("StyleSeeMorePressed")
@@ -605,7 +671,7 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.96, 0.82, 0.38, 0.95)
 theme_override_fonts/font = ExtResource("5_semibold")
-theme_override_font_sizes/font_size = 17
+theme_override_font_sizes/font_size = 20
 text = "\"The stroad to hell is paved....\""
 horizontal_alignment = 1
 
@@ -621,7 +687,7 @@ alignment = 1
 
 [node name="StartButton" type="Button" parent="RootControl/Pane/Margin/Content/MainPage/ActionSection/ButtonsRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(240, 48)
+custom_minimum_size = Vector2(260, 52)
 layout_mode = 2
 focus_neighbor_left = NodePath(".")
 focus_neighbor_top = NodePath(".")
@@ -637,7 +703,7 @@ theme_override_colors/font_hover_color = Color(0.06, 0.07, 0.09, 1)
 theme_override_colors/font_focus_color = Color(0.08, 0.09, 0.12, 1)
 theme_override_colors/font_disabled_color = Color(0.55, 0.52, 0.44, 1)
 theme_override_fonts/font = ExtResource("3_heading")
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 22
 theme_override_styles/normal = SubResource("StyleBtnNormal")
 theme_override_styles/hover = SubResource("StyleBtnHover")
 theme_override_styles/pressed = SubResource("StyleBtnPressed")
@@ -647,7 +713,7 @@ text = "START GAME"
 
 [node name="QuitButton" type="Button" parent="RootControl/Pane/Margin/Content/MainPage/ActionSection/ButtonsRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(160, 48)
+custom_minimum_size = Vector2(170, 52)
 layout_mode = 2
 focus_mode = 0
 mouse_default_cursor_shape = 2
@@ -656,7 +722,7 @@ theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
 theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_colors/font_focus_color = Color(1, 1, 1, 1)
 theme_override_fonts/font = ExtResource("3_heading")
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 22
 theme_override_styles/normal = SubResource("StyleQuitBtnNormal")
 theme_override_styles/hover = SubResource("StyleQuitBtnHover")
 theme_override_styles/pressed = SubResource("StyleQuitBtnPressed")
@@ -682,7 +748,7 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.74, 0.14, 1)
 theme_override_fonts/font = ExtResource("4_body")
-theme_override_font_sizes/font_size = 15
+theme_override_font_sizes/font_size = 18
 text = "Loading game world..."
 
 [node name="PromptLabel" type="Label" parent="RootControl/Pane/Margin/Content/MainPage/ActionSection"]
@@ -690,7 +756,7 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.58, 0.64, 0.72, 1)
 theme_override_fonts/font = ExtResource("4_body")
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 16
 text = "[ Press Space, Enter, or Esc to Play ]"
 horizontal_alignment = 1
 
@@ -704,7 +770,7 @@ theme_override_constants/separation = 14
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.74, 0.14, 1)
 theme_override_fonts/font = ExtResource("3_heading")
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 22
 text = "KEYBOARD CONTROLS"
 horizontal_alignment = 1
 
@@ -736,14 +802,14 @@ theme_override_styles/panel = SubResource("StyleKey")
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.96, 0.98, 1)
 theme_override_fonts/font = ExtResource("3_heading")
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 15
 text = "Arrow Keys"
 
 [node name="DescLabel" type="Label" parent="RootControl/Pane/Margin/Content/ControlsPage/FullControlsCard/FullControlsContent/Grid/ColWalk"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.85, 0.88, 0.92, 1)
 theme_override_fonts/font = ExtResource("4_body")
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 18
 text = "Walk / Move"
 
 [node name="ColCamRot" type="HBoxContainer" parent="RootControl/Pane/Margin/Content/ControlsPage/FullControlsCard/FullControlsContent/Grid"]
@@ -759,14 +825,14 @@ theme_override_styles/panel = SubResource("StyleKey")
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.96, 0.98, 1)
 theme_override_fonts/font = ExtResource("3_heading")
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 15
 text = "A / D"
 
 [node name="DescLabel" type="Label" parent="RootControl/Pane/Margin/Content/ControlsPage/FullControlsCard/FullControlsContent/Grid/ColCamRot"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.85, 0.88, 0.92, 1)
 theme_override_fonts/font = ExtResource("4_body")
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 18
 text = "Rotate Camera"
 
 [node name="ColJump" type="HBoxContainer" parent="RootControl/Pane/Margin/Content/ControlsPage/FullControlsCard/FullControlsContent/Grid"]
@@ -782,14 +848,14 @@ theme_override_styles/panel = SubResource("StyleKey")
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.96, 0.98, 1)
 theme_override_fonts/font = ExtResource("3_heading")
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 15
 text = "Space"
 
 [node name="DescLabel" type="Label" parent="RootControl/Pane/Margin/Content/ControlsPage/FullControlsCard/FullControlsContent/Grid/ColJump"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.85, 0.88, 0.92, 1)
 theme_override_fonts/font = ExtResource("4_body")
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 18
 text = "Hop / Ride Cart"
 
 [node name="ColCamTilt" type="HBoxContainer" parent="RootControl/Pane/Margin/Content/ControlsPage/FullControlsCard/FullControlsContent/Grid"]
@@ -805,14 +871,14 @@ theme_override_styles/panel = SubResource("StyleKey")
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.96, 0.98, 1)
 theme_override_fonts/font = ExtResource("3_heading")
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 15
 text = "W / S"
 
 [node name="DescLabel" type="Label" parent="RootControl/Pane/Margin/Content/ControlsPage/FullControlsCard/FullControlsContent/Grid/ColCamTilt"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.85, 0.88, 0.92, 1)
 theme_override_fonts/font = ExtResource("4_body")
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 18
 text = "Tilt Camera"
 
 [node name="ColEditor" type="HBoxContainer" parent="RootControl/Pane/Margin/Content/ControlsPage/FullControlsCard/FullControlsContent/Grid"]
@@ -828,14 +894,14 @@ theme_override_styles/panel = SubResource("StyleKey")
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.96, 0.98, 1)
 theme_override_fonts/font = ExtResource("3_heading")
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 15
 text = "C"
 
 [node name="DescLabel" type="Label" parent="RootControl/Pane/Margin/Content/ControlsPage/FullControlsCard/FullControlsContent/Grid/ColEditor"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.85, 0.88, 0.92, 1)
 theme_override_fonts/font = ExtResource("4_body")
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 18
 text = "Customizer"
 
 [node name="ColCamReset" type="HBoxContainer" parent="RootControl/Pane/Margin/Content/ControlsPage/FullControlsCard/FullControlsContent/Grid"]
@@ -851,15 +917,61 @@ theme_override_styles/panel = SubResource("StyleKey")
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.96, 0.98, 1)
 theme_override_fonts/font = ExtResource("3_heading")
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 15
 text = "R"
 
 [node name="DescLabel" type="Label" parent="RootControl/Pane/Margin/Content/ControlsPage/FullControlsCard/FullControlsContent/Grid/ColCamReset"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.85, 0.88, 0.92, 1)
 theme_override_fonts/font = ExtResource("4_body")
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 18
 text = "Reset Camera"
+
+[node name="ColPhone" type="HBoxContainer" parent="RootControl/Pane/Margin/Content/ControlsPage/FullControlsCard/FullControlsContent/Grid"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="KeyPhone" type="PanelContainer" parent="RootControl/Pane/Margin/Content/ControlsPage/FullControlsCard/FullControlsContent/Grid/ColPhone"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleKey")
+
+[node name="KeyLabel" type="Label" parent="RootControl/Pane/Margin/Content/ControlsPage/FullControlsCard/FullControlsContent/Grid/ColPhone/KeyPhone"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.96, 0.98, 1)
+theme_override_fonts/font = ExtResource("3_heading")
+theme_override_font_sizes/font_size = 15
+text = "A / Enter"
+
+[node name="DescLabel" type="Label" parent="RootControl/Pane/Margin/Content/ControlsPage/FullControlsCard/FullControlsContent/Grid/ColPhone"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.88, 0.92, 1)
+theme_override_fonts/font = ExtResource("4_body")
+theme_override_font_sizes/font_size = 18
+text = "Answer Phone"
+
+[node name="ColTime" type="HBoxContainer" parent="RootControl/Pane/Margin/Content/ControlsPage/FullControlsCard/FullControlsContent/Grid"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="KeyTime" type="PanelContainer" parent="RootControl/Pane/Margin/Content/ControlsPage/FullControlsCard/FullControlsContent/Grid/ColTime"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleKey")
+
+[node name="KeyLabel" type="Label" parent="RootControl/Pane/Margin/Content/ControlsPage/FullControlsCard/FullControlsContent/Grid/ColTime/KeyTime"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.96, 0.98, 1)
+theme_override_fonts/font = ExtResource("3_heading")
+theme_override_font_sizes/font_size = 15
+text = "N"
+
+[node name="DescLabel" type="Label" parent="RootControl/Pane/Margin/Content/ControlsPage/FullControlsCard/FullControlsContent/Grid/ColTime"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.88, 0.92, 1)
+theme_override_fonts/font = ExtResource("4_body")
+theme_override_font_sizes/font_size = 18
+text = "Time of Day"
 
 [node name="ColPause" type="HBoxContainer" parent="RootControl/Pane/Margin/Content/ControlsPage/FullControlsCard/FullControlsContent/Grid"]
 layout_mode = 2
@@ -874,14 +986,14 @@ theme_override_styles/panel = SubResource("StyleKey")
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.96, 0.98, 1)
 theme_override_fonts/font = ExtResource("3_heading")
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 15
 text = "Esc"
 
 [node name="DescLabel" type="Label" parent="RootControl/Pane/Margin/Content/ControlsPage/FullControlsCard/FullControlsContent/Grid/ColPause"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.85, 0.88, 0.92, 1)
 theme_override_fonts/font = ExtResource("4_body")
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 18
 text = "Pause Game"
 
 [node name="ColHelp" type="HBoxContainer" parent="RootControl/Pane/Margin/Content/ControlsPage/FullControlsCard/FullControlsContent/Grid"]
@@ -897,15 +1009,24 @@ theme_override_styles/panel = SubResource("StyleKey")
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.96, 0.98, 1)
 theme_override_fonts/font = ExtResource("3_heading")
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 15
 text = "H"
 
 [node name="DescLabel" type="Label" parent="RootControl/Pane/Margin/Content/ControlsPage/FullControlsCard/FullControlsContent/Grid/ColHelp"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.85, 0.88, 0.92, 1)
 theme_override_fonts/font = ExtResource("4_body")
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 18
 text = "Controls Screen"
+
+[node name="ErrandNote" type="Label" parent="RootControl/Pane/Margin/Content/ControlsPage/FullControlsCard/FullControlsContent"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.78, 0.86, 1)
+theme_override_fonts/font = ExtResource("4_body")
+theme_override_font_sizes/font_size = 15
+text = "Errand Loop: Mom calls with errands across the stroad. Press A or Enter to answer her call, reach the store to complete the errand, and build your OBJ score!"
+horizontal_alignment = 1
+autowrap_mode = 2
 
 [node name="ControlsActionSection" type="VBoxContainer" parent="RootControl/Pane/Margin/Content/ControlsPage"]
 layout_mode = 2
@@ -919,7 +1040,7 @@ alignment = 1
 
 [node name="ControlsBackButton" type="Button" parent="RootControl/Pane/Margin/Content/ControlsPage/ControlsActionSection/ControlsButtonsRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(160, 48)
+custom_minimum_size = Vector2(170, 52)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 theme_override_colors/font_color = Color(0.88, 0.91, 0.95, 1)
@@ -927,7 +1048,7 @@ theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
 theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_colors/font_focus_color = Color(1, 1, 1, 1)
 theme_override_fonts/font = ExtResource("3_heading")
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 22
 theme_override_styles/normal = SubResource("StyleQuitBtnNormal")
 theme_override_styles/hover = SubResource("StyleQuitBtnHover")
 theme_override_styles/pressed = SubResource("StyleQuitBtnPressed")
@@ -936,7 +1057,7 @@ text = "BACK"
 
 [node name="ControlsResumeButton" type="Button" parent="RootControl/Pane/Margin/Content/ControlsPage/ControlsActionSection/ControlsButtonsRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(240, 48)
+custom_minimum_size = Vector2(260, 52)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 theme_override_colors/font_color = Color(0.08, 0.09, 0.12, 1)
@@ -945,7 +1066,7 @@ theme_override_colors/font_hover_color = Color(0.06, 0.07, 0.09, 1)
 theme_override_colors/font_focus_color = Color(0.08, 0.09, 0.12, 1)
 theme_override_colors/font_disabled_color = Color(0.55, 0.52, 0.44, 1)
 theme_override_fonts/font = ExtResource("3_heading")
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 22
 theme_override_styles/normal = SubResource("StyleBtnNormal")
 theme_override_styles/hover = SubResource("StyleBtnHover")
 theme_override_styles/pressed = SubResource("StyleBtnPressed")
@@ -958,6 +1079,6 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.58, 0.64, 0.72, 1)
 theme_override_fonts/font = ExtResource("4_body")
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 16
 text = "[ Press H or Esc to Close ]"
 horizontal_alignment = 1

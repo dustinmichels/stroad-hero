@@ -1,7 +1,11 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://ui/hud.gd" id="1_hud"]
-
+[ext_resource type="PackedScene" path="res://ui/phone_call.tscn" id="2_phone_call"]
+[ext_resource type="Script" path="res://ui/objective_triangle.gd" id="3_triangle"]
+[ext_resource type="FontFile" path="res://fonts/Overpass-SemiBold.ttf" id="4_font_semibold"]
+[ext_resource type="Script" path="res://ui/objective_arrow.gd" id="5_arrow"]
+[ext_resource type="Script" path="res://ui/objective_toast.gd" id="6_toast"]
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hud"]
 content_margin_left = 16.0
 content_margin_top = 10.0
@@ -18,24 +22,46 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_obj"]
+content_margin_left = 16.0
+content_margin_top = 10.0
+content_margin_right = 16.0
+content_margin_bottom = 10.0
+bg_color = Color(0.08, 0.1, 0.13, 0.85)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.2, 0.85, 0.35, 0.8)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1_hud")
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 offset_left = 20.0
 offset_top = 20.0
-offset_right = 240.0
-offset_bottom = 90.0
+offset_right = 500.0
+offset_bottom = 120.0
 
-[node name="PanelContainer" type="PanelContainer" parent="MarginContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer"]
 layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="PanelContainer" type="PanelContainer" parent="MarginContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_hud")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/PanelContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/HBoxContainer/PanelContainer"]
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="SpdLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer"]
+[node name="SpdLabel" type="Label" parent="MarginContainer/HBoxContainer/PanelContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.95, 0.95, 1)
@@ -44,13 +70,65 @@ theme_override_constants/outline_size = 4
 theme_override_font_sizes/font_size = 28
 text = "SPD: 0"
 
-[node name="DescLabel" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer"]
+[node name="DescLabel" type="Label" parent="MarginContainer/HBoxContainer/PanelContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.85, 0.65, 0.65, 0.9)
 theme_override_font_sizes/font_size = 12
 text = "Senseless Pedestrian Deaths"
 
+[node name="ObjVBoxContainer" type="VBoxContainer" parent="MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_constants/separation = 6
+
+[node name="ObjPanelContainer" type="PanelContainer" parent="MarginContainer/HBoxContainer/ObjVBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_obj")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/HBoxContainer/ObjVBoxContainer/ObjPanelContainer"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="ObjLabel" type="Label" parent="MarginContainer/HBoxContainer/ObjVBoxContainer/ObjPanelContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 1, 0.95, 1)
+theme_override_colors/font_outline_color = Color(0.05, 0.18, 0.08, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 28
+text = "OBJ: 0"
+
+[node name="ObjDescLabel" type="Label" parent="MarginContainer/HBoxContainer/ObjVBoxContainer/ObjPanelContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.85, 0.7, 0.9)
+theme_override_font_sizes/font_size = 12
+text = "Errands Completed"
+
+[node name="ObjectiveLine" type="HBoxContainer" parent="MarginContainer/HBoxContainer/ObjVBoxContainer"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="ObjectiveTriangle" type="Control" parent="MarginContainer/HBoxContainer/ObjVBoxContainer/ObjectiveLine"]
+custom_minimum_size = Vector2(10, 14)
+layout_mode = 2
+size_flags_vertical = 4
+script = ExtResource("3_triangle")
+
+[node name="CurrentObjectiveLabel" type="Label" parent="MarginContainer/HBoxContainer/ObjVBoxContainer/ObjectiveLine"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 1, 0.95, 1)
+theme_override_colors/font_outline_color = Color(0.05, 0.18, 0.08, 1)
+theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("4_font_semibold")
+theme_override_font_sizes/font_size = 14
+text = "Get cough syrup at Walgroins"
 
 [node name="ActionLabel" type="Label" parent="."]
 unique_name_in_owner = true
@@ -72,3 +150,30 @@ theme_override_constants/outline_size = 4
 theme_override_font_sizes/font_size = 22
 text = "Space for Action"
 horizontal_alignment = 2
+
+[node name="PhoneCall" parent="." instance=ExtResource("2_phone_call")]
+
+[node name="ObjectiveArrow" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("5_arrow")
+
+[node name="ObjectiveToast" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("6_toast")

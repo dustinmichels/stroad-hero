@@ -7,6 +7,8 @@ extends Node3D
 @onready var world_env: WorldEnvironment = get_node_or_null("WorldEnvironment")
 @onready var sun_light: DirectionalLight3D = get_node_or_null("DirectionalLight3D")
 @onready var streetlights_node: Node3D = get_node_or_null("Props/Streetlights")
+var _baked_streetlights_unlit_mesh: Mesh = null
+var _baked_streetlights_lit_mesh: Mesh = null
 var _day_captured: bool = false
 var _day_sky_top: Color = Color(0.35, 0.55, 0.85, 1.0)
 var _day_sky_horizon: Color = Color(0.68, 0.75, 0.82, 1.0)
@@ -66,7 +68,26 @@ var _saw_gap_merge: bool = false
 var _saw_follower_yield: bool = false
 var _mats_testing: bool = false
 var _mats_start_frame: int = 0
+var _mats_squash_frames: int = 0
 var _mats_stage: int = 0
+var _cart_test_stage: int = 0
+var _cart_test_cart: ShoppingCart = null
+var _cart_test_angles: Array[float] = [0.0, PI, PI / 2.0, -PI / 2.0]
+var _cart_test_angle_idx: int = 0
+var _cart_test_rolling: bool = false
+var _cart_prev_rot_y: float = 0.0
+var _col_test_stage: int = 0
+var _col_test_lane: int = 0
+var _col_test_initial_spd: int = 0
+var _col_test_wait: int = 0
+var _col_test_car: Car = null
+const COL_LANE_CONFIGS: Array[Dictionary] = [
+	{"lane_id": 0, "z": -5.6, "dir": -1.0, "car_x": 12.0, "mats_x": 0.0},
+	{"lane_id": 1, "z": -1.9, "dir": -1.0, "car_x": 12.0, "mats_x": 0.0},
+	{"lane_id": 2, "z": 1.9, "dir": 1.0, "car_x": -12.0, "mats_x": 0.0},
+	{"lane_id": 3, "z": 5.6, "dir": 1.0, "car_x": -12.0, "mats_x": 0.0},
+]
+
 var _saw_lc_cruising: bool = false
 var _saw_lc_decision: bool = false
 var _saw_lc_braking: bool = false
@@ -132,16 +153,21 @@ func _update_streetlights(enabled: bool) -> void:
 	var bulb_mat := _get_lamp_bulb_on_mat()
 	var baked_mmi := sl.get_node_or_null("BakedMultiMesh") as MultiMeshInstance3D
 	if baked_mmi and baked_mmi.multimesh and baked_mmi.multimesh.mesh:
-		var m: Mesh = baked_mmi.multimesh.mesh
-		for s in range(m.get_surface_count()):
-			var orig_mat := m.surface_get_material(s)
-			if (
-				orig_mat is StandardMaterial3D
-				and orig_mat.albedo_color.r > 0.85
-				and orig_mat.metallic < 0.2
-			):
-				baked_mmi.set_surface_override_material(s, bulb_mat if enabled else null)
-
+		if _baked_streetlights_unlit_mesh == null:
+			_baked_streetlights_unlit_mesh = baked_mmi.multimesh.mesh
+			var lit_mesh := _baked_streetlights_unlit_mesh.duplicate() as Mesh
+			for s in range(lit_mesh.get_surface_count()):
+				var orig_mat := _baked_streetlights_unlit_mesh.surface_get_material(s)
+				if (
+					orig_mat is StandardMaterial3D
+					and orig_mat.albedo_color.r > 0.85
+					and orig_mat.metallic < 0.2
+				):
+					lit_mesh.surface_set_material(s, bulb_mat)
+			_baked_streetlights_lit_mesh = lit_mesh
+		baked_mmi.multimesh.mesh = (
+			_baked_streetlights_lit_mesh if enabled else _baked_streetlights_unlit_mesh
+		)
 	for lamp in sl.get_children():
 		if lamp is MultiMeshInstance3D:
 			continue
@@ -297,6 +323,41 @@ func _ready() -> void:
 		_test_car.rotation.y = -PI / 2.0  # facing +Z
 		_test_car._update_blocker_layer()
 		mats.global_position = Vector3(9.0, 0.5, -13.0)
+	if "--test-mats-walk" in _user_args:
+		# Place Mats on flat sidewalk/road, clear velocity, ready for walk cycle test
+		mats.global_position = Vector3(9.0, 0.0, -15.0)
+		mats.velocity = Vector3(0.0, 0.0, mats.walk_speed)
+	if "--test-mats-cart" in _user_args:
+		_cart_test_cart = (
+			get_node_or_null("Props/WalgroinsShoppingCarts/Cart_Abandoned_WestApron")
+			as ShoppingCart
+		)
+		assert(_cart_test_cart != null, "ShoppingCart not found in scene")
+		_cart_test_cart.global_position = Vector3(9.0, 0.0, -15.0)
+		_cart_test_cart.global_basis = Basis()
+		_cart_test_cart._current_speed = 0.0
+		_cart_test_stage = 0
+		_test_frames = 0
+		_cart_test_setup()
+	if "--test-mats-collision" in _user_args:
+		mats.blood_linger_delay = 0.02
+		mats.fade_duration = 0.02
+		mats.spd_emphasis_duration = 0.02
+		var hud_node: HUD = get_tree().get_first_node_in_group("hud") as HUD
+		if hud_node:
+			_col_test_initial_spd = hud_node.spd_count
+		var tm = $TrafficManager
+		if tm:
+			for lane in tm.lanes:
+				lane.spawn_timer = 999.0
+				for c in lane.cars:
+					if is_instance_valid(c):
+						c.queue_free()
+				lane.cars.clear()
+		_col_test_stage = 0
+		_test_frames = 0
+		mats.global_position = Vector3(16.0, 0.10, 7.1)
+		mats.velocity = Vector3(0.0, 0.0, 4.0)
 	if "--test-merge-reentry" in _user_args:
 		var traffic_mgr = $TrafficManager
 		assert(
@@ -1249,6 +1310,818 @@ func _ready() -> void:
 		)
 		get_tree().quit(0)
 		return
+	if "--test-objective-manager" in _user_args:
+		var obj_mgr: ObjectiveManager = $ObjectiveManager
+		assert(obj_mgr != null, "ObjectiveManager must exist")
+		assert(obj_mgr._is_test_mode() == true, "Must detect --test-* flag")
+		obj_mgr._setup()
+		assert(
+			obj_mgr.current_state == ObjectiveManager.State.RINGING,
+			"Must ring immediately in test mode"
+		)
+		assert(
+			obj_mgr.current_errand != null and obj_mgr.current_errand.id == &"cough_syrup",
+			"First errand must be cough_syrup"
+		)
+		# 2. First errand is always cough_syrup and targets Walgroins (north)
+		assert(obj_mgr.completed_count == 0)
+		assert(obj_mgr.current_errand.id == &"cough_syrup")
+		assert(obj_mgr.current_errand.store_name == "Walgroins")
+		var target_pos = obj_mgr.get_target_position(obj_mgr.current_errand)
+		assert(target_pos.z < 0.0, "Walgroins target z must be North (negative z)")
+		# 3. _pick_next() tests:
+		# Case A: Mats at North (z = -30.0), last_completed = cough_syrup -> opposite side candidate is Booger King (hamburgers)
+		mats.global_position = Vector3(0.0, 0.0, -30.0)
+		obj_mgr.last_completed_errand = obj_mgr.get_errand_by_id(&"cough_syrup")
+		var next_errand = obj_mgr._pick_next()
+		assert(
+			next_errand.id == &"hamburgers",
+			"Must pick hamburgers when Mats is North and last was cough_syrup"
+		)
+
+		# Case B: Mats at South (z = 30.0), last_completed = hamburgers -> opposite side candidates are cough_syrup & milk
+		mats.global_position = Vector3(0.0, 0.0, 30.0)
+		obj_mgr.last_completed_errand = obj_mgr.get_errand_by_id(&"hamburgers")
+		for _i in range(20):
+			var picked = obj_mgr._pick_next()
+			assert(
+				picked.id == &"cough_syrup" or picked.id == &"milk",
+				"Must pick North errand (cough_syrup or milk)"
+			)
+			assert(picked.id != &"hamburgers", "Must exclude last completed errand")
+
+		# Case C: Mats at South (z = 30.0), last_completed = cough_syrup -> opposite side candidate excluding cough_syrup is milk
+		mats.global_position = Vector3(0.0, 0.0, 30.0)
+		obj_mgr.last_completed_errand = obj_mgr.get_errand_by_id(&"cough_syrup")
+		next_errand = obj_mgr._pick_next()
+		assert(
+			next_errand.id == &"milk",
+			"Must pick milk when cough_syrup is excluded on opposite side"
+		)
+
+		# Case D: Fallback when no candidates remain on opposite side:
+		# Mats at North (z = -30.0), last_completed = hamburgers. Opposite candidate is hamburgers, which is excluded.
+		mats.global_position = Vector3(0.0, 0.0, -30.0)
+		obj_mgr.last_completed_errand = obj_mgr.get_errand_by_id(&"hamburgers")
+		next_errand = obj_mgr._pick_next()
+		assert(
+			next_errand.id == &"cough_syrup" or next_errand.id == &"milk",
+			"Must fall back to any errand except last one"
+		)
+		assert(next_errand.id != &"hamburgers", "Fallback must exclude last completed errand")
+		# 4. Completion delay test:
+		obj_mgr.current_state = ObjectiveManager.State.ACTIVE
+		obj_mgr.current_errand = obj_mgr.get_errand_by_id(&"cough_syrup")
+		var count_before = obj_mgr.completed_count
+		obj_mgr.complete_objective()
+		assert(obj_mgr.completed_count == count_before + 1, "completed_count must increment")
+		assert(
+			obj_mgr.current_state == ObjectiveManager.State.IDLE,
+			"Must transition to IDLE after complete"
+		)
+		assert(is_equal_approx(obj_mgr.next_call_delay, 4.0), "next_call_delay must be 4.0s")
+		assert(is_equal_approx(obj_mgr._call_timer, 4.0), "Must schedule next call with 4.0s delay")
+		# Advance timer
+		obj_mgr._process(4.1)
+		assert(obj_mgr.current_state == ObjectiveManager.State.RINGING, "Must ring after 4s delay")
+		assert(obj_mgr.current_errand != null, "Next errand must be picked")
+		assert(obj_mgr._call_timer == -1.0, "Timer must be reset after starting call")
+
+		# Start trigger with StartScreen simulation
+		var dummy_mgr = ObjectiveManager.new()
+		add_child(dummy_mgr)
+		assert(dummy_mgr._started_once == false)
+		dummy_mgr._on_start_screen_started()
+		assert(dummy_mgr._started_once == true)
+		assert(is_equal_approx(dummy_mgr._call_timer, dummy_mgr.initial_call_delay))
+		# Second started signal (e.g. from H pause/resume) must NOT overwrite timer
+		dummy_mgr._call_timer = 1.5
+		dummy_mgr._on_start_screen_started()
+		assert(
+			is_equal_approx(dummy_mgr._call_timer, 1.5),
+			"Subsequent started events must not overwrite timer"
+		)
+		dummy_mgr.queue_free()
+		# 5. Arrival detection tests:
+		obj_mgr.current_state = ObjectiveManager.State.ACTIVE
+		obj_mgr.current_errand = obj_mgr.get_errand_by_id(&"cough_syrup")
+		var walgroins_pos = obj_mgr.get_target_position(obj_mgr.current_errand)
+		var count_at_arrival = obj_mgr.completed_count
+
+		# Outside arrival radius: dist_xz = 5.0 > 2.5
+		mats.global_position = walgroins_pos + Vector3(5.0, 0.0, 0.0)
+		obj_mgr._physics_process(0.016)
+		assert(
+			obj_mgr.completed_count == count_at_arrival,
+			"Must not complete when outside arrive_radius"
+		)
+		assert(obj_mgr.current_state == ObjectiveManager.State.ACTIVE)
+
+		# Inside arrival radius, but Mats is dead
+		mats.global_position = walgroins_pos + Vector3(1.0, 0.0, 0.0)
+		obj_mgr._on_mats_died(mats.global_position)
+		assert(obj_mgr._is_mats_dead == true)
+		obj_mgr._physics_process(0.016)
+		assert(
+			obj_mgr.completed_count == count_at_arrival,
+			"Must not complete arrival while Mats is dead"
+		)
+
+		# Mats respawns: arrival should complete
+		obj_mgr._on_mats_respawned()
+		assert(obj_mgr._is_mats_dead == false)
+		mats.died.emit(mats.global_position)
+		assert(obj_mgr._is_mats_dead == true, "mats.died signal must pause arrival checks")
+		mats.respawned.emit()
+		assert(obj_mgr._is_mats_dead == false, "mats.respawned signal must resume arrival checks")
+		# Test horizontal XZ distance: large Y offset should still count as arrived if XZ is close
+		mats.global_position = walgroins_pos + Vector3(1.0, 10.0, 1.0)  # XZ dist = sqrt(2) ≈ 1.414 < 2.5
+		obj_mgr._physics_process(0.016)
+		assert(
+			obj_mgr.completed_count == count_at_arrival + 1,
+			"Must complete arrival using horizontal XZ distance"
+		)
+		assert(obj_mgr.current_state == ObjectiveManager.State.IDLE)
+
+		# Test: Mats already standing inside arrive radius when errand starts allows instant completion
+		obj_mgr.current_state = ObjectiveManager.State.ACTIVE
+		obj_mgr.current_errand = obj_mgr.get_errand_by_id(&"cough_syrup")
+		mats.global_position = walgroins_pos + Vector3(0.5, 0.0, 0.5)
+		var count_before_instant = obj_mgr.completed_count
+		obj_mgr._physics_process(0.016)
+		assert(
+			obj_mgr.completed_count == count_before_instant + 1,
+			"Mats already standing inside arrive_radius when errand starts must allow instant completion"
+		)
+		assert(obj_mgr.current_state == ObjectiveManager.State.IDLE)
+
+		# 6. Phone call UI tests:
+		var hud = $HUD
+		assert(hud != null, "HUD must exist")
+		var phone_call = hud.phone_call
+		assert(phone_call != null, "PhoneCall must be instanced under HUD")
+		assert(phone_call is PhoneCall, "phone_call must be of type PhoneCall")
+		phone_call.set_objective_manager(obj_mgr)
+		hud.set_objective_manager(obj_mgr)
+
+		# 6a. HUD OBJ counter and objective line initial state:
+		assert(hud.obj_label != null, "HUD must have obj_label")
+		assert(hud.obj_label.text == "OBJ: 0", "HUD must show OBJ: 0 initially")
+		assert(hud.obj_desc_label != null, "HUD must have obj_desc_label")
+		assert(hud.obj_desc_label.text == "Errands Completed", "HUD must show Errands Completed")
+		assert(hud.objective_line != null, "HUD must have objective_line")
+		assert(
+			hud.objective_line.visible == false,
+			"Objective line must be hidden when no objective active"
+		)
+		var obj_style: StyleBoxFlat = hud.obj_panel_container.get_theme_stylebox("panel")
+		assert(obj_style != null, "StyleBoxFlat must be set on OBJ panel")
+		assert(
+			obj_style.border_color.g > 0.7 and obj_style.border_color.r < 0.3,
+			"OBJ panel border must be green"
+		)
+		var tri: Control = hud.objective_line.get_node_or_null("ObjectiveTriangle")
+		assert(tri != null, "ObjectiveLine must contain ObjectiveTriangle")
+		assert(tri.has_method("_draw"), "ObjectiveTriangle must have _draw()")
+		tri.queue_redraw()
+		hud.set_obj(3)
+		assert(
+			hud.obj_count == 3 and hud.obj_label.text == "OBJ: 3",
+			"set_obj must update count and label"
+		)
+		hud.increment_obj()
+		assert(
+			hud.obj_count == 4 and hud.obj_label.text == "OBJ: 4",
+			"increment_obj must update count and label"
+		)
+		hud.set_obj(0)
+		# Verify HUD styling match
+		var ring_style: StyleBoxFlat = phone_call.ringing_panel.get_theme_stylebox("panel")
+		assert(ring_style != null, "StyleBoxFlat must be set on ringing panel")
+		assert(
+			ring_style.bg_color == Color(0.08, 0.1, 0.13, 0.85), "bg_color must match HUD dark bg"
+		)
+		assert(ring_style.corner_radius_top_left == 8, "corner radius must be 8")
+		assert(
+			ring_style.border_color.g > 0.7 and ring_style.border_color.r < 0.3,
+			"border must be green"
+		)
+		var caller_font: Font = phone_call.caller_label.get_theme_font("font")
+		assert(
+			caller_font != null and "Overpass" in caller_font.resource_path,
+			"Must use Overpass font"
+		)
+		var dialogue_font: Font = phone_call.dialogue_label.get_theme_font("font")
+		assert(
+			dialogue_font != null and "Overpass" in dialogue_font.resource_path,
+			"Must use Overpass font"
+		)
+
+		# Test ringing UI state:
+		obj_mgr.start_call(obj_mgr.get_errand_by_id(&"cough_syrup"))
+		assert(phone_call.is_ringing == true, "PhoneCall must be ringing")
+		assert(phone_call.visible == true, "PhoneCall must be visible")
+		assert(phone_call.ringing_panel.visible == true, "RingingPanel must be visible")
+		assert(
+			phone_call.in_call_panel.visible == false, "InCallPanel must be hidden while ringing"
+		)
+		assert(phone_call.caller_label.text == "MOM", "Caller must be MOM")
+		assert(phone_call.prompt_label.text == "[A] Answer", "Prompt must be [A] Answer")
+		assert(
+			phone_call._shake_tween != null and phone_call._shake_tween.is_valid(),
+			"Shake tween must be active while ringing"
+		)
+		phone_call.phone_icon.queue_redraw()
+		# Test answering call & in-call dialogue state:
+		phone_call.answer()
+		assert(obj_mgr.current_state == ObjectiveManager.State.IN_CALL, "Manager must be IN_CALL")
+		assert(phone_call.is_in_call == true, "PhoneCall must be in_call")
+		assert(phone_call.ringing_panel.visible == false, "RingingPanel must be hidden")
+		assert(phone_call.in_call_panel.visible == true, "InCallPanel must be visible")
+		assert(phone_call.speaker_label.text == "Mom", "Speaker label must be Mom")
+		assert(
+			phone_call.dialogue_label.text == obj_mgr.current_errand.call_line,
+			"Dialogue text must match errand call_line"
+		)
+		assert(
+			phone_call._typewriter_tween != null and phone_call._typewriter_tween.is_valid(),
+			"Typewriter tween must be active"
+		)
+		phone_call._finish_typewriter()
+		assert(
+			phone_call.dialogue_label.visible_ratio == 1.0, "visible_ratio must be 1.0 after finish"
+		)
+
+		# Test dismissal of dialogue:
+		assert(phone_call.ok_prompt_label.text == "[A] OK", "Prompt must be [A] OK")
+		var dismissed := [false]
+		phone_call.call_dismissed.connect(func(): dismissed[0] = true)
+		phone_call.dismiss()
+		assert(dismissed[0] == true, "call_dismissed must be emitted on dismiss")
+		assert(
+			obj_mgr.current_state == ObjectiveManager.State.ACTIVE,
+			"Manager must transition to ACTIVE"
+		)
+		assert(phone_call.visible == false, "PhoneCall must be hidden after dismiss")
+		assert(phone_call.is_in_call == false, "is_in_call must be false")
+		assert(
+			hud.objective_line.visible == true,
+			"Objective line must be visible when objective is active"
+		)
+		assert(
+			hud.current_objective_label.text == "Get cough syrup at Walgroins",
+			"Objective line text must match current objective"
+		)
+
+		# Test completion hides objective line:
+		obj_mgr.complete_objective()
+		assert(
+			hud.objective_line.visible == false, "Objective line must hide when objective completed"
+		)
+
+		# Test _unhandled_input handling:
+		# 1. When hidden, input is ignored
+		var test_ev := InputEventKey.new()
+		test_ev.pressed = true
+		test_ev.keycode = KEY_A
+		test_ev.physical_keycode = KEY_A
+		phone_call._unhandled_input(test_ev)
+		assert(phone_call.visible == false, "Input while hidden must be ignored")
+
+		# 2. Ringing: input answers call
+		obj_mgr.current_state = ObjectiveManager.State.IDLE
+		obj_mgr.start_call(obj_mgr.get_errand_by_id(&"cough_syrup"))
+		assert(phone_call.is_ringing == true)
+		phone_call._unhandled_input(test_ev)
+		assert(phone_call.is_in_call == true, "_unhandled_input must answer ringing call")
+		assert(obj_mgr.current_state == ObjectiveManager.State.IN_CALL)
+
+		# 3. In-call: first input finishes typewriter if running
+		phone_call.dialogue_label.visible_ratio = 0.2
+		phone_call._unhandled_input(test_ev)
+		assert(
+			phone_call.dialogue_label.visible_ratio == 1.0,
+			"Input must finish typewriter if animating"
+		)
+		assert(phone_call.is_in_call == true)
+
+		# 4. In-call: second input dismisses call
+		phone_call._unhandled_input(test_ev)
+		assert(phone_call.visible == false, "Input must dismiss call when typewriter complete")
+		assert(obj_mgr.current_state == ObjectiveManager.State.ACTIVE)
+
+		# 5. answer_phone ActionMap test:
+		assert(InputMap.has_action("answer_phone"), "InputMap must define answer_phone")
+		var enter_ev := InputEventKey.new()
+		enter_ev.pressed = true
+		enter_ev.physical_keycode = KEY_ENTER
+		assert(enter_ev.is_action_pressed("answer_phone"), "Enter must trigger answer_phone")
+		var joy_ev := InputEventJoypadButton.new()
+		joy_ev.pressed = true
+		joy_ev.button_index = JOY_BUTTON_A
+		assert(joy_ev.is_action_pressed("answer_phone"), "Gamepad A must trigger answer_phone")
+		obj_mgr.current_state = ObjectiveManager.State.IDLE
+		obj_mgr.start_call(obj_mgr.get_errand_by_id(&"cough_syrup"))
+		assert(phone_call.is_ringing == true)
+		phone_call._unhandled_input(joy_ev)
+		assert(phone_call.is_in_call == true, "Must answer via answer_phone action")
+		phone_call.dismiss()
+
+		# Test: Don't ring while StartScreen is open or tree is paused
+		var start_screen_node = get_node_or_null("StartScreen")
+		obj_mgr.current_state = ObjectiveManager.State.IDLE
+		obj_mgr._call_timer = 1.0
+		if start_screen_node:
+			start_screen_node.visible = true
+			obj_mgr._process(2.0)
+			assert(
+				obj_mgr.current_state == ObjectiveManager.State.IDLE,
+				"Must not ring while StartScreen is visible"
+			)
+			assert(
+				obj_mgr._call_timer == 1.0,
+				"Call timer must not advance while StartScreen is visible"
+			)
+			start_screen_node.visible = false
+
+		# Don't ring while tree is paused
+		get_tree().paused = true
+		obj_mgr.start_call(obj_mgr.get_errand_by_id(&"cough_syrup"))
+		assert(
+			obj_mgr.current_state == ObjectiveManager.State.IDLE,
+			"Must not ring while tree is paused"
+		)
+		get_tree().paused = false
+
+		# Opening start screen / pause mid-call does not break state machine
+		obj_mgr.start_call(obj_mgr.get_errand_by_id(&"cough_syrup"))
+		assert(obj_mgr.current_state == ObjectiveManager.State.RINGING)
+		phone_call.answer()
+		assert(obj_mgr.current_state == ObjectiveManager.State.IN_CALL)
+		# Simulate pause mid-call
+		get_tree().paused = true
+		assert(
+			obj_mgr.current_state == ObjectiveManager.State.IN_CALL,
+			"State must remain IN_CALL while paused"
+		)
+		phone_call._unhandled_input(test_ev)
+		assert(
+			obj_mgr.current_state == ObjectiveManager.State.IN_CALL,
+			"Input while paused must be ignored"
+		)
+		get_tree().paused = false
+		phone_call.dismiss()
+		assert(obj_mgr.current_state == ObjectiveManager.State.ACTIVE)
+		obj_mgr.complete_objective()
+		# 6. FollowCamera ignores camera_left during phone call:
+		var cam := get_node_or_null("Camera3D") as FollowCamera
+		if cam:
+			obj_mgr.current_state = ObjectiveManager.State.RINGING
+			assert(
+				obj_mgr.is_call_showing() == true,
+				"ObjectiveManager must report call showing when ringing"
+			)
+			assert(
+				cam._is_phone_call_showing() == true, "Camera must detect ringing call via group"
+			)
+			obj_mgr.current_state = ObjectiveManager.State.IN_CALL
+			assert(
+				obj_mgr.is_call_showing() == true,
+				"ObjectiveManager must report call showing when in call"
+			)
+			assert(
+				cam._is_phone_call_showing() == true, "Camera must detect in-call state via group"
+			)
+			obj_mgr.current_state = ObjectiveManager.State.ACTIVE
+			assert(
+				obj_mgr.is_call_showing() == false,
+				"ObjectiveManager must not report call showing when active"
+			)
+			assert(
+				cam._is_phone_call_showing() == false,
+				"Camera must not report call showing when active"
+			)
+			obj_mgr.current_state = ObjectiveManager.State.IDLE
+			assert(
+				cam._is_phone_call_showing() == false,
+				"Camera must not report call showing when idle"
+			)
+		# 7. World marker (ObjectiveMarker) tests:
+		obj_mgr.current_state = ObjectiveManager.State.IDLE
+		obj_mgr.start_call(obj_mgr.get_errand_by_id(&"cough_syrup"))
+		obj_mgr.answer_call()
+		obj_mgr.dismiss_call()
+		assert(obj_mgr.current_state == ObjectiveManager.State.ACTIVE)
+		assert(
+			obj_mgr.current_marker != null, "ObjectiveMarker must be spawned on active objective"
+		)
+		var marker: ObjectiveMarker = obj_mgr.current_marker
+		assert(marker is ObjectiveMarker, "current_marker must be of type ObjectiveMarker")
+		assert(marker.is_inside_tree(), "ObjectiveMarker must be added to scene tree")
+		var expected_pos := obj_mgr.get_target_position(obj_mgr.current_errand)
+		var dist_xz := (
+			Vector2(
+				marker.global_position.x - expected_pos.x, marker.global_position.z - expected_pos.z
+			)
+			. length()
+		)
+		assert(dist_xz < 0.1, "Marker XZ position must match errand target position")
+		assert(
+			is_zero_approx(marker.global_position.y),
+			"Marker ground position Y must be at ground level (0.0)"
+		)
+		# Cone checks:
+		assert(marker.cone_mesh != null and marker.cone_mesh.mesh is CylinderMesh)
+		var cyl_mesh: CylinderMesh = marker.cone_mesh.mesh
+		assert(is_zero_approx(cyl_mesh.top_radius), "Cone mesh top_radius must be 0")
+		assert(is_equal_approx(marker.cone_mesh.rotation.x, PI), "Cone mesh must point downwards")
+		assert(is_equal_approx(marker.base_cone_height, 6.0), "base_cone_height must be 6.0m")
+		var init_y := marker.cone_pivot.position.y
+		var init_rot := marker.cone_pivot.rotation.y
+		marker._process(0.3)
+		assert(
+			not is_equal_approx(marker.cone_pivot.position.y, init_y),
+			"Cone pivot must bob with sine wave"
+		)
+		assert(
+			not is_equal_approx(marker.cone_pivot.rotation.y, init_rot),
+			"Cone pivot must rotate over time"
+		)
+		assert(
+			marker.cone_material.shading_mode == BaseMaterial3D.SHADING_MODE_UNSHADED,
+			"Cone material must be unshaded"
+		)
+		assert(marker.cone_material.albedo_color.g > 0.8, "Cone must be green")
+
+		# Ground ring checks:
+		assert(marker.ground_ring != null and marker.ground_ring.mesh is TorusMesh)
+		var torus_mesh: TorusMesh = marker.ground_ring.mesh
+		assert(
+			is_equal_approx(torus_mesh.outer_radius, obj_mgr.arrive_radius),
+			"TorusMesh outer_radius must match arrive_radius"
+		)
+		assert(
+			marker.ring_material.transparency == BaseMaterial3D.TRANSPARENCY_ALPHA,
+			"Ring material must be translucent"
+		)
+		assert(marker.ring_material.albedo_color.a < 1.0, "Ring material alpha must be < 1.0")
+		assert(marker.ring_material.albedo_color.g > 0.8, "Ring must be green")
+		marker.arrive_radius = 3.5
+		assert(is_equal_approx((marker.ground_ring.mesh as TorusMesh).outer_radius, 3.5))
+		marker.arrive_radius = 2.5
+
+		# Store label checks:
+		assert(marker.label != null and marker.label is Label3D)
+		assert(
+			marker.label.billboard == BaseMaterial3D.BILLBOARD_ENABLED,
+			"StoreLabel must be billboarded"
+		)
+		assert(marker.label.text == "Walgroins", "StoreLabel text must match store name")
+		assert(marker.label.visible == true, "StoreLabel must be visible when store name is set")
+		marker.store_name = "Booger King"
+		assert(marker.label.text == "Booger King")
+		marker.store_name = ""
+		assert(marker.label.visible == false, "StoreLabel must hide when store name is empty")
+		marker.store_name = "Walgroins"
+		assert(marker.label.visible == true)
+
+		# Emissive / night readability checks:
+		assert(
+			marker.cone_material.emission_enabled == true,
+			"Cone material must have emission enabled"
+		)
+		assert(
+			marker.cone_material.emission == marker.marker_color,
+			"Cone emission must match marker_color"
+		)
+		assert(
+			marker.cone_material.shading_mode == BaseMaterial3D.SHADING_MODE_UNSHADED,
+			"Cone material must be unshaded for night readability"
+		)
+		assert(
+			marker.ring_material.emission_enabled == true,
+			"Ring material must have emission enabled"
+		)
+		assert(
+			marker.ring_material.shading_mode == BaseMaterial3D.SHADING_MODE_UNSHADED,
+			"Ring material must be unshaded for night readability"
+		)
+		var orig_tod: GameState.TimeOfDay = GameState.time_of_day
+		GameState.set_time_of_day(GameState.TimeOfDay.NIGHT)
+		assert(marker.cone_material.shading_mode == BaseMaterial3D.SHADING_MODE_UNSHADED)
+		GameState.set_time_of_day(orig_tod)
+
+		# No collision and no shadow checks:
+		assert(
+			not ((marker as Variant) is CollisionObject3D), "Marker must not be CollisionObject3D"
+		)
+		for child in marker.find_children("*", "", true, false):
+			assert(
+				not (child is CollisionObject3D),
+				"Marker child %s must not be CollisionObject3D" % child.name
+			)
+			assert(
+				not (child is CollisionShape3D),
+				"Marker child %s must not be CollisionShape3D" % child.name
+			)
+			if child is GeometryInstance3D:
+				assert(
+					child.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_OFF,
+					"Marker visual %s must not cast shadows" % child.name
+				)
+
+		# Completion scale-up and fade tween:
+		var completing_marker := obj_mgr.current_marker
+		assert(completing_marker != null)
+		assert(completing_marker._is_completing == false)
+		obj_mgr.complete_objective()
+		assert(obj_mgr.current_marker == null, "obj_mgr must clear current_marker on completion")
+		assert(
+			completing_marker._is_completing == true, "complete_and_free must set _is_completing"
+		)
+		assert(
+			completing_marker.pop_particles != null, "complete_and_free must spawn pop_particles"
+		)
+		assert(completing_marker.pop_particles is CPUParticles3D)
+		assert(completing_marker.pop_particles.one_shot == true)
+		assert(completing_marker.pop_particles.emitting == true)
+		var pop_node: CPUParticles3D = completing_marker.pop_particles
+		assert(is_instance_valid(completing_marker), "Marker should still be valid during tween")
+		await get_tree().create_timer(0.5).timeout
+		assert(
+			not is_instance_valid(completing_marker), "Marker should be freed after tween completes"
+		)
+		await get_tree().create_timer(0.3).timeout
+		assert(not is_instance_valid(pop_node), "Particle pop should be freed after lifetime")
+		# 8. ObjectiveArrow tests:
+		var arrow: ObjectiveArrow = hud.objective_arrow
+		assert(arrow != null, "HUD must have objective_arrow")
+		assert(arrow is ObjectiveArrow, "objective_arrow must be of type ObjectiveArrow")
+		assert(arrow.edge_margin == 60.0, "edge_margin must default to 60px")
+		arrow._resolve_dependencies()
+		arrow.camera = cam
+		arrow.objective_manager = obj_mgr
+
+		# Check projection and behind calculation
+		var cam_3d: Camera3D = cam
+		var behind_pos := cam_3d.global_position + cam_3d.global_basis.z * 10.0
+		var front_pos := cam_3d.global_position - cam_3d.global_basis.z * 10.0
+		assert(cam_3d.is_position_behind(behind_pos) == true, "Must detect position behind camera")
+		assert(
+			cam_3d.is_position_behind(front_pos) == false, "Must detect position in front of camera"
+		)
+		var unproj_front := cam_3d.unproject_position(front_pos)
+		assert(unproj_front is Vector2, "unproject_position must return Vector2")
+
+		# Test on-screen hiding:
+		obj_mgr.current_state = ObjectiveManager.State.ACTIVE
+		obj_mgr.current_errand = obj_mgr.get_errand_by_id(&"cough_syrup")
+		target_pos = obj_mgr.get_target_position(obj_mgr.current_errand)
+		# Aim camera directly at target from 10m back
+		cam_3d.global_position = target_pos + Vector3(0.0, 5.0, 15.0)
+		cam_3d.look_at(target_pos)
+		arrow.update_arrow()
+		assert(arrow.is_arrow_visible == false, "Arrow must be hidden when target is on screen")
+		assert(
+			arrow.distance_label.visible == false,
+			"Distance label must be hidden when target is on screen"
+		)
+
+		# Test off-screen clamping & rotation (target to the right):
+		var vp_rect := arrow.get_viewport_rect()
+		# Camera at origin looking north (0, 0, -1), target far east (100, 0, -10)
+		cam_3d.global_position = Vector3(0.0, 1.5, 0.0)
+		cam_3d.look_at(Vector3(0.0, 1.5, -10.0))
+		var east_pos := Vector3(100.0, 1.5, -10.0)
+		# Temporarily override target position via dummy errand or moving node
+		var orig_errand_id := obj_mgr.current_errand.id
+		# We can test with target behind camera: target is at (0, 1.5, 50.0)
+		cam_3d.global_position = Vector3(0.0, 1.5, 0.0)
+		cam_3d.look_at(Vector3(0.0, 1.5, -10.0))
+		# Target pos for cough syrup is at z ≈ -31.35. Camera looking south:
+		cam_3d.look_at(Vector3(0.0, 1.5, 10.0))  # camera looks South, target is North (behind camera!)
+		arrow.update_arrow()
+		assert(
+			arrow.is_arrow_visible == true,
+			"Arrow must be visible when target is off-screen / behind"
+		)
+		assert(
+			is_equal_approx(arrow.arrow_screen_pos.x, vp_rect.size.x - 60.0),
+			"Behind camera looking south with target at x<0 must clamp to right margin"
+		)
+		assert(cam_3d.is_position_behind(target_pos) == true, "Target must be behind camera")
+		assert(cos(arrow.arrow_rotation) > 0.9, "Arrow rotation must point right")
+
+		# Camera looks east (10, 1.5, 0), target is north (-3, 1.3, -31.35) -> target is to the left in front of camera
+		cam_3d.global_position = Vector3(-3.0, 1.3, -10.0)
+		cam_3d.look_at(Vector3(20.0, 1.3, -10.0))  # looking east (+X)
+		# target is at Z=-31.35, which is to the left (-Z relative to +X)
+		arrow.update_arrow()
+		assert(arrow.is_arrow_visible == true, "Arrow must be visible when target is off-screen")
+		assert(
+			arrow.arrow_screen_pos.x <= vp_rect.size.x - 60.0 and arrow.arrow_screen_pos.x >= 60.0,
+			"X clamped within margin"
+		)
+		assert(
+			arrow.arrow_screen_pos.y <= vp_rect.size.y - 60.0 and arrow.arrow_screen_pos.y >= 60.0,
+			"Y clamped within margin"
+		)
+		# At least one dimension must be clamped to the margin
+		assert(
+			is_equal_approx(arrow.arrow_screen_pos.x, 60.0),
+			"Target to the left must clamp to left margin"
+		)
+		# Angle pointing left is PI (or -PI)
+		assert(
+			absf(absf(arrow.arrow_rotation) - PI) < 0.1,
+			"Arrow rotation must point left (-X in screen)"
+		)
+		# Distance label verification
+		assert(arrow.distance_label != null, "Distance label must exist")
+		assert(
+			arrow.distance_label.visible == true, "Distance label must be visible when off-screen"
+		)
+		assert(arrow.distance_label.text.ends_with(" m"), "Distance label must end with ' m'")
+		# Explicit 42 m test:
+		mats.global_position = Vector3(target_pos.x, 0.0, target_pos.z + 42.0)
+		arrow.update_arrow()
+		assert(arrow.distance_meters == 42, "distance_meters must be 42")
+		assert(arrow.distance_label.text == "42 m", "Distance label must display '42 m'")
+		# Arrow draw verification:
+		assert(arrow.has_method("_draw"), "ObjectiveArrow must implement _draw()")
+		assert(arrow.arrow_color.g > 0.8, "Arrow color must be objective green")
+		arrow.queue_redraw()
+		# Overlay hiding tests:
+		assert(arrow.is_arrow_visible == true, "Arrow must start visible off-screen")
+
+		# 1. StartScreen open hides arrow
+		var start_screen: StartScreen = get_node_or_null("StartScreen")
+		if start_screen:
+			start_screen.visible = true
+			arrow.update_arrow()
+			assert(arrow.is_arrow_visible == false, "StartScreen open must hide arrow")
+			assert(
+				arrow.distance_label.visible == false, "StartScreen open must hide distance label"
+			)
+			start_screen.visible = false
+			arrow.update_arrow()
+			assert(arrow.is_arrow_visible == true, "Closing StartScreen must restore arrow")
+
+		# 2. CharacterEditor open hides arrow
+		var char_editor: CharacterEditor = get_node_or_null("CharacterEditor")
+		if char_editor:
+			char_editor.open_editor()
+			assert(get_tree().paused == true, "CharacterEditor must pause the tree")
+			assert(arrow.is_arrow_visible == false, "CharacterEditor open must hide arrow")
+			assert(
+				arrow.distance_label.visible == false,
+				"CharacterEditor open must hide distance label"
+			)
+			char_editor.close_editor()
+			assert(get_tree().paused == false, "Closing CharacterEditor must unpause the tree")
+			assert(arrow.is_arrow_visible == true, "Closing CharacterEditor must restore arrow")
+
+			# Test CharacterEditor hiding the phone call overlay:
+			phone_call.show_ringing()
+			assert(phone_call.visible == true, "Phone call starts visible")
+			char_editor.open_editor()
+			assert(phone_call.visible == false, "CharacterEditor open must hide phone call overlay")
+			char_editor.close_editor()
+			assert(
+				phone_call.visible == true,
+				"Closing CharacterEditor must restore phone call overlay"
+			)
+			phone_call.hide_all()
+
+		# 3. Call overlay open hides arrow
+		phone_call.show_ringing()
+		arrow.update_arrow()
+		assert(arrow.is_arrow_visible == false, "Ringing call must hide arrow")
+		phone_call.hide_all()
+		arrow.update_arrow()
+		assert(arrow.is_arrow_visible == true, "Hiding call must restore arrow")
+
+		phone_call.show_in_call()
+		arrow.update_arrow()
+		assert(arrow.is_arrow_visible == false, "In-call dialogue must hide arrow")
+		phone_call.hide_all()
+		arrow.update_arrow()
+		assert(arrow.is_arrow_visible == true, "Hiding in-call must restore arrow")
+
+		# 9. Success feedback toast tests:
+		var toast: ObjectiveToast = hud.objective_toast
+		assert(toast != null, "HUD must have objective_toast")
+		assert(toast is ObjectiveToast, "objective_toast must be of type ObjectiveToast")
+		assert(toast.checkmark != null, "Toast must have checkmark child")
+		assert(toast.checkmark is ObjectiveCheckmark, "Checkmark must be ObjectiveCheckmark")
+		assert(toast.checkmark.has_method("_draw"), "Checkmark must implement _draw()")
+		assert(toast.checkmark.color.g > 0.8, "Checkmark must be green")
+		assert(
+			toast.anchor_left == 0.5 and toast.anchor_right == 0.5, "Toast must be center-anchored"
+		)
+		assert(
+			toast.anchor_top == 0.5 and toast.anchor_bottom == 0.5, "Toast must be center-anchored"
+		)
+
+		# Test show_toast() with scale-in, hold, and fade-out timing
+		hud.show_toast("Got the cough syrup!", 2.0)
+		assert(toast.is_showing() == true, "Toast must be showing immediately after show_toast")
+		assert(toast.get_text() == "Got the cough syrup!", "Toast text must match")
+		await get_tree().create_timer(0.4).timeout
+		assert(toast.is_showing() == true, "Toast must be visible after scale-in")
+		assert(toast.modulate.a > 0.9, "Toast modulate alpha must be ~1.0 after scale-in")
+		assert(is_equal_approx(toast.scale.x, 1.0), "Toast scale must be 1.0 after scale-in")
+		await get_tree().create_timer(0.8).timeout  # t = 1.2s total
+		assert(toast.is_showing() == true, "Toast must still be held visible at ~1.2s")
+		assert(toast.modulate.a > 0.9, "Toast modulate alpha must still be ~1.0 during hold")
+		await get_tree().create_timer(1.0).timeout  # t = 2.2s total
+		assert(toast.visible == false, "Toast must be hidden after 2.0s duration and fade-out")
+
+		# Test complete_objective triggers toast with errand success_line
+		obj_mgr.current_state = ObjectiveManager.State.ACTIVE
+		obj_mgr.current_errand = obj_mgr.get_errand_by_id(&"cough_syrup")
+		obj_mgr.complete_objective()
+		assert(toast.is_showing() == true, "complete_objective must trigger toast")
+		assert(
+			toast.get_text() == "Got the cough syrup!",
+			"complete_objective toast text must match errand success_line"
+		)
+
+		# Test CharacterEditor open hides toast
+		if char_editor:
+			char_editor.open_editor()
+			assert(toast.visible == false, "Opening CharacterEditor must hide toast")
+			char_editor.close_editor()
+		# Test hud.increment_obj() and green flash on complete_objective
+		assert(hud.obj_count == obj_mgr.completed_count, "HUD obj_count must match completed_count")
+		assert(
+			hud.obj_label.text == "OBJ: %d" % obj_mgr.completed_count,
+			"HUD obj_label must display completed_count"
+		)
+		assert(hud.obj_label.modulate.g > 0.8, "HUD obj_label must flash green on complete")
+
+		# Test calling hud.increment_obj() directly
+		var obj_before: int = hud.obj_count
+		hud.increment_obj()
+		assert(hud.obj_count == obj_before + 1, "Direct increment_obj must increase obj_count by 1")
+		assert(
+			hud.obj_label.text == "OBJ: %d" % (obj_before + 1),
+			"Direct increment_obj must update label"
+		)
+		assert(hud.obj_label.modulate.g > 0.8, "Direct increment_obj must flash green")
+
+		print("OBJECTIVE_MANAGER_TEST: SUCCESS - All ObjectiveManager test cases passed!")
+		get_tree().quit(0)
+		return
+	if "--test-objectives" in _user_args:
+		# Allow deferred setup across ObjectiveManager, HUD, and PhoneCall to resolve naturally
+		await get_tree().process_frame
+		var obj_mgr: ObjectiveManager = $ObjectiveManager
+		assert(obj_mgr != null, "ObjectiveManager must exist")
+		var hud = $HUD
+		assert(hud != null, "HUD must exist")
+
+		# 1. The first call is cough_syrup, and its target is on the north side (z < 0).
+		assert(
+			obj_mgr.current_state == ObjectiveManager.State.RINGING, "First call must be ringing"
+		)
+		assert(obj_mgr.current_errand != null, "Current errand must be set")
+		assert(obj_mgr.current_errand.id == &"cough_syrup", "First errand must be cough_syrup")
+		var target_pos := obj_mgr.get_target_position(obj_mgr.current_errand)
+		assert(target_pos.z < 0.0, "First errand target must be on the north side (z < 0)")
+
+		# 2. Answer programmatically, teleport Mats to the target, and assert completed_count == 1 and the HUD shows "OBJ: 1".
+		var phone_call = hud.phone_call
+		if phone_call and phone_call.is_ringing:
+			phone_call.answer()
+			phone_call.dismiss()
+		else:
+			obj_mgr.answer_call()
+			obj_mgr.dismiss_call()
+		assert(obj_mgr.current_state == ObjectiveManager.State.ACTIVE, "Must be ACTIVE after call")
+
+		mats.global_position = target_pos
+		await get_tree().physics_frame
+		await get_tree().physics_frame
+		assert(obj_mgr.completed_count == 1, "completed_count must be 1 after reaching target")
+		assert(hud.obj_label != null and hud.obj_label.text == "OBJ: 1", "HUD must show 'OBJ: 1'")
+
+		# 3. The next errand's target z sign is opposite Mats's z sign.
+		obj_mgr.start_call()
+		assert(obj_mgr.current_errand != null, "Next errand must be set")
+		var next_target_pos := obj_mgr.get_target_position(obj_mgr.current_errand)
+		assert(
+			signf(next_target_pos.z) != signf(mats.global_position.z),
+			(
+				"Next errand target z sign (%f) must be opposite Mats's z sign (%f)"
+				% [next_target_pos.z, mats.global_position.z]
+			)
+		)
+
+		# 4. Quit with exit code 0.
+		print("OBJECTIVES_TEST: SUCCESS - --test-objectives passed cleanly!")
+		get_tree().quit(0)
+		return
 
 
 func _physics_process(_delta: float) -> void:
@@ -1318,6 +2191,417 @@ func _physics_process(_delta: float) -> void:
 			elif _test_frames - _mats_start_frame > 120:
 				assert(false, "Timeout: Mats did not die when hit by car pulling out into merge!")
 
+	if "--test-mats-walk" in _user_args:
+		_test_frames += 1
+		if _test_frames <= 60 or _test_frames >= 105:
+			mats.velocity = Vector3(0.0, 0.0, mats.walk_speed)
+		elif _test_frames == 61:
+			mats.velocity = Vector3(0.0, sqrt(2.0 * mats.gravity * mats.jump_height), 0.0)
+		elif _test_frames > 61 and not mats.is_on_floor():
+			mats.velocity.x = 0.0
+			mats.velocity.z = 0.0
+		elif mats.is_on_floor():
+			mats.velocity = Vector3.ZERO
+		var shoe_l: Node3D = mats.get_node("Visual/LeftLegPivot/Knee/Shoe")
+		var shoe_r: Node3D = mats.get_node("Visual/RightLegPivot/Knee/Shoe")
+		var shoe_bottom_local := Vector3(0.0, -0.07, 0.0)
+		var l_y := (shoe_l.global_transform * shoe_bottom_local).y
+		var r_y := (shoe_r.global_transform * shoe_bottom_local).y
+		var lowest_shoe_y := minf(l_y, r_y)
+		var l_z := (shoe_l.global_transform * shoe_bottom_local).z
+		var r_z := (shoe_r.global_transform * shoe_bottom_local).z
+		var stance_is_left := l_y <= r_y
+		var stance_z := l_z if stance_is_left else r_z
+		if _test_frames >= 40 and _test_frames <= 50:
+			var l_hip: Node3D = mats.get_node("Visual/LeftLegPivot")
+			var r_hip: Node3D = mats.get_node("Visual/RightLegPivot")
+			var l_knee: Node3D = mats.get_node("Visual/LeftLegPivot/Knee")
+			var r_knee: Node3D = mats.get_node("Visual/RightLegPivot/Knee")
+			print(
+				(
+					"F%d ph=%.2f sw=%.2f st=%.2f | L: rot_x=%.2f kn=%.2f y=%.3f z=%.3f | R: rot_x=%.2f kn=%.2f y=%.3f z=%.3f"
+					% [
+						_test_frames,
+						mats._stride_phase,
+						sin(mats._stride_phase),
+						cos(mats._stride_phase),
+						l_hip.rotation.x,
+						l_knee.rotation.x,
+						l_y,
+						l_z,
+						r_hip.rotation.x,
+						r_knee.rotation.x,
+						r_y,
+						r_z,
+					]
+				)
+			)
+		elif _test_frames % 10 == 0:
+			print(
+				(
+					"WALK_TEST frame=%d z=%.2f mats_y=%.3f floor=%s rel_shoe_y=%.4f (l=%.4f, r=%.4f) stance=%s stance_z=%.3f"
+					% [
+						_test_frames,
+						mats.global_position.z,
+						mats.global_position.y,
+						mats.is_on_floor(),
+						lowest_shoe_y - mats.global_position.y,
+						l_y - mats.global_position.y,
+						r_y - mats.global_position.y,
+						"L" if stance_is_left else "R",
+						stance_z,
+					]
+				)
+			)
+		var rel_y := lowest_shoe_y - mats.global_position.y
+		if _test_frames >= 10 and _test_frames <= 60:
+			assert(
+				absf(rel_y) <= 0.01,
+				(
+					"Lowest shoe point exceeded 1 cm from floor during walk at frame %d: %.4f"
+					% [_test_frames, rel_y]
+				)
+			)
+		if _test_frames >= 61 and _test_frames <= 115 and mats.is_on_floor():
+			assert(
+				absf(rel_y) <= 0.01,
+				(
+					"Lowest shoe point exceeded 1 cm from floor during landing/recovery at frame %d: %.4f"
+					% [_test_frames, rel_y]
+				)
+			)
+		if _test_frames > 65 and mats.is_on_floor() and mats._squash >= 0.3:
+			_mats_squash_frames += 1
+			var l_knee: Node3D = mats.get_node("Visual/LeftLegPivot/Knee")
+			var r_knee: Node3D = mats.get_node("Visual/RightLegPivot/Knee")
+			assert(
+				l_knee.rotation.x >= 0.15 and r_knee.rotation.x >= 0.15,
+				(
+					"Knees must bend during landing squash (L: %.3f, R: %.3f, squash: %.3f)"
+					% [l_knee.rotation.x, r_knee.rotation.x, mats._squash]
+				)
+			)
+		if _test_frames >= 115:
+			assert(
+				absf(rel_y) <= 0.01,
+				(
+					"Lowest shoe point exceeded 1 cm from floor after resume walk at frame %d: %.4f"
+					% [_test_frames, rel_y]
+				)
+			)
+		if _test_frames >= 160:
+			assert(
+				_mats_squash_frames > 0,
+				(
+					"Landing squash assertion must run at least once (ran %d times)"
+					% _mats_squash_frames
+				)
+			)
+			print(
+				(
+					"WALK_TEST completed: walk stride, jump, and landing squash knee bend verified (squash frames=%d)!"
+					% _mats_squash_frames
+				)
+			)
+			get_tree().quit(0)
+		elif _test_frames >= 200:
+			assert(false, "Timeout in WALK_TEST")
+	if "--test-mats-cart" in _user_args:
+		_test_frames += 1
+		var vis: Node3D = mats.get_node("Visual")
+		var left_knee: Node3D = mats.get_node("Visual/LeftLegPivot/Knee")
+		var left_leg: Node3D = mats.get_node("Visual/LeftLegPivot")
+		var left_ankle: Node3D = mats.get_node("Visual/LeftLegPivot/Knee/Shoe")
+		if _cart_test_stage == 0:
+			var cur_rot_y := vis.rotation.y
+			var d_rot := absf(wrapf(cur_rot_y - _cart_prev_rot_y, -PI, PI))
+			assert(d_rot < 0.45, "Abrupt rotation jump during cart mount: %f" % d_rot)
+			_cart_prev_rot_y = cur_rot_y
+			if _test_frames >= 24:
+				assert(
+					absf(vis.rotation.y) < 0.01,
+					"Visual rotation Y not 0 at sit: %f" % vis.rotation.y
+				)
+				assert(
+					absf(vis.rotation.x) < 0.01,
+					"Visual rotation X not 0 at sit: %f" % vis.rotation.x
+				)
+				assert(
+					absf(vis.rotation.z) < 0.01,
+					"Visual rotation Z not 0 at sit: %f" % vis.rotation.z
+				)
+				var target_y := Mats.KNEEL_HIP_HEIGHT - left_leg.position.y
+				assert(
+					absf(vis.position.y - target_y) < 0.01,
+					"Visual position Y mismatch at sit: %f vs %f" % [vis.position.y, target_y]
+				)
+				assert(
+					absf(left_knee.rotation.x - Mats.KNEEL_KNEE_ROTATION) < 0.01,
+					"Knee rotation mismatch at sit"
+				)
+				assert(
+					absf(left_ankle.rotation.x - Mats.KNEEL_ANKLE_ROTATION) < 0.01,
+					"Ankle rotation mismatch at sit"
+				)
+				var left_arm: Node3D = mats.get_node("Visual/LeftArmPivot")
+				var left_elbow: Node3D = mats.get_node("Visual/LeftArmPivot/Elbow")
+				assert(
+					absf(left_arm.rotation.x - Mats.KNEEL_SHOULDER_ROTATION) < 0.01,
+					"Shoulder rotation mismatch at sit"
+				)
+				assert(
+					absf(left_elbow.rotation.x - Mats.KNEEL_ELBOW_ROTATION) < 0.01,
+					"Elbow rotation mismatch at sit"
+				)
+				assert(_cart_test_cart._rider == mats, "ShoppingCart rider must be set to mats")
+				_cart_test_stage = 1
+				_test_frames = 0
+		elif _cart_test_stage == 1:
+			if _test_frames >= 5:
+				_cart_test_stage = 2
+				_test_frames = 0
+				mats.exit_cart(_cart_test_cart.get_node("ExitPosition"))
+		elif _cart_test_stage == 2:
+			if _test_frames >= 24:
+				assert(
+					mats.is_physics_processing(),
+					"Physics processing must resume after exiting cart"
+				)
+				assert(
+					left_knee.rotation.x < 0.35,
+					"Knee rotation must return to idle stance after exit: %f" % left_knee.rotation.x
+				)
+				assert(
+					absf(vis.position.y) < 0.05,
+					"Visual pos Y must return to ground level: %f" % vis.position.y
+				)
+				_cart_test_angle_idx += 1
+				if _cart_test_angle_idx >= _cart_test_angles.size():
+					if not _cart_test_rolling:
+						_cart_test_rolling = true
+						_cart_test_angle_idx = 0
+						print("Stationary angle tests passed! Now testing rolling cart...")
+					else:
+						print(
+							"Mount, sit, and exit verified across all angles and while rolling! Now testing death while riding..."
+						)
+						_cart_test_stage = 3
+						_test_frames = 0
+						_cart_test_angle_idx = 0
+						_cart_test_rolling = true
+						_cart_test_setup()
+						return
+				_cart_test_stage = 0
+				_test_frames = 0
+				_cart_test_setup()
+		elif _cart_test_stage == 3:
+			if _test_frames >= 24:
+				assert(_cart_test_cart._rider == mats, "ShoppingCart rider must be set")
+				_cart_test_stage = 4
+				_test_frames = 0
+				_cart_test_cart.die()
+		elif _cart_test_stage == 4:
+			if not mats.is_dead and _test_frames > 20:
+				assert(
+					mats.is_physics_processing(),
+					"Physics processing must resume after respawning from cart death"
+				)
+				assert(mats._mounted_cart == null, "_mounted_cart must be cleared after death")
+				assert(
+					(
+						mats.get_parent() != _cart_test_cart
+						and mats.get_parent() != _cart_test_cart.get_node("Seat")
+					),
+					"Mats must be reparented out of cart after death"
+				)
+				assert(_cart_test_cart._rider == null, "Cart rider must be null after rider died")
+				assert(
+					_cart_test_cart._nearby_mats == null,
+					"Cart nearby mats must be null after rider died and respawned"
+				)
+				assert(
+					absf(vis.position.x) < 0.01 and absf(vis.position.z) < 0.01,
+					"Visual X/Z offset must be reset to 0: %s" % vis.position
+				)
+				assert(
+					absf(vis.position.y) < 0.05,
+					"Visual pos Y must return to ground level: %f" % vis.position.y
+				)
+				assert(
+					left_knee.rotation.x < 0.1,
+					"Knee rotation must reset after respawn: %f" % left_knee.rotation.x
+				)
+				assert(
+					left_leg.rotation.x < 0.1,
+					"Hip rotation must reset after respawn: %f" % left_leg.rotation.x
+				)
+				print("CART_TEST completed: mount, sit, exit, and die-while-riding verified!")
+				get_tree().quit(0)
+				return
+			elif _test_frames >= 300:
+				assert(false, "Timeout waiting for respawn after dying in cart")
+		elif _test_frames >= 120:
+			assert(false, "Timeout in CART_TEST")
+	if "--test-mats-collision" in _user_args:
+		_test_frames += 1
+		if _col_test_stage == 0:
+			mats.velocity = Vector3(0.0, 0.0, 4.0)
+			if mats.global_position.z >= 7.3 and mats.global_position.z <= 7.8:
+				print(
+					(
+						"  [Curb Step-Up Trace] f=%d y=%.4f z=%.4f on_floor=%s"
+						% [
+							_test_frames,
+							mats.global_position.y,
+							mats.global_position.z,
+							mats.is_on_floor()
+						]
+					)
+				)
+			if _test_frames >= 40:
+				assert(mats.global_position.z > 7.6, "Mats should walk onto sidewalk over curb")
+				assert(
+					absf(mats.global_position.y - 0.245) < 0.05,
+					"Mats should be on sidewalk (y ~ 0.245), got %f" % mats.global_position.y
+				)
+				print(
+					"COLLISION_TEST [1/5]: Curb step-up (0.195m height with step_height=0.3) verified!"
+				)
+				_col_test_stage = 1
+				_test_frames = 0
+		elif _col_test_stage == 1:
+			mats.velocity = Vector3(0.0, 0.0, -4.0)
+			if mats.global_position.z >= 7.3 and mats.global_position.z <= 7.8:
+				print(
+					(
+						"  [Curb Step-Down Trace] f=%d y=%.4f z=%.4f on_floor=%s"
+						% [
+							_test_frames,
+							mats.global_position.y,
+							mats.global_position.z,
+							mats.is_on_floor()
+						]
+					)
+				)
+			if _test_frames >= 50:
+				assert(mats.global_position.z < 7.4, "Mats should step off sidewalk back onto road")
+				assert(
+					absf(mats.global_position.y - 0.10) < 0.05,
+					"Mats should settle on road (y ~ 0.10), got %f" % mats.global_position.y
+				)
+				print("COLLISION_TEST [2/5]: Curb step-down and floor snap verified!")
+				_col_test_stage = 2
+				_test_frames = 0
+				mats.global_position = Vector3(92.0, 0.245, 9.3)
+				mats.velocity = Vector3(0.0, 0.0, -4.0)
+		elif _col_test_stage == 2:
+			mats.velocity = Vector3(0.0, 0.0, -4.0)
+			if _test_frames >= 40:
+				var post_pos := Vector3(92.0, 0.245, 8.2)
+				var dist := mats.global_position.distance_to(post_pos)
+				assert(dist >= 0.48, "Mats must not penetrate sign post cylinder: dist=%f" % dist)
+				assert(mats.global_position.z > 8.5, "Mats must be stopped by sign post!")
+				print(
+					(
+						"COLLISION_TEST [3/5]: Sign post cylinder collision verified (blocked at dist=%.2f)!"
+						% dist
+					)
+				)
+				_col_test_stage = 3
+				_test_frames = 0
+				var bk_site := get_node("Props/BoogerKingSite")
+				var bk_doors := bk_site.get_node("Building/Building/Tower/Doors")
+				mats.global_position = bk_doors.global_position + Vector3(0.0, 0.0, -2.5)
+				mats.velocity = Vector3(0.0, 0.0, 3.0)
+		elif _col_test_stage == 3:
+			mats.velocity = Vector3(0.0, 0.0, 3.0)
+			assert(not mats.is_on_ceiling(), "Mats 1.5m capsule must not hit canopy ceiling!")
+			if _test_frames >= 40:
+				var bk_site := get_node("Props/BoogerKingSite")
+				var bk_doors := bk_site.get_node("Building/Building/Tower/Doors")
+				var dist := mats.global_position.distance_to(bk_doors.global_position)
+				assert(dist < 1.0, "Mats must reach BK door threshold unobstructed: dist=%f" % dist)
+				_col_test_stage = 4
+				_test_frames = 0
+				var taco := get_node("Props/TacoHell")
+				var taco_doors := taco.get_node("Building/MainArchPortico/Doors")
+				mats.global_position = taco_doors.global_position + Vector3(0.0, 0.0, 2.5)
+				mats.velocity = Vector3(0.0, 0.0, -3.0)
+		elif _col_test_stage == 4:
+			mats.velocity = Vector3(0.0, 0.0, -3.0)
+			assert(not mats.is_on_ceiling(), "Mats 1.5m capsule must not hit arch header!")
+			if _test_frames >= 40:
+				var taco := get_node("Props/TacoHell")
+				var taco_doors := taco.get_node("Building/MainArchPortico/Doors")
+				var dist := mats.global_position.distance_to(taco_doors.global_position)
+				assert(
+					dist < 1.0,
+					"Mats must reach Taco Hell door threshold unobstructed: dist=%f" % dist
+				)
+				print(
+					"COLLISION_TEST [4/5]: Building doorways and overhead canopies clearance verified!"
+				)
+				_col_test_stage = 5
+				_setup_col_near_miss_test()
+		elif _col_test_stage == 5:
+			if is_instance_valid(_col_test_car):
+				_col_test_car.advance_simulation(_delta)
+				assert(
+					not mats.is_dead,
+					"Near miss must not kill Mats! 0.25m capsule radius accurately avoids phantom hits."
+				)
+				if _col_test_car.global_position.x < -8.0:
+					print(
+						"  Near miss verified! Car brushed within 0.27m of Mats center without phantom hit."
+					)
+					_col_test_car.queue_free()
+					_col_test_stage = 6
+					_col_test_lane = 0
+					_setup_col_lane_test(0)
+			elif _test_frames > 120:
+				assert(false, "Timeout waiting for near miss car")
+		elif _col_test_stage == 6:
+			if is_instance_valid(_col_test_car):
+				_col_test_car.advance_simulation(_delta)
+			if _col_test_wait == 0:
+				if mats.is_dead:
+					_col_test_wait = 1
+				elif _test_frames > 120:
+					assert(false, "Timeout waiting for car hit in lane %d" % _col_test_lane)
+			elif _col_test_wait == 1:
+				if not mats.is_dead:
+					var hud_node: HUD = get_tree().get_first_node_in_group("hud") as HUD
+					var expected_spd = _col_test_initial_spd + _col_test_lane + 1
+					assert(
+						hud_node != null and hud_node.spd_count == expected_spd,
+						(
+							"SPD counter must increment on car hit death! expected %d, got %d"
+							% [expected_spd, hud_node.spd_count if hud_node else -1]
+						)
+					)
+					print(
+						(
+							"  Lane %d hit verified! Mats died and SPD counter incremented to %d"
+							% [_col_test_lane, hud_node.spd_count]
+						)
+					)
+					if is_instance_valid(_col_test_car):
+						_col_test_car.queue_free()
+					_col_test_lane += 1
+					if _col_test_lane >= COL_LANE_CONFIGS.size():
+						print(
+							(
+								"COLLISION_TEST [5/5]: Near miss clearance and car hits in all 4 lanes verified (SPD = %d)!"
+								% hud_node.spd_count
+							)
+						)
+						print(
+							"MATS_COLLISION_TEST: SUCCESS - All collision, curb, sign post, doorway, and car hit tests passed!"
+						)
+						get_tree().quit(0)
+						return
+					else:
+						_setup_col_lane_test(_col_test_lane)
 	if "--test-merge-reentry" in _user_args:
 		_test_frames += 1
 		if _test_car != null and is_instance_valid(_test_car):
@@ -2000,3 +3284,70 @@ func _exit_tree() -> void:
 		and GameState.instance.time_of_day_changed.is_connected(_on_time_of_day_changed)
 	):
 		GameState.instance.time_of_day_changed.disconnect(_on_time_of_day_changed)
+
+
+func _cart_test_setup() -> void:
+	var facing: float = _cart_test_angles[_cart_test_angle_idx]
+	_cart_test_cart.global_position = Vector3(9.0, 0.0, -15.0)
+	_cart_test_cart.global_basis = Basis()
+	if _cart_test_rolling:
+		_cart_test_cart.roll_from(Vector3(0.0, 0.0, 1.0))
+	else:
+		_cart_test_cart._current_speed = 0.0
+	mats.global_position = _cart_test_cart.global_position + Vector3(0.5, 0.0, 0.5)
+	var vis: Node3D = mats.get_node("Visual")
+	vis.rotation = Vector3(0.0, facing, 0.0)
+	_cart_prev_rot_y = facing
+	mats.get_node("Visual/LeftLegPivot").rotation.x = 0.4
+	mats.get_node("Visual/RightLegPivot").rotation.x = -0.4
+	mats.get_node("Visual/LeftLegPivot/Knee").rotation.x = 0.8
+	mats.get_node("Visual/RightLegPivot/Knee").rotation.x = 0.2
+	mats.enter_cart(_cart_test_cart, _cart_test_cart.get_node("Seat"))
+
+
+func _setup_col_near_miss_test() -> void:
+	_test_frames = 0
+	_col_test_wait = 0
+	var lane_id := 0
+	var lane_z := -5.6
+	var lane_dir := -1.0
+	var car_x := 12.0
+	# Car width for SEDAN is 1.9m -> half-width is 0.95m.
+	# Lane center is -5.6, so south edge of car is at -5.6 + 0.95 = -4.65.
+	# Place Mats center at -4.65 + 0.27 = -4.38 (clearance 0.27m to car edge).
+	# With radius=0.25m, car passes cleanly without hit (capsule reaches -4.63 > -4.65).
+	# With radius=0.30m, capsule reaches -4.68 < -4.65, so a phantom hit kills Mats.
+	mats.global_position = Vector3(0.0, 0.10, -4.38)
+	mats.velocity = Vector3.ZERO
+
+	var car_scene = load("res://cars/passenger_car.tscn")
+	_col_test_car = car_scene.instantiate()
+	_col_test_car.car_type = Car.CarType.SEDAN
+	add_child(_col_test_car)
+	_col_test_car.setup(lane_id, lane_z, lane_dir, car_x, 60.0, 16.0, Car.CarType.SEDAN)
+	_col_test_car.speed = 16.0
+	_col_test_car.desired_speed = 16.0
+	_col_test_car._update_blocker_layer()
+
+
+func _setup_col_lane_test(idx: int) -> void:
+	_test_frames = 0
+	_col_test_wait = 0
+	var cfg: Dictionary = COL_LANE_CONFIGS[idx]
+	var lane_id: int = cfg["lane_id"]
+	var lane_z: float = cfg["z"]
+	var lane_dir: float = cfg["dir"]
+	var car_x: float = cfg["car_x"]
+	var mats_x: float = cfg["mats_x"]
+
+	mats.global_position = Vector3(mats_x, 0.10, lane_z)
+	mats.velocity = Vector3.ZERO
+
+	var car_scene = load("res://cars/passenger_car.tscn")
+	_col_test_car = car_scene.instantiate()
+	_col_test_car.car_type = Car.CarType.SEDAN
+	add_child(_col_test_car)
+	_col_test_car.setup(lane_id, lane_z, lane_dir, car_x, 60.0, 16.0, Car.CarType.SEDAN)
+	_col_test_car.speed = 16.0
+	_col_test_car.desired_speed = 16.0
+	_col_test_car._update_blocker_layer()

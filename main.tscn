@@ -24,6 +24,7 @@
 [ext_resource type="PackedScene" path="res://buildings/smell_gas_station.tscn" id="22_smell"]
 [ext_resource type="PackedScene" path="res://props/overhead_road_sign.tscn" id="23_overhead_road_sign"]
 [ext_resource type="Shader" path="res://shaders/sidewalk.gdshader" id="24_sidewalk_shader"]
+[ext_resource type="Script" path="res://objectives/objective_manager.gd" id="25_objective_manager"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.35, 0.55, 0.85, 1)
@@ -225,6 +226,9 @@ script = ExtResource("3_main")
 
 [node name="GameState" type="Node" parent="." unique_id=1230684381]
 script = ExtResource("15_gamestate")
+
+[node name="ObjectiveManager" type="Node" parent="."]
+script = ExtResource("25_objective_manager")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=45702480]
 environment = SubResource("Environment_main")

@@ -3,10 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
+uid="uid://boqholeofduq3"
+path="res://.godot/imported/pickup.blend-d116485cbe3bb7af4835d92666539d0b.scn"
 
 [deps]
 
 source_file="res://cars/bodies/pickup.blend"
+dest_files=["res://.godot/imported/pickup.blend-d116485cbe3bb7af4835d92666539d0b.scn"]
 
 [params]
 
@@ -38,67 +41,67 @@ materials/extract_format=0
 materials/extract_path=""
 _subresources={
 "meshes": {
-"bed_liner": {
+"pickup_bed_liner": {
 "generate/lightmap_uv": 0,
 "generate/lods": 0,
 "generate/shadow_meshes": 0,
 "lods/normal_merge_angle": 20.0,
 "save_to_file/enabled": true,
-"save_to_file/fallback_path": "res://cars/bodies/pickup_meshes/bed_liner.res",
+"save_to_file/fallback_path": "res://cars/bodies/pickup_meshes/pickup_bed_liner.res",
 "save_to_file/path": ""
 },
-"body": {
+"pickup_body": {
 "generate/lightmap_uv": 0,
 "generate/lods": 0,
 "generate/shadow_meshes": 0,
 "lods/normal_merge_angle": 20.0,
 "save_to_file/enabled": true,
-"save_to_file/fallback_path": "res://cars/bodies/pickup_meshes/body.res",
+"save_to_file/fallback_path": "res://cars/bodies/pickup_meshes/pickup_body.res",
 "save_to_file/path": ""
 },
-"headlight_mesh": {
+"pickup_headlight": {
 "generate/lightmap_uv": 0,
 "generate/lods": 0,
 "generate/shadow_meshes": 0,
 "lods/normal_merge_angle": 20.0,
 "save_to_file/enabled": true,
-"save_to_file/fallback_path": "res://cars/bodies/pickup_meshes/headlight_mesh.res",
+"save_to_file/fallback_path": "res://cars/bodies/pickup_meshes/pickup_headlight.res",
 "save_to_file/path": ""
 },
-"taillight_mesh": {
+"pickup_taillight": {
 "generate/lightmap_uv": 0,
 "generate/lods": 0,
 "generate/shadow_meshes": 0,
 "lods/normal_merge_angle": 20.0,
 "save_to_file/enabled": true,
-"save_to_file/fallback_path": "res://cars/bodies/pickup_meshes/taillight_mesh.res",
+"save_to_file/fallback_path": "res://cars/bodies/pickup_meshes/pickup_taillight.res",
 "save_to_file/path": ""
 },
-"trim": {
+"pickup_trim": {
 "generate/lightmap_uv": 0,
 "generate/lods": 0,
 "generate/shadow_meshes": 0,
 "lods/normal_merge_angle": 20.0,
 "save_to_file/enabled": true,
-"save_to_file/fallback_path": "res://cars/bodies/pickup_meshes/trim.res",
+"save_to_file/fallback_path": "res://cars/bodies/pickup_meshes/pickup_trim.res",
 "save_to_file/path": ""
 },
-"wheel_mesh": {
+"pickup_wheel": {
 "generate/lightmap_uv": 0,
 "generate/lods": 0,
 "generate/shadow_meshes": 0,
 "lods/normal_merge_angle": 20.0,
 "save_to_file/enabled": true,
-"save_to_file/fallback_path": "res://cars/bodies/pickup_meshes/wheel_mesh.res",
+"save_to_file/fallback_path": "res://cars/bodies/pickup_meshes/pickup_wheel.res",
 "save_to_file/path": ""
 },
-"windows": {
+"pickup_windows": {
 "generate/lightmap_uv": 0,
 "generate/lods": 0,
 "generate/shadow_meshes": 0,
 "lods/normal_merge_angle": 20.0,
 "save_to_file/enabled": true,
-"save_to_file/fallback_path": "res://cars/bodies/pickup_meshes/windows.res",
+"save_to_file/fallback_path": "res://cars/bodies/pickup_meshes/pickup_windows.res",
 "save_to_file/path": ""
 }
 }

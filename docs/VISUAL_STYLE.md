@@ -33,7 +33,7 @@ This document catalogs the current visual style and 3D assets of **Stroad Hero**
 - **`asset_character_mats.png`** — **Mats (Player Character)**:
   - Blocky proportions with segmented limbs (swinging arms and legs during walk cycle).
   - Stylized blonde hair, facial features (dark eyes with white specular highlights, subtle smiling mouth).
-  - Bright orange hooded jacket, denim blue trousers, and modular backpack (Pine, Blue, Red, Yellow variants).
+  - Bright orange hooded jacket, denim blue trousers, and modular backpack (Green, Blue, Red, Yellow variants).
 
 ### Vehicles
 

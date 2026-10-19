@@ -18,3 +18,4 @@ Godot 4.7 project (GDScript). The user usually has the Godot editor open while y
 ## Conventions
 
 - Run `mise run fmt` periodically
+- Run tests: `mise run test` (all tests in parallel, ~45s), `mise run test --fast` (unit tests, < 3s), or `mise run test -- <flag>`

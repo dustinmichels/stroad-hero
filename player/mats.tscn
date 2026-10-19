@@ -13,9 +13,10 @@
 [ext_resource type="ArrayMesh" path="res://player/mats_meshes/mats_face.res" id="11_face"]
 [ext_resource type="ArrayMesh" path="res://player/mats_meshes/mats_hair.res" id="12_hair"]
 [ext_resource type="ArrayMesh" path="res://player/mats_meshes/mats_cap.res" id="13_cap"]
+[ext_resource type="ArrayMesh" path="res://player/mats_meshes/mats_beanie.res" id="14_beanie"]
 
 [sub_resource type="CapsuleShape3D" id="Shape_Mats"]
-radius = 0.3
+radius = 0.25
 height = 1.5
 
 [node name="Mats" type="CharacterBody3D"]
@@ -113,3 +114,7 @@ mesh = ExtResource("12_hair")
 
 [node name="Cap" type="MeshInstance3D" parent="Visual/Head/Hat"]
 mesh = ExtResource("13_cap")
+
+[node name="Beanie" type="MeshInstance3D" parent="Visual/Head/Hat"]
+visible = false
+mesh = ExtResource("14_beanie")

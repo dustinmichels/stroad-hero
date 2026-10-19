@@ -21,6 +21,8 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
+	if _rider and _rider.has_signal("died") and _rider.died.is_connected(_on_rider_died):
+		_rider.died.disconnect(_on_rider_died)
 	if is_instance_valid(_hud):
 		_hud.set_action_prompt(self, false)
 
@@ -41,17 +43,44 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not event.is_action_pressed("jump") or event.is_echo():
 		return
 	if _rider:
-		_nearby_mats = _rider
-		_rider.call("exit_cart", _exit_position)
-		_rider = null
+		var exiting_rider := _rider
+		clear_rider()
+		_nearby_mats = exiting_rider
+		exiting_rider.call("exit_cart", _exit_position)
 	elif _nearby_mats:
-		_rider = _nearby_mats
-		_nearby_mats = null
-		_rider.call("enter_cart", self, _seat)
+		var new_rider := _nearby_mats
+		set_rider(new_rider)
+		new_rider.call("enter_cart", self, _seat)
 	else:
 		return
 	_update_prompt()
 	get_viewport().set_input_as_handled()
+
+
+func set_rider(rider: Mats) -> void:
+	if _rider == rider:
+		return
+	if _rider and _rider.has_signal("died") and _rider.died.is_connected(_on_rider_died):
+		_rider.died.disconnect(_on_rider_died)
+	_rider = rider
+	if _rider:
+		_nearby_mats = null
+		if _rider.has_signal("died") and not _rider.died.is_connected(_on_rider_died):
+			_rider.died.connect(_on_rider_died)
+	_update_prompt()
+
+
+func clear_rider() -> void:
+	set_rider(null)
+
+
+func die() -> void:
+	if _rider and _rider.has_method("die"):
+		_rider.die()
+
+
+func _on_rider_died(_death_position: Vector3) -> void:
+	clear_rider()
 
 
 func roll_from(impact_direction: Vector3) -> void:
@@ -65,7 +94,7 @@ func roll_from(impact_direction: Vector3) -> void:
 
 
 func _on_body_entered(body: Node3D) -> void:
-	if body.is_in_group("player"):
+	if body.is_in_group("player") and body != _rider:
 		_nearby_mats = body as Mats
 		_update_prompt()
 

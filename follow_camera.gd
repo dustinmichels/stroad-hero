@@ -48,10 +48,10 @@ func _process(delta: float) -> void:
 	var target_position := target.get_global_transform_interpolated().origin
 	var is_target_dead: bool = target.is_dead if target != null else false
 	if not is_target_dead:
-		var yaw_step := (
-			int(Input.is_action_just_pressed("camera_left"))
-			- int(Input.is_action_just_pressed("camera_right"))
+		var camera_left_pressed := (
+			Input.is_action_just_pressed("camera_left") and not _is_phone_call_showing()
 		)
+		var yaw_step := int(camera_left_pressed) - int(Input.is_action_just_pressed("camera_right"))
 		var pitch_step := (
 			int(Input.is_action_just_pressed("camera_forward"))
 			- int(Input.is_action_just_pressed("camera_back"))
@@ -131,3 +131,13 @@ func _on_target_died(_death_position: Vector3) -> void:
 
 func _on_target_respawned() -> void:
 	snap_to_target()
+
+
+func _is_phone_call_showing() -> bool:
+	var tree := get_tree()
+	if not tree:
+		return false
+	var mgr := tree.get_first_node_in_group("objective_manager")
+	if mgr and mgr.has_method("is_call_showing"):
+		return mgr.is_call_showing()
+	return false

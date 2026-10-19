@@ -1,0 +1,131 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://ui/phone_call.gd" id="1_script"]
+[ext_resource type="Script" path="res://ui/phone_icon.gd" id="2_icon_script"]
+[ext_resource type="FontFile" path="res://fonts/Overpass-Bold.ttf" id="3_font_bold"]
+[ext_resource type="FontFile" path="res://fonts/Overpass-Regular.ttf" id="4_font_regular"]
+[ext_resource type="FontFile" path="res://fonts/Overpass-SemiBold.ttf" id="5_font_semibold"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_phone"]
+content_margin_left = 16.0
+content_margin_top = 10.0
+content_margin_right = 16.0
+content_margin_bottom = 10.0
+bg_color = Color(0.08, 0.1, 0.13, 0.85)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.2, 0.85, 0.35, 0.9)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[node name="PhoneCall" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_script")
+
+[node name="RingingPanel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -110.0
+offset_top = -80.0
+offset_right = 110.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 0
+pivot_offset = Vector2(110, 28)
+theme_override_styles/panel = SubResource("StyleBoxFlat_phone")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="RingingPanel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="PhoneIcon" type="Control" parent="RingingPanel/HBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
+size_flags_vertical = 4
+script = ExtResource("2_icon_script")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="RingingPanel/HBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 2
+
+[node name="CallerLabel" type="Label" parent="RingingPanel/HBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("3_font_bold")
+theme_override_font_sizes/font_size = 18
+text = "MOM"
+
+[node name="PromptLabel" type="Label" parent="RingingPanel/HBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.95, 0.7, 1)
+theme_override_fonts/font = ExtResource("5_font_semibold")
+theme_override_font_sizes/font_size = 13
+text = "[A] Answer"
+
+[node name="InCallPanel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -260.0
+offset_top = -140.0
+offset_right = 260.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_phone")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="InCallPanel"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="SpeakerLabel" type="Label" parent="InCallPanel/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.35, 0.95, 0.5, 1)
+theme_override_fonts/font = ExtResource("3_font_bold")
+theme_override_font_sizes/font_size = 16
+text = "Mom"
+
+[node name="DialogueLabel" type="Label" parent="InCallPanel/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.95, 0.97, 1, 1)
+theme_override_fonts/font = ExtResource("4_font_regular")
+theme_override_font_sizes/font_size = 15
+autowrap_mode = 2
+
+[node name="OkPromptLabel" type="Label" parent="InCallPanel/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.95, 0.7, 1)
+theme_override_fonts/font = ExtResource("5_font_semibold")
+theme_override_font_sizes/font_size = 13
+text = "[A] OK"
+horizontal_alignment = 2

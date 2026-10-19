@@ -1,63 +1,67 @@
 [gd_scene format=3]
 
-[ext_resource type="ArrayMesh" path="res://cars/bodies/pickup_meshes/body.res" id="1_pp2jy"]
-[ext_resource type="ArrayMesh" path="res://cars/bodies/pickup_meshes/windows.res" id="2_yljlm"]
-[ext_resource type="ArrayMesh" path="res://cars/bodies/pickup_meshes/trim.res" id="3_w1gfc"]
-[ext_resource type="ArrayMesh" path="res://cars/bodies/pickup_meshes/bed_liner.res" id="4_75m7i"]
-[ext_resource type="ArrayMesh" path="res://cars/bodies/pickup_meshes/headlight_mesh.res" id="5_byfc4"]
-[ext_resource type="ArrayMesh" path="res://cars/bodies/pickup_meshes/taillight_mesh.res" id="6_p5vyb"]
-[ext_resource type="ArrayMesh" path="res://cars/bodies/pickup_meshes/wheel_mesh.res" id="7_7m6nr"]
+[ext_resource type="ArrayMesh" path="res://cars/bodies/pickup_meshes/pickup_body.res" id="1_body"]
+[ext_resource type="ArrayMesh" path="res://cars/bodies/pickup_meshes/pickup_windows.res" id="2_win"]
+[ext_resource type="ArrayMesh" path="res://cars/bodies/pickup_meshes/pickup_trim.res" id="3_trim"]
+[ext_resource type="ArrayMesh" path="res://cars/bodies/pickup_meshes/pickup_bed_liner.res" id="4_liner"]
+[ext_resource type="ArrayMesh" path="res://cars/bodies/pickup_meshes/pickup_headlight.res" id="5_hl"]
+[ext_resource type="ArrayMesh" path="res://cars/bodies/pickup_meshes/pickup_taillight.res" id="6_tl"]
+[ext_resource type="ArrayMesh" path="res://cars/bodies/pickup_meshes/pickup_wheel.res" id="7_wheel"]
 
-[node name="Pickup" type="Node3D" unique_id=1029958944]
+[node name="Pickup" type="Node3D"]
 
-[node name="Body" type="MeshInstance3D" parent="." unique_id=1302847653]
-mesh = ExtResource("1_pp2jy")
+[node name="Body" type="MeshInstance3D" parent="."]
+mesh = ExtResource("1_body")
 
-[node name="Windows" type="MeshInstance3D" parent="." unique_id=714799020]
-mesh = ExtResource("2_yljlm")
+[node name="Windows" type="MeshInstance3D" parent="."]
+mesh = ExtResource("2_win")
 
-[node name="Trim" type="MeshInstance3D" parent="." unique_id=660875351]
-mesh = ExtResource("3_w1gfc")
+[node name="Trim" type="MeshInstance3D" parent="."]
+mesh = ExtResource("3_trim")
 
-[node name="BedLiner" type="MeshInstance3D" parent="." unique_id=420526937]
-mesh = ExtResource("4_75m7i")
+[node name="BedLiner" type="MeshInstance3D" parent="."]
+mesh = ExtResource("4_liner")
 
-[node name="HeadlightL" type="MeshInstance3D" parent="." unique_id=168099556]
+[node name="HeadlightL" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.18, 0.88, 0.74)
-mesh = ExtResource("5_byfc4")
+mesh = ExtResource("5_hl")
 
-[node name="HeadlightR" type="MeshInstance3D" parent="." unique_id=1892009917]
+[node name="HeadlightR" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.18, 0.88, -0.74)
-mesh = ExtResource("5_byfc4")
+mesh = ExtResource("5_hl")
 
-[node name="TaillightL" type="MeshInstance3D" parent="." unique_id=350163587]
+[node name="TaillightL" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.44, 1.12, 0.93)
-mesh = ExtResource("6_p5vyb")
+mesh = ExtResource("6_tl")
 
-[node name="TaillightR" type="MeshInstance3D" parent="." unique_id=1932091256]
+[node name="TaillightR" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.44, 1.12, -0.93)
-mesh = ExtResource("6_p5vyb")
+mesh = ExtResource("6_tl")
 
-[node name="Wheel_FL" type="MeshInstance3D" parent="." unique_id=1337809759]
+[node name="Wheel_FL" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1.3, 0.35, 0.98)
-mesh = ExtResource("7_7m6nr")
 
-[node name="Spoke" type="Node3D" parent="Wheel_FL" unique_id=606658789]
+[node name="Model" type="MeshInstance3D" parent="Wheel_FL"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0)
+mesh = ExtResource("7_wheel")
 
-[node name="Wheel_FR" type="MeshInstance3D" parent="." unique_id=45348332]
+[node name="Wheel_FR" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1.3, 0.35, -0.98)
-mesh = ExtResource("7_7m6nr")
 
-[node name="Spoke" type="Node3D" parent="Wheel_FR" unique_id=1307096177]
+[node name="Model" type="MeshInstance3D" parent="Wheel_FR"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0)
+mesh = ExtResource("7_wheel")
 
-[node name="Wheel_RL" type="MeshInstance3D" parent="." unique_id=777928007]
+[node name="Wheel_RL" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -1.35, 0.35, 0.98)
-mesh = ExtResource("7_7m6nr")
 
-[node name="Spoke" type="Node3D" parent="Wheel_RL" unique_id=532871320]
+[node name="Model" type="MeshInstance3D" parent="Wheel_RL"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0)
+mesh = ExtResource("7_wheel")
 
-[node name="Wheel_RR" type="MeshInstance3D" parent="." unique_id=1766421879]
+[node name="Wheel_RR" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -1.35, 0.35, -0.98)
-mesh = ExtResource("7_7m6nr")
 
-[node name="Spoke" type="Node3D" parent="Wheel_RR" unique_id=989493374]
+[node name="Model" type="MeshInstance3D" parent="Wheel_RR"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0)
+mesh = ExtResource("7_wheel")

@@ -44,14 +44,14 @@ def col_srgb_to_linear(rgb: tuple) -> tuple:
 
 # Palette in sRGB; converted to linear for Blender Principled BSDF
 PALETTE_SRGB = {
-    "paint": ((0.18, 0.38, 0.24, 1.0), 0.32, 0.15),      # Forest Green base (overridden at runtime in Godot)
+    "paint": ((0.18, 0.38, 0.24, 1.0), 0.32, 0.15),      # Forest Green base
     "glass": ((0.10, 0.14, 0.20, 1.0), 0.10, 0.40),      # Tinted dark glass
     "chrome": ((0.85, 0.86, 0.88, 1.0), 0.20, 0.85),     # Polished chrome bumper & grille
     "dark_trim": ((0.12, 0.13, 0.15, 1.0), 0.75, 0.05),  # Rugged plastic / steps / underbody
     "bed_liner": ((0.15, 0.16, 0.18, 1.0), 0.85, 0.0),   # Tough bed liner
     "headlight": ((1.00, 0.98, 0.85, 1.0), 0.20, 0.0),   # Headlight lens (emissive)
     "taillight": ((0.90, 0.10, 0.10, 1.0), 0.20, 0.0),   # Taillight lens (emissive)
-    "tire": ((0.10, 0.10, 0.11, 1.0), 0.90, 0.0),        # Rubber
+    "tire": ((0.10, 0.10, 0.11, 1.0), 0.90, 0.0),        # Dark rubber
     "rim": ((0.75, 0.77, 0.80, 1.0), 0.25, 0.80),         # Alloy rim
 }
 
@@ -112,9 +112,44 @@ def create_box(bm: bmesh.types.BMesh, min_pt: Vector, max_pt: Vector):
     return created_faces
 
 
+def build_slanted_pane(bm: bmesh.types.BMesh, p1_bot: Vector, p2_bot: Vector, p1_top: Vector, p2_top: Vector, thickness: float):
+    """Creates a thin 3D pane spanning between bottom edge and top edge in Godot space."""
+    # Bottom vector p2 - p1 is lateral (+Z)
+    # Edge vector along slope
+    edge_slope = (p1_top - p1_bot).normalized()
+    edge_lateral = (p2_bot - p1_bot).normalized()
+    normal = edge_slope.cross(edge_lateral).normalized()
+    offset = normal * (thickness * 0.5)
+
+    v1 = p1_bot + offset
+    v2 = p2_bot + offset
+    v3 = p2_top + offset
+    v4 = p1_top + offset
+
+    v5 = p1_bot - offset
+    v6 = p2_bot - offset
+    v7 = p2_top - offset
+    v8 = p1_top - offset
+
+    verts = [bm.verts.new(gd_to_bl(v)) for v in [v1, v2, v3, v4, v5, v6, v7, v8]]
+    faces = [
+        [verts[0], verts[1], verts[2], verts[3]],
+        [verts[7], verts[6], verts[5], verts[4]],
+        [verts[0], verts[4], verts[7], verts[3]],
+        [verts[1], verts[5], verts[6], verts[2]],
+        [verts[0], verts[1], verts[5], verts[4]],
+        [verts[3], verts[2], verts[6], verts[7]],
+    ]
+    for f in faces:
+        try:
+            bm.faces.new(f)
+        except ValueError:
+            pass
+
+
 def build_body_mesh() -> bpy.types.Mesh:
     """Builds the main painted sheet metal for the pickup truck."""
-    me = bpy.data.meshes.new("body")
+    me = bpy.data.meshes.new("pickup_body")
     bm = bmesh.new()
 
     # 1. Lower chassis / rocker & floor base
@@ -133,11 +168,23 @@ def build_body_mesh() -> bpy.types.Mesh:
     create_box(bm, Vector((-0.65, 0.65, -0.98)), Vector((0.85, 1.05, 0.98)))
     # Roof with subtle visor overhang
     create_box(bm, Vector((-0.66, 1.55, -0.91)), Vector((0.18, 1.62, 0.91)))
-    # A-Pillars (slanted)
-    p1 = Vector((0.82, 1.04, 0.88))
-    p2 = Vector((0.15, 1.58, 0.88))
-    create_box(bm, Vector((p2.x - 0.05, p1.y, p1.z - 0.04)), Vector((p1.x, p2.y, p1.z + 0.04)))
-    create_box(bm, Vector((p2.x - 0.05, p1.y, -p1.z - 0.04)), Vector((p1.x, p2.y, -p1.z + 0.04)))
+    # Clean slanted A-pillars flanking the windshield
+    build_slanted_pane(
+        bm,
+        p1_bot=Vector((0.80, 1.04, 0.84)),
+        p2_bot=Vector((0.80, 1.04, 0.90)),
+        p1_top=Vector((0.18, 1.56, 0.84)),
+        p2_top=Vector((0.18, 1.56, 0.90)),
+        thickness=0.06,
+    )
+    build_slanted_pane(
+        bm,
+        p1_bot=Vector((0.80, 1.04, -0.90)),
+        p2_bot=Vector((0.80, 1.04, -0.84)),
+        p1_top=Vector((0.18, 1.56, -0.90)),
+        p2_top=Vector((0.18, 1.56, -0.84)),
+        thickness=0.06,
+    )
     # C-Pillars (rear cab wall outer pillars)
     create_box(bm, Vector((-0.66, 1.05, 0.82)), Vector((-0.55, 1.58, 0.91)))
     create_box(bm, Vector((-0.66, 1.05, -0.91)), Vector((-0.55, 1.58, -0.82)))
@@ -167,18 +214,26 @@ def build_body_mesh() -> bpy.types.Mesh:
 
 
 def build_windows_mesh() -> bpy.types.Mesh:
-    """Builds the glass windows (windshield, rear cab window, side door windows)."""
-    me = bpy.data.meshes.new("windows")
+    """Builds clean, thin glass windows (slanted windshield, side windows, rear cab window)."""
+    me = bpy.data.meshes.new("pickup_windows")
     bm = bmesh.new()
 
-    # Windshield (raked glass)
-    create_box(bm, Vector((0.16, 1.05, -0.84)), Vector((0.80, 1.55, 0.84)))
-    # Side glass Left
-    create_box(bm, Vector((-0.55, 1.08, 0.84)), Vector((0.15, 1.54, 0.86)))
-    # Side glass Right
-    create_box(bm, Vector((-0.55, 1.08, -0.86)), Vector((0.15, 1.54, -0.84)))
-    # Rear cab glass
-    create_box(bm, Vector((-0.64, 1.25, -0.76)), Vector((-0.62, 1.54, 0.76)))
+    # Windshield: thin slanted pane (thickness 0.04m) from cowl to roof
+    build_slanted_pane(
+        bm,
+        p1_bot=Vector((0.80, 1.05, -0.84)),
+        p2_bot=Vector((0.80, 1.05, 0.84)),
+        p1_top=Vector((0.18, 1.56, -0.84)),
+        p2_top=Vector((0.18, 1.56, 0.84)),
+        thickness=0.04,
+    )
+
+    # Side glass Left (thin pane)
+    create_box(bm, Vector((-0.55, 1.08, 0.84)), Vector((0.15, 1.54, 0.87)))
+    # Side glass Right (thin pane)
+    create_box(bm, Vector((-0.55, 1.08, -0.87)), Vector((0.15, 1.54, -0.84)))
+    # Rear cab glass (thin pane)
+    create_box(bm, Vector((-0.64, 1.25, -0.76)), Vector((-0.61, 1.54, 0.76)))
 
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     bm.to_mesh(me)
@@ -190,7 +245,7 @@ def build_windows_mesh() -> bpy.types.Mesh:
 
 def build_trim_mesh() -> bpy.types.Mesh:
     """Builds bumpers, front grille, side steps, and trim details."""
-    me = bpy.data.meshes.new("trim")
+    me = bpy.data.meshes.new("pickup_trim")
     bm = bmesh.new()
 
     # Front Bumper (heavy duty truck bumper)
@@ -230,7 +285,7 @@ def build_trim_mesh() -> bpy.types.Mesh:
 
 def build_bed_liner_mesh() -> bpy.types.Mesh:
     """Builds the interior bed liner (floor and inside walls)."""
-    me = bpy.data.meshes.new("bed_liner")
+    me = bpy.data.meshes.new("pickup_bed_liner")
     bm = bmesh.new()
 
     # Bed floor
@@ -263,9 +318,11 @@ def build_centered_light_mesh(name: str, mat_name: str, size: Vector) -> bpy.typ
 
 
 def build_wheel_mesh(name: str) -> bpy.types.Mesh:
-    """Builds a wheel centered at local origin (0, 0, 0).
-    Local cylinder axis is Y in Godot/Blender convention for wheels so that
-    BASE_WHEEL_BASIS * Basis(Vector3.UP, angle) rolls the wheel along X!
+    """Builds an upright wheel in Blender coordinates:
+    - Center is at (0, 0, 0).
+    - Circular cross-section is in the vertical plane (Blender X-Z plane).
+    - Axle / thickness is along Blender Y (lateral).
+    This ensures the wheel stands UPRIGHT on the road in Blender.
     """
     me = bpy.data.meshes.new(name)
     bm = bmesh.new()
@@ -281,6 +338,7 @@ def build_wheel_mesh(name: str) -> bpy.types.Mesh:
     hub_radius = outer_radius * 0.28
     half_width = WHEEL_WIDTH * 0.5
 
+    # In Blender: +X is Forward, +Y is Lateral, +Z is Up
     ring_outer_pos = []
     ring_outer_neg = []
     ring_rim_pos = []
@@ -292,13 +350,13 @@ def build_wheel_mesh(name: str) -> bpy.types.Mesh:
         angle = (2.0 * math.pi * i) / segments
         ca = math.cos(angle)
         sa = math.sin(angle)
-        # Local coords: X fwd, Y lateral axle, Z radial up
-        ring_outer_pos.append(bm.verts.new(gd_to_bl(Vector((ca * outer_radius, half_width, sa * outer_radius)))))
-        ring_outer_neg.append(bm.verts.new(gd_to_bl(Vector((ca * outer_radius, -half_width, sa * outer_radius)))))
-        ring_rim_pos.append(bm.verts.new(gd_to_bl(Vector((ca * inner_radius, half_width * 0.9, sa * inner_radius)))))
-        ring_rim_neg.append(bm.verts.new(gd_to_bl(Vector((ca * inner_radius, -half_width * 0.9, sa * inner_radius)))))
-        ring_hub_pos.append(bm.verts.new(gd_to_bl(Vector((ca * hub_radius, half_width * 0.95, sa * hub_radius)))))
-        ring_hub_neg.append(bm.verts.new(gd_to_bl(Vector((ca * hub_radius, -half_width * 0.95, sa * hub_radius)))))
+        # Vertical circle in X-Z; lateral thickness in Y
+        ring_outer_pos.append(bm.verts.new(Vector((ca * outer_radius, half_width, sa * outer_radius))))
+        ring_outer_neg.append(bm.verts.new(Vector((ca * outer_radius, -half_width, sa * outer_radius))))
+        ring_rim_pos.append(bm.verts.new(Vector((ca * inner_radius, half_width * 0.9, sa * inner_radius))))
+        ring_rim_neg.append(bm.verts.new(Vector((ca * inner_radius, -half_width * 0.9, sa * inner_radius))))
+        ring_hub_pos.append(bm.verts.new(Vector((ca * hub_radius, half_width * 0.95, sa * hub_radius))))
+        ring_hub_neg.append(bm.verts.new(Vector((ca * hub_radius, -half_width * 0.95, sa * hub_radius))))
 
     # Tire tread
     for i in range(segments):
@@ -314,7 +372,7 @@ def build_wheel_mesh(name: str) -> bpy.types.Mesh:
         f_in = bm.faces.new([ring_rim_neg[i], ring_rim_neg[ni], ring_outer_neg[ni], ring_outer_neg[i]])
         f_in.material_index = 0
 
-    # Rim faces on both sides (symmetric alloy wheel)
+    # Rim faces
     for i in range(segments):
         ni = (i + 1) % segments
         f_rim_out = bm.faces.new([ring_rim_pos[i], ring_rim_pos[ni], ring_hub_pos[ni], ring_hub_pos[i]])
@@ -322,9 +380,9 @@ def build_wheel_mesh(name: str) -> bpy.types.Mesh:
         f_rim_in = bm.faces.new([ring_hub_neg[i], ring_hub_neg[ni], ring_rim_neg[ni], ring_rim_neg[i]])
         f_rim_in.material_index = 1
 
-    # Center hub caps on both sides
-    hub_center_pos = bm.verts.new(gd_to_bl(Vector((0.0, half_width * 1.02, 0.0))))
-    hub_center_neg = bm.verts.new(gd_to_bl(Vector((0.0, -half_width * 1.02, 0.0))))
+    # Center hub caps
+    hub_center_pos = bm.verts.new(Vector((0.0, half_width * 1.02, 0.0)))
+    hub_center_neg = bm.verts.new(Vector((0.0, -half_width * 1.02, 0.0)))
     for i in range(segments):
         ni = (i + 1) % segments
         f_hub_out = bm.faces.new([ring_hub_pos[i], ring_hub_pos[ni], hub_center_pos])
@@ -339,26 +397,29 @@ def build_wheel_mesh(name: str) -> bpy.types.Mesh:
 
 
 def build_pickup():
-    coll = bpy.data.collections.get(COLLECTION_NAME)
-    if coll is None:
-        coll = bpy.data.collections.new(COLLECTION_NAME)
-        bpy.context.scene.collection.children.link(coll)
-    else:
-        for obj in list(coll.objects):
-            coll.objects.unlink(obj)
-            bpy.data.objects.remove(obj)
+    # 1. Reset Blender completely to an empty scene
+    bpy.ops.wm.read_factory_settings(use_empty=True)
 
+    # Thoroughly purge any stray objects, meshes, or materials
+    for obj in list(bpy.data.objects):
+        bpy.data.objects.remove(obj, do_unlink=True)
+    for mesh in list(bpy.data.meshes):
+        bpy.data.meshes.remove(mesh, do_unlink=True)
+    for coll in list(bpy.data.collections):
+        bpy.data.collections.remove(coll)
+
+    # 2. Create the target collection
+    coll = bpy.data.collections.new(COLLECTION_NAME)
+    bpy.context.scene.collection.children.link(coll)
+
+    # 3. Build meshes
     body_mesh = build_body_mesh()
     windows_mesh = build_windows_mesh()
     trim_mesh = build_trim_mesh()
     bed_liner_mesh = build_bed_liner_mesh()
-
-    # Headlight & Taillight meshes centered at origin
-    hl_mesh = build_centered_light_mesh("headlight_mesh", "headlight", Vector((0.10, 0.20, 0.28)))
-    tl_mesh = build_centered_light_mesh("taillight_mesh", "taillight", Vector((0.10, 0.30, 0.16)))
-
-    # Reusable wheel mesh
-    wheel_mesh = build_wheel_mesh("wheel_mesh")
+    hl_mesh = build_centered_light_mesh("pickup_headlight", "headlight", Vector((0.10, 0.20, 0.28)))
+    tl_mesh = build_centered_light_mesh("pickup_taillight", "taillight", Vector((0.10, 0.30, 0.16)))
+    wheel_mesh = build_wheel_mesh("pickup_wheel")
 
     # Static body objects
     body_obj = bpy.data.objects.new("Body", body_mesh)
@@ -369,7 +430,7 @@ def build_pickup():
     for o in [body_obj, windows_obj, trim_obj, bed_liner_obj]:
         coll.objects.link(o)
 
-    # Headlights placed at exact locator positions matching Godot
+    # Headlights placed at exact locator positions
     hl_l_obj = bpy.data.objects.new("HeadlightL", hl_mesh)
     hl_l_obj.location = gd_to_bl(Vector((2.18, 0.88, 0.74)))
     coll.objects.link(hl_l_obj)
@@ -378,7 +439,7 @@ def build_pickup():
     hl_r_obj.location = gd_to_bl(Vector((2.18, 0.88, -0.74)))
     coll.objects.link(hl_r_obj)
 
-    # Taillights placed at exact locator positions matching Godot
+    # Taillights placed at exact locator positions
     tl_l_obj = bpy.data.objects.new("TaillightL", tl_mesh)
     tl_l_obj.location = gd_to_bl(Vector((-2.44, 1.12, 0.93)))
     coll.objects.link(tl_l_obj)
@@ -387,17 +448,18 @@ def build_pickup():
     tl_r_obj.location = gd_to_bl(Vector((-2.44, 1.12, -0.93)))
     coll.objects.link(tl_r_obj)
 
-    # Wheels at exact wheel positions
+    # Upright wheels at wheel axle centers
+    # In Blender: X = Godot X, Y = -Godot Z, Z = Godot Y
     wheel_positions = {
-        "Wheel_FL": Vector((WHEELBASE_F, WHEEL_Y, TRACK_Z)),
-        "Wheel_FR": Vector((WHEELBASE_F, WHEEL_Y, -TRACK_Z)),
-        "Wheel_RL": Vector((WHEELBASE_R, WHEEL_Y, TRACK_Z)),
-        "Wheel_RR": Vector((WHEELBASE_R, WHEEL_Y, -TRACK_Z)),
+        "Wheel_FL": Vector((WHEELBASE_F, -TRACK_Z, WHEEL_Y)),
+        "Wheel_FR": Vector((WHEELBASE_F, TRACK_Z, WHEEL_Y)),
+        "Wheel_RL": Vector((WHEELBASE_R, -TRACK_Z, WHEEL_Y)),
+        "Wheel_RR": Vector((WHEELBASE_R, TRACK_Z, WHEEL_Y)),
     }
 
     for name, pos in wheel_positions.items():
         w_obj = bpy.data.objects.new(name, wheel_mesh)
-        w_obj.location = gd_to_bl(pos)
+        w_obj.location = pos
         coll.objects.link(w_obj)
 
     print("Successfully built Pickup truck collection in Blender!")
