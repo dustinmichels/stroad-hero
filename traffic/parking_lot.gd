@@ -9,12 +9,16 @@ const ROWS := [
 	{"z": 24.0, "x0": 22.0, "count": 3, "nose": 1.0, "serves": &"cramped_inn"},  # CI West row, nose +Z
 	{"z": 24.0, "x0": 54.0, "count": 2, "nose": 1.0, "serves": &"cramped_inn"},  # CI East row, nose +Z
 	{"z": 26.0, "x0": -19.0, "count": 8, "nose": 1.0, "serves": &"strip_mall"},  # Mall row, nose +Z
+	{"z": -27.0, "x0": -50.0, "count": 2, "nose": -1.0, "serves": &"smell_store"},  # Smell store row, nose -Z
+	{"z": -21.2, "x0": -61.75, "count": 2, "spacing": 5.5, "nose": -1.0, "serves": &"smell_gas"},  # Smell gas row, nose -Z
 ]
 const ENTRANCES: Dictionary[StringName, Vector3] = {
 	&"walgroins": Vector3(-3, 0, -32),
 	&"taco_hell": Vector3(31.5, 0, -27.8),
 	&"cramped_inn": Vector3(45.7, 0, 27.75),
 	&"strip_mall": Vector3(-5, 0, 29.7),
+	&"smell_store": Vector3(-48.0, 0, -30.0),
+	&"smell_gas": Vector3(-59.0, 0, -21.2),
 }
 const TURN_IN_START := Vector3(17.0, 0.0, -5.6)
 const ENTRY_X := 13.0
@@ -47,6 +51,12 @@ const SM_ENTRY_X := -7.0
 const SM_EXIT_X := -3.0
 const SM_WAIT_POINT := Vector3(-3.0, 0.0, 9.6)
 const SM_MERGE_END := Vector3(1.0, 0.0, 5.6)
+const SMELL_TURN_IN_START := Vector3(-44.0, 0.0, -5.6)
+const SMELL_ENTRY_X := -48.0
+const SMELL_EXIT_X := -61.0
+const SMELL_WAIT_POINT := Vector3(-61.0, 0.0, -9.6)
+const SMELL_MERGE_END := Vector3(-65.0, 0.0, -5.6)
+const SMELL_AISLE_Z := -15.0
 ## Lots south of the road, entered from and exited to eastbound Lane 3 through a
 ## two-way driveway: enter at entry_x, leave at exit_x. Aisle z values are
 ## Vector2(west of the driveway column, east of it); entry and exit aisles differ so
@@ -88,6 +98,32 @@ static func south_lot(spot) -> StringName:
 	if pos.z <= 0.0:
 		return &""
 	return &"strip_mall" if pos.x < SOUTH_LOT_SPLIT_X else &"cramped_inn"
+
+
+static func is_smell(spot) -> bool:
+	if spot is ParkingSpot:
+		for s in spot.serves:
+			if s == &"smell_store" or s == &"smell_gas":
+				return true
+	var pos := _spot_position(spot)
+	return pos.z <= 0.0 and pos.x < -30.0
+
+
+static func lot_group(spot) -> StringName:
+	var s_lot := south_lot(spot)
+	if s_lot != &"":
+		return s_lot
+	if is_smell(spot):
+		return &"smell"
+	return &"north"
+
+
+static func dest_group(dest: StringName) -> StringName:
+	if SOUTH_LOTS.has(dest):
+		return dest
+	if dest == &"smell_store" or dest == &"smell_gas":
+		return &"smell"
+	return &"north"
 
 
 static func _spot_position(spot) -> Vector3:
@@ -182,6 +218,8 @@ static func entry_route(spot, radius := 4.0) -> Curve3D:
 	var site := south_lot(spot)
 	if site != &"":
 		return south_entry_route(site, spot, radius)
+	if is_smell(spot):
+		return smell_entry_route(spot, radius)
 	var sx: float = 0.0
 	var spot_pos := Vector3.ZERO
 	if spot is ParkingSpot:
@@ -236,10 +274,27 @@ static func south_entry_route(site: StringName, spot, radius := 4.0) -> Curve3D:
 	return PathBuilder.build(pts, radius)
 
 
+static func smell_entry_route(spot, radius := 4.0) -> Curve3D:
+	var spot_pos := _spot_position(spot)
+	var sx := spot_pos.x
+	var pts := PackedVector3Array(
+		[
+			SMELL_TURN_IN_START,
+			Vector3(SMELL_ENTRY_X, 0.0, -5.6 - radius),
+			Vector3(SMELL_ENTRY_X, 0.0, SMELL_AISLE_Z),
+			Vector3(sx, 0.0, SMELL_AISLE_Z),
+			spot_pos,
+		]
+	)
+	return PathBuilder.build(pts, radius)
+
+
 static func reverse_route(spot, radius := 4.0) -> Curve3D:
 	var site := south_lot(spot)
 	if site != &"":
 		return south_reverse_route(site, spot, radius)
+	if is_smell(spot):
+		return smell_reverse_route(spot, radius)
 	var sx: float = 0.0
 	var spot_pos := Vector3.ZERO
 	if spot is ParkingSpot:
@@ -290,10 +345,25 @@ static func south_reverse_route(site: StringName, spot, radius := 4.0) -> Curve3
 	return PathBuilder.build(pts, radius)
 
 
+static func smell_reverse_route(spot, radius := 4.0) -> Curve3D:
+	var spot_pos := _spot_position(spot)
+	var sx := spot_pos.x
+	var pts := PackedVector3Array(
+		[
+			Vector3(sx + 3.0, 0.0, SMELL_AISLE_Z),
+			Vector3(sx, 0.0, SMELL_AISLE_Z),
+			spot_pos,
+		]
+	)
+	return PathBuilder.build(pts, radius)
+
+
 static func exit_route(spot, radius := 4.0) -> Curve3D:
 	var site := south_lot(spot)
 	if site != &"":
 		return south_exit_route(site, spot, radius)
+	if is_smell(spot):
+		return smell_exit_route(spot, radius)
 	var sx: float = 0.0
 	if spot is ParkingSpot:
 		sx = spot.transform.origin.x
@@ -329,6 +399,30 @@ static func south_exit_route(site: StringName, spot, radius := 4.0) -> Curve3D:
 			Vector3(sx - sign_val * SOUTH_REVERSE_RUN, 0.0, aisle_z),
 			Vector3(lot_cfg["exit_x"], 0.0, aisle_z),
 			lot_cfg["wait"],
+		]
+	)
+	return PathBuilder.build(pts, radius)
+
+
+static func smell_exit_route(spot, radius := 4.0) -> Curve3D:
+	var spot_pos := _spot_position(spot)
+	var sx := spot_pos.x
+	var pts := PackedVector3Array(
+		[
+			Vector3(sx + 3.0, 0.0, SMELL_AISLE_Z),
+			Vector3(SMELL_EXIT_X, 0.0, SMELL_AISLE_Z),
+			SMELL_WAIT_POINT,
+		]
+	)
+	return PathBuilder.build(pts, radius)
+
+
+static func smell_merge_route(radius := 4.0) -> Curve3D:
+	var pts := PackedVector3Array(
+		[
+			SMELL_WAIT_POINT,
+			Vector3(SMELL_EXIT_X, 0.0, -5.6),
+			SMELL_MERGE_END,
 		]
 	)
 	return PathBuilder.build(pts, radius)
@@ -423,8 +517,9 @@ func _build_spots() -> void:
 		var rot_y: float = PI / 2.0 if nose < 0.0 else -PI / 2.0
 		var spot_basis := Basis(Vector3.UP, rot_y)
 
+		var spacing: float = row.get("spacing", STALL_SPACING)
 		for i in range(count):
-			var x: float = x0 + i * STALL_SPACING
+			var x: float = x0 + i * spacing
 			var spot := ParkingSpot.new()
 			spot.id = next_id
 			next_id += 1
@@ -466,9 +561,11 @@ func request_spot(car: Car, errand) -> ParkingSpot:
 	var best_cost := INF
 
 	# Cars can only poach spots reachable through the same driveway as their errand.
-	var dest_lot: StringName = dest if SOUTH_LOTS.has(dest) else &""
+	var target_group := dest_group(dest)
 	for spot in spots:
-		if not spot.is_free() or south_lot(spot) != dest_lot:
+		if not spot.is_free() or lot_group(spot) != target_group:
+			continue
+		if target_group == &"smell" and not (dest in spot.serves):
 			continue
 		var spot_2d := Vector2(spot.transform.origin.x, spot.transform.origin.z)
 		var dist := spot_2d.distance_to(entrance_2d)

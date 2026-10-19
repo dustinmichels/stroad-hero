@@ -9,7 +9,6 @@ const TruckScene = preload("res://cars/truck.tscn")
 const VanScene = preload("res://cars/van.tscn")
 const ShippingTruckScene = preload("res://cars/shipping_truck.tscn")
 const TrafficDebugScript = preload("res://traffic/traffic_debug.gd")
-const Errand = preload("res://traffic/errand.gd")
 
 
 class Lane:
@@ -139,6 +138,8 @@ const DECISION_D_SM := 49.0
 const TURN_D_SM := 84.0
 const DECISION_D_CI := 94.0
 const TURN_D_CI := 129.0
+const DECISION_D_SMELL := 79.0
+const TURN_D_SMELL := 114.0
 const MAX_DRIVE_THRU_CAPACITY := 5
 const TACO_DT_ORDER_DIST := 38.5
 const TACO_DT_PICKUP_DIST := 75.1
@@ -395,9 +396,9 @@ func _update_lot_cars(delta: float) -> void:
 				if can_reverse_out(car):
 					var rev_route: Curve3D = null
 					if lot != null and car.spot != null:
-						rev_route = lot.reverse_route(car.spot)
+						rev_route = ParkingLot.reverse_route(car.spot)
 					elif car.spot != null and car.spot.lot != null:
-						rev_route = car.spot.lot.reverse_route(car.spot)
+						rev_route = ParkingLot.reverse_route(car.spot)
 					if rev_route != null:
 						car.state = CarScript.State.REVERSING_OUT
 						car.follow_path(rev_route, true)
@@ -429,9 +430,9 @@ func _update_lot_cars(delta: float) -> void:
 				car.blocked_time = 0.0
 				var exit_path: Curve3D = null
 				if lot != null and car.spot != null:
-					exit_path = lot.exit_route(car.spot)
+					exit_path = ParkingLot.exit_route(car.spot)
 				elif car.spot != null and car.spot.lot != null:
-					exit_path = car.spot.lot.exit_route(car.spot)
+					exit_path = ParkingLot.exit_route(car.spot)
 				if car.spot != null:
 					if lot != null:
 						lot.release(car.spot)
@@ -498,8 +499,10 @@ func _update_lot_cars(delta: float) -> void:
 				var m_route: Curve3D = null
 				if car.merge_target_lane == 3:
 					m_route = lane3_merge_path(car.global_position.x)
+				elif car.global_position.x < -30.0:
+					m_route = ParkingLot.smell_merge_route()
 				elif lot != null:
-					m_route = lot.merge_route()
+					m_route = ParkingLot.merge_route()
 				else:
 					m_route = ParkingLot.merge_route()
 				car.follow_path(m_route)
@@ -1006,6 +1009,8 @@ func _can_merge(car: Car) -> bool:
 			var my_d: float
 			if target_lane_id == 3:
 				my_d = target_lane.distance_at(lane3_merge_x(car.global_position.x))
+			elif car.global_position.x < -30.0:
+				my_d = target_lane.distance_at(ParkingLot.SMELL_WAIT_POINT.x)
 			else:
 				my_d = 61.0
 			if absf(other_d - my_d) < 25.0:
@@ -1014,6 +1019,8 @@ func _can_merge(car: Car) -> bool:
 	var merge_dist: float
 	if target_lane_id == 3:
 		merge_dist = target_lane.distance_at(lane3_merge_x(car.global_position.x))
+	elif car.global_position.x < -30.0:
+		merge_dist = target_lane.distance_at(ParkingLot.SMELL_WAIT_POINT.x)
 	else:
 		merge_dist = 61.0
 
@@ -1139,7 +1146,7 @@ func spawn_debug_car() -> Car:
 	car.had_errand = true
 	add_child(car)
 	lot.reserve(chosen_spot, car)
-	var route := lot.entry_route(chosen_spot)
+	var route := ParkingLot.entry_route(chosen_spot)
 	car.state = CarScript.State.TO_SPOT
 	car.speed = V_LOT
 	car.desired_speed = V_LOT
@@ -1169,11 +1176,42 @@ func spawn_south_lot_car(site: StringName) -> Car:
 	car.merge_target_lane = 3
 	add_child(car)
 	lot.reserve(chosen_spot, car)
-	var route := lot.entry_route(chosen_spot)
+	var route := ParkingLot.entry_route(chosen_spot)
 	car.state = CarScript.State.TO_SPOT
 	car.speed = V_LOT
 	car.desired_speed = V_LOT
 	car.follow_path(route)
+	lot_cars.append(car)
+	stats["cars_spawned"] += 1
+	stats["errands_assigned"] += 1
+	return car
+
+
+func spawn_smell_car(dest: StringName = &"smell_gas") -> Car:
+	if lot == null:
+		return null
+	var candidate_spots: Array[ParkingSpot] = []
+	for s in lot.get_free_spots():
+		if dest in s.serves:
+			candidate_spots.append(s)
+	if candidate_spots.is_empty():
+		return null
+	var chosen_spot: ParkingSpot = candidate_spots[randi() % candidate_spots.size()]
+	var car: Car = PassengerCarScene.instantiate()
+	var parkable_types := CarScript.PARKING_CAR_TYPES
+	var chosen_type: CarScript.CarType = parkable_types[randi() % parkable_types.size()]
+	car.car_type = chosen_type
+	var dwell := randf_range(12.0, 25.0) if dest == &"smell_gas" else randf_range(15.0, 35.0)
+	car.errand = Errand.new(dest, dwell)
+	car.had_errand = true
+	car.merge_target_lane = 0
+	add_child(car)
+	lot.reserve(chosen_spot, car)
+	var route := lot.entry_route(chosen_spot)
+	car.follow_path(route)
+	car.speed = V_LOT
+	car.desired_speed = V_LOT
+	car.state = CarScript.State.TO_SPOT
 	lot_cars.append(car)
 	stats["cars_spawned"] += 1
 	stats["errands_assigned"] += 1
@@ -1192,6 +1230,10 @@ func _unhandled_input(event: InputEvent) -> void:
 			spawn_south_lot_car(&"cramped_inn")
 		elif event.keycode == KEY_F8 or event.physical_keycode == KEY_F8:
 			spawn_south_lot_car(&"strip_mall")
+		elif event.keycode == KEY_F9 or event.physical_keycode == KEY_F9:
+			spawn_smell_car(&"smell_gas")
+		elif event.keycode == KEY_F10 or event.physical_keycode == KEY_F10:
+			spawn_smell_car(&"smell_store")
 
 
 func _update_lane_spawning(lane: Lane, delta: float) -> void:
@@ -1249,13 +1291,22 @@ func _spawn_car_at(lane: Lane, initial_distance: float, scene: PackedScene = nul
 	car.setup(lane.id, lane.z, lane.direction, lane.start_x, lane.length, spd, chosen_type)
 	car.lane_distance = initial_distance
 	car.update_presentation()
-	if lane.id == 0 and car.can_park() and initial_distance < DECISION_D and randf() < P_ERRAND:
-		if randf() < 0.35:
-			car.errand = Errand.new(&"taco_hell_drive_thru", randf_range(10.0, 25.0))
-		else:
-			car.errand = Errand.random()
-		car.had_errand = true
-		stats["errands_assigned"] += 1
+	if lane.id == 0 and car.can_park() and randf() < P_ERRAND:
+		if initial_distance < DECISION_D:
+			if randf() < 0.35:
+				car.errand = Errand.new(&"taco_hell_drive_thru", randf_range(10.0, 25.0))
+			else:
+				car.errand = Errand.random()
+			car.had_errand = true
+			stats["errands_assigned"] += 1
+		elif initial_distance < DECISION_D_SMELL:
+			var roll := randf()
+			if roll < 0.5:
+				car.errand = Errand.new(&"smell_store", randf_range(15.0, 35.0))
+			else:
+				car.errand = Errand.new(&"smell_gas", randf_range(12.0, 25.0))
+			car.had_errand = true
+			stats["errands_assigned"] += 1
 	elif lane.id == 3 and car.can_park() and randf() < P_ERRAND:
 		var roll := randf()
 		if initial_distance < DECISION_D_BK:
@@ -1325,24 +1376,30 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 			continue
 		# Decision point for errand cars
 		if car.state == Car.State.CRUISING and car.errand != null:
-			if lane.id == 0 and car.lane_distance >= DECISION_D:
-				if car.errand.destination == &"taco_hell_drive_thru":
-					if _count_drive_thru_cars(&"taco_hell_drive_thru") < MAX_DRIVE_THRU_CAPACITY:
-						car.state = Car.State.APPROACHING
-						car.set_turn_signal(CarScript.TurnSignal.RIGHT)
-					else:
-						car.errand = null
-						car.had_errand = false
-						stats["errands_dropped_lot_full"] += 1
-				elif lot != null:
-					var spot = lot.request_spot(car, car.errand)
-					if spot != null:
-						car.state = Car.State.APPROACHING
-						car.set_turn_signal(CarScript.TurnSignal.RIGHT)
-					else:
-						car.errand = null
-						car.had_errand = false
-						stats["errands_dropped_lot_full"] += 1
+			if lane.id == 0:
+				var is_smell_dest: bool = car.errand.is_smell()
+				var dec_d := DECISION_D_SMELL if is_smell_dest else DECISION_D
+				if car.lane_distance >= dec_d:
+					if car.errand.destination == &"taco_hell_drive_thru":
+						if (
+							_count_drive_thru_cars(&"taco_hell_drive_thru")
+							< MAX_DRIVE_THRU_CAPACITY
+						):
+							car.state = Car.State.APPROACHING
+							car.set_turn_signal(CarScript.TurnSignal.RIGHT)
+						else:
+							car.errand = null
+							car.had_errand = false
+							stats["errands_dropped_lot_full"] += 1
+					elif lot != null:
+						var spot = lot.request_spot(car, car.errand)
+						if spot != null:
+							car.state = Car.State.APPROACHING
+							car.set_turn_signal(CarScript.TurnSignal.RIGHT)
+						else:
+							car.errand = null
+							car.had_errand = false
+							stats["errands_dropped_lot_full"] += 1
 			elif lane.id == 3:
 				if car.errand.destination == &"booger_king" and car.lane_distance >= DECISION_D_BK:
 					if _count_drive_thru_cars(&"booger_king") < MAX_DRIVE_THRU_CAPACITY:
@@ -1410,13 +1467,13 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 					else:
 						car.state = Car.State.TO_SPOT
 						if lot != null and car.spot != null:
-							car.follow_path(lot.entry_route(car.spot))
+							car.follow_path(ParkingLot.entry_route(car.spot))
 				elif lane.id == 3:
 					car.merge_target_lane = 3
 					if car.errand != null and not car.errand.is_drive_thru():
 						car.state = Car.State.TO_SPOT
 						if lot != null and car.spot != null:
-							car.follow_path(lot.entry_route(car.spot))
+							car.follow_path(ParkingLot.entry_route(car.spot))
 					else:
 						car.state = Car.State.DRIVE_THRU
 						car.follow_path(booger_king_drive_thru_path)
@@ -1454,6 +1511,9 @@ func _lane3_lot_decision_d(dest: StringName) -> float:
 ## Lane distance at which an approaching car leaves its lane for the turn-in path.
 func _turn_d(lane_id: int, car: Car) -> float:
 	if lane_id == 0:
+		var dest: StringName = car.errand.destination if car.errand != null else &""
+		if dest == &"smell_store" or dest == &"smell_gas":
+			return TURN_D_SMELL
 		return TURN_D
 	var dest: StringName = car.errand.destination if car.errand != null else &""
 	match dest:

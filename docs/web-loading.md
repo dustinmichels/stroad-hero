@@ -1,12 +1,12 @@
 # Web Loading and Startup Architecture
 
-This document describes the browser startup lifecycle, performance bottlenecks, and the multi-stage progress tracking system used in **Stroad Hero**'s Web export (`web/shell.html` and `ui/start_screen.gd`).
+This document describes the browser startup lifecycle, performance bottlenecks, and the multi-stage progress tracking system used in **Stroad Hero**'s Web export (`web/custom_web_template.html` and `ui/start_screen.gd`).
 
 ---
 
 ## 1. Overview & Problem Context
 
-When exporting Godot 4.7 to the Web, the game runs via WebAssembly and WebGL2 inside a custom HTML shell (`web/shell.html`).
+When exporting Godot 4.7 to the Web, the game runs via WebAssembly and WebGL2 inside a custom HTML shell (`web/custom_web_template.html`).
 
 In default setups, progress bars hook into `engine.startGame({ onProgress })`. However, `onProgress` **only tracks network byte download** for `.wasm` and `.pck`. Once downloads reach 100%, the browser and Godot engine still have to execute several heavy initialization phases before the game becomes interactive. On mobile devices with slower single-thread performance, this caused the start screen to appear frozen at 100% before suddenly launching.
 
@@ -24,7 +24,7 @@ The startup sequence is divided into five distinct phases:
 | **4** | **Scene Load & Shader Compilation**  | Godot C++ `Main::start()`, WebGL2 driver     | ~1–4 seconds                 | `Compiling shaders & loading world...` |
 | **5** | **Warmup & First Frame Settle**      | `StartScreen._ready()` in GDScript           | 2 process frames (~33–66 ms) | `Ready!`                               |
 
-> **Note**: Timing estimates vary significantly across mobile chipsets and thermal states. `web/shell.html` instruments each transition with `performance.now()` logging to the browser console (`[Startup] Download completed...`, `[Startup] Engine started...`, `[Startup] Godot ready...`) to allow empirical profiling.
+> **Note**: Timing estimates vary significantly across mobile chipsets and thermal states. `web/custom_web_template.html` instruments each transition with `performance.now()` logging to the browser console (`[Startup] Download completed...`, `[Startup] Engine started...`, `[Startup] Godot ready...`) to allow empirical profiling.
 
 ### Detailed Breakdown
 
@@ -51,7 +51,7 @@ The startup sequence is divided into five distinct phases:
 
 ## 3. Staged Progress Bar Architecture
 
-To prevent the UI from freezing at 100% and to keep the user informed during shader and engine compilation, the progress bar in `web/shell.html` maps the startup sequence to **weighted stages**:
+To prevent the UI from freezing at 100% and to keep the user informed during shader and engine compilation, the progress bar in `web/custom_web_template.html` maps the startup sequence to **weighted stages**:
 
 ```
 0% ──────────── 70% ──────────── 85% ──────────── 95% ──── 100%
@@ -90,7 +90,7 @@ The HTML shell and GDScript communicate through window-level bridge methods:
 
 ### Safety Fallback Timeout
 
-- In `web/shell.html`, a fallback timer runs in `.then()`. If `window.godotReady()` is not received within **20 seconds** (e.g., due to an unexpected script error or extreme shader compilation lag on budget mobile chipsets), `finishStartup()` runs automatically so players are not permanently blocked behind the loading overlay.
+- In `web/custom_web_template.html`, a fallback timer runs in `.then()`. If `window.godotReady()` is not received within **20 seconds** (e.g., due to an unexpected script error or extreme shader compilation lag on budget mobile chipsets), `finishStartup()` runs automatically so players are not permanently blocked behind the loading overlay.
 
 ---
 
@@ -99,5 +99,5 @@ The HTML shell and GDScript communicate through window-level bridge methods:
 In `export_presets.cfg`:
 
 - `variant/thread_support=false`: Godot runs single-threaded on Web. Required for GitHub Pages deployment without Cross-Origin Isolation headers (`COOP`/`COEP`).
-- `html/custom_html_shell="res://web/shell.html"`: Points to the custom responsive HTML shell.
+- `html/custom_html_shell="res://web/custom_web_template.html"`: Points to the custom responsive HTML template.
 - `vram_texture_compression/for_mobile=false`: Mobile uses standard desktop texture formats unless mobile compression is configured.

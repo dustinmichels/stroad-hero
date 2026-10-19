@@ -102,6 +102,16 @@ var _ci_saw_wait: bool = false
 var _ci_saw_merge: bool = false
 var _ci_saw_rejoin: bool = false
 var _ci_site: StringName = &"cramped_inn"
+var _smell_saw_cruise: bool = false
+var _smell_saw_decision: bool = false
+var _smell_saw_turn: bool = false
+var _smell_saw_park: bool = false
+var _smell_saw_reverse: bool = false
+var _smell_saw_exit: bool = false
+var _smell_saw_wait: bool = false
+var _smell_saw_merge: bool = false
+var _smell_saw_rejoin: bool = false
+var _smell_dest: StringName = &"smell_gas"
 
 
 static func _get_lamp_bulb_on_mat() -> StandardMaterial3D:
@@ -430,6 +440,45 @@ func _ready() -> void:
 		if hud and hud.night_mode_button:
 			assert("DAY" in hud.night_mode_button.text, "HUD button must show DAY")
 
+		# Test direct 3-way toggle clicks on slots
+		if hud and hud.night_mode_button:
+			var toggle: Control = hud.night_mode_button
+			var click_slot := func(x_ratio: float) -> void:
+				var pos := Vector2(toggle.size.x * x_ratio, 10.0)
+				var press := InputEventMouseButton.new()
+				press.button_index = MOUSE_BUTTON_LEFT
+				press.pressed = true
+				press.position = pos
+				toggle._gui_input(press)
+				var release := InputEventMouseButton.new()
+				release.button_index = MOUSE_BUTTON_LEFT
+				release.pressed = false
+				release.position = pos
+				toggle._gui_input(release)
+
+			# Click slot 1 (SUNSET)
+			click_slot.call(0.5)
+			assert(
+				GameState.time_of_day == GameState.TimeOfDay.EVENING,
+				"Clicking center slot must switch to EVENING"
+			)
+			assert("SUNSET" in toggle.text, "HUD must show SUNSET after clicking center slot")
+
+			# Click active slot (SUNSET) again: must produce exactly one cycle transition to NIGHT
+			click_slot.call(0.5)
+			assert(
+				GameState.time_of_day == GameState.TimeOfDay.NIGHT,
+				"Clicking active center slot must cycle to NIGHT"
+			)
+			assert("NIGHT" in toggle.text, "HUD must show NIGHT after cycling active slot")
+
+			# Click slot 0 (DAY) directly
+			click_slot.call(0.15)
+			assert(
+				GameState.time_of_day == GameState.TimeOfDay.DAY,
+				"Clicking left slot must switch to DAY"
+			)
+			assert("DAY" in toggle.text, "HUD must show DAY after clicking left slot")
 		print(
 			"NIGHT_MODE_TEST: SUCCESS - toggling night mode updates GameState, streetlights, car headlamps, beam directions, and HUD"
 		)
@@ -724,6 +773,22 @@ func _ready() -> void:
 		_test_car = traffic_mgr._spawn_car_at(lane3, start_d, traffic_mgr.PassengerCarScene)
 		_test_car.car_type = Car.CarType.SEDAN
 		_test_car.errand = Errand.new(_ci_site, 1.0)
+		_test_car.had_errand = true
+		_test_car.desired_speed = 12.0
+		_test_car.speed = 12.0
+	if "--test-smell-store" in _user_args or "--test-smell-gas" in _user_args:
+		_smell_dest = &"smell_gas" if "--test-smell-gas" in _user_args else &"smell_store"
+		var traffic_mgr = $TrafficManager
+		assert(traffic_mgr != null, "TrafficManager must exist")
+		var lane0 = traffic_mgr.lanes[0]
+		for c in lane0.cars:
+			c.queue_free()
+		lane0.cars.clear()
+		lane0.spawn_timer = 9999.0
+		var start_d: float = traffic_mgr.DECISION_D_SMELL - 14.0
+		_test_car = traffic_mgr._spawn_car_at(lane0, start_d, traffic_mgr.PassengerCarScene)
+		_test_car.car_type = Car.CarType.SEDAN
+		_test_car.errand = Errand.new(_smell_dest, 1.0)
 		_test_car.had_errand = true
 		_test_car.desired_speed = 12.0
 		_test_car.speed = 12.0
@@ -2452,6 +2517,114 @@ func _physics_process(_delta: float) -> void:
 					return
 		if _test_frames > 2400:
 			assert(false, "Timeout waiting for %s test completion!" % _ci_site)
+
+	if "--test-smell-store" in _user_args or "--test-smell-gas" in _user_args:
+		var tag := String(_smell_dest).to_upper()
+		_test_frames += 1
+		if _test_car != null and is_instance_valid(_test_car):
+			if (
+				_test_car.state == Car.State.CRUISING
+				and _test_car.lane_id == 0
+				and not _smell_saw_merge
+			):
+				if not _smell_saw_cruise:
+					_smell_saw_cruise = true
+					print(
+						(
+							"%s [1/8]: cruising west in lane 0 (pos=%s)"
+							% [tag, str(_test_car.global_position)]
+						)
+					)
+			elif _test_car.state == Car.State.APPROACHING:
+				if not _smell_saw_decision:
+					_smell_saw_decision = true
+					assert(_test_car.spot != null, "Must have reserved a spot")
+					assert(
+						_test_car.spot.serves.has(_smell_dest), "Spot must serve %s" % _smell_dest
+					)
+					assert(
+						_test_car.turn_signal == Car.TurnSignal.RIGHT, "Turn signal must be RIGHT"
+					)
+					print(
+						(
+							"%s [2/8]: decision & approach turn (spot=%d, pos=%s)"
+							% [tag, _test_car.spot.id, str(_test_car.global_position)]
+						)
+					)
+			elif _test_car.state == Car.State.TO_SPOT:
+				if not _smell_saw_turn:
+					_smell_saw_turn = true
+					assert(_test_car.merge_target_lane == 0, "merge_target_lane must be 0")
+					print(
+						(
+							"%s [3/8]: turned into driveway (pos=%s)"
+							% [tag, str(_test_car.global_position)]
+						)
+					)
+			elif _test_car.state == Car.State.PARKED:
+				if not _smell_saw_park:
+					_smell_saw_park = true
+					_test_car.dwell_left = minf(_test_car.dwell_left, 0.5)
+					assert(
+						_test_car.spot.state == ParkingSpot.State.OCCUPIED, "Spot must be OCCUPIED"
+					)
+					print(
+						(
+							"%s [4/8]: parked at destination (spot=%d, pos=%s)"
+							% [tag, _test_car.spot.id, str(_test_car.global_position)]
+						)
+					)
+			elif _test_car.state == Car.State.REVERSING_OUT:
+				if not _smell_saw_reverse:
+					_smell_saw_reverse = true
+					print(
+						"%s [5/8]: reversing out (pos=%s)" % [tag, str(_test_car.global_position)]
+					)
+			elif _test_car.state == Car.State.TO_EXIT:
+				if not _smell_saw_exit:
+					_smell_saw_exit = true
+					print(
+						"%s [6/8]: driving to exit (pos=%s)" % [tag, str(_test_car.global_position)]
+					)
+			elif _test_car.state == Car.State.WAITING_TO_MERGE:
+				if not _smell_saw_wait:
+					_smell_saw_wait = true
+					var wait_point: Vector3 = ParkingLot.SMELL_WAIT_POINT
+					assert(
+						_test_car.global_position.distance_to(wait_point) < 1.0,
+						"Must be at the smell wait point"
+					)
+					print(
+						(
+							"%s [7/8]: waiting to merge (wait_point=%s, pos=%s)"
+							% [tag, str(wait_point), str(_test_car.global_position)]
+						)
+					)
+			elif _test_car.state == Car.State.MERGING:
+				if not _smell_saw_merge:
+					_smell_saw_merge = true
+					print(
+						(
+							"%s [8/8]: merging into lane 0 (pos=%s)"
+							% [tag, str(_test_car.global_position)]
+						)
+					)
+			elif (
+				_test_car.state == Car.State.CRUISING
+				and _test_car.lane_id == 0
+				and _smell_saw_merge
+			):
+				if not _smell_saw_rejoin:
+					_smell_saw_rejoin = true
+					assert(
+						absf(_test_car.global_position.z - (-5.6)) < 0.5,
+						"Car must be in Lane 0 (z=-5.6)"
+					)
+					print("%s: SUCCESS - full errand cycle complete!" % tag)
+					get_tree().quit(0)
+					return
+		if _test_frames > 3600:
+			assert(false, "Timeout waiting for %s test completion!" % _smell_dest)
 
 
 func _on_player_died(pos: Vector3) -> void:

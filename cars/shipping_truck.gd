@@ -26,7 +26,7 @@ func setup(
 	p_start_x: float,
 	p_lane_len: float,
 	p_speed: float,
-	p_type: CarType = CarType.SHIPPING_TRUCK
+	_p_type: CarType = CarType.SHIPPING_TRUCK
 ) -> void:
 	super.setup(p_lane_id, p_lane_z, p_dir, p_start_x, p_lane_len, p_speed, CarType.SHIPPING_TRUCK)
 

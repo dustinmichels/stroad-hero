@@ -20,7 +20,7 @@
 [ext_resource type="PackedScene" path="res://ui/start_screen.tscn" id="18_start_screen"]
 [ext_resource type="PackedScene" path="res://buildings/strip_mall.tscn" id="19_strip_mall"]
 [ext_resource type="Shader" uid="uid://8j2ppnyxf3xo" path="res://shaders/pavement.gdshader" id="20_pavement_shader"]
-[ext_resource type="Script" uid="uid://bp1g4xwckp52h" path="res://props/pavement_details.gd" id="21_pavement_details"]
+[ext_resource type="Script" path="res://props/pavement_details.gd" id="21_pavement_details"]
 [ext_resource type="PackedScene" path="res://buildings/smell_gas_station.tscn" id="22_smell"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
@@ -616,6 +616,18 @@ mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_N_16" type="MeshInstance3D" parent="Parking" unique_id=1877989131]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0.06, -28.5)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_Smell_m52" type="MeshInstance3D" parent="Parking"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -52, 0.06, -27)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_Smell_m48" type="MeshInstance3D" parent="Parking"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -48, 0.06, -27)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_Smell_m44" type="MeshInstance3D" parent="Parking"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -44, 0.06, -27)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_S_m20" type="MeshInstance3D" parent="Parking" unique_id=547576093]

@@ -14,13 +14,17 @@ func is_drive_thru() -> bool:
 	return destination == &"booger_king" or destination == &"taco_hell_drive_thru"
 
 
+func is_smell() -> bool:
+	return destination == &"smell_store" or destination == &"smell_gas"
+
+
 static func random() -> Errand:
-	var dest: StringName
-	var dwell: float
-	if randf() < 0.6:
-		dest = &"walgroins"
-		dwell = randf_range(20.0, 45.0)
+	var roll := randf()
+	if roll < 0.35:
+		return new(&"walgroins", randf_range(20.0, 45.0))
+	elif roll < 0.6:
+		return new(&"taco_hell", randf_range(15.0, 30.0))
+	elif roll < 0.8:
+		return new(&"smell_store", randf_range(15.0, 35.0))
 	else:
-		dest = &"taco_hell"
-		dwell = randf_range(15.0, 30.0)
-	return new(dest, dwell)
+		return new(&"smell_gas", randf_range(12.0, 25.0))

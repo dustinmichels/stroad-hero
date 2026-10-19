@@ -62,13 +62,26 @@ Expected: total nodes go from about 7,000 to about 1,500.
 The native physics step is about 3 ms. Turning individual scripts off gave noisy results, so it's still unknown whether the time goes to `traffic_manager.gd`, `car.gd`, or the physics server handling 21 car `Area3D`s.
 
 - [ ] Run the main scene from the editor and use Debugger → Profiler (per-function script time) and Visual Profiler (CPU/GPU per render stage).
-- [ ] Fix whatever tops the list. Likely candidates: per-tick `get_baked_length()` calls and per-car yielding checks in `_update_lot_cars`, or Area3D overlap monitoring that can be replaced with distance checks along the lane.
+- [ ] Fix whatever tops the list. Specific candidates from auditing `traffic_manager.gd`, `parking_lot.gd`, and `car.gd`:
+  - **Cache stall routes on `ParkingSpot`:** `can_reverse_out()` (`traffic_manager.gd:940`) calls `ParkingLot.reverse_route(car.spot)` on every physics tick while a parked car with `dwell_left <= 0` waits for traffic to clear, allocating and baking a fresh `Curve3D` at 60 Hz. Prebuilding `entry_route`, `reverse_route`, and `exit_route` on each `ParkingSpot` in `ParkingLot._build_spots()` removes all runtime `Curve3D` allocations.
+  - **Replace per-lookup `Array` keys in `_car_sweep()` with a revision counter or scalar fields:** `_car_sweep()` (`traffic_manager.gd:638`) allocates an 8-element `Array` key on every `find_blocker()` pair check to catch mid-tick mutations as `_update_lot_cars()` advances cars sequentially. Storing a lightweight `sweep_rev: int` counter on `Car` (incremented on transform/path/state/speed changes) or comparing scalar fields directly on the cached dictionary entry avoids allocating a new `Array` on every pair check while preserving mid-tick cache invalidation.
+  - **Remove per-tick `get_overlapping_bodies()` polling:** `Car.advance_simulation()` and `advance_path()` call `_check_player_overlap()` (`car.gd:609`) every physics tick for every moving car, even though `body_entered` is already connected in `_ready()`. Relying on `body_entered` (or a single distance check against the player node) avoids polling the physics server ~25 times per tick.
+  - **Partition lot conflict checks if car/lot counts grow:** `find_blocker()` $\rightarrow$ `_conflict_distance()` compares every active lot car against all others ($O(N_{\text{lot}}^2)$) and tests nested 2D SAT footprint pairs ($O(S_a \cdot S_b)$) along their lookahead horizons. Partitioning `lot_cars` by lot/driveway (north apron vs. each south lot) prevents cars in separate lots from running sweep checks against each other.
 
 ### 3c. Debug overlay
 
 `traffic/traffic_debug.gd` creates `Label3D`s and does per-frame work only while it's visible (F3).
 
 - [ ] Leave it as is, but consider stripping the node from release builds with `if not OS.is_debug_build(): queue_free()`.
+
+### 3d. Traffic and navigation architecture (`traffic_manager.gd`, `parking_lot.gd`)
+
+`TrafficManager` is a 1,500-line monolith that mixes lane spawning, car-following, lot state-machine transitions, 2D SAT footprint collision math, deadlock recovery, debug keybinds (`F4`–`F8`), and stats. Spatial constants are split across `ParkingLot` and `TrafficManager` and hardcoded in GDScript rather than derived from the 3D scene.
+
+- [ ] **Unify north and south lot definitions into a data-driven `LotSite` config:** `SOUTH_LOTS` (`parking_lot.gd:54`) already parameterizes `{turn_in, entry_x, exit_x, wait, merge_end, entry_aisle, exit_aisle}`, whereas the north lot (Walgroins / Taco Hell) uses separate top-level constants and functions (`ENTRY_X`, `EXIT_X`, `entry_route`, `reverse_route`, `exit_route`) and hardcoded decision/turn distances (`DECISION_D`, `TURN_D`, `merge_dist = 61.0` in `traffic_manager.gd`). Moving all lots and drive-thrus into a single table (including `lane_id`, `decision_d`, `turn_d`, `entrances`, and `merge_route`) removes the per-destination `if/elif` chains in `_spawn_car_at()`, `_update_lane_traffic()`, and `_can_merge()`.
+- [ ] **Split `TrafficManager` responsibilities:** Extract the 2D swept-footprint conflict solver and deadlock watchdog (`find_blocker`, `_car_sweep`, `_conflict_distance`, `_check_deadlock_watchdog`) into a dedicated helper (`traffic/lot_conflict_solver.gd`), leaving `TrafficManager` to orchestrate lane and lot lifecycles.
+- [ ] **Source lot/building coordinates from scene markers or validate them at startup:** `ParkingLot.ROWS`, `ENTRANCES`, and driveway coordinates are numeric literals that must manually match the baked `Parking` and building meshes in `main.tscn`. Reading `Marker3D` nodes from the scene tree (or asserting their alignment in debug builds) prevents silent drift when editing `main.tscn`.
+- [ ] **Clarify errand completion semantics:** `dwell_left <= 0` in `State.PARKED` starts `REVERSING_OUT`, but `car.errand` stays set until `MERGING` completes (`traffic_manager.gd:554`) and `stats["errands_completed"]` increments only when the car reaches `lane.length` and despawns (`traffic_manager.gd:1441`). Seeded parked cars (`_seed_parked_cars()`) have `errand == null` and `had_errand = false`. If multi-stop errands or pedestrian drivers (`docs/deferred.md`) are added, separate `complete_errand()` at stall departure from road despawn stats.
 
 ## 4. Author granular, ship merged: bake meshes at export
 

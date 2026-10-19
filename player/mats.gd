@@ -85,6 +85,9 @@ func _ready() -> void:
 	var material := StandardMaterial3D.new()
 	material.roughness = 0.8
 	_backpack.material_override = material
+	var backpack_pocket := _backpack.get_node_or_null("Pocket") as MeshInstance3D
+	if backpack_pocket:
+		backpack_pocket.material_override = material
 	var shoe_material := StandardMaterial3D.new()
 	shoe_material.roughness = 0.75
 	_left_shoe_upper.material_override = shoe_material

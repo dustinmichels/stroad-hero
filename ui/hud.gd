@@ -1,6 +1,8 @@
 class_name HUD
 extends CanvasLayer
 
+const TimeOfDayToggleScript = preload("res://ui/time_of_day_toggle.gd")
+
 @onready var spd_label: Label = %SpdLabel
 @onready var desc_label: Label = %DescLabel
 @onready var action_label: Label = %ActionLabel
@@ -56,56 +58,21 @@ func _setup_night_mode_button() -> void:
 		container.anchors_preset = Control.PRESET_TOP_RIGHT
 		container.anchor_left = 1.0
 		container.anchor_right = 1.0
-		container.offset_left = -220.0
+		container.offset_left = -254.0
 		container.offset_top = 20.0
 		container.offset_right = -20.0
-		container.offset_bottom = 68.0
+		container.offset_bottom = 54.0
 		container.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 
-		var btn := Button.new()
+		var btn = TimeOfDayToggleScript.new()
 		btn.name = "NightModeButton"
 		btn.unique_name_in_owner = true
-		btn.focus_mode = Control.FOCUS_NONE
-		btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-
-		var style_normal := StyleBoxFlat.new()
-		style_normal.bg_color = Color(0.08, 0.1, 0.13, 0.85)
-		style_normal.border_width_left = 2
-		style_normal.border_width_top = 2
-		style_normal.border_width_right = 2
-		style_normal.border_width_bottom = 2
-		style_normal.border_color = Color(0.95, 0.74, 0.14, 0.8)
-		style_normal.corner_radius_top_left = 8
-		style_normal.corner_radius_top_right = 8
-		style_normal.corner_radius_bottom_right = 8
-		style_normal.corner_radius_bottom_left = 8
-		style_normal.content_margin_left = 14.0
-		style_normal.content_margin_right = 14.0
-
-		var style_hover := style_normal.duplicate() as StyleBoxFlat
-		style_hover.bg_color = Color(0.14, 0.17, 0.22, 0.95)
-		style_hover.border_color = Color(1.0, 0.85, 0.25, 1.0)
-
-		var style_pressed := style_normal.duplicate() as StyleBoxFlat
-		style_pressed.bg_color = Color(0.05, 0.07, 0.09, 0.95)
-		style_pressed.border_color = Color(0.8, 0.6, 0.1, 1.0)
-
-		btn.add_theme_stylebox_override("normal", style_normal)
-		btn.add_theme_stylebox_override("hover", style_hover)
-		btn.add_theme_stylebox_override("pressed", style_pressed)
-		btn.add_theme_color_override("font_color", Color(1.0, 0.95, 0.88, 1.0))
-		btn.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 1.0, 1.0))
-		btn.add_theme_font_size_override("font_size", 14)
-
-		var font := load("res://fonts/ArchivoBlack-Regular.ttf") as Font
-		if font:
-			btn.add_theme_font_override("font", font)
 
 		container.add_child(btn)
 		add_child(container)
 		night_mode_button = btn
-
-	night_mode_button.pressed.connect(_on_night_mode_button_pressed)
+	if not night_mode_button.has_method("set_mode"):
+		night_mode_button.pressed.connect(_on_night_mode_button_pressed)
 	if GameState.instance:
 		GameState.instance.time_of_day_changed.connect(_on_time_of_day_changed)
 	_update_night_mode_button(GameState.time_of_day)
@@ -125,16 +92,19 @@ func _update_night_mode_button(mode: Variant) -> void:
 	var tod: GameState.TimeOfDay = GameState.time_of_day
 	if mode is GameState.TimeOfDay:
 		tod = mode
-	match tod:
-		GameState.TimeOfDay.DAY:
-			night_mode_button.text = "TIME: DAY [N]"
-			night_mode_button.tooltip_text = "Time of Day: Day (Click or press N for Sunset)"
-		GameState.TimeOfDay.EVENING:
-			night_mode_button.text = "TIME: SUNSET [N]"
-			night_mode_button.tooltip_text = "Time of Day: Sunset (Click or press N for Night)"
-		GameState.TimeOfDay.NIGHT:
-			night_mode_button.text = "TIME: NIGHT [N]"
-			night_mode_button.tooltip_text = "Time of Day: Night (Click or press N for Day)"
+	if night_mode_button.has_method("set_mode"):
+		night_mode_button.set_mode(tod)
+	else:
+		match tod:
+			GameState.TimeOfDay.DAY:
+				night_mode_button.text = "TIME: DAY [N]"
+				night_mode_button.tooltip_text = "Time of Day: Day (Click or press N for Sunset)"
+			GameState.TimeOfDay.EVENING:
+				night_mode_button.text = "TIME: SUNSET [N]"
+				night_mode_button.tooltip_text = "Time of Day: Sunset (Click or press N for Night)"
+			GameState.TimeOfDay.NIGHT:
+				night_mode_button.text = "TIME: NIGHT [N]"
+				night_mode_button.tooltip_text = "Time of Day: Night (Click or press N for Day)"
 
 
 func _unhandled_input(event: InputEvent) -> void:

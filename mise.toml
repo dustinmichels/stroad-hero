@@ -18,3 +18,9 @@ fi
 mkdir -p build/web
 /Applications/Godot.app/Contents/MacOS/Godot --headless --path "$work" --export-release "Web" "$PWD/build/web/index.html"
 '''
+
+[tasks.web]
+description = "Build the Web export and serve locally at http://localhost:8080"
+depends = ["export-web"]
+raw = true
+run = "python3 -m http.server 8080 --directory build/web"

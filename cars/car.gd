@@ -1,8 +1,6 @@
 class_name Car
 extends Area3D
 
-const Errand = preload("res://traffic/errand.gd")
-
 enum CarType {SEDAN, SUV, TAXI, TRUCK, PICKUP, BUS, HATCHBACK, MINIVAN, SPORTS, VAN, SHIPPING_TRUCK}
 
 enum Motion { LANE, PATH }

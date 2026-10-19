@@ -20,7 +20,6 @@ static func build(points: PackedVector3Array, radius := 4.0) -> Curve3D:
 
 	# Start by adding the very first point of the polyline
 	# Interior corners will add fillet entry and exit points with handles.
-	var last_added_point := pts[0]
 	curve.add_point(pts[0])
 
 	for i in range(1, pts.size() - 1):
@@ -53,7 +52,6 @@ static func build(points: PackedVector3Array, radius := 4.0) -> Curve3D:
 		# If nearly straight or radius is negligible, pass through corner point
 		if theta < 0.001 or r < 0.0001:
 			curve.add_point(p_corner)
-			last_added_point = p_corner
 			continue
 
 		# Trim distance: d = r · tan(θ / 2)
@@ -77,8 +75,6 @@ static func build(points: PackedVector3Array, radius := 4.0) -> Curve3D:
 		# At p_exit, curve arrives along dir_out, so in_handle = -dir_out * h
 		curve.add_point(p_entry, Vector3.ZERO, dir_in * h)
 		curve.add_point(p_exit, -dir_out * h, Vector3.ZERO)
-
-		last_added_point = p_exit
 
 	# Finally add the destination point
 	curve.add_point(pts[pts.size() - 1])
