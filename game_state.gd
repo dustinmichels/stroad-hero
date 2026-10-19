@@ -6,8 +6,10 @@ extends Node
 
 ## Emitted whenever the wind direction or speed updates.
 signal wind_changed(direction: Vector3, speed: float)
-## Emitted whenever night mode is toggled on or off.
-signal night_mode_changed(enabled: bool)
+enum TimeOfDay { DAY, EVENING, NIGHT }
+
+## Emitted whenever the time of day changes.
+signal time_of_day_changed(mode: TimeOfDay)
 
 ## Base prevailing wind angle (in radians). Default ~12° (0.209 rad, blowing eastward along the stroad corridor).
 @export var base_wind_angle: float = 0.20944
@@ -18,11 +20,16 @@ signal night_mode_changed(enabled: bool)
 ## Speed multiplier for wind changes over time.
 @export var wind_variation_speed: float = 1.0
 
-## Initial night mode setting (false = day, true = night).
-@export var initial_night_mode: bool = false
+## Initial time of day setting.
+@export var initial_time_of_day: TimeOfDay = TimeOfDay.DAY
 
-## Current night mode state (false = day, true = night).
-static var night_mode: bool = false
+## Current time of day state.
+static var time_of_day: TimeOfDay = TimeOfDay.DAY
+
+## Current night mode state (true if TimeOfDay.NIGHT).
+static var night_mode: bool:
+	get:
+		return time_of_day == TimeOfDay.NIGHT
 
 ## Global wind direction (normalized 3D vector in horizontal XZ plane, Y = 0.0).
 ## Points in the direction the wind is blowing towards.
@@ -61,9 +68,15 @@ func _exit_tree() -> void:
 
 func _ready() -> void:
 	_update_wind_calculation(base_wind_angle, base_wind_speed)
-	night_mode = initial_night_mode or "--night-mode" in OS.get_cmdline_user_args()
-	if night_mode and instance:
-		instance.night_mode_changed.emit(true)
+	var user_args := OS.get_cmdline_user_args()
+	if "--night-mode" in user_args:
+		time_of_day = TimeOfDay.NIGHT
+	elif "--evening-mode" in user_args or "--sunset-mode" in user_args:
+		time_of_day = TimeOfDay.EVENING
+	else:
+		time_of_day = initial_time_of_day
+	if time_of_day != TimeOfDay.DAY and instance:
+		instance.time_of_day_changed.emit(time_of_day)
 
 
 func _process(delta: float) -> void:
@@ -135,16 +148,38 @@ static func resume_wind_simulation() -> void:
 	_manual_override = false
 
 
+## Returns true if environment artificial lights (streetlights, headlamps) should be active.
+static func are_lights_on() -> bool:
+	return time_of_day != TimeOfDay.DAY
+
+
+## Explicitly set the time of day.
+static func set_time_of_day(mode: TimeOfDay) -> void:
+	if time_of_day == mode:
+		return
+	time_of_day = mode
+	if instance:
+		instance.time_of_day_changed.emit(mode)
+
+
+## Cycles time of day (DAY -> EVENING -> NIGHT -> DAY) and returns the new state.
+static func cycle_time_of_day() -> TimeOfDay:
+	match time_of_day:
+		TimeOfDay.DAY:
+			set_time_of_day(TimeOfDay.EVENING)
+		TimeOfDay.EVENING:
+			set_time_of_day(TimeOfDay.NIGHT)
+		TimeOfDay.NIGHT:
+			set_time_of_day(TimeOfDay.DAY)
+	return time_of_day
+
+
 ## Explicitly set night mode on or off.
 static func set_night_mode(enabled: bool) -> void:
-	if night_mode == enabled:
-		return
-	night_mode = enabled
-	if instance:
-		instance.night_mode_changed.emit(enabled)
+	set_time_of_day(TimeOfDay.NIGHT if enabled else TimeOfDay.DAY)
 
 
-## Toggles night mode and returns the new state.
+## Toggles night mode / cycles time of day and returns the new state.
 static func toggle_night_mode() -> bool:
-	set_night_mode(not night_mode)
-	return night_mode
+	cycle_time_of_day()
+	return time_of_day != TimeOfDay.DAY

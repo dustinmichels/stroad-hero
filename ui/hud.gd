@@ -27,11 +27,9 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
-	if (
-		GameState.instance
-		and GameState.instance.night_mode_changed.is_connected(_on_night_mode_changed)
-	):
-		GameState.instance.night_mode_changed.disconnect(_on_night_mode_changed)
+	if GameState.instance:
+		if GameState.instance.time_of_day_changed.is_connected(_on_time_of_day_changed):
+			GameState.instance.time_of_day_changed.disconnect(_on_time_of_day_changed)
 
 
 func _setup_fade_overlay() -> void:
@@ -109,33 +107,40 @@ func _setup_night_mode_button() -> void:
 
 	night_mode_button.pressed.connect(_on_night_mode_button_pressed)
 	if GameState.instance:
-		GameState.instance.night_mode_changed.connect(_on_night_mode_changed)
-	_update_night_mode_button(GameState.night_mode)
+		GameState.instance.time_of_day_changed.connect(_on_time_of_day_changed)
+	_update_night_mode_button(GameState.time_of_day)
 
 
 func _on_night_mode_button_pressed() -> void:
-	GameState.toggle_night_mode()
+	GameState.cycle_time_of_day()
 
 
-func _on_night_mode_changed(enabled: bool) -> void:
-	_update_night_mode_button(enabled)
+func _on_time_of_day_changed(mode: GameState.TimeOfDay) -> void:
+	_update_night_mode_button(mode)
 
 
-func _update_night_mode_button(enabled: bool) -> void:
+func _update_night_mode_button(mode: Variant) -> void:
 	if not night_mode_button:
 		return
-	if enabled:
-		night_mode_button.text = "NIGHT: ON [N]"
-		night_mode_button.tooltip_text = "Switch to Day Mode (Shortcut: N)"
-	else:
-		night_mode_button.text = "NIGHT: OFF [N]"
-		night_mode_button.tooltip_text = "Switch to Night Mode (Shortcut: N)"
+	var tod: GameState.TimeOfDay = GameState.time_of_day
+	if mode is GameState.TimeOfDay:
+		tod = mode
+	match tod:
+		GameState.TimeOfDay.DAY:
+			night_mode_button.text = "TIME: DAY [N]"
+			night_mode_button.tooltip_text = "Time of Day: Day (Click or press N for Sunset)"
+		GameState.TimeOfDay.EVENING:
+			night_mode_button.text = "TIME: SUNSET [N]"
+			night_mode_button.tooltip_text = "Time of Day: Sunset (Click or press N for Night)"
+		GameState.TimeOfDay.NIGHT:
+			night_mode_button.text = "TIME: NIGHT [N]"
+			night_mode_button.tooltip_text = "Time of Day: Night (Click or press N for Day)"
 
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.is_echo():
 		if event.keycode == KEY_N:
-			GameState.toggle_night_mode()
+			GameState.cycle_time_of_day()
 			get_viewport().set_input_as_handled()
 
 

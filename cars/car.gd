@@ -142,7 +142,7 @@ func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	tree_exiting.connect(_on_tree_exiting)
 	if GameState.instance:
-		GameState.instance.night_mode_changed.connect(_on_night_mode_changed)
+		GameState.instance.time_of_day_changed.connect(_on_time_of_day_changed)
 	blocker = AnimatableBody3D.new()
 	blocker.name = "Blocker"
 	blocker.sync_to_physics = false
@@ -400,7 +400,7 @@ func _create_headlamp(parent: Node, node_name: String, base_pos: Vector3) -> Spo
 
 
 func _should_headlamp_be_on() -> bool:
-	return GameState.night_mode and state != State.PARKED
+	return GameState.are_lights_on() and state != State.PARKED
 
 
 func _update_headlamps() -> void:
@@ -408,7 +408,7 @@ func _update_headlamps() -> void:
 		headlamp.visible = _should_headlamp_be_on()
 
 
-func _on_night_mode_changed(_enabled: bool) -> void:
+func _on_time_of_day_changed(_mode: GameState.TimeOfDay) -> void:
 	_update_headlamps()
 
 
@@ -619,11 +619,10 @@ func _check_hit(body: Node3D) -> void:
 
 
 func _on_tree_exiting() -> void:
-	if (
-		GameState.instance
-		and GameState.instance.night_mode_changed.is_connected(_on_night_mode_changed)
-	):
-		GameState.instance.night_mode_changed.disconnect(_on_night_mode_changed)
+	if GameState.instance:
+		if GameState.instance.time_of_day_changed.is_connected(_on_time_of_day_changed):
+			GameState.instance.time_of_day_changed.disconnect(_on_time_of_day_changed)
+
 	if spot != null:
 		if spot.lot != null:
 			spot.lot.release(spot)

@@ -337,6 +337,7 @@ const engine = new Engine(GODOT_CONFIG);
 		initializing = false;
 	}
 
+	const startupStartTime = performance.now();
 	let progressInterval = null;
 
 	function setProgress(val, text) {
@@ -395,6 +396,7 @@ const engine = new Engine(GODOT_CONFIG);
 	// GDScript calls window.godotReady() once the scene tree and shaders are settled
 	window.godotReady = function () {
 		isReady = true;
+		console.log('[Startup] Godot ready at ' + Math.round(performance.now() - startupStartTime) + 'ms');
 		if (progressInterval) {
 			clearInterval(progressInterval);
 			progressInterval = null;
@@ -443,6 +445,7 @@ const engine = new Engine(GODOT_CONFIG);
 						setProgress(Math.floor(pct * 0.7), `Downloading game assets: ${pct}%`);
 					} else if (!downloadComplete) {
 						downloadComplete = true;
+						console.log('[Startup] Download completed at ' + Math.round(performance.now() - startupStartTime) + 'ms');
 						setProgress(70, 'Initializing engine...');
 						startProgressCrawl(85, 'Initializing engine...', 160);
 					}
@@ -454,8 +457,8 @@ const engine = new Engine(GODOT_CONFIG);
 			},
 		}).then(() => {
 			// Engine downloaded and starting; now compiling shaders & loading world
+			console.log('[Startup] Engine started at ' + Math.round(performance.now() - startupStartTime) + 'ms');
 			startProgressCrawl(95, 'Compiling shaders & loading world...', 120);
-
 			// Safety fallback: if godotReady() is not called within 20 seconds, fade out
 			setTimeout(() => {
 				if (!isReady) {

@@ -8,6 +8,19 @@ const BloodSplatScript = preload("res://player/blood_splat.gd")
 @onready var world_env: WorldEnvironment = get_node_or_null("WorldEnvironment")
 @onready var sun_light: DirectionalLight3D = get_node_or_null("DirectionalLight3D")
 @onready var streetlights_node: Node3D = get_node_or_null("Props/Streetlights")
+var _day_captured: bool = false
+var _day_sky_top: Color = Color(0.35, 0.55, 0.85, 1.0)
+var _day_sky_horizon: Color = Color(0.68, 0.75, 0.82, 1.0)
+var _day_ground_bottom: Color = Color(0.2, 0.25, 0.22, 1.0)
+var _day_ground_horizon: Color = Color(0.68, 0.75, 0.82, 1.0)
+var _day_ambient_color: Color = Color(0.62, 0.7, 0.84, 1.0)
+var _day_ambient_energy: float = 1.0
+var _day_ambient_sky_contrib: float = 0.6
+var _day_sun_color: Color = Color(1.0, 0.96, 0.88, 1.0)
+var _day_sun_energy: float = 1.0
+var _day_sun_rotation: Vector3 = Vector3.ZERO
+
+const EVENING_SUN_ROTATION := Vector3(-0.16, 1.30, 0.0)
 
 const DAY_SKY_TOP := Color(0.35, 0.55, 0.85, 1.0)
 const DAY_SKY_HORIZON := Color(0.68, 0.75, 0.82, 1.0)
@@ -18,6 +31,15 @@ const DAY_AMBIENT_ENERGY := 1.0
 const DAY_AMBIENT_SKY_CONTRIB := 0.6
 const DAY_SUN_COLOR := Color(1.0, 0.96, 0.88, 1.0)
 const DAY_SUN_ENERGY := 1.0
+const EVENING_SKY_TOP := Color(0.18, 0.22, 0.45, 1.0)
+const EVENING_SKY_HORIZON := Color(0.96, 0.52, 0.22, 1.0)
+const EVENING_GROUND_BOTTOM := Color(0.10, 0.11, 0.12, 1.0)
+const EVENING_GROUND_HORIZON := Color(0.48, 0.30, 0.20, 1.0)
+const EVENING_AMBIENT_COLOR := Color(0.68, 0.45, 0.35, 1.0)
+const EVENING_AMBIENT_ENERGY := 0.7
+const EVENING_AMBIENT_SKY_CONTRIB := 0.5
+const EVENING_SUN_COLOR := Color(1.0, 0.58, 0.28, 1.0)
+const EVENING_SUN_ENERGY := 0.75
 
 const NIGHT_SKY_TOP := Color(0.02, 0.035, 0.075, 1.0)
 const NIGHT_SKY_HORIZON := Color(0.07, 0.09, 0.15, 1.0)
@@ -92,8 +114,8 @@ static func _get_lamp_bulb_on_mat() -> StandardMaterial3D:
 	return _lamp_bulb_on_mat
 
 
-func _on_night_mode_changed(enabled: bool) -> void:
-	_apply_night_mode(enabled, false)
+func _on_time_of_day_changed(mode: GameState.TimeOfDay) -> void:
+	_apply_time_of_day(mode, false)
 
 
 func _update_streetlights(enabled: bool) -> void:
@@ -109,8 +131,9 @@ func _update_streetlights(enabled: bool) -> void:
 		for s in range(m.get_surface_count()):
 			var orig_mat := m.surface_get_material(s)
 			if (
-				orig_mat
-				and ("Headlight" in str(orig_mat) or orig_mat.resource_name == "Mat_Headlight")
+				orig_mat is StandardMaterial3D
+				and orig_mat.albedo_color.r > 0.85
+				and orig_mat.metallic < 0.2
 			):
 				baked_mmi.set_surface_override_material(s, bulb_mat if enabled else null)
 
@@ -125,8 +148,34 @@ func _update_streetlights(enabled: bool) -> void:
 			lamp_mesh.material_override = bulb_mat if enabled else null
 
 
-func _apply_night_mode(enabled: bool, immediate: bool = false) -> void:
-	_update_streetlights(enabled)
+func _capture_day_settings() -> void:
+	if _day_captured:
+		return
+	_day_captured = true
+	var we := world_env if world_env else get_node_or_null("WorldEnvironment") as WorldEnvironment
+	var dl := (
+		sun_light if sun_light else get_node_or_null("DirectionalLight3D") as DirectionalLight3D
+	)
+	if we and we.environment:
+		var env: Environment = we.environment
+		_day_ambient_color = env.ambient_light_color
+		_day_ambient_energy = env.ambient_light_energy
+		_day_ambient_sky_contrib = env.ambient_light_sky_contribution
+		var sky_mat := env.sky.sky_material as ProceduralSkyMaterial if env.sky else null
+		if sky_mat:
+			_day_sky_top = sky_mat.sky_top_color
+			_day_sky_horizon = sky_mat.sky_horizon_color
+			_day_ground_bottom = sky_mat.ground_bottom_color
+			_day_ground_horizon = sky_mat.ground_horizon_color
+	if dl:
+		_day_sun_color = dl.light_color
+		_day_sun_energy = dl.light_energy
+		_day_sun_rotation = dl.rotation
+
+
+func _apply_time_of_day(mode: GameState.TimeOfDay, immediate: bool = false) -> void:
+	var lights_on := mode != GameState.TimeOfDay.DAY
+	_update_streetlights(lights_on)
 
 	var we := world_env if world_env else get_node_or_null("WorldEnvironment") as WorldEnvironment
 	var dl := (
@@ -138,15 +187,51 @@ func _apply_night_mode(enabled: bool, immediate: bool = false) -> void:
 	var env: Environment = we.environment
 	var sky_mat := env.sky.sky_material as ProceduralSkyMaterial if env.sky else null
 
-	var target_sky_top := NIGHT_SKY_TOP if enabled else DAY_SKY_TOP
-	var target_sky_horizon := NIGHT_SKY_HORIZON if enabled else DAY_SKY_HORIZON
-	var target_ground_bottom := NIGHT_GROUND_BOTTOM if enabled else DAY_GROUND_BOTTOM
-	var target_ground_horizon := NIGHT_GROUND_HORIZON if enabled else DAY_GROUND_HORIZON
-	var target_ambient_color := NIGHT_AMBIENT_COLOR if enabled else DAY_AMBIENT_COLOR
-	var target_ambient_energy := NIGHT_AMBIENT_ENERGY if enabled else DAY_AMBIENT_ENERGY
-	var target_ambient_contrib := NIGHT_AMBIENT_SKY_CONTRIB if enabled else DAY_AMBIENT_SKY_CONTRIB
-	var target_sun_color := NIGHT_SUN_COLOR if enabled else DAY_SUN_COLOR
-	var target_sun_energy := NIGHT_SUN_ENERGY if enabled else DAY_SUN_ENERGY
+	var target_sky_top: Color
+	var target_sky_horizon: Color
+	var target_ground_bottom: Color
+	var target_ground_horizon: Color
+	var target_ambient_color: Color
+	var target_ambient_energy: float
+	var target_ambient_contrib: float
+	var target_sun_color: Color
+	var target_sun_energy: float
+	var target_sun_rot: Vector3
+
+	match mode:
+		GameState.TimeOfDay.DAY:
+			target_sky_top = _day_sky_top
+			target_sky_horizon = _day_sky_horizon
+			target_ground_bottom = _day_ground_bottom
+			target_ground_horizon = _day_ground_horizon
+			target_ambient_color = _day_ambient_color
+			target_ambient_energy = _day_ambient_energy
+			target_ambient_contrib = _day_ambient_sky_contrib
+			target_sun_color = _day_sun_color
+			target_sun_energy = _day_sun_energy
+			target_sun_rot = _day_sun_rotation
+		GameState.TimeOfDay.EVENING:
+			target_sky_top = EVENING_SKY_TOP
+			target_sky_horizon = EVENING_SKY_HORIZON
+			target_ground_bottom = EVENING_GROUND_BOTTOM
+			target_ground_horizon = EVENING_GROUND_HORIZON
+			target_ambient_color = EVENING_AMBIENT_COLOR
+			target_ambient_energy = EVENING_AMBIENT_ENERGY
+			target_ambient_contrib = EVENING_AMBIENT_SKY_CONTRIB
+			target_sun_color = EVENING_SUN_COLOR
+			target_sun_energy = EVENING_SUN_ENERGY
+			target_sun_rot = EVENING_SUN_ROTATION
+		GameState.TimeOfDay.NIGHT:
+			target_sky_top = NIGHT_SKY_TOP
+			target_sky_horizon = NIGHT_SKY_HORIZON
+			target_ground_bottom = NIGHT_GROUND_BOTTOM
+			target_ground_horizon = NIGHT_GROUND_HORIZON
+			target_ambient_color = NIGHT_AMBIENT_COLOR
+			target_ambient_energy = NIGHT_AMBIENT_ENERGY
+			target_ambient_contrib = NIGHT_AMBIENT_SKY_CONTRIB
+			target_sun_color = NIGHT_SUN_COLOR
+			target_sun_energy = NIGHT_SUN_ENERGY
+			target_sun_rot = _day_sun_rotation
 
 	if immediate:
 		if _night_tween and _night_tween.is_valid():
@@ -162,6 +247,7 @@ func _apply_night_mode(enabled: bool, immediate: bool = false) -> void:
 		if dl:
 			dl.light_color = target_sun_color
 			dl.light_energy = target_sun_energy
+			dl.rotation = target_sun_rot
 	else:
 		if _night_tween and _night_tween.is_valid():
 			_night_tween.kill()
@@ -181,6 +267,7 @@ func _apply_night_mode(enabled: bool, immediate: bool = false) -> void:
 		if dl:
 			_night_tween.tween_property(dl, "light_color", target_sun_color, 0.5)
 			_night_tween.tween_property(dl, "light_energy", target_sun_energy, 0.5)
+			_night_tween.tween_property(dl, "rotation", target_sun_rot, 0.5)
 
 
 func _ready() -> void:
@@ -189,9 +276,10 @@ func _ready() -> void:
 		MeshBaker.bake_main_scene(self)
 	if mats:
 		mats.died.connect(_on_player_died)
+	_capture_day_settings()
 	if GameState.instance:
-		GameState.instance.night_mode_changed.connect(_on_night_mode_changed)
-	_apply_night_mode(GameState.night_mode, true)
+		GameState.instance.time_of_day_changed.connect(_on_time_of_day_changed)
+	_apply_time_of_day(GameState.time_of_day, true)
 	if "--test-night-mode" in _user_args:
 		var initial_state := GameState.night_mode
 		assert(initial_state == false, "Initial night_mode should be false")
@@ -220,9 +308,35 @@ func _ready() -> void:
 			sample_car.headlamp.visible == false, "Cruising car headlamp must be off in day mode"
 		)
 
-		GameState.set_night_mode(true)
-		assert(GameState.night_mode == true, "GameState.night_mode should be true")
+		# Test 3-way toggle cycle: DAY -> EVENING -> NIGHT -> DAY
+		GameState.cycle_time_of_day()
+		_apply_time_of_day(GameState.time_of_day, true)
+		assert(
+			GameState.time_of_day == GameState.TimeOfDay.EVENING,
+			"First cycle must switch to EVENING"
+		)
+		assert(GameState.are_lights_on() == true, "Evening mode must have lights on")
+		assert(
+			sun_light.light_color == EVENING_SUN_COLOR,
+			"Evening mode must have orange sun: %s" % sun_light.light_color
+		)
+		assert(sample_car.headlamp.visible == true, "Evening mode must have car headlamps on")
+		if hud and hud.night_mode_button:
+			assert("SUNSET" in hud.night_mode_button.text, "HUD button must show SUNSET")
 
+		# Cycle to NIGHT
+		GameState.cycle_time_of_day()
+		_apply_time_of_day(GameState.time_of_day, true)
+		assert(
+			GameState.time_of_day == GameState.TimeOfDay.NIGHT, "Second cycle must switch to NIGHT"
+		)
+		assert(GameState.night_mode == true, "Night mode must be active")
+		assert(
+			sun_light.light_color == NIGHT_SUN_COLOR,
+			"Night mode must have moon light: %s" % sun_light.light_color
+		)
+		if hud and hud.night_mode_button:
+			assert("NIGHT" in hud.night_mode_button.text, "HUD button must show NIGHT")
 		var lights_found := 0
 		for lamp in sl.get_children():
 			if lamp is MultiMeshInstance3D:
@@ -231,6 +345,10 @@ func _ready() -> void:
 			assert(light != null and light.visible == true, "Streetlight must be on in night mode")
 			lights_found += 1
 		assert(lights_found >= 10, "Must have checked at least 10 streetlights on in night mode")
+
+		assert(
+			sample_car.headlamp.visible == true, "Cruising car headlamp must turn on in night mode"
+		)
 
 		assert(
 			sample_car.headlamp.visible == true, "Cruising car headlamp must turn on in night mode"
@@ -286,10 +404,14 @@ func _ready() -> void:
 		baked_car.queue_free()
 
 		if hud and hud.night_mode_button:
-			assert("ON" in hud.night_mode_button.text, "HUD button must show ON")
+			assert("NIGHT" in hud.night_mode_button.text, "HUD button must show NIGHT")
 
-		GameState.set_night_mode(false)
+		# Cycle back to DAY
+		GameState.cycle_time_of_day()
+		_apply_time_of_day(GameState.time_of_day, true)
+		assert(GameState.time_of_day == GameState.TimeOfDay.DAY, "Third cycle must return to DAY")
 		assert(GameState.night_mode == false, "GameState.night_mode should be false")
+		assert(sun_light.light_color == DAY_SUN_COLOR, "Day mode must restore daylight sun color")
 
 		for lamp in sl.get_children():
 			if lamp is MultiMeshInstance3D:
@@ -306,7 +428,7 @@ func _ready() -> void:
 		)
 
 		if hud and hud.night_mode_button:
-			assert("OFF" in hud.night_mode_button.text, "HUD button must show OFF")
+			assert("DAY" in hud.night_mode_button.text, "HUD button must show DAY")
 
 		print(
 			"NIGHT_MODE_TEST: SUCCESS - toggling night mode updates GameState, streetlights, car headlamps, beam directions, and HUD"
@@ -2335,3 +2457,11 @@ func _physics_process(_delta: float) -> void:
 func _on_player_died(pos: Vector3) -> void:
 	if blood_splats and mats:
 		BloodSplatScript.spawn(pos, blood_splats, [mats.get_rid()])
+
+
+func _exit_tree() -> void:
+	if (
+		GameState.instance
+		and GameState.instance.time_of_day_changed.is_connected(_on_time_of_day_changed)
+	):
+		GameState.instance.time_of_day_changed.disconnect(_on_time_of_day_changed)
