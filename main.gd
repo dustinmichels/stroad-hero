@@ -1,9 +1,8 @@
+class_name Main
 extends Node3D
 
-const BloodSplatScript = preload("res://player/blood_splat.gd")
-
-@onready var mats: CharacterBody3D = $Mats
-@onready var hud: CanvasLayer = $HUD
+@onready var mats: Mats = $Mats
+@onready var hud: HUD = $HUD
 @onready var blood_splats: Node3D = $BloodSplats
 @onready var world_env: WorldEnvironment = get_node_or_null("WorldEnvironment")
 @onready var sun_light: DirectionalLight3D = get_node_or_null("DirectionalLight3D")
@@ -1105,6 +1104,7 @@ func _ready() -> void:
 		)
 		fast_sports.lane_distance = 25.0
 		fast_sports.lane_change_cooldown = 0.0
+		fast_sports.errand = null
 
 		assert(
 			fast_sports.speed > lane0.max_speed,
@@ -2869,7 +2869,7 @@ func _physics_process(_delta: float) -> void:
 
 func _on_player_died(pos: Vector3) -> void:
 	if blood_splats and mats:
-		BloodSplatScript.spawn(pos, blood_splats, [mats.get_rid()])
+		BloodSplat.spawn(pos, blood_splats, [mats.get_rid()])
 
 
 func _exit_tree() -> void:

@@ -10,8 +10,8 @@ extends CharacterBody3D
 @onready var _exit_position: Marker3D = $ExitPosition
 
 var _current_speed := 0.0
-var _nearby_mats: CharacterBody3D = null
-var _rider: CharacterBody3D = null
+var _nearby_mats: Mats = null
+var _rider: Mats = null
 
 
 func _ready() -> void:
@@ -66,7 +66,7 @@ func roll_from(impact_direction: Vector3) -> void:
 
 func _on_body_entered(body: Node3D) -> void:
 	if body.is_in_group("player"):
-		_nearby_mats = body as CharacterBody3D
+		_nearby_mats = body as Mats
 		_update_prompt()
 
 

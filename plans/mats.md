@@ -50,8 +50,11 @@ Verify: let cars hit Mats in each lane and confirm the SPD counter goes up.
 
 ## 5. Customization
 
-- [ ] More character editor options, such as hair color, skin tone, and jacket color. These colors live in the face, hair, and torso meshes, so they need `surface_material_override/<n>` on the specific surface instead of `material_override`, which replaces every surface.
-- [ ] Extra headwear (beanie, bike helmet) as more meshes under `Head/Hat`, built with the generator's `head_shell` helper.
+More character editor options for accesories.
+
+- [ ] Jacket color.
+- [ ] Extra headwear (beanie)
+- [ ] Rename "pine" to green
 
 ## 6. Performance
 
@@ -60,6 +63,6 @@ Verify: let cars hit Mats in each lane and confirm the SPD counter goes up.
 
 ## 7. Pipeline
 
-- [ ] Decide what the source of truth is. `build_mats.py` rebuilds the `Mats` collection from scratch, so hand edits in `mats.blend` are lost the next time the generator runs. Either keep editing the generator, or stop running it and treat the `.blend` as the source.
+- [ ] Decide what the source of truth is. `build_mats.py` rebuilds the `Mats` collection from scratch, so hand edits in `mats.blend` are lost the next time the generator runs. Either keep editing the generator, or stop running it and treat the `.blend` as the source. -- YES, use .blend as the source of truth.
 - [ ] Add a preview render task. The multi-view render script used during modeling was a throwaway. A `mise run mats-preview` that renders front, side, back, walk, and kneel views to `/tmp` would make reviews repeatable.
 - [ ] `mise run mats` writes a mesh file for every mesh it exports but never deletes old ones. Remove stale `.res` files from `player/mats_meshes/` by hand when you rename or drop a mesh.

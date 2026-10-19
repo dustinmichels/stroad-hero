@@ -1,3 +1,4 @@
+class_name Mats
 extends CharacterBody3D
 ## Mats: arrow keys walk relative to the current camera; Space hops.
 ## The model's front is local +Z, so the facing yaw is atan2(dir.x, dir.z).
@@ -84,6 +85,10 @@ var _idle_time := 0.0
 
 var _spawn_transform: Transform3D
 var _is_dead := false
+## True if Mats is currently dead and waiting to respawn.
+var is_dead: bool:
+	get:
+		return _is_dead
 var _control_forward := Vector3.FORWARD
 var _control_right := Vector3.RIGHT
 var _has_control_basis := false

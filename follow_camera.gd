@@ -1,8 +1,9 @@
+class_name FollowCamera
 extends Camera3D
 ## Tracks `target`; A/D steps yaw, W/S tilts up/down, and R resets behind Mats.
 ## Death returns the camera to its starting view.
 
-@export var target: CharacterBody3D
+@export var target: Mats
 @export var smoothing := 5.0
 @export var swing_smoothing := 8.0
 
@@ -38,15 +39,14 @@ func _ready() -> void:
 	_pitch_framing_offset = rotation.x - (-scene_pitch)
 	_default_pitch = clampf(scene_pitch - PITCH_STEP, MIN_PITCH, MAX_PITCH)
 	snap_to_target()
-	if target.has_signal("died"):
+	if target:
 		target.died.connect(_on_target_died)
-	if target.has_signal("respawned"):
 		target.respawned.connect(_on_target_respawned)
 
 
 func _process(delta: float) -> void:
 	var target_position := target.get_global_transform_interpolated().origin
-	var is_target_dead: bool = target != null and bool(target.get("_is_dead"))
+	var is_target_dead: bool = target.is_dead if target != null else false
 	if not is_target_dead:
 		var yaw_step := (
 			int(Input.is_action_just_pressed("camera_left"))

@@ -1,3 +1,4 @@
+class_name CharacterEditor
 extends CanvasLayer
 
 const BACKPACK_COLORS: Array[Color] = [
@@ -24,10 +25,10 @@ const UNSELECTED_MODULATE := Color(0.7, 0.72, 0.74, 1.0)
 @export var row_style: StyleBox
 @export var row_selected_style: StyleBox
 
-@onready var _preview: CharacterBody3D = %PreviewMats
+@onready var _preview: Mats = %PreviewMats
 @onready var _camera: Camera3D = %PreviewCamera
 @onready var _viewport: SubViewport = %PreviewViewport
-@onready var _player: CharacterBody3D = get_node_or_null(player_path)
+@onready var _player: Mats = get_node_or_null(player_path)
 
 var _was_paused := false
 var _selected_row := 0

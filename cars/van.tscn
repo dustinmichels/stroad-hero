@@ -2,12 +2,12 @@
 
 [ext_resource type="Script" path="res://cars/van.gd" id="1_van"]
 [ext_resource type="FontFile" path="res://fonts/Fredoka.ttf" id="2_font_fredoka"]
-[ext_resource type="ArrayMesh" path="res://cars/van_cab_roof_cap.res" id="6_cap"]
-[ext_resource type="ArrayMesh" path="res://cars/van_sloping_nose.res" id="7_nose"]
-[ext_resource type="ArrayMesh" path="res://cars/van_front_bumper.res" id="8_front"]
-[ext_resource type="ArrayMesh" path="res://cars/van_rear_bumper.res" id="9_rear"]
-[ext_resource type="ArrayMesh" path="res://cars/van_side_cladding.res" id="10_cladding"]
-[ext_resource type="ArrayMesh" path="res://cars/van_smile.res" id="11_smile"]
+[ext_resource type="ArrayMesh" path="res://cars/van_meshes/van_cab_roof_cap.res" id="6_cap"]
+[ext_resource type="ArrayMesh" path="res://cars/van_meshes/van_sloping_nose.res" id="7_nose"]
+[ext_resource type="ArrayMesh" path="res://cars/van_meshes/van_front_bumper.res" id="8_front"]
+[ext_resource type="ArrayMesh" path="res://cars/van_meshes/van_rear_bumper.res" id="9_rear"]
+[ext_resource type="ArrayMesh" path="res://cars/van_meshes/van_side_cladding.res" id="10_cladding"]
+[ext_resource type="ArrayMesh" path="res://cars/van_meshes/van_smile.res" id="11_smile"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_van"]
 size = Vector3(5.3, 2.3, 2.1)

@@ -1,3 +1,4 @@
+class_name TacoHellDriveThru
 extends Node3D
 
 ## Functional controller for Taco Hell Drive-Thru.

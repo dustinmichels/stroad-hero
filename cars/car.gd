@@ -33,12 +33,7 @@ const PARKING_CAR_TYPES: Array[CarType] = [
 
 
 static func is_type_parkable(type: CarType) -> bool:
-	match type:
-		CarType.SEDAN, CarType.SUV, CarType.PICKUP, CarType.HATCHBACK, CarType.MINIVAN, CarType.SPORTS, CarType.JEEP:
-			return true
-		CarType.BUS, CarType.TRUCK, CarType.TAXI, CarType.VAN, CarType.SHIPPING_TRUCK:
-			return false
-	return false
+	return type in PARKING_CAR_TYPES
 
 
 func can_park() -> bool:

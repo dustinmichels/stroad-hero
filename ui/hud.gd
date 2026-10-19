@@ -1,8 +1,6 @@
 class_name HUD
 extends CanvasLayer
 
-const TimeOfDayToggleScript = preload("res://ui/time_of_day_toggle.gd")
-
 @onready var spd_label: Label = %SpdLabel
 @onready var desc_label: Label = %DescLabel
 @onready var action_label: Label = %ActionLabel
@@ -64,7 +62,7 @@ func _setup_night_mode_button() -> void:
 		container.offset_bottom = 54.0
 		container.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 
-		var btn = TimeOfDayToggleScript.new()
+		var btn = TimeOfDayToggle.new()
 		btn.name = "NightModeButton"
 		btn.unique_name_in_owner = true
 
