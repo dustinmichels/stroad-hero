@@ -1,0 +1,287 @@
+[gd_scene format=3]
+
+[ext_resource type="FontFile" path="res://fonts/ArchivoBlack-Regular.ttf" id="1_font"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_PumpRed"]
+albedo_color = Color(0.84, 0.1, 0.08, 1)
+roughness = 0.45
+
+[sub_resource type="StandardMaterial3D" id="Mat_PumpWhite"]
+albedo_color = Color(0.94, 0.94, 0.92, 1)
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_PumpYellow"]
+albedo_color = Color(1, 0.8, 0.05, 1)
+roughness = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Mat_Screen"]
+albedo_color = Color(0.05, 0.12, 0.08, 1)
+roughness = 0.2
+emission_enabled = true
+emission = Color(0.15, 0.6, 0.3, 1)
+emission_energy_multiplier = 0.45
+
+[sub_resource type="StandardMaterial3D" id="Mat_Rubber"]
+albedo_color = Color(0.07, 0.07, 0.08, 1)
+roughness = 0.8
+
+[sub_resource type="StandardMaterial3D" id="Mat_Steel"]
+albedo_color = Color(0.7, 0.72, 0.75, 1)
+roughness = 0.3
+metallic = 0.8
+
+[sub_resource type="StandardMaterial3D" id="Mat_Grade87"]
+albedo_color = Color(0.2, 0.6, 0.2, 1)
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_Grade89"]
+albedo_color = Color(0.95, 0.65, 0.1, 1)
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_Grade93"]
+albedo_color = Color(0.8, 0.12, 0.12, 1)
+roughness = 0.4
+
+[sub_resource type="CylinderMesh" id="Mesh_Hose"]
+material = SubResource("Mat_Rubber")
+top_radius = 0.028
+bottom_radius = 0.028
+height = 1.0
+radial_segments = 8
+
+[sub_resource type="BoxShape3D" id="Shape_Box0"]
+size = Vector3(1.06, 2.06, 0.54)
+
+[sub_resource type="BoxMesh" id="Mesh_Box1"]
+material = SubResource("Mat_PumpRed")
+size = Vector3(1, 0.36, 0.5)
+
+[sub_resource type="BoxMesh" id="Mesh_Box2"]
+material = SubResource("Mat_PumpWhite")
+size = Vector3(0.96, 1.24, 0.46)
+
+[sub_resource type="BoxMesh" id="Mesh_Box3"]
+material = SubResource("Mat_PumpRed")
+size = Vector3(1.06, 0.07, 0.54)
+
+[sub_resource type="BoxMesh" id="Mesh_Box4"]
+material = SubResource("Mat_PumpYellow")
+size = Vector3(1.04, 0.36, 0.52)
+
+[sub_resource type="BoxMesh" id="Mesh_Box5"]
+material = SubResource("Mat_PumpWhite")
+size = Vector3(1.06, 0.04, 0.54)
+
+[sub_resource type="BoxMesh" id="Mesh_Box6"]
+material = SubResource("Mat_Screen")
+size = Vector3(0.44, 0.28, 0.02)
+
+[sub_resource type="BoxMesh" id="Mesh_Box7"]
+material = SubResource("Mat_Rubber")
+size = Vector3(0.16, 0.2, 0.04)
+
+[sub_resource type="BoxMesh" id="Mesh_Box8"]
+material = SubResource("Mat_Grade87")
+size = Vector3(0.16, 0.1, 0.03)
+
+[sub_resource type="BoxMesh" id="Mesh_Box9"]
+material = SubResource("Mat_Grade89")
+size = Vector3(0.16, 0.1, 0.03)
+
+[sub_resource type="BoxMesh" id="Mesh_Box10"]
+material = SubResource("Mat_Grade93")
+size = Vector3(0.16, 0.1, 0.03)
+
+[sub_resource type="BoxMesh" id="Mesh_Box11"]
+material = SubResource("Mat_PumpYellow")
+size = Vector3(0.6, 0.3, 0.01)
+
+[sub_resource type="BoxMesh" id="Mesh_Box12"]
+material = SubResource("Mat_Steel")
+size = Vector3(0.08, 0.3, 0.16)
+
+[sub_resource type="BoxMesh" id="Mesh_Box13"]
+material = SubResource("Mat_Rubber")
+size = Vector3(0.07, 0.24, 0.07)
+
+[sub_resource type="BoxMesh" id="Mesh_Box14"]
+material = SubResource("Mat_Steel")
+size = Vector3(0.04, 0.04, 0.2)
+
+[node name="SmellFuelPump" type="StaticBody3D"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.03, 0)
+shape = SubResource("Shape_Box0")
+
+[node name="KickPanel" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.18, 0)
+mesh = SubResource("Mesh_Box1")
+
+[node name="Body" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.98, 0)
+mesh = SubResource("Mesh_Box2")
+
+[node name="RedStripe" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.635, 0)
+mesh = SubResource("Mesh_Box3")
+
+[node name="Header" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.84, 0)
+mesh = SubResource("Mesh_Box4")
+
+[node name="HeaderCap" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.04, 0)
+mesh = SubResource("Mesh_Box5")
+
+[node name="BrandFront" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.84, 0.265)
+pixel_size = 0.00313
+modulate = Color(0.84, 0.1, 0.08, 1)
+text = "Smell"
+font = ExtResource("1_font")
+font_size = 64
+outline_size = 0
+
+[node name="ScreenFront" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2, 1.33, 0.24)
+mesh = SubResource("Mesh_Box6")
+
+[node name="PriceFront" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2, 1.33, 0.255)
+pixel_size = 0.00208
+modulate = Color(0.6, 1, 0.7, 1)
+text = "$4.20"
+font = ExtResource("1_font")
+font_size = 48
+outline_size = 0
+
+[node name="CardReaderFront" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.26, 1.33, 0.25)
+mesh = SubResource("Mesh_Box7")
+
+[node name="Grade0Front" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2, 1.02, 0.245)
+mesh = SubResource("Mesh_Box8")
+
+[node name="Grade1Front" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.02, 0.245)
+mesh = SubResource("Mesh_Box9")
+
+[node name="Grade2Front" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2, 1.02, 0.245)
+mesh = SubResource("Mesh_Box10")
+
+[node name="GradeTextFront" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.02, 0.265)
+pixel_size = 0.00187
+modulate = Color(1, 1, 1, 1)
+text = "87   89   93"
+font = ExtResource("1_font")
+font_size = 32
+outline_size = 0
+
+[node name="PlacardFront" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.66, 0.235)
+mesh = SubResource("Mesh_Box11")
+
+[node name="PlacardTextFront" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.66, 0.242)
+pixel_size = 0.00219
+modulate = Color(0.84, 0.1, 0.08, 1)
+text = "NO SNIFFING"
+font = ExtResource("1_font")
+font_size = 32
+outline_size = 0
+
+[node name="BrandBack" type="Label3D" parent="."]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 1.84, -0.265)
+pixel_size = 0.00313
+modulate = Color(0.84, 0.1, 0.08, 1)
+text = "Smell"
+font = ExtResource("1_font")
+font_size = 64
+outline_size = 0
+
+[node name="ScreenBack" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2, 1.33, -0.24)
+mesh = SubResource("Mesh_Box6")
+
+[node name="PriceBack" type="Label3D" parent="."]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0.2, 1.33, -0.255)
+pixel_size = 0.00208
+modulate = Color(0.6, 1, 0.7, 1)
+text = "$4.20"
+font = ExtResource("1_font")
+font_size = 48
+outline_size = 0
+
+[node name="CardReaderBack" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.26, 1.33, -0.25)
+mesh = SubResource("Mesh_Box7")
+
+[node name="Grade0Back" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2, 1.02, -0.245)
+mesh = SubResource("Mesh_Box8")
+
+[node name="Grade1Back" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.02, -0.245)
+mesh = SubResource("Mesh_Box9")
+
+[node name="Grade2Back" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2, 1.02, -0.245)
+mesh = SubResource("Mesh_Box10")
+
+[node name="GradeTextBack" type="Label3D" parent="."]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 1.02, -0.265)
+pixel_size = 0.00187
+modulate = Color(1, 1, 1, 1)
+text = "87   89   93"
+font = ExtResource("1_font")
+font_size = 32
+outline_size = 0
+
+[node name="PlacardBack" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.66, -0.235)
+mesh = SubResource("Mesh_Box11")
+
+[node name="PlacardTextBack" type="Label3D" parent="."]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0.66, -0.242)
+pixel_size = 0.00219
+modulate = Color(0.84, 0.1, 0.08, 1)
+text = "NO SNIFFING"
+font = ExtResource("1_font")
+font_size = 32
+outline_size = 0
+
+[node name="HolsterL" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.52, 1.15, 0)
+mesh = SubResource("Mesh_Box12")
+
+[node name="NozzleL" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.56, 1.18, 0)
+mesh = SubResource("Mesh_Box13")
+
+[node name="NozzleSpoutL" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.56, 1.05, 0.1)
+mesh = SubResource("Mesh_Box14")
+
+[node name="HoseL" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.99027, -0.13917, 0, 0.13917, 0.99027, -0.58, 1.12, -0.08)
+mesh = SubResource("Mesh_Hose")
+
+[node name="HolsterR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.52, 1.15, 0)
+mesh = SubResource("Mesh_Box12")
+
+[node name="NozzleR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.56, 1.18, 0)
+mesh = SubResource("Mesh_Box13")
+
+[node name="NozzleSpoutR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.56, 1.05, 0.1)
+mesh = SubResource("Mesh_Box14")
+
+[node name="HoseR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.99027, -0.13917, 0, 0.13917, 0.99027, 0.58, 1.12, -0.08)
+mesh = SubResource("Mesh_Hose")

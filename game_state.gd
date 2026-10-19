@@ -6,6 +6,8 @@ extends Node
 
 ## Emitted whenever the wind direction or speed updates.
 signal wind_changed(direction: Vector3, speed: float)
+## Emitted whenever night mode is toggled on or off.
+signal night_mode_changed(enabled: bool)
 
 ## Base prevailing wind angle (in radians). Default ~12° (0.209 rad, blowing eastward along the stroad corridor).
 @export var base_wind_angle: float = 0.20944
@@ -15,6 +17,12 @@ signal wind_changed(direction: Vector3, speed: float)
 
 ## Speed multiplier for wind changes over time.
 @export var wind_variation_speed: float = 1.0
+
+## Initial night mode setting (false = day, true = night).
+@export var initial_night_mode: bool = false
+
+## Current night mode state (false = day, true = night).
+static var night_mode: bool = false
 
 ## Global wind direction (normalized 3D vector in horizontal XZ plane, Y = 0.0).
 ## Points in the direction the wind is blowing towards.
@@ -53,6 +61,9 @@ func _exit_tree() -> void:
 
 func _ready() -> void:
 	_update_wind_calculation(base_wind_angle, base_wind_speed)
+	night_mode = initial_night_mode or "--night-mode" in OS.get_cmdline_user_args()
+	if night_mode and instance:
+		instance.night_mode_changed.emit(true)
 
 
 func _process(delta: float) -> void:
@@ -122,3 +133,18 @@ static func set_wind_speed(speed: float) -> void:
 ## Resume automatic time-based wind simulation if previously manually overridden.
 static func resume_wind_simulation() -> void:
 	_manual_override = false
+
+
+## Explicitly set night mode on or off.
+static func set_night_mode(enabled: bool) -> void:
+	if night_mode == enabled:
+		return
+	night_mode = enabled
+	if instance:
+		instance.night_mode_changed.emit(enabled)
+
+
+## Toggles night mode and returns the new state.
+static func toggle_night_mode() -> bool:
+	set_night_mode(not night_mode)
+	return night_mode

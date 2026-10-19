@@ -7,4 +7,5 @@ There are businesses in the game which are parodies of real businesses. For agen
 - Walgreens -> Walgroins
 - Ford -> Dorf
 - Domino's Pizza -> abominos
+- Shell -> Smell
 - Strip Mall Businesses: USA Vape, Freedom Tattoo, abominos, Star Nails & Spa

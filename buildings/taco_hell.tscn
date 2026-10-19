@@ -518,6 +518,21 @@ size = Vector3(0.18, 1.9, 4.2)
 material = SubResource("Mat_TacoEnclosureWood")
 size = Vector3(0.25, 2.05, 0.25)
 
+
+[sub_resource type="BoxShape3D" id="Shape_TacoCorralBackWall"]
+size = Vector3(6.8, 1.9, 0.18)
+
+[sub_resource type="BoxShape3D" id="Shape_TacoCorralSideWall"]
+size = Vector3(0.18, 1.9, 4.2)
+
+[sub_resource type="BoxShape3D" id="Shape_TacoSignPillar"]
+size = Vector3(1.6, 2.0, 0.55)
+
+[sub_resource type="BoxShape3D" id="Shape_TacoMenuBoard"]
+size = Vector3(0.5, 2.8, 2.8)
+
+[sub_resource type="BoxShape3D" id="Shape_TacoSpeaker"]
+size = Vector3(0.35, 1.6, 0.38)
 [sub_resource type="BoxShape3D" id="Shape_TacoZone"]
 size = Vector3(4.5, 2.5, 4.5)
 [sub_resource type="BoxShape3D" id="Shape_BuildingCollision"]
@@ -815,6 +830,12 @@ outline_size = 8
 
 [node name="RoadsideSign" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, 23)
+
+[node name="StaticBody3D" type="StaticBody3D" parent="RoadsideSign"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RoadsideSign/StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("Shape_TacoSignPillar")
 
 [node name="Pillar" type="MeshInstance3D" parent="RoadsideSign"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
@@ -1174,6 +1195,12 @@ outline_modulate = Color(0.12, 0.12, 0.12, 1)
 [node name="MenuBoard" type="Node3D" parent="DriveThru"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.65, 0, -2.0)
 
+[node name="StaticBody3D" type="StaticBody3D" parent="DriveThru/MenuBoard"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DriveThru/MenuBoard/StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0)
+shape = SubResource("Shape_TacoMenuBoard")
+
 [node name="Base" type="MeshInstance3D" parent="DriveThru/MenuBoard"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.125, 0)
 mesh = SubResource("Mesh_TacoMenuBase")
@@ -1272,6 +1299,12 @@ outline_modulate = Color(0.02, 0.2, 0.08, 1)
 
 [node name="OrderingSpeaker" type="Node3D" parent="DriveThru"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.3, 0, -0.6)
+
+[node name="StaticBody3D" type="StaticBody3D" parent="DriveThru/OrderingSpeaker"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DriveThru/OrderingSpeaker/StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+shape = SubResource("Shape_TacoSpeaker")
 
 [node name="Base" type="MeshInstance3D" parent="DriveThru/OrderingSpeaker"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.075, 0)
@@ -1398,6 +1431,20 @@ mesh = SubResource("Mesh_TacoDumpsterPad")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="DumpsterEnclosure/ConcretePad/StaticBody3D"]
 shape = SubResource("Shape_TacoDumpsterPad")
+
+[node name="Fence" type="StaticBody3D" parent="DumpsterEnclosure"]
+
+[node name="CollisionBack" type="CollisionShape3D" parent="DumpsterEnclosure/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -2.1)
+shape = SubResource("Shape_TacoCorralBackWall")
+
+[node name="CollisionLeft" type="CollisionShape3D" parent="DumpsterEnclosure/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.35, 1, 0)
+shape = SubResource("Shape_TacoCorralSideWall")
+
+[node name="CollisionRight" type="CollisionShape3D" parent="DumpsterEnclosure/Fence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.35, 1, 0)
+shape = SubResource("Shape_TacoCorralSideWall")
 
 [node name="BackWall" type="MeshInstance3D" parent="DumpsterEnclosure"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, -2.1)

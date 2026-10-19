@@ -1038,6 +1038,8 @@ func _can_merge(car: Car) -> bool:
 	return true
 
 
+## A drive-thru car spawns at its path start, which sits on the curb lane, so the start
+## must be clear of other drive-thru cars and of lane traffic passing the turn-in.
 func can_spawn_drive_thru(dest: StringName) -> bool:
 	var target_path := (
 		booger_king_drive_thru_path if dest == &"booger_king" else taco_hell_drive_thru_path
@@ -1045,6 +1047,14 @@ func can_spawn_drive_thru(dest: StringName) -> bool:
 	for car in lot_cars:
 		if is_instance_valid(car) and car.path == target_path:
 			if car.path_distance < 12.0:
+				return false
+	var start := target_path.get_point_position(0)
+	for lane in lanes:
+		for car in lane.cars:
+			if (
+				is_instance_valid(car)
+				and car.global_position.distance_to(start) < car.car_length * 0.5 + 6.0
+			):
 				return false
 	return true
 

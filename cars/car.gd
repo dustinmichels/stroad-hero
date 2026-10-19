@@ -113,6 +113,9 @@ var _signals_initialized: bool = false
 var _active_right_signals: Array[MeshInstance3D] = []
 var _active_left_signals: Array[MeshInstance3D] = []
 
+var headlamp: SpotLight3D = null
+var _headlamps_initialized: bool = false
+
 static var _signal_mesh: BoxMesh
 static var _signal_mat_on: StandardMaterial3D
 static var _signal_mat_off: StandardMaterial3D
@@ -138,6 +141,8 @@ var _blocking: bool = false
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	tree_exiting.connect(_on_tree_exiting)
+	if GameState.instance:
+		GameState.instance.night_mode_changed.connect(_on_night_mode_changed)
 	blocker = AnimatableBody3D.new()
 	blocker.name = "Blocker"
 	blocker.sync_to_physics = false
@@ -262,6 +267,7 @@ func _apply_visual_type() -> void:
 	_update_dimensions()
 	_setup_wheels()
 	_setup_signals()
+	_setup_headlamps()
 	_collect_active_parts()
 
 
@@ -348,6 +354,62 @@ func _create_signal_mesh(
 	sig.visible = false
 	parent.add_child(sig)
 	return sig
+
+
+func _setup_headlamps() -> void:
+	if _headlamps_initialized:
+		_update_headlamps()
+		return
+	_headlamps_initialized = true
+
+	var visuals := get_node_or_null("Visuals")
+	if not visuals:
+		return
+	for car_model in visuals.get_children():
+		var hl_l: Node3D = car_model.get_node_or_null("HeadlightL")
+		var hl_r: Node3D = car_model.get_node_or_null("HeadlightR")
+
+		if hl_l:
+			var front_x: float = hl_l.position.x
+			var height_y: float = hl_l.position.y
+			if hl_r:
+				front_x = maxf(hl_l.position.x, hl_r.position.x)
+				height_y = (hl_l.position.y + hl_r.position.y) * 0.5
+			headlamp = _create_headlamp(car_model, "HeadlampLight", Vector3(front_x, height_y, 0.0))
+			break
+	_update_headlamps()
+
+
+func _create_headlamp(parent: Node, node_name: String, base_pos: Vector3) -> SpotLight3D:
+	var light := SpotLight3D.new()
+	light.name = node_name
+	var aim_dir := Vector3(1.0, -0.06, 0.0).normalized()
+	light.transform = Transform3D(
+		Basis.looking_at(aim_dir, Vector3.UP), base_pos + Vector3(0.06, 0.0, 0.0)
+	)
+	light.light_color = Color(1.0, 0.97, 0.88, 1.0)
+	light.light_energy = 3.2
+	light.spot_range = 18.0
+	light.spot_angle = 38.0
+	light.spot_angle_attenuation = 1.1
+	light.spot_attenuation = 1.0
+	light.shadow_enabled = false
+	light.visible = _should_headlamp_be_on()
+	parent.add_child(light)
+	return light
+
+
+func _should_headlamp_be_on() -> bool:
+	return GameState.night_mode and state != State.PARKED
+
+
+func _update_headlamps() -> void:
+	if headlamp:
+		headlamp.visible = _should_headlamp_be_on()
+
+
+func _on_night_mode_changed(_enabled: bool) -> void:
+	_update_headlamps()
 
 
 func _update_signals(delta: float) -> void:
@@ -504,6 +566,7 @@ func advance_path(delta: float) -> bool:
 
 
 func update_presentation() -> void:
+	_update_headlamps()
 	if motion == Motion.PATH:
 		if path != null:
 			var length := path.get_baked_length()
@@ -556,6 +619,11 @@ func _check_hit(body: Node3D) -> void:
 
 
 func _on_tree_exiting() -> void:
+	if (
+		GameState.instance
+		and GameState.instance.night_mode_changed.is_connected(_on_night_mode_changed)
+	):
+		GameState.instance.night_mode_changed.disconnect(_on_night_mode_changed)
 	if spot != null:
 		if spot.lot != null:
 			spot.lot.release(spot)

@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
+		<title>$GODOT_PROJECT_NAME</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
+		<style>
+html, body, #canvas {
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+body {
+	color: white;
+	background-color: black;
+	overflow: hidden;
+	touch-action: none;
+	font-family: 'Fredoka', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+#canvas {
+	display: block;
+	width: 100vw;
+	height: 100vh;
+}
+
+#canvas:focus {
+	outline: none;
+}
+
+#status {
+	position: fixed;
+	inset: 0;
+	background-color: rgba(8, 10, 14, 0.94);
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	z-index: 1000;
+	transition: opacity 0.35s ease-out;
+}
+
+.pane {
+	background: rgba(19, 23, 31, 0.98);
+	border: 3px solid #f2bd24;
+	border-radius: 20px;
+	box-shadow: 0 28px 60px rgba(0, 0, 0, 0.7);
+	max-width: 840px;
+	width: 90%;
+	padding: 34px 44px 30px;
+	box-sizing: border-box;
+	text-align: center;
+}
+
+.title {
+	font-family: 'Archivo Black', Impact, sans-serif;
+	font-size: 44px;
+	color: #ffcc24;
+	text-shadow: 0 2px 6px rgba(30, 20, 5, 0.8);
+	margin: 0 0 8px 0;
+	letter-spacing: 1px;
+}
+
+.dividers {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	align-items: center;
+	margin-bottom: 14px;
+}
+
+.stripe {
+	width: 220px;
+	height: 3px;
+	background-color: #f2bd24;
+	border-radius: 2px;
+}
+
+.welcome {
+	font-size: 19px;
+	color: #edf2f7;
+	line-height: 1.4;
+	margin: 0 0 8px 0;
+}
+
+.good-luck {
+	font-family: 'Archivo Black', Impact, sans-serif;
+	font-size: 21px;
+	color: #ff8561;
+	margin: 0 0 16px 0;
+}
+
+.controls-card {
+	background: rgba(11, 14, 19, 0.88);
+	border: 1px solid #2e3845;
+	border-radius: 14px;
+	padding: 14px 22px 16px;
+	margin-bottom: 20px;
+}
+
+.controls-title {
+	font-family: 'Archivo Black', Impact, sans-serif;
+	font-size: 13px;
+	color: #aebccf;
+	letter-spacing: 0.5px;
+	margin: 0 0 10px 0;
+}
+
+.controls-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	column-gap: 32px;
+	row-gap: 8px;
+	text-align: left;
+}
+
+.control-item {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.keycap {
+	background: #262e38;
+	border: 1px solid #526170;
+	border-bottom: 2px solid #526170;
+	border-radius: 6px;
+	padding: 3px 10px 4px;
+	font-family: 'Archivo Black', Impact, sans-serif;
+	font-size: 12px;
+	color: #f2f5f8;
+	min-width: 24px;
+	text-align: center;
+	display: inline-block;
+}
+
+.control-desc {
+	font-size: 15px;
+	color: #d9e0ea;
+}
+
+.action-section {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 12px;
+}
+
+.btn-start-disabled {
+	background: rgba(56, 51, 31, 0.85);
+	border: 1px solid rgba(97, 87, 38, 0.5);
+	border-radius: 12px;
+	color: #8c8570;
+	font-family: 'Archivo Black', Impact, sans-serif;
+	font-size: 19px;
+	padding: 13px 40px;
+	cursor: not-allowed;
+	letter-spacing: 0.5px;
+}
+
+.loading-indicator {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	font-size: 15px;
+	color: #f2bd24;
+}
+
+.spinner {
+	width: 22px;
+	height: 22px;
+	border: 3px solid rgba(242, 189, 36, 0.25);
+	border-top-color: #f2bd24;
+	border-radius: 50%;
+	animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+	to { transform: rotate(360deg); }
+}
+
+#status-progress {
+	width: 260px;
+	height: 8px;
+	border-radius: 4px;
+	overflow: hidden;
+	appearance: none;
+	-webkit-appearance: none;
+	border: none;
+	background: #1c222b;
+}
+
+#status-progress::-webkit-progress-bar {
+	background-color: #1c222b;
+	border-radius: 4px;
+}
+
+#status-progress::-webkit-progress-value {
+	background-color: #f2bd24;
+	border-radius: 4px;
+}
+
+#status-progress::-moz-progress-bar {
+	background-color: #f2bd24;
+	border-radius: 4px;
+}
+
+#status-notice {
+	display: none;
+	background-color: #5b3943;
+	border-radius: 0.5rem;
+	border: 1px solid #9b3943;
+	color: #e0e0e0;
+	line-height: 1.3;
+	margin: 1rem 0 0;
+	padding: 0.8rem 1.2rem;
+	text-align: center;
+}
+
+#status-splash {
+	display: none;
+}
+		</style>
+		$GODOT_HEAD_INCLUDE
+	</head>
+	<body>
+		<canvas id="canvas">
+			Your browser does not support the canvas tag.
+		</canvas>
+
+		<noscript>
+			Your browser does not support JavaScript.
+		</noscript>
+
+		<div id="status">
+			<img id="status-splash" class="$GODOT_SPLASH_CLASSES" src="$GODOT_SPLASH" alt="">
+			<div class="pane">
+				<h1 class="title">STROAD HERO</h1>
+				<div class="dividers">
+					<div class="stripe"></div>
+					<div class="stripe"></div>
+				</div>
+				<p class="welcome">
+					Hello, pedestrian. Welcome to Anywhere, USA.<br>
+					Do you have what it takes to be the Stroad Hero?
+				</p>
+				<div class="good-luck">Good Luck</div>
+				<div class="controls-card">
+					<div class="controls-title">KEYBOARD CONTROLS</div>
+					<div class="controls-grid">
+						<div class="control-item">
+							<span class="keycap">Arrow Keys</span>
+							<span class="control-desc">Walk / Run</span>
+						</div>
+						<div class="control-item">
+							<span class="keycap">Space</span>
+							<span class="control-desc">Jump</span>
+						</div>
+						<div class="control-item">
+							<span class="keycap">A / D</span>
+							<span class="control-desc">Rotate Camera</span>
+						</div>
+						<div class="control-item">
+							<span class="keycap">W / S</span>
+							<span class="control-desc">Zoom Camera</span>
+						</div>
+						<div class="control-item">
+							<span class="keycap">C</span>
+							<span class="control-desc">Character Editor</span>
+						</div>
+						<div class="control-item">
+							<span class="keycap">R</span>
+							<span class="control-desc">Reset Camera</span>
+						</div>
+						<div class="control-item">
+							<span class="keycap">Esc</span>
+							<span class="control-desc">Pause Game</span>
+						</div>
+						<div class="control-item">
+							<span class="keycap">H</span>
+							<span class="control-desc">Controls Help</span>
+						</div>
+					</div>
+				</div>
+				<div class="action-section">
+					<div class="btn-start-disabled">START GAME</div>
+					<div class="loading-indicator">
+						<div class="spinner"></div>
+						<span id="loading-text">Downloading game assets...</span>
+					</div>
+					<progress id="status-progress" value="0" max="100"></progress>
+					<div id="status-notice"></div>
+				</div>
+			</div>
+		</div>
+
+		<script src="$GODOT_URL"></script>
+		<script>
+const GODOT_CONFIG = $GODOT_CONFIG;
+const GODOT_THREADS_ENABLED = $GODOT_THREADS_ENABLED;
+const engine = new Engine(GODOT_CONFIG);
+
+(function () {
+	const statusOverlay = document.getElementById('status');
+	const statusProgress = document.getElementById('status-progress');
+	const statusNotice = document.getElementById('status-notice');
+	const loadingText = document.getElementById('loading-text');
+
+	let initializing = true;
+	let isReady = false;
+
+	function setStatusNotice(text) {
+		while (statusNotice.lastChild) {
+			statusNotice.removeChild(statusNotice.lastChild);
+		}
+		const lines = text.split('\n');
+		lines.forEach((line) => {
+			statusNotice.appendChild(document.createTextNode(line));
+			statusNotice.appendChild(document.createElement('br'));
+		});
+		statusNotice.style.display = 'block';
+	}
+
+	function displayFailureNotice(err) {
+		console.error(err);
+		if (err instanceof Error) {
+			setStatusNotice(err.message);
+		} else if (typeof err === 'string') {
+			setStatusNotice(err);
+		} else {
+			setStatusNotice('An unknown error occurred.');
+		}
+		initializing = false;
+	}
+
+	let progressInterval = null;
+
+	function setProgress(val, text) {
+		statusProgress.max = 100;
+		statusProgress.value = Math.min(val, 100);
+		if (text) {
+			loadingText.textContent = text;
+		}
+	}
+
+	function startProgressCrawl(targetVal, text, stepMs) {
+		if (progressInterval) {
+			clearInterval(progressInterval);
+		}
+		if (text) {
+			loadingText.textContent = text;
+		}
+		progressInterval = setInterval(() => {
+			if (statusProgress.value < targetVal) {
+				statusProgress.value = Math.min(statusProgress.value + 1, targetVal);
+			} else {
+				clearInterval(progressInterval);
+				progressInterval = null;
+			}
+		}, stepMs);
+	}
+
+	function finishStartup() {
+		if (progressInterval) {
+			clearInterval(progressInterval);
+			progressInterval = null;
+		}
+		if (!statusOverlay) return;
+		statusOverlay.style.opacity = '0';
+		statusOverlay.style.pointerEvents = 'none';
+		setTimeout(() => {
+			if (statusOverlay && statusOverlay.parentNode) {
+				statusOverlay.remove();
+			}
+		}, 400);
+		const canvas = document.getElementById('canvas');
+		if (canvas) {
+			canvas.focus();
+		}
+	}
+
+	// GDScript calls window.godotProgress() or window.godotReady()
+	window.godotProgress = function (pct, text) {
+		if (progressInterval) {
+			clearInterval(progressInterval);
+			progressInterval = null;
+		}
+		setProgress(pct, text);
+	};
+
+	// GDScript calls window.godotReady() once the scene tree and shaders are settled
+	window.godotReady = function () {
+		isReady = true;
+		if (progressInterval) {
+			clearInterval(progressInterval);
+			progressInterval = null;
+		}
+		setProgress(100, 'Ready!');
+		setTimeout(finishStartup, 200);
+	};
+	const missing = Engine.getMissingFeatures({
+		threads: GODOT_THREADS_ENABLED,
+	});
+
+	if (missing.length !== 0) {
+		if (GODOT_CONFIG['serviceWorker'] && GODOT_CONFIG['ensureCrossOriginIsolationHeaders'] && 'serviceWorker' in navigator) {
+			let serviceWorkerRegistrationPromise;
+			try {
+				serviceWorkerRegistrationPromise = navigator.serviceWorker.getRegistration();
+			} catch (err) {
+				serviceWorkerRegistrationPromise = Promise.reject(new Error('Service worker registration failed.'));
+			}
+			Promise.race([
+				serviceWorkerRegistrationPromise.then((registration) => {
+					if (registration != null) {
+						return Promise.reject(new Error('Service worker already exists.'));
+					}
+					return registration;
+				}).then(() => engine.installServiceWorker()),
+				new Promise((resolve) => {
+					setTimeout(() => resolve(), 2000);
+				}),
+			]).then(() => {
+				window.location.reload();
+			}).catch((err) => {
+				console.error('Error while registering service worker:', err);
+			});
+		} else {
+			const missingMsg = 'Error\nThe following features required to run Godot projects on the Web are missing:\n';
+			displayFailureNotice(missingMsg + missing.join('\n'));
+		}
+	} else {
+		let downloadComplete = false;
+		engine.startGame({
+			'onProgress': function (current, total) {
+				if (current > 0 && total > 0) {
+					const pct = Math.floor((current / total) * 100);
+					if (pct < 100) {
+						setProgress(Math.floor(pct * 0.7), `Downloading game assets: ${pct}%`);
+					} else if (!downloadComplete) {
+						downloadComplete = true;
+						setProgress(70, 'Initializing engine...');
+						startProgressCrawl(85, 'Initializing engine...', 160);
+					}
+				} else if (!downloadComplete) {
+					statusProgress.removeAttribute('value');
+					statusProgress.removeAttribute('max');
+					loadingText.textContent = 'Downloading game assets...';
+				}
+			},
+		}).then(() => {
+			// Engine downloaded and starting; now compiling shaders & loading world
+			startProgressCrawl(95, 'Compiling shaders & loading world...', 120);
+
+			// Safety fallback: if godotReady() is not called within 20 seconds, fade out
+			setTimeout(() => {
+				if (!isReady) {
+					finishStartup();
+				}
+			}, 20000);
+		}, displayFailureNotice);
+	}
+}());
+		</script>
+	</body>
+</html>

@@ -1,8 +1,9 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://ui/start_screen.gd" id="1_script"]
 [ext_resource type="FontFile" path="res://fonts/ArchivoBlack-Regular.ttf" id="2_heading"]
 [ext_resource type="FontFile" path="res://fonts/Fredoka.ttf" id="3_body"]
+[ext_resource type="Script" path="res://ui/loading_spinner.gd" id="4_spinner"]
 
 [sub_resource type="StyleBoxFlat" id="StylePane"]
 bg_color = Color(0.075, 0.09, 0.12, 0.98)
@@ -103,6 +104,22 @@ corner_radius_top_right = 12
 corner_radius_bottom_right = 12
 corner_radius_bottom_left = 12
 
+[sub_resource type="StyleBoxFlat" id="StyleBtnDisabled"]
+content_margin_left = 36.0
+content_margin_top = 14.0
+content_margin_right = 36.0
+content_margin_bottom = 14.0
+bg_color = Color(0.22, 0.2, 0.14, 0.85)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.38, 0.34, 0.2, 0.5)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
 [sub_resource type="StyleBoxFlat" id="StyleQuitBtnNormal"]
 content_margin_left = 28.0
 content_margin_top = 14.0
@@ -189,7 +206,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.03, 0.04, 0.055, 0.85)
+color = Color(0.03, 0.04, 0.055, 1)
 
 [node name="Pane" type="PanelContainer" parent="RootControl"]
 layout_mode = 1
@@ -502,10 +519,12 @@ theme_override_colors/font_hover_color = Color(0.06, 0.07, 0.09, 1)
 theme_override_colors/font_focus_color = Color(0.08, 0.09, 0.12, 1)
 theme_override_fonts/font = ExtResource("2_heading")
 theme_override_font_sizes/font_size = 20
+theme_override_colors/font_disabled_color = Color(0.55, 0.52, 0.44, 1)
 theme_override_styles/normal = SubResource("StyleBtnNormal")
 theme_override_styles/hover = SubResource("StyleBtnHover")
 theme_override_styles/pressed = SubResource("StyleBtnPressed")
 theme_override_styles/focus = SubResource("StyleBtnFocus")
+theme_override_styles/disabled = SubResource("StyleBtnDisabled")
 text = "START GAME"
 
 [node name="QuitButton" type="Button" parent="RootControl/Pane/Margin/Content/ActionSection/ButtonsRow"]
@@ -525,6 +544,28 @@ theme_override_styles/hover = SubResource("StyleQuitBtnHover")
 theme_override_styles/pressed = SubResource("StyleQuitBtnPressed")
 theme_override_styles/focus = SubResource("StyleQuitBtnFocus")
 text = "QUIT"
+
+[node name="LoadingStatus" type="HBoxContainer" parent="RootControl/Pane/Margin/Content/ActionSection"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 10
+
+[node name="LoadingSpinner" type="Control" parent="RootControl/Pane/Margin/Content/ActionSection/LoadingStatus"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+size_flags_vertical = 4
+script = ExtResource("4_spinner")
+
+[node name="LoadingLabel" type="Label" parent="RootControl/Pane/Margin/Content/ActionSection/LoadingStatus"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.74, 0.14, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 15
+text = "Loading game world..."
 
 [node name="PromptLabel" type="Label" parent="RootControl/Pane/Margin/Content/ActionSection"]
 unique_name_in_owner = true

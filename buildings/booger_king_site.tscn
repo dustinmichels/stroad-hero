@@ -5,10 +5,15 @@
 [ext_resource type="PackedScene" path="res://props/bollard.tscn" id="3_bollard"]
 [ext_resource type="FontFile" path="res://fonts/Fredoka.ttf" id="4_font"]
 [ext_resource type="FontFile" path="res://fonts/ArchivoBlack-Regular.ttf" id="5_font_archivo"]
+[ext_resource type="Shader" path="res://shaders/pavement.gdshader" id="6_pavement"]
 
-[sub_resource type="StandardMaterial3D" id="Mat_SiteAsphalt"]
-albedo_color = Color(0.2, 0.21, 0.23, 1)
-roughness = 0.88
+[sub_resource type="ShaderMaterial" id="Mat_SiteAsphalt"]
+render_priority = 0
+shader = ExtResource("6_pavement")
+shader_parameter/asphalt_base = Color(0.2, 0.21, 0.24, 1)
+shader_parameter/asphalt_worn = Color(0.27, 0.28, 0.31, 1)
+shader_parameter/aggregate_color = Color(0.37, 0.38, 0.41, 1)
+shader_parameter/roughness_base = 0.88
 
 [sub_resource type="StandardMaterial3D" id="Mat_SiteStripe"]
 albedo_color = Color(0.94, 0.94, 0.92, 1)
@@ -207,6 +212,12 @@ size = Vector3(0.28, 0.04, 1.4)
 material = SubResource("Mat_DriveThruLine")
 size = Vector3(0.75, 0.7, 0.04)
 
+
+[sub_resource type="BoxShape3D" id="Shape_BKMenuBoard"]
+size = Vector3(0.5, 2.8, 2.8)
+
+[sub_resource type="BoxShape3D" id="Shape_BKSpeaker"]
+size = Vector3(0.35, 1.6, 0.38)
 [node name="BoogerKingSite" type="Node3D"]
 
 [node name="ParkingLot" type="MeshInstance3D" parent="."]
@@ -374,6 +385,12 @@ outline_modulate = Color(0.12, 0.12, 0.12, 1)
 [node name="MenuBoard" type="Node3D" parent="DriveThru"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.65, 0, 1.55)
 
+[node name="StaticBody3D" type="StaticBody3D" parent="DriveThru/MenuBoard"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DriveThru/MenuBoard/StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0)
+shape = SubResource("Shape_BKMenuBoard")
+
 [node name="Base" type="MeshInstance3D" parent="DriveThru/MenuBoard"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.125, 0)
 mesh = SubResource("Mesh_MenuBase")
@@ -472,6 +489,12 @@ outline_modulate = Color(0.02, 0.2, 0.08, 1)
 
 [node name="OrderingSpeaker" type="Node3D" parent="DriveThru"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.3, 0, 2.75)
+
+[node name="StaticBody3D" type="StaticBody3D" parent="DriveThru/OrderingSpeaker"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DriveThru/OrderingSpeaker/StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+shape = SubResource("Shape_BKSpeaker")
 
 [node name="Base" type="MeshInstance3D" parent="DriveThru/OrderingSpeaker"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.075, 0)

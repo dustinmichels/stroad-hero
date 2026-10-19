@@ -109,7 +109,7 @@ mesh = SubResource("Mesh_Sticker")
 
 [node name="WarningLabel" type="Label3D" parent="WarningSticker"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.02)
-pixel_size = 0.003
+pixel_size = 0.0018
 modulate = Color(0.1, 0.1, 0.1, 1)
 text = "NO PARKING
 PRIVATE PROPERTY"

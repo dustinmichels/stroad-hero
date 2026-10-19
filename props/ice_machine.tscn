@@ -1,0 +1,199 @@
+[gd_scene format=3]
+
+[ext_resource type="FontFile" path="res://fonts/ArchivoBlack-Regular.ttf" id="1_font"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_CabinetWhite"]
+albedo_color = Color(0.93, 0.94, 0.95, 1)
+roughness = 0.45
+metallic = 0.1
+
+[sub_resource type="StandardMaterial3D" id="Mat_IceBlue"]
+albedo_color = Color(0.08, 0.36, 0.74, 1)
+roughness = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Mat_HeaderBlue"]
+albedo_color = Color(0.05, 0.22, 0.52, 1)
+roughness = 0.35
+emission_enabled = true
+emission = Color(0.06, 0.25, 0.6, 1)
+emission_energy_multiplier = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Mat_Chrome"]
+albedo_color = Color(0.8, 0.82, 0.85, 1)
+roughness = 0.2
+metallic = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Mat_BaseDark"]
+albedo_color = Color(0.16, 0.17, 0.19, 1)
+roughness = 0.7
+metallic = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_Frost"]
+albedo_color = Color(0.82, 0.92, 1, 1)
+roughness = 0.3
+
+[sub_resource type="BoxShape3D" id="Shape_Box0"]
+size = Vector3(1.6, 1.97, 0.8)
+
+[sub_resource type="BoxMesh" id="Mesh_Box1"]
+material = SubResource("Mat_BaseDark")
+size = Vector3(1.56, 0.12, 0.76)
+
+[sub_resource type="BoxMesh" id="Mesh_Box2"]
+material = SubResource("Mat_CabinetWhite")
+size = Vector3(1.6, 1.85, 0.8)
+
+[sub_resource type="BoxMesh" id="Mesh_Box3"]
+material = SubResource("Mat_HeaderBlue")
+size = Vector3(1.62, 0.34, 0.82)
+
+[sub_resource type="BoxMesh" id="Mesh_Box4"]
+material = SubResource("Mat_CabinetWhite")
+size = Vector3(1.64, 0.04, 0.84)
+
+[sub_resource type="BoxMesh" id="Mesh_Box5"]
+material = SubResource("Mat_IceBlue")
+size = Vector3(0.74, 1.36, 0.03)
+
+[sub_resource type="BoxMesh" id="Mesh_Box6"]
+material = SubResource("Mat_Chrome")
+size = Vector3(0.04, 0.3, 0.05)
+
+[sub_resource type="BoxMesh" id="Mesh_Box7"]
+material = SubResource("Mat_Chrome")
+size = Vector3(0.05, 0.12, 0.04)
+
+[sub_resource type="BoxMesh" id="Mesh_Box8"]
+material = SubResource("Mat_Frost")
+size = Vector3(1.52, 0.1, 0.01)
+
+[node name="IceMachine" type="StaticBody3D"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.985, 0)
+shape = SubResource("Shape_Box0")
+
+[node name="Base" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06, 0)
+mesh = SubResource("Mesh_Box1")
+
+[node name="Cabinet" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.045, 0)
+mesh = SubResource("Mesh_Box2")
+
+[node name="Header" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, 0)
+mesh = SubResource("Mesh_Box3")
+
+[node name="TopCap" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.99, 0)
+mesh = SubResource("Mesh_Box4")
+
+[node name="DoorL" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.39, 0.89, 0.415)
+mesh = SubResource("Mesh_Box5")
+
+[node name="HandleL" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08, 0.5, 0.455)
+mesh = SubResource("Mesh_Box6")
+
+[node name="HingeTopL" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.74, 1.4, 0.43)
+mesh = SubResource("Mesh_Box7")
+
+[node name="HingeBottomL" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.74, 0.36, 0.43)
+mesh = SubResource("Mesh_Box7")
+
+[node name="DoorR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.39, 0.89, 0.415)
+mesh = SubResource("Mesh_Box5")
+
+[node name="HandleR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.08, 0.5, 0.455)
+mesh = SubResource("Mesh_Box6")
+
+[node name="HingeTopR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.74, 1.4, 0.43)
+mesh = SubResource("Mesh_Box7")
+
+[node name="HingeBottomR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.74, 0.36, 0.43)
+mesh = SubResource("Mesh_Box7")
+
+[node name="FrostBand" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.29, 0.435)
+mesh = SubResource("Mesh_Box8")
+
+[node name="IceText" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.03, 0.44)
+pixel_size = 0.00484
+modulate = Color(1, 1, 1, 1)
+outline_modulate = Color(0.03, 0.14, 0.36, 1)
+text = "ICE"
+font = ExtResource("1_font")
+font_size = 128
+outline_size = 10
+
+[node name="HeaderText" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, 0.425)
+pixel_size = 0.00266
+modulate = Color(1, 1, 1, 1)
+text = "PACKAGED ICE"
+font = ExtResource("1_font")
+font_size = 64
+outline_size = 0
+
+[node name="PriceText" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.43, 0.5, 0.44)
+pixel_size = 0.00187
+modulate = Color(1, 1, 1, 1)
+text = "$2.99 BAG"
+font = ExtResource("1_font")
+font_size = 48
+outline_size = 0
+
+[node name="ColdText" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.43, 0.5, 0.44)
+pixel_size = 0.00187
+modulate = Color(0.82, 0.92, 1, 1)
+text = "STAY COLD"
+font = ExtResource("1_font")
+font_size = 48
+outline_size = 0
+
+[node name="Flake0" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.6, 1.42, 0.435)
+pixel_size = 0.00344
+modulate = Color(0.82, 0.92, 1, 1)
+text = "*"
+font = ExtResource("1_font")
+font_size = 64
+outline_size = 0
+
+[node name="Flake1" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.6, 1.36, 0.435)
+pixel_size = 0.00281
+modulate = Color(0.82, 0.92, 1, 1)
+text = "*"
+font = ExtResource("1_font")
+font_size = 64
+outline_size = 0
+
+[node name="Flake2" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 0.68, 0.435)
+pixel_size = 0.00187
+modulate = Color(0.82, 0.92, 1, 1)
+text = "*"
+font = ExtResource("1_font")
+font_size = 64
+outline_size = 0
+
+[node name="Flake3" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.62, 0.72, 0.435)
+pixel_size = 0.00187
+modulate = Color(0.82, 0.92, 1, 1)
+text = "*"
+font = ExtResource("1_font")
+font_size = 64
+outline_size = 0

@@ -36,6 +36,10 @@ bottom_radius = 0.24
 height = 7.2
 radial_segments = 16
 
+
+[sub_resource type="CylinderShape3D" id="Shape_BKPylonPole"]
+height = 7.2
+radius = 0.24
 [sub_resource type="BoxMesh" id="Mesh_BKPylonCross"]
 material = SubResource("Mat_BKDarkFrame")
 size = Vector3(2.8, 0.2, 0.2)
@@ -87,6 +91,16 @@ left_to_right = 0.5
 size = Vector3(0.42, 0.65, 0.12)
 
 [node name="BoogerKingSign" type="Node3D"]
+
+[node name="StaticBody3D" type="StaticBody3D" parent="."]
+
+[node name="CollisionPoleL" type="CollisionShape3D" parent="StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.3, 3.6, 0)
+shape = SubResource("Shape_BKPylonPole")
+
+[node name="CollisionPoleR" type="CollisionShape3D" parent="StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3, 3.6, 0)
+shape = SubResource("Shape_BKPylonPole")
 
 [node name="PoleL" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.3, 3.6, 0)

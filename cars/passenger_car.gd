@@ -122,6 +122,8 @@ func _apply_visual_type() -> void:
 		visuals.add_child(active_model)
 		_wheels_initialized = false
 		_signals_initialized = false
+		_headlamps_initialized = false
+		headlamp = null
 
 	super._apply_visual_type()
 	_apply_paint_material()

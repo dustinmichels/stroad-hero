@@ -7,6 +7,7 @@ extends CanvasLayer
 @onready var margin_container: MarginContainer = $MarginContainer
 @onready var panel_container: PanelContainer = $MarginContainer/PanelContainer
 
+var night_mode_button: Button = null
 var spd_count: int = 0
 var fade_overlay: ColorRect
 var _action_prompt_sources := {}
@@ -17,11 +18,20 @@ var _spd_tween: Tween
 
 func _ready() -> void:
 	_setup_fade_overlay()
+	_setup_night_mode_button()
 	if margin_container:
 		_default_margin_pos = margin_container.position
 		margin_container.pivot_offset = Vector2.ZERO
 	_update_display()
 	add_to_group("hud")
+
+
+func _exit_tree() -> void:
+	if (
+		GameState.instance
+		and GameState.instance.night_mode_changed.is_connected(_on_night_mode_changed)
+	):
+		GameState.instance.night_mode_changed.disconnect(_on_night_mode_changed)
 
 
 func _setup_fade_overlay() -> void:
@@ -36,6 +46,97 @@ func _setup_fade_overlay() -> void:
 		fade_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
 		add_child(fade_overlay)
 		move_child(fade_overlay, 0)
+
+
+func _setup_night_mode_button() -> void:
+	var existing := get_node_or_null("%NightModeButton") as Button
+	if existing:
+		night_mode_button = existing
+	else:
+		var container := MarginContainer.new()
+		container.name = "NightModeContainer"
+		container.anchors_preset = Control.PRESET_TOP_RIGHT
+		container.anchor_left = 1.0
+		container.anchor_right = 1.0
+		container.offset_left = -220.0
+		container.offset_top = 20.0
+		container.offset_right = -20.0
+		container.offset_bottom = 68.0
+		container.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+
+		var btn := Button.new()
+		btn.name = "NightModeButton"
+		btn.unique_name_in_owner = true
+		btn.focus_mode = Control.FOCUS_NONE
+		btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+
+		var style_normal := StyleBoxFlat.new()
+		style_normal.bg_color = Color(0.08, 0.1, 0.13, 0.85)
+		style_normal.border_width_left = 2
+		style_normal.border_width_top = 2
+		style_normal.border_width_right = 2
+		style_normal.border_width_bottom = 2
+		style_normal.border_color = Color(0.95, 0.74, 0.14, 0.8)
+		style_normal.corner_radius_top_left = 8
+		style_normal.corner_radius_top_right = 8
+		style_normal.corner_radius_bottom_right = 8
+		style_normal.corner_radius_bottom_left = 8
+		style_normal.content_margin_left = 14.0
+		style_normal.content_margin_right = 14.0
+
+		var style_hover := style_normal.duplicate() as StyleBoxFlat
+		style_hover.bg_color = Color(0.14, 0.17, 0.22, 0.95)
+		style_hover.border_color = Color(1.0, 0.85, 0.25, 1.0)
+
+		var style_pressed := style_normal.duplicate() as StyleBoxFlat
+		style_pressed.bg_color = Color(0.05, 0.07, 0.09, 0.95)
+		style_pressed.border_color = Color(0.8, 0.6, 0.1, 1.0)
+
+		btn.add_theme_stylebox_override("normal", style_normal)
+		btn.add_theme_stylebox_override("hover", style_hover)
+		btn.add_theme_stylebox_override("pressed", style_pressed)
+		btn.add_theme_color_override("font_color", Color(1.0, 0.95, 0.88, 1.0))
+		btn.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 1.0, 1.0))
+		btn.add_theme_font_size_override("font_size", 14)
+
+		var font := load("res://fonts/ArchivoBlack-Regular.ttf") as Font
+		if font:
+			btn.add_theme_font_override("font", font)
+
+		container.add_child(btn)
+		add_child(container)
+		night_mode_button = btn
+
+	night_mode_button.pressed.connect(_on_night_mode_button_pressed)
+	if GameState.instance:
+		GameState.instance.night_mode_changed.connect(_on_night_mode_changed)
+	_update_night_mode_button(GameState.night_mode)
+
+
+func _on_night_mode_button_pressed() -> void:
+	GameState.toggle_night_mode()
+
+
+func _on_night_mode_changed(enabled: bool) -> void:
+	_update_night_mode_button(enabled)
+
+
+func _update_night_mode_button(enabled: bool) -> void:
+	if not night_mode_button:
+		return
+	if enabled:
+		night_mode_button.text = "NIGHT: ON [N]"
+		night_mode_button.tooltip_text = "Switch to Day Mode (Shortcut: N)"
+	else:
+		night_mode_button.text = "NIGHT: OFF [N]"
+		night_mode_button.tooltip_text = "Switch to Night Mode (Shortcut: N)"
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.is_echo():
+		if event.keycode == KEY_N:
+			GameState.toggle_night_mode()
+			get_viewport().set_input_as_handled()
 
 
 func increment_spd() -> void:

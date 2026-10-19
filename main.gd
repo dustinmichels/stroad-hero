@@ -5,6 +5,32 @@ const BloodSplatScript = preload("res://player/blood_splat.gd")
 @onready var mats: CharacterBody3D = $Mats
 @onready var hud: CanvasLayer = $HUD
 @onready var blood_splats: Node3D = $BloodSplats
+@onready var world_env: WorldEnvironment = get_node_or_null("WorldEnvironment")
+@onready var sun_light: DirectionalLight3D = get_node_or_null("DirectionalLight3D")
+@onready var streetlights_node: Node3D = get_node_or_null("Props/Streetlights")
+
+const DAY_SKY_TOP := Color(0.35, 0.55, 0.85, 1.0)
+const DAY_SKY_HORIZON := Color(0.68, 0.75, 0.82, 1.0)
+const DAY_GROUND_BOTTOM := Color(0.2, 0.25, 0.22, 1.0)
+const DAY_GROUND_HORIZON := Color(0.68, 0.75, 0.82, 1.0)
+const DAY_AMBIENT_COLOR := Color(0.62, 0.7, 0.84, 1.0)
+const DAY_AMBIENT_ENERGY := 1.0
+const DAY_AMBIENT_SKY_CONTRIB := 0.6
+const DAY_SUN_COLOR := Color(1.0, 0.96, 0.88, 1.0)
+const DAY_SUN_ENERGY := 1.0
+
+const NIGHT_SKY_TOP := Color(0.02, 0.035, 0.075, 1.0)
+const NIGHT_SKY_HORIZON := Color(0.07, 0.09, 0.15, 1.0)
+const NIGHT_GROUND_BOTTOM := Color(0.015, 0.02, 0.03, 1.0)
+const NIGHT_GROUND_HORIZON := Color(0.05, 0.07, 0.11, 1.0)
+const NIGHT_AMBIENT_COLOR := Color(0.18, 0.22, 0.32, 1.0)
+const NIGHT_AMBIENT_ENERGY := 0.45
+const NIGHT_AMBIENT_SKY_CONTRIB := 0.25
+const NIGHT_SUN_COLOR := Color(0.45, 0.55, 0.78, 1.0)
+const NIGHT_SUN_ENERGY := 0.15
+
+var _night_tween: Tween = null
+static var _lamp_bulb_on_mat: StandardMaterial3D = null
 var _test_frames: int = 0
 var _test_car: Car = null
 var _test_follower: Car = null
@@ -56,17 +82,246 @@ var _ci_saw_rejoin: bool = false
 var _ci_site: StringName = &"cramped_inn"
 
 
+static func _get_lamp_bulb_on_mat() -> StandardMaterial3D:
+	if _lamp_bulb_on_mat == null:
+		_lamp_bulb_on_mat = StandardMaterial3D.new()
+		_lamp_bulb_on_mat.albedo_color = Color(1.0, 0.98, 0.85, 1.0)
+		_lamp_bulb_on_mat.emission_enabled = true
+		_lamp_bulb_on_mat.emission = Color(1.0, 0.96, 0.85, 1.0)
+		_lamp_bulb_on_mat.emission_energy_multiplier = 4.0
+	return _lamp_bulb_on_mat
+
+
+func _on_night_mode_changed(enabled: bool) -> void:
+	_apply_night_mode(enabled, false)
+
+
+func _update_streetlights(enabled: bool) -> void:
+	var sl := (
+		streetlights_node if streetlights_node else get_node_or_null("Props/Streetlights") as Node3D
+	)
+	if not sl:
+		return
+	var bulb_mat := _get_lamp_bulb_on_mat()
+	var baked_mmi := sl.get_node_or_null("BakedMultiMesh") as MultiMeshInstance3D
+	if baked_mmi and baked_mmi.multimesh and baked_mmi.multimesh.mesh:
+		var m: Mesh = baked_mmi.multimesh.mesh
+		for s in range(m.get_surface_count()):
+			var orig_mat := m.surface_get_material(s)
+			if (
+				orig_mat
+				and ("Headlight" in str(orig_mat) or orig_mat.resource_name == "Mat_Headlight")
+			):
+				baked_mmi.set_surface_override_material(s, bulb_mat if enabled else null)
+
+	for lamp in sl.get_children():
+		if lamp is MultiMeshInstance3D:
+			continue
+		var light: SpotLight3D = lamp.get_node_or_null("Light")
+		if light:
+			light.visible = enabled
+		var lamp_mesh: MeshInstance3D = lamp.get_node_or_null("Lamp")
+		if lamp_mesh:
+			lamp_mesh.material_override = bulb_mat if enabled else null
+
+
+func _apply_night_mode(enabled: bool, immediate: bool = false) -> void:
+	_update_streetlights(enabled)
+
+	var we := world_env if world_env else get_node_or_null("WorldEnvironment") as WorldEnvironment
+	var dl := (
+		sun_light if sun_light else get_node_or_null("DirectionalLight3D") as DirectionalLight3D
+	)
+	if not we or not we.environment:
+		return
+
+	var env: Environment = we.environment
+	var sky_mat := env.sky.sky_material as ProceduralSkyMaterial if env.sky else null
+
+	var target_sky_top := NIGHT_SKY_TOP if enabled else DAY_SKY_TOP
+	var target_sky_horizon := NIGHT_SKY_HORIZON if enabled else DAY_SKY_HORIZON
+	var target_ground_bottom := NIGHT_GROUND_BOTTOM if enabled else DAY_GROUND_BOTTOM
+	var target_ground_horizon := NIGHT_GROUND_HORIZON if enabled else DAY_GROUND_HORIZON
+	var target_ambient_color := NIGHT_AMBIENT_COLOR if enabled else DAY_AMBIENT_COLOR
+	var target_ambient_energy := NIGHT_AMBIENT_ENERGY if enabled else DAY_AMBIENT_ENERGY
+	var target_ambient_contrib := NIGHT_AMBIENT_SKY_CONTRIB if enabled else DAY_AMBIENT_SKY_CONTRIB
+	var target_sun_color := NIGHT_SUN_COLOR if enabled else DAY_SUN_COLOR
+	var target_sun_energy := NIGHT_SUN_ENERGY if enabled else DAY_SUN_ENERGY
+
+	if immediate:
+		if _night_tween and _night_tween.is_valid():
+			_night_tween.kill()
+		if sky_mat:
+			sky_mat.sky_top_color = target_sky_top
+			sky_mat.sky_horizon_color = target_sky_horizon
+			sky_mat.ground_bottom_color = target_ground_bottom
+			sky_mat.ground_horizon_color = target_ground_horizon
+		env.ambient_light_color = target_ambient_color
+		env.ambient_light_energy = target_ambient_energy
+		env.ambient_light_sky_contribution = target_ambient_contrib
+		if dl:
+			dl.light_color = target_sun_color
+			dl.light_energy = target_sun_energy
+	else:
+		if _night_tween and _night_tween.is_valid():
+			_night_tween.kill()
+		_night_tween = create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(
+			Tween.EASE_OUT
+		)
+		if sky_mat:
+			_night_tween.tween_property(sky_mat, "sky_top_color", target_sky_top, 0.5)
+			_night_tween.tween_property(sky_mat, "sky_horizon_color", target_sky_horizon, 0.5)
+			_night_tween.tween_property(sky_mat, "ground_bottom_color", target_ground_bottom, 0.5)
+			_night_tween.tween_property(sky_mat, "ground_horizon_color", target_ground_horizon, 0.5)
+		_night_tween.tween_property(env, "ambient_light_color", target_ambient_color, 0.5)
+		_night_tween.tween_property(env, "ambient_light_energy", target_ambient_energy, 0.5)
+		_night_tween.tween_property(
+			env, "ambient_light_sky_contribution", target_ambient_contrib, 0.5
+		)
+		if dl:
+			_night_tween.tween_property(dl, "light_color", target_sun_color, 0.5)
+			_night_tween.tween_property(dl, "light_energy", target_sun_energy, 0.5)
+
+
 func _ready() -> void:
 	_user_args = OS.get_cmdline_user_args()
 	if OS.is_debug_build() and ProjectSettings.get_setting("debug/bake_preview", false):
 		MeshBaker.bake_main_scene(self)
 	if mats:
 		mats.died.connect(_on_player_died)
+	if GameState.instance:
+		GameState.instance.night_mode_changed.connect(_on_night_mode_changed)
+	_apply_night_mode(GameState.night_mode, true)
+	if "--test-night-mode" in _user_args:
+		var initial_state := GameState.night_mode
+		assert(initial_state == false, "Initial night_mode should be false")
+		var sl := get_node_or_null("Props/Streetlights") as Node3D
+		assert(sl != null and sl.get_child_count() > 0, "Props/Streetlights must exist")
+		var day_lights_checked := 0
+		for lamp in sl.get_children():
+			if lamp is MultiMeshInstance3D:
+				continue
+			var light: SpotLight3D = lamp.get_node_or_null("Light")
+			assert(light != null, "Each street lamp must have a Light node")
+			assert(light.visible == false, "Streetlight must be off in day mode")
+			day_lights_checked += 1
+		assert(day_lights_checked >= 10, "Must check at least 10 streetlights in day mode")
+
+		var tm := $TrafficManager
+		assert(tm != null and tm.lot_cars.size() > 0, "TrafficManager must have cars")
+		var sample_car: Car = null
+		for lane in tm.lanes:
+			if lane.cars.size() > 0:
+				sample_car = lane.cars[0]
+				break
+		assert(sample_car != null, "Must find an active cruising car")
+		assert(sample_car.headlamp != null, "Active car must have a headlamp node")
+		assert(
+			sample_car.headlamp.visible == false, "Cruising car headlamp must be off in day mode"
+		)
+
+		GameState.set_night_mode(true)
+		assert(GameState.night_mode == true, "GameState.night_mode should be true")
+
+		var lights_found := 0
+		for lamp in sl.get_children():
+			if lamp is MultiMeshInstance3D:
+				continue
+			var light: SpotLight3D = lamp.get_node_or_null("Light")
+			assert(light != null and light.visible == true, "Streetlight must be on in night mode")
+			lights_found += 1
+		assert(lights_found >= 10, "Must have checked at least 10 streetlights on in night mode")
+
+		assert(
+			sample_car.headlamp.visible == true, "Cruising car headlamp must turn on in night mode"
+		)
+
+		# Check car spawned AFTER night mode is toggled on has headlamps visible
+		var lane_east = tm.lanes[0]
+		var spawned_car: Car = tm._spawn_car_at(lane_east, 35.0, tm.PassengerCarScene)
+		assert(spawned_car != null, "Car spawned after night mode enabled must succeed")
+		assert(spawned_car.headlamp != null, "Spawned car must have headlamp node")
+		assert(
+			spawned_car.headlamp.visible == true, "Car spawned in night mode must have headlamp on"
+		)
+
+		# Test beam aim for both eastbound (direction > 0) and westbound (direction < 0) cars
+		var eastbound_car: Car = null
+		var westbound_car: Car = null
+		for lane in tm.lanes:
+			for c in lane.cars:
+				if c.direction > 0.0 and eastbound_car == null:
+					eastbound_car = c
+				elif c.direction < 0.0 and westbound_car == null:
+					westbound_car = c
+		assert(eastbound_car != null, "Must find eastbound car")
+		assert(westbound_car != null, "Must find westbound car")
+		var east_dot := (-eastbound_car.headlamp.global_transform.basis.z).dot(
+			eastbound_car.get_heading()
+		)
+		assert(
+			east_dot > 0.9, "Eastbound headlamp must point forward with heading (dot=%f)" % east_dot
+		)
+		var west_dot := (-westbound_car.headlamp.global_transform.basis.z).dot(
+			westbound_car.get_heading()
+		)
+		assert(
+			west_dot > 0.9, "Westbound headlamp must point forward with heading (dot=%f)" % west_dot
+		)
+
+		# Test baked car body compatibility
+		var baked_car: PassengerCar = tm.PassengerCarScene.instantiate()
+		var body_model := baked_car.get_active_model()
+		if body_model:
+			MeshBaker.bake_car_body(body_model)
+		tm.add_child(baked_car)
+		baked_car.setup(0, 0.0, 1.0, 0.0, 140.0, 14.0, Car.CarType.SEDAN)
+		assert(
+			baked_car.headlamp != null,
+			"Baked car must successfully instantiate headlamp from Marker3D"
+		)
+		assert(
+			baked_car.headlamp.visible == true, "Baked car in night mode must have headlamp visible"
+		)
+		baked_car.queue_free()
+
+		if hud and hud.night_mode_button:
+			assert("ON" in hud.night_mode_button.text, "HUD button must show ON")
+
+		GameState.set_night_mode(false)
+		assert(GameState.night_mode == false, "GameState.night_mode should be false")
+
+		for lamp in sl.get_children():
+			if lamp is MultiMeshInstance3D:
+				continue
+			var light: SpotLight3D = lamp.get_node_or_null("Light")
+			assert(
+				light != null and light.visible == false,
+				"Streetlight must turn off when day mode restored"
+			)
+
+		assert(sample_car.headlamp.visible == false, "Car headlamps must turn off in day mode")
+		assert(
+			spawned_car.headlamp.visible == false, "Spawned car headlamp must turn off in day mode"
+		)
+
+		if hud and hud.night_mode_button:
+			assert("OFF" in hud.night_mode_button.text, "HUD button must show OFF")
+
+		print(
+			"NIGHT_MODE_TEST: SUCCESS - toggling night mode updates GameState, streetlights, car headlamps, beam directions, and HUD"
+		)
+		get_tree().quit(0)
+		return
 	if "--test-start-screen" in _user_args:
 		var start_screen: StartScreen = get_node_or_null("StartScreen")
 		assert(start_screen != null, "StartScreen must exist in main scene")
 		assert(start_screen.visible == true, "StartScreen must be visible initially")
 		assert(get_tree().paused == true, "Tree must be paused when StartScreen is open")
+		assert(
+			start_screen.scrim != null and is_equal_approx(start_screen.scrim.color.a, 1.0),
+			"StartScreen scrim must be fully opaque when game starts"
+		)
 
 		# Verify exact title
 		var title_label: Label = start_screen.get_node(
@@ -177,6 +432,10 @@ func _ready() -> void:
 		assert(start_screen.visible == true, "Pressing Esc during gameplay must show StartScreen")
 		assert(get_tree().paused == true, "Pressing Esc during gameplay must pause game tree")
 		assert(start_btn.text == "RESUME", "Start button must say RESUME on pause")
+		assert(
+			is_equal_approx(start_screen.scrim.color.a, 0.85),
+			"StartScreen scrim should be translucent when paused during gameplay"
+		)
 
 		# Test Esc again resumes the game
 		Input.parse_input_event(esc_event)
@@ -189,9 +448,13 @@ func _ready() -> void:
 		assert(start_screen.visible == true, "StartScreen must show on open_screen()")
 		assert(get_tree().paused == true, "Game tree must pause on open_screen()")
 		assert(start_btn.text == "RESUME", "Start button must say RESUME on reopen")
+		assert(
+			is_equal_approx(start_screen.scrim.color.a, 0.85),
+			"StartScreen scrim should be translucent when reopened during gameplay"
+		)
 
 		print(
-			"START_SCREEN_TEST: SUCCESS - title, message, controls, CharacterEditor Esc isolation, and pause/resume flow verified"
+			"START_SCREEN_TEST: SUCCESS - title, message, controls, scrim opacity, CharacterEditor Esc isolation, and pause/resume flow verified"
 		)
 		get_tree().quit(0)
 		return

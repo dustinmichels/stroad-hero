@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://props/bollard.tscn" id="4_bollard"]
 [ext_resource type="PackedScene" path="res://props/dumpster.tscn" id="5_dumpster"]
 [ext_resource type="PackedScene" path="res://props/shopping_cart.tscn" id="6_cart"]
+[ext_resource type="Shader" path="res://shaders/pavement.gdshader" id="7_pavement"]
 
 [sub_resource type="StandardMaterial3D" id="Mat_YellowStucco"]
 albedo_color = Color(0.92, 0.83, 0.58, 1)
@@ -40,15 +41,20 @@ roughness = 0.4
 albedo_color = Color(0.82, 0.81, 0.78, 1)
 roughness = 0.85
 
-[sub_resource type="StandardMaterial3D" id="Mat_Asphalt"]
+[sub_resource type="StandardMaterial3D" id="Mat_RoofAsphalt"]
 albedo_color = Color(0.20, 0.21, 0.23, 1)
 roughness = 0.88
 
+[sub_resource type="ShaderMaterial" id="Mat_Asphalt"]
+render_priority = 0
+shader = ExtResource("7_pavement")
+shader_parameter/asphalt_base = Color(0.20, 0.21, 0.24, 1)
+shader_parameter/asphalt_worn = Color(0.27, 0.28, 0.31, 1)
+shader_parameter/aggregate_color = Color(0.37, 0.38, 0.41, 1)
+shader_parameter/roughness_base = 0.88
+
 [sub_resource type="StandardMaterial3D" id="Mat_StripeWhite"]
 albedo_color = Color(0.94, 0.94, 0.92, 1)
-
-[sub_resource type="StandardMaterial3D" id="Mat_StripeBlue"]
-albedo_color = Color(0.10, 0.44, 0.88, 1)
 
 [sub_resource type="StandardMaterial3D" id="Mat_WheelStop"]
 albedo_color = Color(0.75, 0.74, 0.72, 1)
@@ -146,7 +152,7 @@ material = SubResource("Mat_YellowStucco")
 size = Vector3(32, 1.0, 10)
 
 [sub_resource type="BoxMesh" id="Mesh_RoofDeck"]
-material = SubResource("Mat_Asphalt")
+material = SubResource("Mat_RoofAsphalt")
 size = Vector3(31.4, 0.04, 9.4)
 
 [sub_resource type="BoxMesh" id="Mesh_Mansard"]
@@ -163,7 +169,7 @@ material = SubResource("Mat_MansardMetal")
 size = Vector3(0.1, 1.9, 1.25)
 
 [sub_resource type="BoxMesh" id="Mesh_MansardCap"]
-material = SubResource("Mat_Asphalt")
+material = SubResource("Mat_RoofAsphalt")
 size = Vector3(32.9, 0.1, 1.3)
 
 [sub_resource type="BoxMesh" id="Mesh_FasciaBottom"]
@@ -262,31 +268,12 @@ size = Vector3(36.0, 0.1, 6.0)
 material = SubResource("Mat_StripeWhite")
 size = Vector3(0.14, 0.02, 4.5)
 
-[sub_resource type="BoxMesh" id="Mesh_StripeBlue"]
-material = SubResource("Mat_StripeBlue")
-size = Vector3(0.16, 0.02, 4.5)
-
-[sub_resource type="BoxMesh" id="Mesh_HandicapPatch"]
-material = SubResource("Mat_StripeBlue")
-size = Vector3(1.7, 0.015, 1.8)
-
 [sub_resource type="BoxMesh" id="Mesh_WheelStop"]
 material = SubResource("Mat_WheelStop")
 size = Vector3(1.8, 0.14, 0.22)
 
 [sub_resource type="BoxShape3D" id="Shape_WheelStop"]
 size = Vector3(1.8, 0.14, 0.22)
-
-[sub_resource type="CylinderMesh" id="Mesh_SignPole"]
-material = SubResource("Mat_DarkAluminum")
-top_radius = 0.025
-bottom_radius = 0.025
-height = 1.7
-radial_segments = 12
-
-[sub_resource type="BoxMesh" id="Mesh_SignPlate"]
-material = SubResource("Mat_StripeBlue")
-size = Vector3(0.45, 0.6, 0.02)
 
 [sub_resource type="BoxMesh" id="Mesh_CorralBack"]
 material = SubResource("Mat_WoodFence")
@@ -836,17 +823,17 @@ mesh = SubResource("Mesh_Stripe")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0.11, -10)
 mesh = SubResource("Mesh_Stripe")
 
-[node name="Stripe_m4_blue" type="MeshInstance3D" parent="ParkingLot/Stripes"]
+[node name="Stripe_m4" type="MeshInstance3D" parent="ParkingLot/Stripes"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.11, -10)
-mesh = SubResource("Mesh_StripeBlue")
+mesh = SubResource("Mesh_Stripe")
 
-[node name="Stripe_0_blue" type="MeshInstance3D" parent="ParkingLot/Stripes"]
+[node name="Stripe_0" type="MeshInstance3D" parent="ParkingLot/Stripes"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.11, -10)
-mesh = SubResource("Mesh_StripeBlue")
+mesh = SubResource("Mesh_Stripe")
 
-[node name="Stripe_4_blue" type="MeshInstance3D" parent="ParkingLot/Stripes"]
+[node name="Stripe_4" type="MeshInstance3D" parent="ParkingLot/Stripes"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.11, -10)
-mesh = SubResource("Mesh_StripeBlue")
+mesh = SubResource("Mesh_Stripe")
 
 [node name="Stripe_8" type="MeshInstance3D" parent="ParkingLot/Stripes"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.11, -10)
@@ -859,28 +846,6 @@ mesh = SubResource("Mesh_Stripe")
 [node name="Stripe_16" type="MeshInstance3D" parent="ParkingLot/Stripes"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0.11, -10)
 mesh = SubResource("Mesh_Stripe")
-
-[node name="HandicapPatchL" type="MeshInstance3D" parent="ParkingLot/Stripes"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0.108, -10.5)
-mesh = SubResource("Mesh_HandicapPatch")
-
-[node name="HandicapSymbolL" type="Label3D" parent="ParkingLot/Stripes"]
-transform = Transform3D(-1, 0, 0, 0, 0, 1, 0, 1, 0, -2, 0.12, -10.5)
-pixel_size = 0.0075
-text = "RESERVED"
-font = ExtResource("1_font_archivo")
-outline_size = 0
-
-[node name="HandicapPatchR" type="MeshInstance3D" parent="ParkingLot/Stripes"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.108, -10.5)
-mesh = SubResource("Mesh_HandicapPatch")
-
-[node name="HandicapSymbolR" type="Label3D" parent="ParkingLot/Stripes"]
-transform = Transform3D(-1, 0, 0, 0, 0, 1, 0, 1, 0, 2, 0.12, -10.5)
-pixel_size = 0.0075
-text = "RESERVED"
-font = ExtResource("1_font_archivo")
-outline_size = 0
 
 [node name="WheelStops" type="Node3D" parent="ParkingLot"]
 
@@ -956,50 +921,6 @@ mesh = SubResource("Mesh_WheelStop")
 [node name="Collision" type="CollisionShape3D" parent="ParkingLot/WheelStops/Stop_8"]
 shape = SubResource("Shape_WheelStop")
 
-[node name="Signs" type="Node3D" parent="ParkingLot"]
-
-[node name="HandicapSignL" type="Node3D" parent="ParkingLot/Signs"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, -7.45)
-
-[node name="Pole" type="MeshInstance3D" parent="ParkingLot/Signs/HandicapSignL"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
-mesh = SubResource("Mesh_SignPole")
-
-[node name="Plate" type="MeshInstance3D" parent="ParkingLot/Signs/HandicapSignL"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
-mesh = SubResource("Mesh_SignPlate")
-
-[node name="Label" type="Label3D" parent="ParkingLot/Signs/HandicapSignL"]
-transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 1.5, -0.02)
-pixel_size = 0.00105
-font_size = 64
-text = "RESERVED
-PARKING
-ONLY"
-font = ExtResource("1_font_archivo")
-outline_size = 0
-
-[node name="HandicapSignR" type="Node3D" parent="ParkingLot/Signs"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -7.45)
-
-[node name="Pole" type="MeshInstance3D" parent="ParkingLot/Signs/HandicapSignR"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
-mesh = SubResource("Mesh_SignPole")
-
-[node name="Plate" type="MeshInstance3D" parent="ParkingLot/Signs/HandicapSignR"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
-mesh = SubResource("Mesh_SignPlate")
-
-[node name="Label" type="Label3D" parent="ParkingLot/Signs/HandicapSignR"]
-transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 1.5, -0.02)
-pixel_size = 0.00105
-font_size = 64
-text = "RESERVED
-PARKING
-ONLY"
-font = ExtResource("1_font_archivo")
-outline_size = 0
-
 [node name="Bollards" type="Node3D" parent="ParkingLot"]
 
 [node name="Bollard_1" parent="ParkingLot/Bollards" instance=ExtResource("4_bollard")]
@@ -1061,11 +982,14 @@ lid_open = false
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.5, 0, -23.5)
 
 [node name="StaticBody3D" type="StaticBody3D" parent="RoadsideSign"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.1, 0)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="RoadsideSign/StaticBody3D"]
+[node name="CollisionPoleL" type="CollisionShape3D" parent="RoadsideSign/StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4, 3.1, 0)
 shape = SubResource("Shape_Pylon")
 
+[node name="CollisionPoleR" type="CollisionShape3D" parent="RoadsideSign/StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.4, 3.1, 0)
+shape = SubResource("Shape_Pylon")
 [node name="PoleL" type="MeshInstance3D" parent="RoadsideSign"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4, 3.1, 0)
 mesh = SubResource("Mesh_PylonPole")
