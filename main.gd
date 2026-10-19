@@ -502,41 +502,70 @@ func _ready() -> void:
 			title_label != null and title_label.text == "STROAD HERO", "Title must be STROAD HERO"
 		)
 
-		# Verify welcome message
-		var welcome_label: Label = start_screen.get_node(
-			"RootControl/Pane/Margin/Content/MessageSection/WelcomeLabel"
+		# Verify quote and welcome message
+		var quote_label: Label = start_screen.quote_label
+		assert(quote_label != null, "QuoteLabel must exist")
+		assert(
+			quote_label.text == '"The stroad to hell is paved...."',
+			"Quote text must match: %s" % quote_label.text
 		)
+
+		var welcome_label: Label = start_screen.welcome_label
 		assert(welcome_label != null, "WelcomeLabel must exist")
-		var expected_welcome := "Hello, pedestrian. Welcome to Anywhere, USA.\nDo you have what it takes to be the Stroad Hero?"
+		var expected_welcome := "Hi, Mats. Welcome to America. You're trying to get around by foot, eh? Good luck...."
 		assert(
 			welcome_label.text == expected_welcome,
 			"Welcome text must match: %s" % welcome_label.text
 		)
 
-		# Verify good luck text
-		var good_luck_label: Label = start_screen.get_node(
-			"RootControl/Pane/Margin/Content/MessageSection/GoodLuckLabel"
+		# Verify basic controls on MainPage
+		assert(
+			start_screen.main_page != null and start_screen.main_page.visible == true,
+			"MainPage must be visible"
 		)
 		assert(
-			good_luck_label != null and good_luck_label.text == "Good Luck",
-			"Good luck label must be 'Good Luck'"
+			start_screen.controls_page != null and start_screen.controls_page.visible == false,
+			"ControlsPage must be hidden initially"
+		)
+		var spacebar_label: Label = start_screen.get_node("%KeySpaceLabel")
+		assert(
+			spacebar_label != null and spacebar_label.text == "spacebar",
+			"Spacebar keycap must say spacebar"
+		)
+		var space_desc: Label = start_screen.get_node("%SpaceDesc")
+		assert(
+			space_desc != null and space_desc.text == "jump/action",
+			"Spacebar desc must say jump/action"
 		)
 
-		# Verify controls grid content
+		var see_more_btn: Button = start_screen.see_more_button
+		assert(see_more_btn != null, "SeeMoreButton must exist")
+		assert(
+			see_more_btn.text == "[see more controls]",
+			"See more button must say [see more controls]"
+		)
+
+		# Test switching to ControlsPage via see more controls button
+		see_more_btn.pressed.emit()
+		await get_tree().process_frame
+		assert(
+			start_screen.controls_page.visible == true,
+			"ControlsPage must be visible after pressing see more"
+		)
+		assert(start_screen.main_page.visible == false, "MainPage must be hidden on controls page")
+
+		# Verify full controls grid on ControlsPage
 		var grid = start_screen.get_node(
-			"RootControl/Pane/Margin/Content/ControlsPanel/ControlsContent/Grid"
+			"RootControl/Pane/Margin/Content/ControlsPage/FullControlsCard/FullControlsContent/Grid"
 		)
 		assert(grid != null, "Controls grid must exist")
 		var keycaps: Array[String] = []
-		var desc_texts: Array[String] = []
 		for child in grid.get_children():
 			for sub in child.get_children():
 				if sub is PanelContainer:
 					for sub2 in sub.get_children():
 						if sub2 is Label:
 							keycaps.append(sub2.text)
-				elif sub is Label:
-					desc_texts.append(sub.text)
 		assert("Arrow Keys" in keycaps, "Must have Arrow Keys keycap: %s" % str(keycaps))
 		assert("Space" in keycaps, "Must have Space keycap: %s" % str(keycaps))
 		assert("A / D" in keycaps, "Must have A / D keycap: %s" % str(keycaps))
@@ -546,6 +575,18 @@ func _ready() -> void:
 		assert("Esc" in keycaps, "Must have Esc keycap: %s" % str(keycaps))
 		assert("H" in keycaps, "Must have H keycap: %s" % str(keycaps))
 
+		# Test switching back to MainPage via ControlsBackButton
+		var back_btn: Button = start_screen.controls_back_button
+		assert(back_btn != null, "ControlsBackButton must exist")
+		back_btn.pressed.emit()
+		await get_tree().process_frame
+		assert(
+			start_screen.main_page.visible == true, "MainPage must be visible after pressing back"
+		)
+		assert(
+			start_screen.controls_page.visible == false,
+			"ControlsPage must be hidden after pressing back"
+		)
 		# Verify start and quit buttons exist and work
 		var start_btn: Button = start_screen.start_button
 		assert(
@@ -623,6 +664,34 @@ func _ready() -> void:
 			is_equal_approx(start_screen.scrim.color.a, 0.85),
 			"StartScreen scrim should be translucent when reopened during gameplay"
 		)
+
+		# Test pressing H during gameplay opens StartScreen directly to ControlsPage
+		start_screen.start_game()
+		await start_screen.started
+		assert(start_screen.visible == false, "StartScreen must hide after start_game()")
+
+		var h_event := InputEventKey.new()
+		h_event.pressed = true
+		h_event.keycode = KEY_H
+		h_event.echo = false
+		Input.parse_input_event(h_event)
+		await get_tree().process_frame
+		assert(start_screen.visible == true, "Pressing H during gameplay must show StartScreen")
+		assert(get_tree().paused == true, "Pressing H during gameplay must pause game tree")
+		assert(
+			start_screen.controls_page.visible == true,
+			"Pressing H must open directly to ControlsPage"
+		)
+		assert(
+			start_screen.main_page.visible == false,
+			"MainPage must be hidden when H opens ControlsPage"
+		)
+
+		# Test pressing H again while on ControlsPage resumes the game
+		Input.parse_input_event(h_event)
+		await start_screen.started
+		assert(start_screen.visible == false, "Pressing H again must resume and hide StartScreen")
+		assert(get_tree().paused == false, "Game tree must unpause after H resumes")
 
 		print(
 			"START_SCREEN_TEST: SUCCESS - title, message, controls, scrim opacity, CharacterEditor Esc isolation, and pause/resume flow verified"
@@ -932,6 +1001,177 @@ func _ready() -> void:
 
 		GameState.resume_wind_simulation()
 		print("WIND_FLAGS_TEST: SUCCESS - all test cases passed!")
+		get_tree().quit(0)
+	if "--test-taxi-color" in _user_args:
+		var tm = $TrafficManager
+		assert(tm != null, "TrafficManager must exist")
+		var taxi: TaxiCar = tm.TaxiScene.instantiate()
+		tm.add_child(taxi)
+		taxi._apply_visual_type()
+		assert(taxi.body_color == TaxiCar.TAXI_YELLOW, "Taxi body_color must match TAXI_YELLOW")
+		assert(
+			not PassengerCar.PAINT_PALETTE.has(TaxiCar.TAXI_YELLOW),
+			"Taxi yellow must not be in regular PAINT_PALETTE"
+		)
+		assert(
+			not PassengerCar.SPORTS_PAINT_PALETTE.has(TaxiCar.TAXI_YELLOW),
+			"Taxi yellow must not be in SPORTS_PAINT_PALETTE"
+		)
+		var taxi_body: MeshInstance3D = taxi.get_node_or_null("Visuals/Taxi/Body")
+		assert(taxi_body != null and taxi_body.mesh != null, "Taxi body mesh must exist")
+		var mat: StandardMaterial3D = taxi_body.mesh.material
+		assert(mat != null, "Taxi body material must exist")
+		assert(
+			mat.albedo_color.is_equal_approx(TaxiCar.TAXI_YELLOW),
+			"Taxi material color must equal TAXI_YELLOW"
+		)
+		taxi.queue_free()
+		print("TAXI_COLOR_TEST: SUCCESS - taxi yellow is distinct from other car colors!")
+		get_tree().quit(0)
+	if "--test-sports-cars" in _user_args:
+		var tm = $TrafficManager
+		assert(tm != null, "TrafficManager must exist")
+
+		# 1. Test Rarity
+		var samples := 1000
+		var sports_count := 0
+		for i in range(samples):
+			var t := PassengerCar.pick_passenger_car_type(true)
+			if t == Car.CarType.SPORTS:
+				sports_count += 1
+		var pct := float(sports_count) / float(samples) * 100.0
+		print("SPORTS_CARS_TEST: spawn rate %.1f%% (%d / %d)" % [pct, sports_count, samples])
+		assert(sports_count > 15 and sports_count < 110, "Sports car frequency should be ~5%")
+		var non_sports := PassengerCar.pick_passenger_car_type(false)
+		assert(non_sports != Car.CarType.SPORTS, "allow_sports=false must never return SPORTS")
+
+		# 2. Test Colors: Always red, yellow, or pink
+		var allowed_colors := PassengerCar.SPORTS_PAINT_PALETTE
+		assert(allowed_colors.size() == 3, "Must have exactly 3 colors in SPORTS_PAINT_PALETTE")
+		for i in range(30):
+			var sc: PassengerCar = tm.PassengerCarScene.instantiate()
+			sc.car_type = Car.CarType.SPORTS
+			tm.add_child(sc)
+			sc._apply_visual_type()
+			assert(
+				allowed_colors.has(sc.body_color),
+				"Sports car color %s must be in SPORTS_PAINT_PALETTE" % sc.body_color
+			)
+			assert(
+				sc._paint_material != null and allowed_colors.has(sc._paint_material.albedo_color),
+				"Material color must be in SPORTS_PAINT_PALETTE"
+			)
+			sc.queue_free()
+
+		# 3. Test Errands & Parking
+		var sports_car = tm.PassengerCarScene.instantiate()
+		sports_car.car_type = Car.CarType.SPORTS
+		assert(sports_car.can_park() == true, "Sports car can park")
+		assert(sports_car.can_take_errands() == true, "Sports car can take errands")
+		sports_car.queue_free()
+
+		# 4. Driving Faster & Swerving
+		for l in tm.lanes:
+			for c in l.cars:
+				c.queue_free()
+			l.cars.clear()
+			l.spawn_timer = 9999.0
+		for c in tm.lot_cars:
+			c.queue_free()
+		tm.lot_cars.clear()
+
+		var lane0 = tm.lanes[0]
+		var lane1 = tm.lanes[1]
+
+		# Spawn lead car in Lane 0 at distance 55.0, slow speed (11.0)
+		var lead: Car = tm._spawn_car_at(lane0, 55.0, tm.PassengerCarScene)
+		lead.car_type = Car.CarType.SEDAN
+		lead.speed = 11.0
+		lead.desired_speed = 11.0
+		lead.lane_speed = 11.0
+		lead.errand = null
+
+		# Spawn sports car in Lane 0 at distance 25.0
+		var fast_sports: Car = tm._spawn_car_at(lane0, 25.0, tm.PassengerCarScene)
+		fast_sports.car_type = Car.CarType.SPORTS
+		fast_sports.setup(
+			lane0.id,
+			lane0.z,
+			lane0.direction,
+			lane0.start_x,
+			lane0.length,
+			22.0,
+			Car.CarType.SPORTS
+		)
+		fast_sports.lane_distance = 25.0
+		fast_sports.lane_change_cooldown = 0.0
+
+		assert(
+			fast_sports.speed > lane0.max_speed,
+			"Sports car must drive faster than lane 0 max speed"
+		)
+
+		var saw_swerve_start := false
+		var saw_lane1_complete := false
+		for tick in range(180):
+			tm._update_lane_traffic(lane0, 1.0 / 60.0)
+			tm._update_lane_traffic(lane1, 1.0 / 60.0)
+			tm._apply_pending_lane_transfers()
+
+			if fast_sports.is_changing_lanes:
+				saw_swerve_start = true
+				assert(fast_sports.lane_id == 1, "Lane ID must switch to 1 during lane change")
+				assert(fast_sports.turn_signal == Car.TurnSignal.LEFT, "Turn signal must be LEFT")
+
+			if saw_swerve_start and not fast_sports.is_changing_lanes and fast_sports.lane_id == 1:
+				saw_lane1_complete = true
+				assert(lane1.cars.has(fast_sports), "Fast sports car must now belong to lane 1")
+				assert(not lane0.cars.has(fast_sports), "Fast sports car must not belong to lane 0")
+				assert(
+					absf(fast_sports.global_position.z - (-1.9)) < 0.1, "Final Z must be on lane 1"
+				)
+				break
+
+		assert(saw_swerve_start, "Sports car must initiate swerve around lead car")
+		assert(saw_lane1_complete, "Sports car must complete lane change into lane 1")
+
+		# 5. Swerve back from Lane 1 to Lane 0 when obstructed in Lane 1
+		fast_sports.lane_change_cooldown = 0.0
+		var lead2: Car = tm._spawn_car_at(
+			lane1, fast_sports.lane_distance + 25.0, tm.PassengerCarScene
+		)
+		lead2.car_type = Car.CarType.SEDAN
+		lead2.speed = 11.0
+		lead2.desired_speed = 11.0
+		lead2.lane_speed = 11.0
+		lead2.errand = null
+
+		# Ensure lane 0 is clear ahead of fast_sports
+		var to_remove: Array[Car] = []
+		for c in lane0.cars:
+			if c.lane_distance > fast_sports.lane_distance:
+				to_remove.append(c)
+		for c in to_remove:
+			lane0.cars.erase(c)
+			c.queue_free()
+
+		var saw_swerve_back := false
+		for tick in range(180):
+			tm._update_lane_traffic(lane0, 1.0 / 60.0)
+			tm._update_lane_traffic(lane1, 1.0 / 60.0)
+			tm._apply_pending_lane_transfers()
+			tm._physics_tick_count += 1
+
+			if fast_sports.is_changing_lanes and fast_sports.lane_id == 0:
+				saw_swerve_back = true
+				assert(fast_sports.turn_signal == Car.TurnSignal.RIGHT, "Turn signal must be RIGHT")
+				break
+
+		assert(
+			saw_swerve_back, "Sports car must swerve back from Lane 1 to Lane 0 to avoid obstacle"
+		)
+
+		print("SPORTS_CARS_TEST: SUCCESS - all requirements verified!")
 		get_tree().quit(0)
 		return
 	if "--test-find-blocker" in _user_args:

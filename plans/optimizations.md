@@ -151,9 +151,9 @@ The 38–96 ms spikes in the baseline fit first-use shader compilation: ANGLE tr
 
 No scene sets `cast_shadow`, so every mesh, down to lot striping and wheel hubs, is drawn again into the sun's shadow map.
 
-- [ ] Set `cast_shadow = SHADOW_CASTING_SETTING_OFF` on flat ground pieces (road markings, lot striping, sidewalk tops), small details (hubs, spokes, signals, logos) and anything inside a larger caster.
-- [ ] The sun uses the default PSSM 4-split mode with `directional_shadow_max_distance = 80`, so a caster can be drawn up to four times. The camera follows from a fixed height (16.5 m, 54° FOV), so try 2 splits or orthogonal mode and a max distance that fits what the camera can actually see.
-- [ ] Web overrides: `rendering/lights_and_shadows/directional_shadow/size.web` at 2048 (default 4096) and a lower `soft_shadow_filter_quality.web`.
+- [x] Set `cast_shadow = SHADOW_CASTING_SETTING_OFF` on flat ground pieces (road markings, lot striping, sidewalk tops), small details (hubs, spokes, signals, logos) and anything inside a larger caster. (`GroundTerrain` and `Stroad` set to `cast_shadow = 0` in `main.tscn`; baked `Road` and `Parking` set to `SHADOW_CASTING_SETTING_OFF` in `MeshBaker.bake_main_scene`).
+- [x] The sun uses the default PSSM 4-split mode with `directional_shadow_max_distance = 80`, so a caster can be drawn up to four times. The camera follows from a fixed height (16.5 m, 54° FOV), so try 2 splits or orthogonal mode and a max distance that fits what the camera can actually see. (`DirectionalLight3D` in `main.tscn` switched to 2-split PSSM `directional_shadow_mode = 1`, `split_1 = 0.25`, and max distance clamped to 65.0 m).
+- [x] Web overrides: `rendering/lights_and_shadows/directional_shadow/size.web` at 2048 (default 4096) and a lower `soft_shadow_filter_quality.web` at 1 (set in `project.godot`).
 
 ### 5d. Culling and LOD
 

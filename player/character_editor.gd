@@ -38,7 +38,7 @@ var _preview_turn_time := 0.0
 
 
 func _ready() -> void:
-	_camera.look_at(Vector3(0.0, 1.0, 0.0))
+	_camera.look_at(Vector3(0.0, 0.75, 0.0))
 	%HeadPrevious.pressed.connect(_on_headwear_step.bind(-1))
 	%HeadNext.pressed.connect(_on_headwear_step.bind(1))
 	%BackpackPrevious.pressed.connect(_on_backpack_step.bind(-1))

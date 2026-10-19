@@ -26,6 +26,7 @@ const PAINTED_NODE_NAMES: Array[StringName] = [
 	&"DPillarR",
 	&"MirrorHousingL",
 	&"MirrorHousingR",
+	&"GrilleFace",
 ]
 
 const LIGHT_MARKER_NAMES: Array[StringName] = [
@@ -267,10 +268,16 @@ static func bake_main_scene(root: Node3D) -> Node3D:
 	var road := root.get_node_or_null("Road") as Node3D
 	if road != null:
 		bake_static_scene(road, root)
+		var baked_road := road.get_node_or_null("BakedStaticMesh") as MeshInstance3D
+		if baked_road != null:
+			baked_road.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 	var parking := root.get_node_or_null("Parking") as Node3D
 	if parking != null:
 		bake_static_scene(parking, root)
+		var baked_parking := parking.get_node_or_null("BakedStaticMesh") as MeshInstance3D
+		if baked_parking != null:
+			baked_parking.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 	var streetlights := root.get_node_or_null("Props/Streetlights") as Node3D
 	if streetlights != null and streetlights.get_child_count() > 0:

@@ -1,7 +1,9 @@
 class_name Car
 extends Area3D
 
-enum CarType {SEDAN, SUV, TAXI, TRUCK, PICKUP, BUS, HATCHBACK, MINIVAN, SPORTS, VAN, SHIPPING_TRUCK}
+enum CarType {
+	SEDAN, SUV, TAXI, TRUCK, PICKUP, BUS, HATCHBACK, MINIVAN, SPORTS, VAN, SHIPPING_TRUCK, JEEP
+}
 
 enum Motion { LANE, PATH }
 
@@ -26,12 +28,13 @@ const PARKING_CAR_TYPES: Array[CarType] = [
 	CarType.HATCHBACK,
 	CarType.MINIVAN,
 	CarType.SPORTS,
+	CarType.JEEP,
 ]
 
 
 static func is_type_parkable(type: CarType) -> bool:
 	match type:
-		CarType.SEDAN, CarType.SUV, CarType.PICKUP, CarType.HATCHBACK, CarType.MINIVAN, CarType.SPORTS:
+		CarType.SEDAN, CarType.SUV, CarType.PICKUP, CarType.HATCHBACK, CarType.MINIVAN, CarType.SPORTS, CarType.JEEP:
 			return true
 		CarType.BUS, CarType.TRUCK, CarType.TAXI, CarType.VAN, CarType.SHIPPING_TRUCK:
 			return false
@@ -104,6 +107,28 @@ var merge_target_lane: int = 0
 var dt_order_done: bool = false
 var dt_pickup_done: bool = false
 var dt_dwell_timer: float = 0.0
+var is_changing_lanes: bool = false
+var lane_change_progress: float = 0.0
+var lane_change_duration: float = 0.8
+var lane_change_from_z: float = 0.0
+var lane_change_to_z: float = 0.0
+var current_lateral_z: float = 0.0
+var lane_change_cooldown: float = 0.0
+
+
+func start_lane_change(target_id: int, target_z: float) -> void:
+	lane_id = target_id
+	is_changing_lanes = true
+	lane_change_progress = 0.0
+	lane_change_duration = randf_range(0.75, 1.0)
+	lane_change_from_z = current_lateral_z if absf(current_lateral_z) > 0.001 else lane_z
+	lane_change_to_z = target_z
+	var is_right: bool = (
+		(target_z > lane_change_from_z) if (direction > 0.0) else (target_z < lane_change_from_z)
+	)
+	set_turn_signal(TurnSignal.RIGHT if is_right else TurnSignal.LEFT)
+
+
 var turn_signal: TurnSignal = TurnSignal.NONE
 const SIGNAL_BLINK_INTERVAL := 0.35
 var _signal_blink_timer: float = 0.0
@@ -225,6 +250,10 @@ func setup(
 	lane_id = p_lane_id
 	motion = Motion.LANE
 	lane_z = p_lane_z
+	current_lateral_z = p_lane_z
+	is_changing_lanes = false
+	lane_change_progress = 0.0
+	lane_change_cooldown = randf_range(1.0, 3.0)
 	direction = p_dir
 	start_x = p_start_x
 	lane_length = p_lane_len
@@ -497,6 +526,11 @@ func _update_dimensions() -> void:
 			car_width = 2.5
 			shape_size = Vector3(13.7, 3.6, 2.5)
 			shape_y = 1.85
+		CarType.JEEP:
+			car_length = 4.4
+			car_width = 1.95
+			shape_size = Vector3(4.3, 1.86, 1.95)
+			shape_y = 0.93
 	var col = _collision_shape if _collision_shape else get_node_or_null("CollisionShape3D")
 	if col:
 		var box := BoxShape3D.new()
@@ -526,6 +560,23 @@ func get_heading() -> Vector3:
 
 ## Advance vehicle along lane (kinematic state) and update 3D transform
 func advance_simulation(delta: float) -> void:
+	if lane_change_cooldown > 0.0:
+		lane_change_cooldown = maxf(0.0, lane_change_cooldown - delta)
+
+	if is_changing_lanes:
+		lane_change_progress += delta / maxf(0.001, lane_change_duration)
+		var t := clampf(lane_change_progress, 0.0, 1.0)
+		var smooth_t := t * t * (3.0 - 2.0 * t)
+		current_lateral_z = lerpf(lane_change_from_z, lane_change_to_z, smooth_t)
+		if t >= 1.0:
+			is_changing_lanes = false
+			current_lateral_z = lane_change_to_z
+			lane_z = lane_change_to_z
+			set_turn_signal(TurnSignal.NONE)
+			lane_change_cooldown = randf_range(1.5, 3.0)
+	else:
+		current_lateral_z = lane_z
+
 	lane_distance += speed * delta
 	update_presentation()
 	_check_player_overlap()
@@ -582,8 +633,26 @@ func update_presentation() -> void:
 		global_transform = spot.transform
 		return
 	var current_x := start_x + (direction * lane_distance)
-	global_position = Vector3(current_x, 0.05, lane_z)
-	rotation.y = 0.0 if direction > 0.0 else PI
+	var z_pos := current_lateral_z if is_changing_lanes else lane_z
+	if is_inside_tree():
+		global_position = Vector3(current_x, 0.05, z_pos)
+	else:
+		position = Vector3(current_x, 0.05, z_pos)
+
+	if is_changing_lanes:
+		var t := clampf(lane_change_progress, 0.0, 1.0)
+		var dz_dt := (
+			(lane_change_to_z - lane_change_from_z)
+			* (6.0 * t * (1.0 - t))
+			/ maxf(0.001, lane_change_duration)
+		)
+		var dx_dt := speed * direction
+		if absf(dx_dt) > 0.01:
+			rotation.y = atan2(-dz_dt, dx_dt)
+		else:
+			rotation.y = 0.0 if direction > 0.0 else PI
+	else:
+		rotation.y = 0.0 if direction > 0.0 else PI
 
 	wheel_rotation = fmod(-lane_distance / wheel_radius, TAU)
 	_update_wheels()

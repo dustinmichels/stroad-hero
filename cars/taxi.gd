@@ -1,5 +1,8 @@
 class_name TaxiCar
 extends Car
+const TAXI_YELLOW: Color = Color(0.98, 0.70, 0.02, 1.0)
+
+@export var body_color: Color = TAXI_YELLOW
 
 
 func _init() -> void:

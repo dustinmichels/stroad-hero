@@ -30,12 +30,22 @@ enum Headwear { HAIR, HAT }
 @export var preview_mode := false
 
 ## Leg-swing radians per meter walked.
-const STRIDE_RATE := 2.6
+const STRIDE_RATE := 3.6
 const LEG_SWING := 0.6
 const ARM_SWING := 0.5
 const BOB_HEIGHT := 0.08
 const POSE_SHARPNESS := 15.0
 const STEP_SMOOTHING := 18.0
+## Knee flex while a leg swings forward, plus a slight bend while it carries weight.
+const KNEE_SWING := 0.9
+const KNEE_STANCE := 0.12
+## Elbows rest slightly bent and bend further as the arm swings forward.
+const ELBOW_REST := 0.25
+const ELBOW_SWING := 0.5
+## Fraction of hip + knee rotation the ankle cancels, keeping shoes near level.
+const ANKLE_LEVELING := 0.7
+## Hip height above the cart's seat marker while kneeling in the basket.
+const KNEEL_HIP_HEIGHT := 0.3
 
 ## Idle animation tuning.
 const IDLE_BREATH_RATE := 2.4
@@ -52,11 +62,17 @@ const IDLE_SWAY_ANGLE := 0.02
 @onready var _right_leg: Node3D = $Visual/RightLegPivot
 @onready var _left_arm: Node3D = $Visual/LeftArmPivot
 @onready var _right_arm: Node3D = $Visual/RightArmPivot
+@onready var _left_knee: Node3D = $Visual/LeftLegPivot/Knee
+@onready var _right_knee: Node3D = $Visual/RightLegPivot/Knee
+@onready var _left_ankle: Node3D = $Visual/LeftLegPivot/Knee/Shoe
+@onready var _right_ankle: Node3D = $Visual/RightLegPivot/Knee/Shoe
+@onready var _left_elbow: Node3D = $Visual/LeftArmPivot/Elbow
+@onready var _right_elbow: Node3D = $Visual/RightArmPivot/Elbow
 @onready var _head: Node3D = $Visual/Head
 @onready var _hat: Node3D = $Visual/Head/Hat
 @onready var _backpack: MeshInstance3D = $Visual/Backpack
-@onready var _left_shoe_upper: MeshInstance3D = $Visual/LeftLegPivot/Shoe/Upper
-@onready var _right_shoe_upper: MeshInstance3D = $Visual/RightLegPivot/Shoe/Upper
+@onready var _left_shoe_upper: MeshInstance3D = $Visual/LeftLegPivot/Knee/Shoe/Upper
+@onready var _right_shoe_upper: MeshInstance3D = $Visual/RightLegPivot/Knee/Shoe/Upper
 @onready var _camera := get_viewport().get_camera_3d()
 @onready var _collision_shape: CollisionShape3D = $CollisionShape3D
 
@@ -85,9 +101,6 @@ func _ready() -> void:
 	var material := StandardMaterial3D.new()
 	material.roughness = 0.8
 	_backpack.material_override = material
-	var backpack_pocket := _backpack.get_node_or_null("Pocket") as MeshInstance3D
-	if backpack_pocket:
-		backpack_pocket.material_override = material
 	var shoe_material := StandardMaterial3D.new()
 	shoe_material.roughness = 0.75
 	_left_shoe_upper.material_override = shoe_material
@@ -234,6 +247,7 @@ func exit_cart(exit_position: Marker3D) -> void:
 	reparent(_world_parent, true)
 	global_basis = Basis()
 	_visual.global_rotation = Vector3(0.0, facing_yaw, 0.0)
+	_visual.position = Vector3.ZERO
 	var destination := exit_position.global_position
 	var jump_peak := (global_position + destination) * 0.5 + Vector3.UP * 0.85
 	_mount_tween = create_tween()
@@ -254,20 +268,31 @@ func exit_cart(exit_position: Marker3D) -> void:
 
 func _sit_in_cart() -> void:
 	_mount_tween = null
-	_left_leg.rotation.x = -1.35
-	_right_leg.rotation.x = -1.35
-	_left_arm.rotation.x = -0.45
-	_right_arm.rotation.x = -0.45
+	# Kneel facing the cart's front: shins flat behind, soles up.
+	_visual.rotation.y = 0.0
+	# Forward nudge keeps the upturned soles inside the basket's rear wall.
+	_visual.position = Vector3(0.0, KNEEL_HIP_HEIGHT - _left_leg.position.y, 0.03)
+	_set_limb_pose(0.0, PI / 2.0, PI / 2.0, -0.45, -0.4)
 
 
 func _finish_exiting_cart() -> void:
 	_mount_tween = null
-	_left_leg.rotation.x = 0.0
-	_right_leg.rotation.x = 0.0
-	_left_arm.rotation.x = 0.0
-	_right_arm.rotation.x = 0.0
+	_set_limb_pose(0.0, 0.0, 0.0, 0.0, 0.0)
 	_collision_shape.disabled = false
 	set_physics_process(true)
+
+
+func _set_limb_pose(hip: float, knee: float, ankle: float, shoulder: float, elbow: float) -> void:
+	for joint: Node3D in [_left_leg, _right_leg]:
+		joint.rotation.x = hip
+	for joint: Node3D in [_left_knee, _right_knee]:
+		joint.rotation.x = knee
+	for joint: Node3D in [_left_ankle, _right_ankle]:
+		joint.rotation.x = ankle
+	for joint: Node3D in [_left_arm, _right_arm]:
+		joint.rotation.x = shoulder
+	for joint: Node3D in [_left_elbow, _right_elbow]:
+		joint.rotation.x = elbow
 
 
 func die() -> void:
@@ -377,19 +402,31 @@ func _animate(delta: float, force_idle := false) -> void:
 	var target_left_arm_z := idle_arm_z
 	var target_right_arm_z := -idle_arm_z
 
+	# Joint targets: a knee flexes while its leg swings forward (left: cos < 0), and an
+	# elbow bends further while its arm leads (left: swing > 0).
+	var stride := cos(_stride_phase)
+	var target_left_knee := (KNEE_STANCE + KNEE_SWING * maxf(0.0, -stride)) * walk_blend
+	var target_right_knee := (KNEE_STANCE + KNEE_SWING * maxf(0.0, stride)) * walk_blend
+	var target_left_elbow := -(ELBOW_REST + ELBOW_SWING * maxf(0.0, swing) * walk_blend)
+	var target_right_elbow := -(ELBOW_REST + ELBOW_SWING * maxf(0.0, -swing) * walk_blend)
+
 	# Vertical bob
 	var walk_bob := absf(swing) * BOB_HEIGHT * walk_blend
 	var idle_bob := breath * IDLE_BOB_HEIGHT * idle_blend
 	var total_bob := walk_bob + idle_bob
 
 	if not on_floor:
-		# Mid-hop: legs split, arms flung out.
+		# Mid-hop: legs split with knees tucked, arms flung out.
 		target_left_leg_x = 0.45
 		target_right_leg_x = -0.45
+		target_left_knee = 0.9
+		target_right_knee = 0.4
 		target_left_arm_x = 0.0
 		target_right_arm_x = 0.0
 		target_left_arm_z = 0.7
 		target_right_arm_z = -0.7
+		target_left_elbow = -0.3
+		target_right_elbow = -0.3
 		total_bob = 0.0
 
 	var weight := 1.0 - exp(-POSE_SHARPNESS * delta)
@@ -399,6 +436,12 @@ func _animate(delta: float, force_idle := false) -> void:
 	_right_arm.rotation.x = lerpf(_right_arm.rotation.x, target_right_arm_x, weight)
 	_left_arm.rotation.z = lerpf(_left_arm.rotation.z, target_left_arm_z, weight)
 	_right_arm.rotation.z = lerpf(_right_arm.rotation.z, target_right_arm_z, weight)
+	_left_knee.rotation.x = lerpf(_left_knee.rotation.x, target_left_knee, weight)
+	_right_knee.rotation.x = lerpf(_right_knee.rotation.x, target_right_knee, weight)
+	_left_elbow.rotation.x = lerpf(_left_elbow.rotation.x, target_left_elbow, weight)
+	_right_elbow.rotation.x = lerpf(_right_elbow.rotation.x, target_right_elbow, weight)
+	_left_ankle.rotation.x = -ANKLE_LEVELING * (_left_leg.rotation.x + _left_knee.rotation.x)
+	_right_ankle.rotation.x = -ANKLE_LEVELING * (_right_leg.rotation.x + _right_knee.rotation.x)
 
 	# Body lateral sway (subtle weight shift)
 	var target_sway_z := sway * IDLE_SWAY_ANGLE * idle_blend

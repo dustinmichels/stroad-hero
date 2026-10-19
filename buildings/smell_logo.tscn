@@ -1,5 +1,7 @@
 [gd_scene format=3]
 
+[ext_resource type="Texture2D" path="res://buildings/smell_lines.svg" id="1_stink_tex"]
+
 [sub_resource type="StandardMaterial3D" id="Mat_LogoYellow"]
 albedo_color = Color(1, 0.82, 0.05, 1)
 roughness = 0.35
@@ -11,12 +13,15 @@ emission_energy_multiplier = 0.2
 albedo_color = Color(0.86, 0.1, 0.08, 1)
 roughness = 0.4
 
-[sub_resource type="StandardMaterial3D" id="Mat_StinkGreen"]
-albedo_color = Color(0.48, 0.74, 0.16, 1)
-roughness = 0.5
+[sub_resource type="StandardMaterial3D" id="Mat_StinkLines"]
+transparency = 1
+cull_mode = 2
+albedo_texture = ExtResource("1_stink_tex")
 emission_enabled = true
-emission = Color(0.4, 0.7, 0.1, 1)
-emission_energy_multiplier = 0.25
+emission = Color(0.44, 0.77, 0.11, 1)
+emission_energy_multiplier = 0.3
+emission_operator = 1
+emission_texture = ExtResource("1_stink_tex")
 
 [sub_resource type="CapsuleMesh" id="Mesh_RibYellow"]
 material = SubResource("Mat_LogoYellow")
@@ -32,12 +37,9 @@ height = 1.08
 radial_segments = 16
 rings = 4
 
-[sub_resource type="CapsuleMesh" id="Mesh_StinkSegment"]
-material = SubResource("Mat_StinkGreen")
-radius = 0.045
-height = 0.3
-radial_segments = 8
-rings = 2
+[sub_resource type="QuadMesh" id="Mesh_StinkQuad"]
+material = SubResource("Mat_StinkLines")
+size = Vector2(0.95, 0.95)
 
 [sub_resource type="BoxMesh" id="Mesh_Box0"]
 material = SubResource("Mat_LogoRed")
@@ -46,7 +48,6 @@ size = Vector3(0.62, 0.22, 0.12)
 [sub_resource type="BoxMesh" id="Mesh_Box1"]
 material = SubResource("Mat_LogoYellow")
 size = Vector3(0.46, 0.1, 0.06)
-
 [node name="SmellLogo" type="Node3D"]
 
 [node name="RibOutline0" type="MeshInstance3D" parent="."]
@@ -129,38 +130,6 @@ mesh = SubResource("Mesh_Box0")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0.06)
 mesh = SubResource("Mesh_Box1")
 
-[node name="Stink0_0" type="MeshInstance3D" parent="."]
-transform = Transform3D(0.88295, -0.46947, 0, 0.46947, 0.88295, 0, 0, 0, 1, -0.38, 0.72, 0.03)
-mesh = SubResource("Mesh_StinkSegment")
-
-[node name="Stink0_1" type="MeshInstance3D" parent="."]
-transform = Transform3D(0.88295, 0.46947, 0, -0.46947, 0.88295, 0, 0, 0, 1, -0.46, 0.96, 0.03)
-mesh = SubResource("Mesh_StinkSegment")
-
-[node name="Stink0_2" type="MeshInstance3D" parent="."]
-transform = Transform3D(0.88295, -0.46947, 0, 0.46947, 0.88295, 0, 0, 0, 1, -0.38, 1.2, 0.03)
-mesh = SubResource("Mesh_StinkSegment")
-
-[node name="Stink1_0" type="MeshInstance3D" parent="."]
-transform = Transform3D(0.88295, -0.46947, 0, 0.46947, 0.88295, 0, 0, 0, 1, 0.04, 0.78, 0.03)
-mesh = SubResource("Mesh_StinkSegment")
-
-[node name="Stink1_1" type="MeshInstance3D" parent="."]
-transform = Transform3D(0.88295, 0.46947, 0, -0.46947, 0.88295, 0, 0, 0, 1, -0.04, 1.02, 0.03)
-mesh = SubResource("Mesh_StinkSegment")
-
-[node name="Stink1_2" type="MeshInstance3D" parent="."]
-transform = Transform3D(0.88295, -0.46947, 0, 0.46947, 0.88295, 0, 0, 0, 1, 0.04, 1.26, 0.03)
-mesh = SubResource("Mesh_StinkSegment")
-
-[node name="Stink2_0" type="MeshInstance3D" parent="."]
-transform = Transform3D(0.88295, -0.46947, 0, 0.46947, 0.88295, 0, 0, 0, 1, 0.46, 0.72, 0.03)
-mesh = SubResource("Mesh_StinkSegment")
-
-[node name="Stink2_1" type="MeshInstance3D" parent="."]
-transform = Transform3D(0.88295, 0.46947, 0, -0.46947, 0.88295, 0, 0, 0, 1, 0.38, 0.96, 0.03)
-mesh = SubResource("Mesh_StinkSegment")
-
-[node name="Stink2_2" type="MeshInstance3D" parent="."]
-transform = Transform3D(0.88295, -0.46947, 0, 0.46947, 0.88295, 0, 0, 0, 1, 0.46, 1.2, 0.03)
-mesh = SubResource("Mesh_StinkSegment")
+[node name="StinkLines" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.955, 0.045)
+mesh = SubResource("Mesh_StinkQuad")

@@ -34,12 +34,10 @@ func _ready() -> void:
 	_distance = offset.length()
 	var horizontal_dist := Vector2(offset.x, offset.z).length()
 	_default_yaw = atan2(-offset.x, -offset.z)
-	_default_pitch = atan2(offset.y, horizontal_dist)
-	_camera_yaw = _default_yaw
-	_target_yaw = _default_yaw
-	_camera_pitch = _default_pitch
-	_target_pitch = _default_pitch
-	_pitch_framing_offset = rotation.x - (-_default_pitch)
+	var scene_pitch := atan2(offset.y, horizontal_dist)
+	_pitch_framing_offset = rotation.x - (-scene_pitch)
+	_default_pitch = clampf(scene_pitch - PITCH_STEP, MIN_PITCH, MAX_PITCH)
+	snap_to_target()
 	if target.has_signal("died"):
 		target.died.connect(_on_target_died)
 	if target.has_signal("respawned"):

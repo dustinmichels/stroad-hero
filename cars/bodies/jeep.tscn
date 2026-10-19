@@ -1,0 +1,598 @@
+[gd_scene format=3]
+
+[sub_resource type="StandardMaterial3D" id="Mat_CarDarkTrim"]
+albedo_color = Color(0.12, 0.13, 0.15, 1)
+roughness = 0.75
+
+[sub_resource type="StandardMaterial3D" id="Mat_CarJeep"]
+albedo_color = Color(0.18, 0.38, 0.24, 1)
+metallic = 0.15
+roughness = 0.32
+
+[sub_resource type="StandardMaterial3D" id="Mat_Headlight"]
+albedo_color = Color(1, 0.98, 0.85, 1)
+roughness = 0.2
+emission_enabled = true
+emission = Color(1, 0.98, 0.85, 1)
+emission_energy_multiplier = 2.0
+
+[sub_resource type="StandardMaterial3D" id="Mat_TowHook"]
+albedo_color = Color(0.78, 0.08, 0.06, 1)
+roughness = 0.45
+
+[sub_resource type="StandardMaterial3D" id="Mat_LicensePlate"]
+albedo_color = Color(0.92, 0.92, 0.9, 1)
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_CarWindow"]
+albedo_color = Color(0.1, 0.14, 0.2, 1)
+metallic = 0.3
+roughness = 0.1
+
+[sub_resource type="StandardMaterial3D" id="Mat_MirrorGlass"]
+albedo_color = Color(0.75, 0.82, 0.88, 1)
+metallic = 0.9
+roughness = 0.1
+
+[sub_resource type="StandardMaterial3D" id="Mat_Taillight"]
+albedo_color = Color(0.9, 0.1, 0.1, 1)
+roughness = 0.2
+emission_enabled = true
+emission = Color(0.9, 0.1, 0.1, 1)
+emission_energy_multiplier = 1.5
+
+[sub_resource type="StandardMaterial3D" id="Mat_WheelRubber"]
+albedo_color = Color(0.1, 0.1, 0.11, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Mat_Rim"]
+albedo_color = Color(0.26, 0.27, 0.29, 1)
+metallic = 0.6
+roughness = 0.35
+
+[sub_resource type="BoxMesh" id="Mesh_JeepFrame"]
+material = SubResource("Mat_CarDarkTrim")
+size = Vector3(3.5, 0.16, 1.2)
+
+[sub_resource type="BoxMesh" id="Mesh_JeepBody"]
+material = SubResource("Mat_CarJeep")
+size = Vector3(2.56, 0.6, 1.66)
+
+[sub_resource type="BoxMesh" id="Mesh_JeepEngineBay"]
+material = SubResource("Mat_CarDarkTrim")
+size = Vector3(1.2, 0.33, 1.24)
+
+[sub_resource type="BoxMesh" id="Mesh_JeepHood"]
+material = SubResource("Mat_CarJeep")
+size = Vector3(1.26, 0.1, 1.3)
+
+[sub_resource type="BoxMesh" id="Mesh_JeepFender"]
+material = SubResource("Mat_CarJeep")
+size = Vector3(1.1, 0.2, 0.22)
+
+[sub_resource type="BoxMesh" id="Mesh_JeepFlareTop"]
+material = SubResource("Mat_CarDarkTrim")
+size = Vector3(0.64, 0.09, 0.18)
+
+[sub_resource type="BoxMesh" id="Mesh_JeepFlareLeg"]
+material = SubResource("Mat_CarDarkTrim")
+size = Vector3(0.09, 0.44, 0.18)
+
+[sub_resource type="BoxMesh" id="Mesh_JeepGrilleFace"]
+material = SubResource("Mat_CarJeep")
+size = Vector3(0.06, 0.38, 1.44)
+
+[sub_resource type="BoxMesh" id="Mesh_JeepGrilleSlot"]
+material = SubResource("Mat_CarDarkTrim")
+size = Vector3(0.02, 0.28, 0.07)
+
+[sub_resource type="CylinderMesh" id="Mesh_JeepHeadlightBezel"]
+material = SubResource("Mat_CarDarkTrim")
+top_radius = 0.14
+bottom_radius = 0.14
+height = 0.03
+radial_segments = 24
+
+[sub_resource type="CylinderMesh" id="Mesh_JeepHeadlight"]
+material = SubResource("Mat_Headlight")
+top_radius = 0.11
+bottom_radius = 0.11
+height = 0.03
+radial_segments = 16
+
+[sub_resource type="BoxMesh" id="Mesh_JeepBumperF"]
+material = SubResource("Mat_CarDarkTrim")
+size = Vector3(0.16, 0.2, 1.86)
+
+[sub_resource type="BoxMesh" id="Mesh_JeepSkidPlate"]
+material = SubResource("Mat_CarDarkTrim")
+size = Vector3(0.3, 0.05, 1)
+
+[sub_resource type="CylinderMesh" id="Mesh_JeepFogLight"]
+material = SubResource("Mat_Headlight")
+top_radius = 0.04
+bottom_radius = 0.04
+height = 0.02
+radial_segments = 12
+
+[sub_resource type="BoxMesh" id="Mesh_JeepTowHook"]
+material = SubResource("Mat_TowHook")
+size = Vector3(0.06, 0.08, 0.04)
+
+[sub_resource type="BoxMesh" id="Mesh_LicensePlate"]
+material = SubResource("Mat_LicensePlate")
+size = Vector3(0.02, 0.12, 0.3)
+
+[sub_resource type="BoxMesh" id="Mesh_JeepCabin"]
+material = SubResource("Mat_CarWindow")
+size = Vector3(2.3, 0.62, 1.52)
+
+[sub_resource type="BoxMesh" id="Mesh_JeepWindshield"]
+material = SubResource("Mat_CarWindow")
+size = Vector3(0.4, 0.64, 1.52)
+
+[sub_resource type="BoxMesh" id="Mesh_JeepAPillar"]
+material = SubResource("Mat_CarJeep")
+size = Vector3(0.08, 0.66, 0.08)
+
+[sub_resource type="BoxMesh" id="Mesh_JeepCenterPillar"]
+material = SubResource("Mat_CarJeep")
+size = Vector3(0.12, 0.62, 0.06)
+
+[sub_resource type="BoxMesh" id="Mesh_JeepCPillar"]
+material = SubResource("Mat_CarJeep")
+size = Vector3(0.1, 0.62, 0.06)
+
+[sub_resource type="BoxMesh" id="Mesh_JeepDPillar"]
+material = SubResource("Mat_CarJeep")
+size = Vector3(0.14, 0.62, 0.1)
+
+[sub_resource type="BoxMesh" id="Mesh_JeepRoof"]
+material = SubResource("Mat_CarJeep")
+size = Vector3(2.48, 0.08, 1.64)
+
+[sub_resource type="BoxMesh" id="Mesh_JeepCowl"]
+material = SubResource("Mat_CarDarkTrim")
+size = Vector3(0.1, 0.03, 1.5)
+
+[sub_resource type="BoxMesh" id="Mesh_JeepDoorGap"]
+material = SubResource("Mat_CarDarkTrim")
+size = Vector3(0.012, 0.56, 0.006)
+
+[sub_resource type="BoxMesh" id="Mesh_JeepHinge"]
+material = SubResource("Mat_CarDarkTrim")
+size = Vector3(0.05, 0.06, 0.02)
+
+[sub_resource type="BoxMesh" id="Mesh_JeepDoorHandle"]
+material = SubResource("Mat_CarDarkTrim")
+size = Vector3(0.1, 0.025, 0.02)
+
+[sub_resource type="BoxMesh" id="Mesh_JeepSideStep"]
+material = SubResource("Mat_CarDarkTrim")
+size = Vector3(1.5, 0.05, 0.16)
+
+[sub_resource type="BoxMesh" id="Mesh_JeepMirrorArm"]
+material = SubResource("Mat_CarDarkTrim")
+size = Vector3(0.05, 0.04, 0.12)
+
+[sub_resource type="BoxMesh" id="Mesh_JeepMirror"]
+material = SubResource("Mat_CarDarkTrim")
+size = Vector3(0.08, 0.16, 0.18)
+
+[sub_resource type="BoxMesh" id="Mesh_MirrorGlass"]
+material = SubResource("Mat_MirrorGlass")
+size = Vector3(0.01, 0.12, 0.14)
+
+[sub_resource type="BoxMesh" id="Mesh_JeepTailgate"]
+material = SubResource("Mat_CarJeep")
+size = Vector3(0.04, 0.54, 1.2)
+
+[sub_resource type="BoxMesh" id="Mesh_JeepTailgateGlass"]
+material = SubResource("Mat_CarWindow")
+size = Vector3(0.04, 0.48, 1.3)
+
+[sub_resource type="BoxMesh" id="Mesh_JeepTaillight"]
+material = SubResource("Mat_Taillight")
+size = Vector3(0.06, 0.3, 0.12)
+
+[sub_resource type="BoxMesh" id="Mesh_JeepBumperR"]
+material = SubResource("Mat_CarDarkTrim")
+size = Vector3(0.14, 0.18, 1.7)
+
+[sub_resource type="BoxMesh" id="Mesh_JeepSpareMount"]
+material = SubResource("Mat_CarDarkTrim")
+size = Vector3(0.1, 0.16, 0.2)
+
+[sub_resource type="CylinderMesh" id="Mesh_JeepSpareTire"]
+material = SubResource("Mat_WheelRubber")
+top_radius = 0.36
+bottom_radius = 0.36
+height = 0.22
+radial_segments = 32
+
+[sub_resource type="CylinderMesh" id="Mesh_JeepSpareRim"]
+material = SubResource("Mat_Rim")
+top_radius = 0.22
+bottom_radius = 0.22
+height = 0.23
+radial_segments = 16
+
+[sub_resource type="CylinderMesh" id="Mesh_Wheel"]
+material = SubResource("Mat_WheelRubber")
+top_radius = 0.4
+bottom_radius = 0.4
+height = 0.3
+radial_segments = 32
+
+[sub_resource type="CylinderMesh" id="Mesh_JeepRim"]
+material = SubResource("Mat_Rim")
+top_radius = 0.25
+bottom_radius = 0.25
+height = 0.31
+radial_segments = 16
+
+[node name="Jeep" type="Node3D"]
+
+[node name="Frame" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.44, 0)
+mesh = SubResource("Mesh_JeepFrame")
+
+[node name="Body" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.58, 0.86, 0)
+mesh = SubResource("Mesh_JeepBody")
+
+[node name="EngineBay" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3, 0.865, 0)
+mesh = SubResource("Mesh_JeepEngineBay")
+
+[node name="Hood" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.33, 1.08, 0)
+mesh = SubResource("Mesh_JeepHood")
+
+[node name="FenderFL" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.35, 0.96, 0.73)
+mesh = SubResource("Mesh_JeepFender")
+
+[node name="FenderFR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.35, 0.96, -0.73)
+mesh = SubResource("Mesh_JeepFender")
+
+[node name="FlareFLTop" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.28, 0.905, 0.9)
+mesh = SubResource("Mesh_JeepFlareTop")
+
+[node name="FlareFLFront" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.891007, -0.45399, 0, 0.45399, 0.891007, 0, 0, 0, 1, 1.7, 0.705, 0.9)
+mesh = SubResource("Mesh_JeepFlareLeg")
+
+[node name="FlareFLRear" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.891007, 0.45399, 0, -0.45399, 0.891007, 0, 0, 0, 1, 0.86, 0.705, 0.9)
+mesh = SubResource("Mesh_JeepFlareLeg")
+
+[node name="FlareFRTop" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.28, 0.905, -0.9)
+mesh = SubResource("Mesh_JeepFlareTop")
+
+[node name="FlareFRFront" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.891007, -0.45399, 0, 0.45399, 0.891007, 0, 0, 0, 1, 1.7, 0.705, -0.9)
+mesh = SubResource("Mesh_JeepFlareLeg")
+
+[node name="FlareFRRear" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.891007, 0.45399, 0, -0.45399, 0.891007, 0, 0, 0, 1, 0.86, 0.705, -0.9)
+mesh = SubResource("Mesh_JeepFlareLeg")
+
+[node name="FlareRLTop" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.28, 0.905, 0.9)
+mesh = SubResource("Mesh_JeepFlareTop")
+
+[node name="FlareRLFront" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.891007, -0.45399, 0, 0.45399, 0.891007, 0, 0, 0, 1, -0.86, 0.705, 0.9)
+mesh = SubResource("Mesh_JeepFlareLeg")
+
+[node name="FlareRLRear" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.891007, 0.45399, 0, -0.45399, 0.891007, 0, 0, 0, 1, -1.7, 0.705, 0.9)
+mesh = SubResource("Mesh_JeepFlareLeg")
+
+[node name="FlareRRTop" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.28, 0.905, -0.9)
+mesh = SubResource("Mesh_JeepFlareTop")
+
+[node name="FlareRRFront" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.891007, -0.45399, 0, 0.45399, 0.891007, 0, 0, 0, 1, -0.86, 0.705, -0.9)
+mesh = SubResource("Mesh_JeepFlareLeg")
+
+[node name="FlareRRRear" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.891007, 0.45399, 0, -0.45399, 0.891007, 0, 0, 0, 1, -1.7, 0.705, -0.9)
+mesh = SubResource("Mesh_JeepFlareLeg")
+
+[node name="GrilleFace" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.93, 0.93, 0)
+mesh = SubResource("Mesh_JeepGrilleFace")
+
+[node name="GrilleSlot1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.965, 0.95, -0.345)
+mesh = SubResource("Mesh_JeepGrilleSlot")
+
+[node name="GrilleSlot2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.965, 0.95, -0.23)
+mesh = SubResource("Mesh_JeepGrilleSlot")
+
+[node name="GrilleSlot3" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.965, 0.95, -0.115)
+mesh = SubResource("Mesh_JeepGrilleSlot")
+
+[node name="GrilleSlot4" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.965, 0.95, 0)
+mesh = SubResource("Mesh_JeepGrilleSlot")
+
+[node name="GrilleSlot5" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.965, 0.95, 0.115)
+mesh = SubResource("Mesh_JeepGrilleSlot")
+
+[node name="GrilleSlot6" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.965, 0.95, 0.23)
+mesh = SubResource("Mesh_JeepGrilleSlot")
+
+[node name="GrilleSlot7" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.965, 0.95, 0.345)
+mesh = SubResource("Mesh_JeepGrilleSlot")
+
+[node name="HeadlightBezelL" type="MeshInstance3D" parent="."]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 1.965, 0.95, 0.53)
+mesh = SubResource("Mesh_JeepHeadlightBezel")
+
+[node name="HeadlightL" type="MeshInstance3D" parent="."]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 1.975, 0.95, 0.53)
+mesh = SubResource("Mesh_JeepHeadlight")
+
+[node name="HeadlightBezelR" type="MeshInstance3D" parent="."]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 1.965, 0.95, -0.53)
+mesh = SubResource("Mesh_JeepHeadlightBezel")
+
+[node name="HeadlightR" type="MeshInstance3D" parent="."]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 1.975, 0.95, -0.53)
+mesh = SubResource("Mesh_JeepHeadlight")
+
+[node name="BumperFront" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.04, 0.62, 0)
+mesh = SubResource("Mesh_JeepBumperF")
+
+[node name="SkidPlate" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.92, 0.5, 0)
+mesh = SubResource("Mesh_JeepSkidPlate")
+
+[node name="FogLightL" type="MeshInstance3D" parent="."]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 2.125, 0.62, 0.62)
+mesh = SubResource("Mesh_JeepFogLight")
+
+[node name="FogLightR" type="MeshInstance3D" parent="."]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 2.125, 0.62, -0.62)
+mesh = SubResource("Mesh_JeepFogLight")
+
+[node name="TowHookL" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.14, 0.58, 0.4)
+mesh = SubResource("Mesh_JeepTowHook")
+
+[node name="TowHookR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.14, 0.58, -0.4)
+mesh = SubResource("Mesh_JeepTowHook")
+
+[node name="LicensePlateFront" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.125, 0.62, 0)
+mesh = SubResource("Mesh_LicensePlate")
+
+[node name="Cabin" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.65, 1.47, 0)
+mesh = SubResource("Mesh_JeepCabin")
+
+[node name="Windshield" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.951057, -0.309017, 0, 0.309017, 0.951057, 0, 0, 0, 1, 0.41, 1.4, 0)
+mesh = SubResource("Mesh_JeepWindshield")
+
+[node name="APillarL" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.951057, -0.309017, 0, 0.309017, 0.951057, 0, 0, 0, 1, 0.585, 1.46, 0.775)
+mesh = SubResource("Mesh_JeepAPillar")
+
+[node name="APillarR" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.951057, -0.309017, 0, 0.309017, 0.951057, 0, 0, 0, 1, 0.585, 1.46, -0.775)
+mesh = SubResource("Mesh_JeepAPillar")
+
+[node name="CenterPillarL" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 1.47, 0.775)
+mesh = SubResource("Mesh_JeepCenterPillar")
+
+[node name="CenterPillarR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 1.47, -0.775)
+mesh = SubResource("Mesh_JeepCenterPillar")
+
+[node name="CPillarL" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 1.47, 0.775)
+mesh = SubResource("Mesh_JeepCPillar")
+
+[node name="CPillarR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 1.47, -0.775)
+mesh = SubResource("Mesh_JeepCPillar")
+
+[node name="DPillarL" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.8, 1.47, 0.76)
+mesh = SubResource("Mesh_JeepDPillar")
+
+[node name="DPillarR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.8, 1.47, -0.76)
+mesh = SubResource("Mesh_JeepDPillar")
+
+[node name="Roof" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.65, 1.82, 0)
+mesh = SubResource("Mesh_JeepRoof")
+
+[node name="Cowl" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.72, 1.17, 0)
+mesh = SubResource("Mesh_JeepCowl")
+
+[node name="DoorGapL1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.66, 0.86, 0.833)
+mesh = SubResource("Mesh_JeepDoorGap")
+
+[node name="DoorGapL2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 0.86, 0.833)
+mesh = SubResource("Mesh_JeepDoorGap")
+
+[node name="DoorGapL3" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0.86, 0.833)
+mesh = SubResource("Mesh_JeepDoorGap")
+
+[node name="HingeL1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.63, 0.74, 0.843)
+mesh = SubResource("Mesh_JeepHinge")
+
+[node name="HingeL2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.63, 1.02, 0.843)
+mesh = SubResource("Mesh_JeepHinge")
+
+[node name="HingeL3" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.31, 0.74, 0.843)
+mesh = SubResource("Mesh_JeepHinge")
+
+[node name="HingeL4" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.31, 1.02, 0.843)
+mesh = SubResource("Mesh_JeepHinge")
+
+[node name="DoorHandleL1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.17, 1.06, 0.843)
+mesh = SubResource("Mesh_JeepDoorHandle")
+
+[node name="DoorHandleL2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.9, 1.06, 0.843)
+mesh = SubResource("Mesh_JeepDoorHandle")
+
+[node name="DoorGapR1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.66, 0.86, -0.833)
+mesh = SubResource("Mesh_JeepDoorGap")
+
+[node name="DoorGapR2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 0.86, -0.833)
+mesh = SubResource("Mesh_JeepDoorGap")
+
+[node name="DoorGapR3" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0.86, -0.833)
+mesh = SubResource("Mesh_JeepDoorGap")
+
+[node name="HingeR1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.63, 0.74, -0.843)
+mesh = SubResource("Mesh_JeepHinge")
+
+[node name="HingeR2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.63, 1.02, -0.843)
+mesh = SubResource("Mesh_JeepHinge")
+
+[node name="HingeR3" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.31, 0.74, -0.843)
+mesh = SubResource("Mesh_JeepHinge")
+
+[node name="HingeR4" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.31, 1.02, -0.843)
+mesh = SubResource("Mesh_JeepHinge")
+
+[node name="DoorHandleR1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.17, 1.06, -0.843)
+mesh = SubResource("Mesh_JeepDoorHandle")
+
+[node name="DoorHandleR2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.9, 1.06, -0.843)
+mesh = SubResource("Mesh_JeepDoorHandle")
+
+[node name="SideStepL" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0.86)
+mesh = SubResource("Mesh_JeepSideStep")
+
+[node name="SideStepR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, -0.86)
+mesh = SubResource("Mesh_JeepSideStep")
+
+[node name="MirrorArmL" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.48, 1.22, 0.88)
+mesh = SubResource("Mesh_JeepMirrorArm")
+
+[node name="MirrorArmR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.48, 1.22, -0.88)
+mesh = SubResource("Mesh_JeepMirrorArm")
+
+[node name="MirrorL" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.48, 1.26, 0.98)
+mesh = SubResource("Mesh_JeepMirror")
+
+[node name="MirrorR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.48, 1.26, -0.98)
+mesh = SubResource("Mesh_JeepMirror")
+
+[node name="MirrorGlassL" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.435, 1.26, 0.98)
+mesh = SubResource("Mesh_MirrorGlass")
+
+[node name="MirrorGlassR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.435, 1.26, -0.98)
+mesh = SubResource("Mesh_MirrorGlass")
+
+[node name="Tailgate" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.88, 0.86, 0)
+mesh = SubResource("Mesh_JeepTailgate")
+
+[node name="TailgateGlass" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.82, 1.47, 0)
+mesh = SubResource("Mesh_JeepTailgateGlass")
+
+[node name="TaillightL" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.88, 0.92, 0.68)
+mesh = SubResource("Mesh_JeepTaillight")
+
+[node name="TaillightR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.88, 0.92, -0.68)
+mesh = SubResource("Mesh_JeepTaillight")
+
+[node name="BumperRear" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.92, 0.6, 0)
+mesh = SubResource("Mesh_JeepBumperR")
+
+[node name="LicensePlate" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0.6, 0)
+mesh = SubResource("Mesh_LicensePlate")
+
+[node name="SpareTireMount" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.94, 1, 0)
+mesh = SubResource("Mesh_JeepSpareMount")
+
+[node name="SpareTire" type="MeshInstance3D" parent="."]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, -2.06, 1, 0)
+mesh = SubResource("Mesh_JeepSpareTire")
+
+[node name="SpareRim" type="MeshInstance3D" parent="."]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, -2.06, 1, 0)
+mesh = SubResource("Mesh_JeepSpareRim")
+
+[node name="WheelFL" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1.28, 0.4, 0.82)
+mesh = SubResource("Mesh_Wheel")
+
+[node name="Rim" type="MeshInstance3D" parent="WheelFL"]
+mesh = SubResource("Mesh_JeepRim")
+
+[node name="WheelFR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1.28, 0.4, -0.82)
+mesh = SubResource("Mesh_Wheel")
+
+[node name="Rim" type="MeshInstance3D" parent="WheelFR"]
+mesh = SubResource("Mesh_JeepRim")
+
+[node name="WheelRL" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -1.28, 0.4, 0.82)
+mesh = SubResource("Mesh_Wheel")
+
+[node name="Rim" type="MeshInstance3D" parent="WheelRL"]
+mesh = SubResource("Mesh_JeepRim")
+
+[node name="WheelRR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -1.28, 0.4, -0.82)
+mesh = SubResource("Mesh_Wheel")
+
+[node name="Rim" type="MeshInstance3D" parent="WheelRR"]
+mesh = SubResource("Mesh_JeepRim")

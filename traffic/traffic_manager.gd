@@ -102,6 +102,7 @@ var lane3_merge_paths: Array[Curve3D] = []
 var _physics_tick_count: int = 0
 var _watchdog_ignores: Dictionary[int, Dictionary] = {}  # int (car_instance_id) -> Dictionary { "target_id": int, "timer": float }
 var _sweep_cache: Dictionary[int, Dictionary] = {}  # car instance id -> _car_sweep() result
+var _pending_transfers: Array[Dictionary] = []
 
 var stats: Dictionary = {
 	"cars_spawned": 0,
@@ -208,10 +209,9 @@ func _pick_seeded_spots() -> Array[ParkingSpot]:
 
 func _seed_parked_cars() -> void:
 	var chosen_spots := _pick_seeded_spots()
-	var parkable_types := CarScript.PARKING_CAR_TYPES
 	for spot in chosen_spots:
 		var car: Car = PassengerCarScene.instantiate()
-		var chosen_type: CarScript.CarType = parkable_types[randi() % parkable_types.size()]
+		var chosen_type: CarScript.CarType = PassengerCar.pick_passenger_car_type(true)
 		car.car_type = chosen_type
 		car.speed = 0.0
 		car.desired_speed = 0.0
@@ -235,6 +235,7 @@ func _physics_process(delta: float) -> void:
 	for lane in lanes:
 		_update_lane_traffic(lane, delta)
 		_update_lane_spawning(lane, delta)
+	_apply_pending_lane_transfers()
 	_update_lot_cars(delta)
 
 	_physics_tick_count += 1
@@ -1058,10 +1059,10 @@ func can_spawn_drive_thru(dest: StringName) -> bool:
 	var start := target_path.get_point_position(0)
 	for lane in lanes:
 		for car in lane.cars:
-			if (
-				is_instance_valid(car)
-				and car.global_position.distance_to(start) < car.car_length * 0.5 + 6.0
-			):
+			if not is_instance_valid(car):
+				continue
+			var safe_dist := car.car_length * 0.5 + maxf(6.0, car.speed * 1.0)
+			if car.global_position.distance_to(start) < safe_dist:
 				return false
 	return true
 
@@ -1100,13 +1101,17 @@ func _count_drive_thru_cars(dest: StringName) -> int:
 				)
 			):
 				count += 1
+	var check_lane_id := 0 if dest == &"taco_hell_drive_thru" else 3
+	if lanes.size() > check_lane_id:
+		for car in lanes[check_lane_id].cars:
+			if is_instance_valid(car) and car.errand != null and car.errand.destination == dest:
+				count += 1
 	return count
 
 
 func spawn_drive_thru_car(dest: StringName = &"taco_hell_drive_thru") -> Car:
 	var car: Car = PassengerCarScene.instantiate()
-	var parkable_types := CarScript.PARKING_CAR_TYPES
-	var chosen_type: CarScript.CarType = parkable_types[randi() % parkable_types.size()]
+	var chosen_type: CarScript.CarType = PassengerCar.pick_passenger_car_type(true)
 	car.car_type = chosen_type
 	add_child(car)
 	car.errand = Errand.new(dest, 15.0)
@@ -1134,8 +1139,7 @@ func spawn_debug_car() -> Car:
 		return null
 	var chosen_spot: ParkingSpot = free_spots[randi() % free_spots.size()]
 	var car: Car = PassengerCarScene.instantiate()
-	var parkable_types := CarScript.PARKING_CAR_TYPES
-	var chosen_type: CarScript.CarType = parkable_types[randi() % parkable_types.size()]
+	var chosen_type: CarScript.CarType = PassengerCar.pick_passenger_car_type(true)
 	car.car_type = chosen_type
 	if ParkingLot.south_lot(chosen_spot) != &"":
 		car.merge_target_lane = 3
@@ -1168,8 +1172,7 @@ func spawn_south_lot_car(site: StringName) -> Car:
 		return null
 	var chosen_spot: ParkingSpot = free_spots[randi() % free_spots.size()]
 	var car: Car = PassengerCarScene.instantiate()
-	var parkable_types := CarScript.PARKING_CAR_TYPES
-	var chosen_type: CarScript.CarType = parkable_types[randi() % parkable_types.size()]
+	var chosen_type: CarScript.CarType = PassengerCar.pick_passenger_car_type(true)
 	car.car_type = chosen_type
 	car.errand = Errand.new(site, randf_range(15.0, 35.0))
 	car.had_errand = true
@@ -1198,8 +1201,7 @@ func spawn_smell_car(dest: StringName = &"smell_gas") -> Car:
 		return null
 	var chosen_spot: ParkingSpot = candidate_spots[randi() % candidate_spots.size()]
 	var car: Car = PassengerCarScene.instantiate()
-	var parkable_types := CarScript.PARKING_CAR_TYPES
-	var chosen_type: CarScript.CarType = parkable_types[randi() % parkable_types.size()]
+	var chosen_type: CarScript.CarType = PassengerCar.pick_passenger_car_type(true)
 	car.car_type = chosen_type
 	var dwell := randf_range(12.0, 25.0) if dest == &"smell_gas" else randf_range(15.0, 35.0)
 	car.errand = Errand.new(dest, dwell)
@@ -1260,14 +1262,12 @@ func _spawn_car_at(lane: Lane, initial_distance: float, scene: PackedScene = nul
 	var chosen_type: CarScript.CarType
 	if scene != null:
 		car = scene.instantiate()
-		var parkable_types := CarScript.PARKING_CAR_TYPES
-		chosen_type = parkable_types[randi() % parkable_types.size()]
+		chosen_type = PassengerCar.pick_passenger_car_type(true)
 	else:
 		var roll := randf()
 		if roll < 0.67:
 			car = PassengerCarScene.instantiate()
-			var parkable_types := CarScript.PARKING_CAR_TYPES
-			chosen_type = parkable_types[randi() % parkable_types.size()]
+			chosen_type = PassengerCar.pick_passenger_car_type(true)
 		elif roll < 0.75:
 			car = VanScene.instantiate()
 			chosen_type = CarScript.CarType.VAN
@@ -1286,46 +1286,55 @@ func _spawn_car_at(lane: Lane, initial_distance: float, scene: PackedScene = nul
 	var spd := randf_range(lane.min_speed, lane.max_speed)
 	if chosen_type == CarScript.CarType.BUS or chosen_type == CarScript.CarType.SHIPPING_TRUCK:
 		spd *= 0.9
-
+	elif chosen_type == CarScript.CarType.SPORTS:
+		spd = maxf(randf_range(20.0, 24.0), lane.max_speed * randf_range(1.25, 1.45))
 	add_child(car)
 	car.setup(lane.id, lane.z, lane.direction, lane.start_x, lane.length, spd, chosen_type)
 	car.lane_distance = initial_distance
 	car.update_presentation()
-	if lane.id == 0 and car.can_park() and randf() < P_ERRAND:
-		if initial_distance < DECISION_D:
-			if randf() < 0.35:
-				car.errand = Errand.new(&"taco_hell_drive_thru", randf_range(10.0, 25.0))
-			else:
+	if lane.id == 0 and car.can_take_errands():
+		if (
+			initial_distance < DECISION_D
+			and car.can_use_drive_thru()
+			and _count_drive_thru_cars(&"taco_hell_drive_thru") < 3
+		):
+			car.errand = Errand.new(&"taco_hell_drive_thru", randf_range(10.0, 25.0))
+			car.had_errand = true
+			stats["errands_assigned"] += 1
+		elif randf() < P_ERRAND:
+			if initial_distance < DECISION_D:
 				car.errand = Errand.random()
+				car.had_errand = true
+				stats["errands_assigned"] += 1
+			elif initial_distance < DECISION_D_SMELL:
+				var roll := randf()
+				if roll < 0.5:
+					car.errand = Errand.new(&"smell_store", randf_range(15.0, 35.0))
+				else:
+					car.errand = Errand.new(&"smell_gas", randf_range(12.0, 25.0))
+				car.had_errand = true
+				stats["errands_assigned"] += 1
+	elif lane.id == 3 and car.can_take_errands():
+		if (
+			initial_distance < DECISION_D_BK
+			and car.can_use_drive_thru()
+			and _count_drive_thru_cars(&"booger_king") < 3
+		):
+			car.errand = Errand.new(&"booger_king", randf_range(10.0, 25.0))
 			car.had_errand = true
 			stats["errands_assigned"] += 1
-		elif initial_distance < DECISION_D_SMELL:
+		elif randf() < P_ERRAND:
 			var roll := randf()
-			if roll < 0.5:
-				car.errand = Errand.new(&"smell_store", randf_range(15.0, 35.0))
-			else:
-				car.errand = Errand.new(&"smell_gas", randf_range(12.0, 25.0))
-			car.had_errand = true
-			stats["errands_assigned"] += 1
-	elif lane.id == 3 and car.can_park() and randf() < P_ERRAND:
-		var roll := randf()
-		if initial_distance < DECISION_D_BK:
-			if roll < 0.4:
-				car.errand = Errand.new(&"booger_king", randf_range(10.0, 25.0))
-			elif roll < 0.7:
-				car.errand = Errand.new(&"strip_mall", randf_range(20.0, 45.0))
-			else:
+			if initial_distance < DECISION_D_SM:
+				if roll < 0.5:
+					car.errand = Errand.new(&"strip_mall", randf_range(20.0, 45.0))
+				else:
+					car.errand = Errand.new(&"cramped_inn", randf_range(20.0, 45.0))
+			elif initial_distance < DECISION_D_CI:
 				car.errand = Errand.new(&"cramped_inn", randf_range(20.0, 45.0))
-		elif initial_distance < DECISION_D_SM:
-			if roll < 0.5:
-				car.errand = Errand.new(&"strip_mall", randf_range(20.0, 45.0))
-			else:
-				car.errand = Errand.new(&"cramped_inn", randf_range(20.0, 45.0))
-		elif initial_distance < DECISION_D_CI:
-			car.errand = Errand.new(&"cramped_inn", randf_range(20.0, 45.0))
-		if car.errand != null:
-			car.had_errand = true
-			stats["errands_assigned"] += 1
+			if car.errand != null:
+				car.had_errand = true
+				stats["errands_assigned"] += 1
 	lane.cars.append(car)
 	stats["cars_spawned"] += 1
 	return car
@@ -1425,23 +1434,51 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 		# Smooth car-following with velocity-dependent safe gap and comfortable deceleration
 		var following_target: float = car.desired_speed
 		var brake_accel: float = BRAKE_ACCELERATION
+		var lead_car: Car = null
+		var lead_gap: float = 999.0
+		var safe_gap: float = maxf(SAFE_FOLLOWING_GAP, 4.0 + car.speed * 1.2)
 		if i > 0:
-			var lead_car = valid_cars[i - 1]
-			var gap: float = (
+			lead_car = valid_cars[i - 1]
+			lead_gap = (
 				lead_car.lane_distance
 				- car.lane_distance
 				- (0.5 * (lead_car.car_length + car.car_length))
 			)
-			var safe_gap: float = maxf(SAFE_FOLLOWING_GAP, 4.0 + car.speed * 1.2)
 			var lead_speed: float = lead_car.lane_speed
-			if gap < safe_gap:
-				var t: float = clampf(maxf(0.0, gap - 4.0) / maxf(0.1, safe_gap - 4.0), 0.0, 1.0)
+			if lead_gap < safe_gap:
+				var t: float = clampf(
+					maxf(0.0, lead_gap - 4.0) / maxf(0.1, safe_gap - 4.0), 0.0, 1.0
+				)
 				following_target = lerpf(lead_speed, car.desired_speed, t)
-				if gap < 4.0:
-					following_target = lead_speed * clampf(gap / 4.0, 0.0, 1.0)
+				if lead_gap < 4.0:
+					following_target = lead_speed * clampf(lead_gap / 4.0, 0.0, 1.0)
 					brake_accel = BRAKE_ACCELERATION
 				else:
 					brake_accel = A_COMFORT * 2.0
+
+		var swerved := false
+		if (
+			car.car_type == CarScript.CarType.SPORTS
+			and car.state == Car.State.CRUISING
+			and car.errand == null
+			and not car.is_changing_lanes
+			and car.lane_change_cooldown <= 0.0
+			and lead_car != null
+		):
+			var wants_swerve: bool = (
+				(lead_gap < safe_gap * 1.8 and lead_car.lane_speed < car.desired_speed - 1.0)
+				or lead_gap < safe_gap
+			)
+			if wants_swerve:
+				var target_lane_id := _get_adjacent_lane_id(lane.id)
+				if target_lane_id >= 0 and target_lane_id < lanes.size():
+					var target_lane := lanes[target_lane_id]
+					if _can_swerve_to_lane(car, target_lane, lead_gap):
+						swerved = true
+						car.start_lane_change(target_lane_id, target_lane.z)
+						_pending_transfers.append({"car": car, "target_lane": target_lane})
+						following_target = car.desired_speed
+
 		var target_speed: float = maxf(0.0, minf(car.desired_speed, following_target))
 		if car.state == Car.State.APPROACHING:
 			if car.turn_signal != CarScript.TurnSignal.RIGHT:
@@ -1451,7 +1488,8 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 			var approach_target: float = sqrt(V_TURN * V_TURN + 2.0 * A_COMFORT * approach_dist)
 			target_speed = minf(target_speed, approach_target)
 
-		var accel: float = brake_accel if car.speed > target_speed else MOTOR_ACCELERATION
+		var motor_accel := 22.0 if car.car_type == CarScript.CarType.SPORTS else MOTOR_ACCELERATION
+		var accel: float = brake_accel if car.speed > target_speed else motor_accel
 		car.speed = move_toward(car.speed, target_speed, accel * delta)
 		car.advance_simulation(delta)
 
@@ -1497,9 +1535,8 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 			if (car.lane_id == 0 or car.lane_id == 3) and car.had_errand:
 				stats["errands_completed"] += 1
 			car.queue_free()
-		else:
+		elif not swerved:
 			surviving_cars.append(car)
-
 	lane.cars = surviving_cars
 
 
@@ -1522,6 +1559,76 @@ func _turn_d(lane_id: int, car: Car) -> float:
 		&"strip_mall":
 			return TURN_D_SM
 	return TURN_D_BK
+
+
+func _get_adjacent_lane_id(current_lane_id: int) -> int:
+	match current_lane_id:
+		0:
+			return 1
+		1:
+			return 0
+		2:
+			return 3
+		3:
+			return 2
+	return -1
+
+
+func _can_swerve_to_lane(car: Car, target_lane: Lane, current_lead_gap: float) -> bool:
+	if car.lane_distance < 15.0 or car.lane_distance > target_lane.length - 25.0:
+		return false
+
+	for transfer in _pending_transfers:
+		if transfer.get("target_lane") == target_lane:
+			var other: Car = transfer.get("car")
+			if other == null or not is_instance_valid(other) or other == car:
+				continue
+			if absf(other.lane_distance - car.lane_distance) < 25.0:
+				return false
+
+	for other in target_lane.cars:
+		if other == null or not is_instance_valid(other) or other == car:
+			continue
+		if other.motion == Car.Motion.PATH:
+			if car.global_position.distance_to(other.global_position) < 18.0:
+				return false
+			continue
+
+		if other.is_changing_lanes and absf(other.lane_distance - car.lane_distance) < 25.0:
+			return false
+
+		if other.lane_distance >= car.lane_distance:
+			var gap_ahead := (
+				other.lane_distance
+				- car.lane_distance
+				- (0.5 * (other.car_length + car.car_length))
+			)
+			if gap_ahead < 18.0:
+				return false
+			if gap_ahead < current_lead_gap + 8.0:
+				return false
+		else:
+			var gap_behind := (
+				car.lane_distance
+				- other.lane_distance
+				- (0.5 * (car.car_length + other.car_length))
+			)
+			var safe_behind := maxf(9.0, 4.0 + other.speed * 0.8)
+			if gap_behind < safe_behind:
+				return false
+			if other.speed > car.speed + 1.0 and gap_behind < (other.speed - car.speed) * 2.5 + 8.0:
+				return false
+
+	return true
+
+
+func _apply_pending_lane_transfers() -> void:
+	for transfer in _pending_transfers:
+		var c: Car = transfer["car"]
+		var target_lane: Lane = transfer["target_lane"]
+		if is_instance_valid(c) and not target_lane.cars.has(c):
+			target_lane.cars.append(c)
+	_pending_transfers.clear()
 
 
 func _exit_tree() -> void:

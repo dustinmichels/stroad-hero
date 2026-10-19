@@ -10,6 +10,7 @@ const PASSENGER_TYPES: Array[CarType] = [
 	CarType.HATCHBACK,
 	CarType.MINIVAN,
 	CarType.SPORTS,
+	CarType.JEEP,
 ]
 
 const BODY_SCENES: Dictionary = {
@@ -19,6 +20,7 @@ const BODY_SCENES: Dictionary = {
 	CarType.HATCHBACK: preload("res://cars/bodies/hatchback.tscn"),
 	CarType.MINIVAN: preload("res://cars/bodies/minivan.tscn"),
 	CarType.SPORTS: preload("res://cars/bodies/sports.tscn"),
+	CarType.JEEP: preload("res://cars/bodies/jeep.tscn"),
 }
 
 const BODY_NODE_PATHS: Dictionary = {
@@ -28,6 +30,7 @@ const BODY_NODE_PATHS: Dictionary = {
 	CarType.HATCHBACK: ^"Hatchback",
 	CarType.MINIVAN: ^"Minivan",
 	CarType.SPORTS: ^"Sports",
+	CarType.JEEP: ^"Jeep",
 }
 
 const PAINT_PALETTE: Array[Color] = [
@@ -40,10 +43,37 @@ const PAINT_PALETTE: Array[Color] = [
 	Color(0.90, 0.36, 0.08),  # Vibrant Orange
 	Color(0.48, 0.08, 0.16),  # Burgundy
 	Color(0.48, 0.18, 0.70),  # Purple
-	Color(0.94, 0.76, 0.08),  # Yellow
+	Color(0.92, 0.84, 0.22),  # Canary Yellow
 	Color(0.08, 0.15, 0.32),  # Midnight Navy
 	Color(0.82, 0.76, 0.65),  # Desert Sand
 ]
+const SPORTS_PAINT_PALETTE: Array[Color] = [
+	Color(0.88, 0.12, 0.12),  # Bright Red
+	Color(0.98, 0.88, 0.05),  # Vibrant Yellow
+	Color(0.95, 0.35, 0.60),  # Hot Pink
+]
+
+const REGULAR_PASSENGER_TYPES: Array[CarType] = [
+	CarType.SEDAN,
+	CarType.SUV,
+	CarType.PICKUP,
+	CarType.HATCHBACK,
+	CarType.MINIVAN,
+	CarType.JEEP,
+]
+
+const DEFAULT_WHEEL_RADIUS := 0.35
+const WHEEL_RADII: Dictionary = {
+	CarType.JEEP: 0.4,
+}
+
+
+static func pick_passenger_car_type(allow_sports: bool = true) -> CarType:
+	var rng := _get_rng()
+	if allow_sports and rng.randf() < 0.05:
+		return CarType.SPORTS
+	return REGULAR_PASSENGER_TYPES[rng.randi_range(0, REGULAR_PASSENGER_TYPES.size() - 1)]
+
 
 const PAINTED_NODE_NAMES: Array[StringName] = [
 	&"Body",
@@ -64,12 +94,17 @@ const PAINTED_NODE_NAMES: Array[StringName] = [
 	&"FastbackR",
 	&"APillarL",
 	&"APillarR",
+	&"CenterPillarL",
+	&"CenterPillarR",
 	&"CPillarL",
 	&"CPillarR",
 	&"DPillarL",
 	&"DPillarR",
 	&"MirrorHousingL",
 	&"MirrorHousingR",
+	&"GrilleFace",
+	&"FenderFL",
+	&"FenderFR",
 ]
 
 static var _rng: RandomNumberGenerator = null
@@ -104,8 +139,7 @@ func can_use_drive_thru() -> bool:
 
 func _apply_visual_type() -> void:
 	if not PASSENGER_TYPES.has(car_type):
-		var rng := _get_rng()
-		car_type = PASSENGER_TYPES[rng.randi_range(0, PASSENGER_TYPES.size() - 1)]
+		car_type = pick_passenger_car_type()
 
 	var visuals := get_node_or_null("Visuals")
 	if visuals and not _get_node_for_type(car_type):
@@ -125,6 +159,7 @@ func _apply_visual_type() -> void:
 		_headlamps_initialized = false
 		headlamp = null
 
+	wheel_radius = WHEEL_RADII.get(car_type, DEFAULT_WHEEL_RADIUS)
 	super._apply_visual_type()
 	_apply_paint_material()
 
@@ -142,10 +177,13 @@ func set_body_color(c: Color) -> void:
 
 
 func _apply_paint_material() -> void:
-	if body_color == Color(0, 0, 0, 0):
+	if car_type == CarType.SPORTS:
+		if not SPORTS_PAINT_PALETTE.has(body_color):
+			var rng := _get_rng()
+			body_color = SPORTS_PAINT_PALETTE[rng.randi_range(0, SPORTS_PAINT_PALETTE.size() - 1)]
+	elif body_color == Color(0, 0, 0, 0):
 		var rng := _get_rng()
 		body_color = PAINT_PALETTE[rng.randi_range(0, PAINT_PALETTE.size() - 1)]
-
 	if _paint_material == null:
 		_paint_material = StandardMaterial3D.new()
 		_paint_material.roughness = 0.32

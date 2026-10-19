@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Left Stink Line -->
+  <path d="M 140 475
+           C 75 390, 85 305, 140 235
+           C 175 180, 135 130, 105 80"
+        fill="none"
+        stroke="#70c41d"
+        stroke-width="26"
+        stroke-linecap="round"
+        stroke-linejoin="round" />
+
+  <!-- Center Stink Line -->
+  <path d="M 256 460
+           C 210 375, 215 285, 265 210
+           C 305 150, 280 95, 256 35"
+        fill="none"
+        stroke="#70c41d"
+        stroke-width="30"
+        stroke-linecap="round"
+        stroke-linejoin="round" />
+
+  <!-- Right Stink Line -->
+  <path d="M 372 475
+           C 437 390, 427 305, 372 235
+           C 337 180, 377 130, 407 80"
+        fill="none"
+        stroke="#70c41d"
+        stroke-width="26"
+        stroke-linecap="round"
+        stroke-linejoin="round" />
+</svg>

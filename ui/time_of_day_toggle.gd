@@ -142,7 +142,6 @@ func _draw() -> void:
 	var th := h - 2.0 * m
 	var tx := m + slider_pos * slot_w
 
-
 	# Symmetric thumb shadow
 	var shadow_style := StyleBoxFlat.new()
 	shadow_style.bg_color = Color(0.0, 0.0, 0.0, 0.3)

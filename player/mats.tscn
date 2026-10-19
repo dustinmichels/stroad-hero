@@ -1,449 +1,115 @@
-[gd_scene load_steps=50 format=3]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://player/mats.gd" id="1_mats"]
+[ext_resource type="ArrayMesh" path="res://player/mats_meshes/torso.res" id="2_torso"]
+[ext_resource type="ArrayMesh" path="res://player/mats_meshes/backpack.res" id="3_backpack"]
+[ext_resource type="ArrayMesh" path="res://player/mats_meshes/thigh.res" id="4_thigh"]
+[ext_resource type="ArrayMesh" path="res://player/mats_meshes/shin.res" id="5_shin"]
+[ext_resource type="ArrayMesh" path="res://player/mats_meshes/shoe_sole.res" id="6_shoe_sole"]
+[ext_resource type="ArrayMesh" path="res://player/mats_meshes/shoe_upper.res" id="7_shoe_upper"]
+[ext_resource type="ArrayMesh" path="res://player/mats_meshes/upper_arm.res" id="8_upper_arm"]
+[ext_resource type="ArrayMesh" path="res://player/mats_meshes/forearm_left.res" id="9_forearm_left"]
+[ext_resource type="ArrayMesh" path="res://player/mats_meshes/forearm_right.res" id="10_forearm_right"]
+[ext_resource type="ArrayMesh" path="res://player/mats_meshes/face.res" id="11_face"]
+[ext_resource type="ArrayMesh" path="res://player/mats_meshes/hair.res" id="12_hair"]
+[ext_resource type="ArrayMesh" path="res://player/mats_meshes/cap.res" id="13_cap"]
 
 [sub_resource type="CapsuleShape3D" id="Shape_Mats"]
 radius = 0.3
-height = 1.95
-
-[sub_resource type="StandardMaterial3D" id="Mat_MatsPants"]
-albedo_color = Color(0.18, 0.28, 0.5, 1)
-roughness = 0.8
-
-[sub_resource type="StandardMaterial3D" id="Mat_MatsShoeUpper"]
-albedo_color = Color(0.8, 0.14, 0.12, 1)
-roughness = 0.75
-
-[sub_resource type="StandardMaterial3D" id="Mat_MatsShoeWhite"]
-albedo_color = Color(0.95, 0.95, 0.92, 1)
-roughness = 0.8
-
-[sub_resource type="StandardMaterial3D" id="Mat_MatsJacket"]
-albedo_color = Color(0.96, 0.48, 0.1, 1)
-roughness = 0.7
-
-[sub_resource type="StandardMaterial3D" id="Mat_MatsJacketTrim"]
-albedo_color = Color(0.82, 0.38, 0.08, 1)
-roughness = 0.75
-
-[sub_resource type="StandardMaterial3D" id="Mat_MatsZipper"]
-albedo_color = Color(0.88, 0.9, 0.92, 1)
-metallic = 0.6
-roughness = 0.4
-
-[sub_resource type="StandardMaterial3D" id="Mat_MatsSkin"]
-albedo_color = Color(0.94, 0.75, 0.62, 1)
-roughness = 0.6
-
-[sub_resource type="StandardMaterial3D" id="Mat_MatsFeatures"]
-albedo_color = Color(0.12, 0.07, 0.06, 1)
-roughness = 0.75
-
-[sub_resource type="StandardMaterial3D" id="Mat_MatsEyeHighlight"]
-albedo_color = Color(1, 0.97, 0.9, 1)
-roughness = 0.45
-
-[sub_resource type="StandardMaterial3D" id="Mat_MatsCap"]
-albedo_color = Color(0.8, 0.12, 0.1, 1)
-roughness = 0.75
-
-[sub_resource type="StandardMaterial3D" id="Mat_MatsCapBrim"]
-albedo_color = Color(0.62, 0.08, 0.07, 1)
-roughness = 0.75
-
-[sub_resource type="StandardMaterial3D" id="Mat_MatsHair"]
-albedo_color = Color(0.7, 0.52, 0.28, 1)
-roughness = 0.9
-
-[sub_resource type="StandardMaterial3D" id="Mat_MatsBackpack"]
-albedo_color = Color(0.2, 0.55, 0.3, 1)
-roughness = 0.8
-
-[sub_resource type="StandardMaterial3D" id="Mat_MatsBackpackStraps"]
-albedo_color = Color(0.15, 0.16, 0.18, 1)
-roughness = 0.85
-
-[sub_resource type="CylinderMesh" id="Mesh_MatsNeck"]
-material = SubResource("Mat_MatsSkin")
-top_radius = 0.075
-bottom_radius = 0.085
-height = 0.12
-radial_segments = 8
-
-[sub_resource type="CylinderMesh" id="Mesh_MatsHead"]
-material = SubResource("Mat_MatsSkin")
-top_radius = 0.21
-bottom_radius = 0.18
-height = 0.38
-radial_segments = 8
-
-[sub_resource type="BoxMesh" id="Mesh_MatsNose"]
-material = SubResource("Mat_MatsSkin")
-size = Vector3(0.04, 0.05, 0.04)
-
-[sub_resource type="BoxMesh" id="Mesh_MatsEar"]
-material = SubResource("Mat_MatsSkin")
-size = Vector3(0.03, 0.07, 0.05)
-
-[sub_resource type="SphereMesh" id="Mesh_MatsEye"]
-material = SubResource("Mat_MatsFeatures")
-radius = 0.035
-height = 0.07
-radial_segments = 12
-rings = 6
-
-[sub_resource type="SphereMesh" id="Mesh_MatsEyeHighlight"]
-material = SubResource("Mat_MatsEyeHighlight")
-radius = 0.01
-height = 0.02
-radial_segments = 8
-rings = 4
-
-[sub_resource type="BoxMesh" id="Mesh_MatsSmile"]
-material = SubResource("Mat_MatsFeatures")
-size = Vector3(0.055, 0.016, 0.02)
-
-[sub_resource type="CylinderMesh" id="Mesh_MatsHairCrown"]
-material = SubResource("Mat_MatsHair")
-top_radius = 0.22
-bottom_radius = 0.23
-height = 0.16
-radial_segments = 8
-
-[sub_resource type="BoxMesh" id="Mesh_MatsHairFringe"]
-material = SubResource("Mat_MatsHair")
-size = Vector3(0.085, 0.07, 0.055)
-
-[sub_resource type="BoxMesh" id="Mesh_MatsHairBack"]
-material = SubResource("Mat_MatsHair")
-size = Vector3(0.3, 0.14, 0.1)
-
-[sub_resource type="CylinderMesh" id="Mesh_MatsCapCrown"]
-material = SubResource("Mat_MatsCap")
-top_radius = 0.2
-bottom_radius = 0.225
-height = 0.15
-radial_segments = 8
-
-[sub_resource type="BoxMesh" id="Mesh_MatsCapBrim"]
-material = SubResource("Mat_MatsCapBrim")
-size = Vector3(0.32, 0.025, 0.18)
-
-[sub_resource type="SphereMesh" id="Mesh_MatsCapButton"]
-material = SubResource("Mat_MatsCap")
-radius = 0.025
-height = 0.035
-radial_segments = 8
-rings = 4
-
-[sub_resource type="BoxMesh" id="Mesh_MatsTorsoChest"]
-material = SubResource("Mat_MatsJacket")
-size = Vector3(0.56, 0.36, 0.34)
-
-[sub_resource type="BoxMesh" id="Mesh_MatsTorsoWaist"]
-material = SubResource("Mat_MatsJacket")
-size = Vector3(0.46, 0.24, 0.28)
-
-[sub_resource type="BoxMesh" id="Mesh_MatsTorsoHem"]
-material = SubResource("Mat_MatsJacketTrim")
-size = Vector3(0.47, 0.05, 0.29)
-
-[sub_resource type="CylinderMesh" id="Mesh_MatsTorsoCollar"]
-material = SubResource("Mat_MatsJacketTrim")
-top_radius = 0.12
-bottom_radius = 0.14
-height = 0.07
-radial_segments = 8
-
-[sub_resource type="BoxMesh" id="Mesh_MatsTorsoZipper"]
-material = SubResource("Mat_MatsZipper")
-size = Vector3(0.022, 0.58, 0.015)
-
-[sub_resource type="BoxMesh" id="Mesh_MatsBackpackStrap"]
-material = SubResource("Mat_MatsBackpackStraps")
-size = Vector3(0.05, 0.48, 0.35)
-
-[sub_resource type="BoxMesh" id="Mesh_MatsBackpack"]
-material = SubResource("Mat_MatsBackpack")
-size = Vector3(0.36, 0.44, 0.18)
-
-[sub_resource type="BoxMesh" id="Mesh_MatsBackpackPocket"]
-material = SubResource("Mat_MatsBackpack")
-size = Vector3(0.26, 0.22, 0.07)
-
-[sub_resource type="CylinderMesh" id="Mesh_MatsSleeve"]
-material = SubResource("Mat_MatsJacket")
-top_radius = 0.085
-bottom_radius = 0.072
-height = 0.42
-radial_segments = 8
-
-[sub_resource type="CylinderMesh" id="Mesh_MatsSleeveCuff"]
-material = SubResource("Mat_MatsJacketTrim")
-top_radius = 0.075
-bottom_radius = 0.075
-height = 0.04
-radial_segments = 8
-
-[sub_resource type="BoxMesh" id="Mesh_MatsHandPalm"]
-material = SubResource("Mat_MatsSkin")
-size = Vector3(0.075, 0.1, 0.09)
-
-[sub_resource type="BoxMesh" id="Mesh_MatsHandThumb"]
-material = SubResource("Mat_MatsSkin")
-size = Vector3(0.028, 0.042, 0.028)
-
-[sub_resource type="CylinderMesh" id="Mesh_MatsLeg"]
-material = SubResource("Mat_MatsPants")
-top_radius = 0.115
-bottom_radius = 0.095
-height = 0.44
-radial_segments = 8
-
-[sub_resource type="CylinderMesh" id="Mesh_MatsLegCuff"]
-material = SubResource("Mat_MatsPants")
-top_radius = 0.098
-bottom_radius = 0.098
-height = 0.04
-radial_segments = 8
-
-[sub_resource type="BoxMesh" id="Mesh_MatsShoeSole"]
-material = SubResource("Mat_MatsShoeWhite")
-size = Vector3(0.22, 0.06, 0.38)
-
-[sub_resource type="BoxMesh" id="Mesh_MatsShoeUpper"]
-material = SubResource("Mat_MatsShoeUpper")
-size = Vector3(0.2, 0.12, 0.34)
-
-[sub_resource type="CylinderMesh" id="Mesh_MatsShoeToeCap"]
-material = SubResource("Mat_MatsShoeWhite")
-top_radius = 0.092
-bottom_radius = 0.092
-height = 0.07
-radial_segments = 8
-
-[sub_resource type="BoxMesh" id="Mesh_MatsShoeLaces"]
-material = SubResource("Mat_MatsShoeWhite")
-size = Vector3(0.1, 0.02, 0.09)
+height = 1.5
 
 [node name="Mats" type="CharacterBody3D"]
 script = ExtResource("1_mats")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.975, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
 shape = SubResource("Shape_Mats")
 
 [node name="Visual" type="Node3D" parent="."]
 transform = Transform3D(-1, 0, 1.22465e-16, 0, 1, 0, -1.22465e-16, 0, -1, 0, 0, 0)
 
-[node name="Neck" type="MeshInstance3D" parent="Visual"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0)
-mesh = SubResource("Mesh_MatsNeck")
-
-[node name="LeftLegPivot" type="Node3D" parent="Visual"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.14, 0.65, 0)
-
-[node name="Leg" type="MeshInstance3D" parent="Visual/LeftLegPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.22, 0)
-mesh = SubResource("Mesh_MatsLeg")
-
-[node name="Cuff" type="MeshInstance3D" parent="Visual/LeftLegPivot/Leg"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
-mesh = SubResource("Mesh_MatsLegCuff")
-
-[node name="Shoe" type="Node3D" parent="Visual/LeftLegPivot"]
-
-[node name="Sole" type="MeshInstance3D" parent="Visual/LeftLegPivot/Shoe"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.62, 0.04)
-mesh = SubResource("Mesh_MatsShoeSole")
-
-[node name="Upper" type="MeshInstance3D" parent="Visual/LeftLegPivot/Shoe"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.535, 0.02)
-mesh = SubResource("Mesh_MatsShoeUpper")
-
-[node name="ToeCap" type="MeshInstance3D" parent="Visual/LeftLegPivot/Shoe"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.56, 0.16)
-mesh = SubResource("Mesh_MatsShoeToeCap")
-
-[node name="Laces" type="MeshInstance3D" parent="Visual/LeftLegPivot/Shoe"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.465, 0.1)
-mesh = SubResource("Mesh_MatsShoeLaces")
-
-[node name="RightLegPivot" type="Node3D" parent="Visual"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.14, 0.65, 0)
-
-[node name="Leg" type="MeshInstance3D" parent="Visual/RightLegPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.22, 0)
-mesh = SubResource("Mesh_MatsLeg")
-
-[node name="Cuff" type="MeshInstance3D" parent="Visual/RightLegPivot/Leg"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
-mesh = SubResource("Mesh_MatsLegCuff")
-
-[node name="Shoe" type="Node3D" parent="Visual/RightLegPivot"]
-
-[node name="Sole" type="MeshInstance3D" parent="Visual/RightLegPivot/Shoe"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.62, 0.04)
-mesh = SubResource("Mesh_MatsShoeSole")
-
-[node name="Upper" type="MeshInstance3D" parent="Visual/RightLegPivot/Shoe"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.535, 0.02)
-mesh = SubResource("Mesh_MatsShoeUpper")
-
-[node name="ToeCap" type="MeshInstance3D" parent="Visual/RightLegPivot/Shoe"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.56, 0.16)
-mesh = SubResource("Mesh_MatsShoeToeCap")
-
-[node name="Laces" type="MeshInstance3D" parent="Visual/RightLegPivot/Shoe"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.465, 0.1)
-mesh = SubResource("Mesh_MatsShoeLaces")
-
 [node name="Torso" type="MeshInstance3D" parent="Visual"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.15, 0)
-mesh = SubResource("Mesh_MatsTorsoChest")
-
-[node name="Waist" type="MeshInstance3D" parent="Visual/Torso"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.28, 0)
-mesh = SubResource("Mesh_MatsTorsoWaist")
-
-[node name="Hem" type="MeshInstance3D" parent="Visual/Torso"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.41, 0)
-mesh = SubResource("Mesh_MatsTorsoHem")
-
-[node name="Collar" type="MeshInstance3D" parent="Visual/Torso"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0)
-mesh = SubResource("Mesh_MatsTorsoCollar")
-
-[node name="Zipper" type="MeshInstance3D" parent="Visual/Torso"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0.172)
-mesh = SubResource("Mesh_MatsTorsoZipper")
-
-[node name="LeftStrap" type="MeshInstance3D" parent="Visual/Torso"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.14, -0.06, 0.01)
-mesh = SubResource("Mesh_MatsBackpackStrap")
-
-[node name="RightStrap" type="MeshInstance3D" parent="Visual/Torso"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.14, -0.06, 0.01)
-mesh = SubResource("Mesh_MatsBackpackStrap")
-
-[node name="LeftArmPivot" type="Node3D" parent="Visual"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.36, 1.25, 0)
-
-[node name="Sleeve" type="MeshInstance3D" parent="Visual/LeftArmPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.23, 0)
-mesh = SubResource("Mesh_MatsSleeve")
-
-[node name="Cuff" type="MeshInstance3D" parent="Visual/LeftArmPivot/Sleeve"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.21, 0)
-mesh = SubResource("Mesh_MatsSleeveCuff")
-
-[node name="Hand" type="MeshInstance3D" parent="Visual/LeftArmPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.52, 0)
-mesh = SubResource("Mesh_MatsHandPalm")
-
-[node name="Thumb" type="MeshInstance3D" parent="Visual/LeftArmPivot/Hand"]
-transform = Transform3D(0.866025, 0.25, 0.433013, 0, 0.866025, -0.5, -0.5, 0.433013, 0.75, -0.035, -0.01, 0.035)
-mesh = SubResource("Mesh_MatsHandThumb")
-
-[node name="RightArmPivot" type="Node3D" parent="Visual"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.36, 1.25, 0)
-
-[node name="Sleeve" type="MeshInstance3D" parent="Visual/RightArmPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.23, 0)
-mesh = SubResource("Mesh_MatsSleeve")
-
-[node name="Cuff" type="MeshInstance3D" parent="Visual/RightArmPivot/Sleeve"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.21, 0)
-mesh = SubResource("Mesh_MatsSleeveCuff")
-
-[node name="Hand" type="MeshInstance3D" parent="Visual/RightArmPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.52, 0)
-mesh = SubResource("Mesh_MatsHandPalm")
-
-[node name="Thumb" type="MeshInstance3D" parent="Visual/RightArmPivot/Hand"]
-transform = Transform3D(0.866025, -0.25, -0.433013, 0, 0.866025, -0.5, 0.5, 0.433013, 0.75, 0.035, -0.01, 0.035)
-mesh = SubResource("Mesh_MatsHandThumb")
-
-[node name="Head" type="Node3D" parent="Visual"]
-position = Vector3(0, 1.6, 0)
-
-[node name="Face" type="MeshInstance3D" parent="Visual/Head"]
-transform = Transform3D(0.92388, 0, 0.382683, 0, 1, 0, -0.382683, 0, 0.92388, 0, 0, 0)
-mesh = SubResource("Mesh_MatsHead")
-
-[node name="Nose" type="MeshInstance3D" parent="Visual/Head"]
-position = Vector3(0, -0.02, 0.19)
-mesh = SubResource("Mesh_MatsNose")
-
-[node name="LeftEar" type="MeshInstance3D" parent="Visual/Head"]
-position = Vector3(0.19, 0.01, 0)
-mesh = SubResource("Mesh_MatsEar")
-
-[node name="RightEar" type="MeshInstance3D" parent="Visual/Head"]
-position = Vector3(-0.19, 0.01, 0)
-mesh = SubResource("Mesh_MatsEar")
-
-[node name="LeftEye" type="MeshInstance3D" parent="Visual/Head"]
-position = Vector3(0.085, 0.045, 0.185)
-mesh = SubResource("Mesh_MatsEye")
-
-[node name="Highlight" type="MeshInstance3D" parent="Visual/Head/LeftEye"]
-position = Vector3(-0.01, 0.014, 0.03)
-mesh = SubResource("Mesh_MatsEyeHighlight")
-
-[node name="RightEye" type="MeshInstance3D" parent="Visual/Head"]
-position = Vector3(-0.085, 0.045, 0.185)
-mesh = SubResource("Mesh_MatsEye")
-
-[node name="Highlight" type="MeshInstance3D" parent="Visual/Head/RightEye"]
-position = Vector3(-0.01, 0.014, 0.03)
-mesh = SubResource("Mesh_MatsEyeHighlight")
-
-[node name="LeftSmile" type="MeshInstance3D" parent="Visual/Head"]
-position = Vector3(-0.028, -0.09, 0.188)
-rotation = Vector3(0, 0, -0.35)
-mesh = SubResource("Mesh_MatsSmile")
-
-[node name="RightSmile" type="MeshInstance3D" parent="Visual/Head"]
-position = Vector3(0.028, -0.09, 0.188)
-rotation = Vector3(0, 0, 0.35)
-mesh = SubResource("Mesh_MatsSmile")
-
-[node name="Hair" type="MeshInstance3D" parent="Visual/Head"]
-transform = Transform3D(0.92388, 0, 0.382683, 0, 1, 0, -0.382683, 0, 0.92388, 0, 0.14, -0.01)
-mesh = SubResource("Mesh_MatsHairCrown")
-
-[node name="FringeLeft" type="MeshInstance3D" parent="Visual/Head/Hair"]
-transform = Transform3D(0.97, 0, 0, 0, 0.96, 0.28, 0, -0.28, 0.96, 0.08, -0.06, 0.18)
-mesh = SubResource("Mesh_MatsHairFringe")
-
-[node name="FringeRight" type="MeshInstance3D" parent="Visual/Head/Hair"]
-transform = Transform3D(0.97, 0, 0, 0, 0.96, 0.28, 0, -0.28, 0.96, -0.08, -0.06, 0.18)
-mesh = SubResource("Mesh_MatsHairFringe")
-
-[node name="Back" type="MeshInstance3D" parent="Visual/Head/Hair"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.05, -0.12)
-mesh = SubResource("Mesh_MatsHairBack")
-
-[node name="Hat" type="Node3D" parent="Visual/Head"]
-position = Vector3(0, 0.12, 0)
-
-[node name="Crown" type="MeshInstance3D" parent="Visual/Head/Hat"]
-transform = Transform3D(0.92388, 0, 0.382683, 0, 1, 0, -0.382683, 0, 0.92388, 0, 0.06, -0.01)
-mesh = SubResource("Mesh_MatsCapCrown")
-
-[node name="Brim" type="MeshInstance3D" parent="Visual/Head/Hat"]
-transform = Transform3D(1, 0, 0, 0, 0.9928, 0.1197, 0, -0.1197, 0.9928, 0, 0, 0.26)
-mesh = SubResource("Mesh_MatsCapBrim")
-
-[node name="Button" type="MeshInstance3D" parent="Visual/Head/Hat"]
-position = Vector3(0, 0.15, -0.01)
-mesh = SubResource("Mesh_MatsCapButton")
+mesh = ExtResource("2_torso")
 
 [node name="Backpack" type="MeshInstance3D" parent="Visual"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.05, -0.26)
-mesh = SubResource("Mesh_MatsBackpack")
+mesh = ExtResource("3_backpack")
 
-[node name="Pocket" type="MeshInstance3D" parent="Visual/Backpack"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.08, -0.11)
-mesh = SubResource("Mesh_MatsBackpackPocket")
+[node name="LeftLegPivot" type="Node3D" parent="Visual"]
+position = Vector3(0.072, 0.6, 0)
+
+[node name="Thigh" type="MeshInstance3D" parent="Visual/LeftLegPivot"]
+mesh = ExtResource("4_thigh")
+
+[node name="Knee" type="Node3D" parent="Visual/LeftLegPivot"]
+position = Vector3(0, -0.28, 0)
+
+[node name="Shin" type="MeshInstance3D" parent="Visual/LeftLegPivot/Knee"]
+mesh = ExtResource("5_shin")
+
+[node name="Shoe" type="Node3D" parent="Visual/LeftLegPivot/Knee"]
+position = Vector3(0, -0.25, 0)
+
+[node name="Sole" type="MeshInstance3D" parent="Visual/LeftLegPivot/Knee/Shoe"]
+mesh = ExtResource("6_shoe_sole")
+
+[node name="Upper" type="MeshInstance3D" parent="Visual/LeftLegPivot/Knee/Shoe"]
+mesh = ExtResource("7_shoe_upper")
+
+[node name="RightLegPivot" type="Node3D" parent="Visual"]
+position = Vector3(-0.072, 0.6, 0)
+
+[node name="Thigh" type="MeshInstance3D" parent="Visual/RightLegPivot"]
+mesh = ExtResource("4_thigh")
+
+[node name="Knee" type="Node3D" parent="Visual/RightLegPivot"]
+position = Vector3(0, -0.28, 0)
+
+[node name="Shin" type="MeshInstance3D" parent="Visual/RightLegPivot/Knee"]
+mesh = ExtResource("5_shin")
+
+[node name="Shoe" type="Node3D" parent="Visual/RightLegPivot/Knee"]
+position = Vector3(0, -0.25, 0)
+
+[node name="Sole" type="MeshInstance3D" parent="Visual/RightLegPivot/Knee/Shoe"]
+mesh = ExtResource("6_shoe_sole")
+
+[node name="Upper" type="MeshInstance3D" parent="Visual/RightLegPivot/Knee/Shoe"]
+mesh = ExtResource("7_shoe_upper")
+
+[node name="LeftArmPivot" type="Node3D" parent="Visual"]
+position = Vector3(0.155, 0.975, 0)
+
+[node name="UpperArm" type="MeshInstance3D" parent="Visual/LeftArmPivot"]
+mesh = ExtResource("8_upper_arm")
+
+[node name="Elbow" type="Node3D" parent="Visual/LeftArmPivot"]
+position = Vector3(0, -0.19, 0)
+
+[node name="Forearm" type="MeshInstance3D" parent="Visual/LeftArmPivot/Elbow"]
+mesh = ExtResource("9_forearm_left")
+
+[node name="RightArmPivot" type="Node3D" parent="Visual"]
+position = Vector3(-0.155, 0.975, 0)
+
+[node name="UpperArm" type="MeshInstance3D" parent="Visual/RightArmPivot"]
+mesh = ExtResource("8_upper_arm")
+
+[node name="Elbow" type="Node3D" parent="Visual/RightArmPivot"]
+position = Vector3(0, -0.19, 0)
+
+[node name="Forearm" type="MeshInstance3D" parent="Visual/RightArmPivot/Elbow"]
+mesh = ExtResource("10_forearm_right")
+
+[node name="Head" type="Node3D" parent="Visual"]
+position = Vector3(0, 1.08, 0)
+
+[node name="Face" type="MeshInstance3D" parent="Visual/Head"]
+mesh = ExtResource("11_face")
+
+[node name="Hair" type="MeshInstance3D" parent="Visual/Head"]
+mesh = ExtResource("12_hair")
+
+[node name="Hat" type="Node3D" parent="Visual/Head"]
+
+[node name="Cap" type="MeshInstance3D" parent="Visual/Head/Hat"]
+mesh = ExtResource("13_cap")

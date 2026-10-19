@@ -6,7 +6,7 @@
 size = Vector3(4.0, 1.5, 1.9)
 
 [sub_resource type="StandardMaterial3D" id="Mat_CarYellow"]
-albedo_color = Color(0.94, 0.76, 0.08, 1)
+albedo_color = Color(0.98, 0.7, 0.02, 1)
 roughness = 0.32
 
 [sub_resource type="StandardMaterial3D" id="Mat_CarWindow"]
