@@ -7,6 +7,10 @@ extends Resource
 @export var target_path: NodePath = NodePath()
 @export var call_line: String = ""
 @export var success_line: String = ""
+@export var location_id: StringName = &""
+@export var proper_store_name: String = ""
+@export var generic_store_name: String = ""
+@export var used_location_name: String = ""
 
 
 func _init(
@@ -15,7 +19,11 @@ func _init(
 	p_store_name: String = "",
 	p_target_path: NodePath = NodePath(),
 	p_call_line: String = "",
-	p_success_line: String = ""
+	p_success_line: String = "",
+	p_location_id: StringName = &"",
+	p_proper_store_name: String = "",
+	p_generic_store_name: String = "",
+	p_used_location_name: String = ""
 ) -> void:
 	id = p_id
 	item = p_item
@@ -23,3 +31,9 @@ func _init(
 	target_path = p_target_path
 	call_line = p_call_line
 	success_line = p_success_line
+	location_id = p_location_id
+	proper_store_name = p_proper_store_name if not p_proper_store_name.is_empty() else p_store_name
+	generic_store_name = p_generic_store_name
+	used_location_name = (
+		p_used_location_name if not p_used_location_name.is_empty() else p_store_name
+	)

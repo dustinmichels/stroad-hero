@@ -6,19 +6,20 @@ Mats is the player character in Stroad Hero—a stylized low-poly kid (approxima
 
 ## 1. Controls
 
-| Action               | Input                                                          | Description                                                                                          |
-| -------------------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| **Walk / Turn**      | Arrow Keys (`move_up`, `move_down`, `move_left`, `move_right`) | Move Mats forward/backward and turn in world space.                                                  |
-| **Jump / Hop**       | Space (`jump`)                                                 | Jump while on foot.                                                                                  |
-| **Shopping Cart**    | Space (`jump`)                                                 | Mount or dismount an abandoned shopping cart when standing nearby.                                   |
-| **Answer Phone**     | **Enter** or Gamepad A (`answer_phone`)                        | Answer Mom's incoming phone calls for errands; dismiss in-call dialogue.                             |
-| **Rotate Camera**    | A / D (`camera_left`, `camera_right`)                          | Orbit camera around Mats (yaw).                                                                      |
-| **Tilt Camera**      | W / S (`camera_forward`, `camera_back`)                        | Pitch camera up and down.                                                                            |
-| **Reset Camera**     | R (`camera_reset`)                                             | Re-center camera to default angle and distance behind Mats.                                          |
-| **Character Editor** | C (`character_editor`)                                         | Open customization screen to change jacket color, headwear (cap, beanie), backpack, and shoe colors. |
-| **Time of Day**      | N                                                              | Cycle lighting between Morning, Noon, Sunset, and Night.                                             |
-| **Controls / Help**  | H                                                              | Open the start / controls menu overlay.                                                              |
-| **Pause Game**       | Esc                                                            | Pause gameplay and show menu.                                                                        |
+| Action               | Input                                                          | Description                                                                                           |
+| -------------------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| **Walk / Turn**      | Arrow Keys (`move_up`, `move_down`, `move_left`, `move_right`) | Move Mats forward/backward and turn in world space.                                                   |
+| **Jump / Hop**       | Space (`jump`)                                                 | Jump while on foot.                                                                                   |
+| **Shopping Cart**    | Space (`jump`)                                                 | Mount or dismount an abandoned shopping cart when standing nearby, or jump into basket while pushing. |
+| **Push Cart**        | P (`push_cart`)                                                | Push a shopping cart from behind; steers where Mats walks; press P again to release.                  |
+| **Answer Phone**     | **Enter** or Gamepad A (`answer_phone`)                        | Answer Mom's incoming phone calls for errands; dismiss in-call dialogue.                              |
+| **Rotate Camera**    | A / D (`camera_left`, `camera_right`)                          | Orbit camera around Mats (yaw).                                                                       |
+| **Tilt Camera**      | W / S (`camera_forward`, `camera_back`)                        | Pitch camera up and down.                                                                             |
+| **Reset Camera**     | R (`camera_reset`)                                             | Re-center camera to default angle and distance behind Mats.                                           |
+| **Character Editor** | C (`character_editor`)                                         | Open customization screen to change jacket color, headwear (cap, beanie), backpack, and shoe colors.  |
+| **Time of Day**      | N                                                              | Cycle lighting between Morning, Noon, Sunset, and Night.                                              |
+| **Controls / Help**  | H                                                              | Open the start / controls menu overlay.                                                               |
+| **Pause Game**       | Esc                                                            | Pause gameplay and show menu.                                                                         |
 
 ---
 
@@ -37,12 +38,13 @@ Mats's primary objective loop involves running errands for Mom across the stroad
    - Press **Enter** (`[Enter] OK`) to acknowledge and start the errand.
 
 3. **Store Objectives & Routing**:
-   - The errand targets one of the commercial destinations along the stroad:
-     - **Cough syrup**: Walgroins entrance (`Props/Walgroins`, north side).
-     - **Milk**: Smell Food Mart door (`Props/SmellGasStation`, north side).
-     - **Hamburgers**: Booger King entrance (`Props/BoogerKingSite`, south side).
+   - Errands are generated from `objectives/mats_objectives.json` featuring parody stores, categorized items, and procedural dialogue:
+     - **Walgroins** (generic: _"the pharmacy"_, north side): cough syrup, band-aids, potato chips, toothpaste, batteries (`Props/Walgroins/Building/Doors`).
+     - **Booger King** (generic: _"the burger joint"_, south side): hamburgers (`Props/BoogerKingSite/Building/Building/Tower/Doors`).
+     - **Taco Hell** (generic: _"the taco stand"_, north side): tacos, burritos, quesadillas (`Props/TacoHell/Building/MainArchPortico/Doors`).
+     - **Smell** (generic: _"the convenience store"_, north side): milk, cereal, chewing gum, beef jerky (`Props/SmellGasStation/Store/DoorGlass`).
+   - **Procedural Dialogue**: Mom's calls combine stock openings (including Dutch terms of endearment like _"Mats schat..."_ and _"Mats, m’n jongen..."_), varied excuses (_"I don't feel like cooking dinner tonight."_, _"I just remembered another thing!"_, etc.), and request templates that randomly alternate between proper parody store names and generic descriptions.
    - **Opposite-Side Rule**: Each new errand prioritizes a store situated on the opposite side of the stroad from Mats's current location, requiring him to cross the multi-lane stroad.
-
 4. **Wayfinding**:
    - **In-World Marker** (`objectives/objective_marker.gd`): An emissive green rotating, bobbing chevron hangs ~6 m above the target store door, paired with a green translucent arrival ring on the ground. The emissive shader ensures visibility during day, sunset, and night.
    - **HUD Arrow** (`ui/objective_arrow.gd`): When the target store is off-screen or behind the camera, a green directional chevron on the HUD points toward the store and displays the real-time distance in meters.

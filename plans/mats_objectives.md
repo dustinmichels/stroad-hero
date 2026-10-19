@@ -56,7 +56,7 @@ Entrance positions are computed from the transform chains in `main.tscn` and the
 - [x] State machine: `IDLE -> RINGING -> IN_CALL -> ACTIVE -> COMPLETE -> IDLE`.
 - [x] Signals: `call_started(errand)`, `call_answered(errand)`, `objective_started(errand)`, `objective_completed(errand, total)`.
 - [x] Add `completed_count: int`.
-- [x] Start trigger: connect to `StartScreen.started`, wait about 3 s, then ring. If the game starts with `--test-*` args (StartScreen auto-skips), start immediately.
+- [x] Start trigger: connect to `StartScreen.started`, wait about 8 s (`initial_call_delay`), then ring. If the game starts with `--test-*` args (StartScreen auto-skips), start immediately.
 - [x] First errand is always `cough_syrup`. Mats spawns south and Walgroins is north, so this already satisfies the opposite-side rule.
 - [x] Pick later errands with `_pick_next()`:
   - [x] Mats's side is `sign(mats.global_position.z)`. Candidates are errands whose target `z` has the opposite sign.

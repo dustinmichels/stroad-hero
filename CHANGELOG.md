@@ -4,6 +4,8 @@
 
 ### Added
 
+- **Expanded parody objective system**: Added JSON-driven objective catalog (`objectives/mats_objectives.json`) and procedural dialogue generator for Mom's errand calls across 4 parody stores (Walgroins, Booger King, Taco Hell, Smell) and 13 items. Features Dutch terms of endearment, variable excuses, and randomized requests alternating between proper and generic store names.
+
 - **Mats objectives (errands from Mom)**: An errand loop where Mom calls Mats with errands to pick up items along the stroad. Answer incoming calls via the `answer_phone` action (A, Enter, or Gamepad A) with a typewriter dialogue overlay that pauses Mats's input while the world keeps running. Errands alternate across the stroad (cough syrup at Walgroins, milk at Smell Food Mart, hamburgers at Booger King) to encourage crossing traffic. Includes an in-world emissive green chevron marker with an arrival ring (`objectives/objective_marker.gd`), an off-screen HUD tracker arrow with distance readouts (`ui/objective_arrow.gd`), a completion toast with checkmark (`ui/objective_toast.gd`), a green-bordered OBJ counter on the HUD (`ui/hud.tscn`, `ui/hud.gd`), and a headless test suite (`--test-objectives`).
 
 ## Oct 18, 2026

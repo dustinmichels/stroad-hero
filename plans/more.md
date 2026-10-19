@@ -9,3 +9,4 @@
 ## Death
 
 - [x] On death, both SPD and OBJ get emphasized. I just want SPD empahsized. Make it big, in middle of the screen, count up, thens shrink back into its spot.
+- [x] After character death, make the animation emphasizing SPD a little slower

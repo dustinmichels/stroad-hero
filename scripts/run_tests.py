@@ -28,6 +28,7 @@ FAST_TESTS = [
     "--test-objectives",
     "--test-mats-cart",
     "--test-mats-collision",
+    "--test-start-screen",
 ]
 
 SCENARIO_TESTS = [

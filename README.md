@@ -21,6 +21,7 @@ I think the underlying model should perhaps be 3D, so I can simulate real traffi
 - Arrow keys: walk relative to the current camera
 - A/D: rotate camera left/right 45 degrees; W/S: tilt camera up/down; R: reset camera behind Mats
 - Space: small hop; next to a shopping cart, enter it or exit while riding
+- P: when behind a shopping cart, push it around; press P again to release
 - C: open the paused character editor; use Up/Down to choose a row and Left/Right to change it. The preview slowly turns to show the backpack.
 - Esc / H: pause the game and show the start / controls menu
 - F3: toggle traffic and parking debug overlay (parking stall statuses, car states/paths, merge windows, and HUD metrics)

@@ -1319,16 +1319,12 @@ func _ready() -> void:
 			obj_mgr.current_state == ObjectiveManager.State.RINGING,
 			"Must ring immediately in test mode"
 		)
-		assert(
-			obj_mgr.current_errand != null and obj_mgr.current_errand.id == &"cough_syrup",
-			"First errand must be cough_syrup"
-		)
-		# 2. First errand is always cough_syrup and targets Walgroins (north)
+		assert(obj_mgr.current_errand != null, "First errand must be set")
+		# 2. First errand is picked with randomness and targets opposite side (North)
 		assert(obj_mgr.completed_count == 0)
-		assert(obj_mgr.current_errand.id == &"cough_syrup")
-		assert(obj_mgr.current_errand.store_name == "Walgroins")
 		var target_pos = obj_mgr.get_target_position(obj_mgr.current_errand)
-		assert(target_pos.z < 0.0, "Walgroins target z must be North (negative z)")
+		assert(target_pos.z < 0.0, "First errand target z must be North (negative z)")
+		assert(obj_mgr.current_errand.location_id in [&"walgroins", &"smell", &"taco_hell"])
 		# 3. _pick_next() tests:
 		# Case A: Mats at North (z = -30.0), last_completed = cough_syrup -> opposite side candidate is Booger King (hamburgers)
 		mats.global_position = Vector3(0.0, 0.0, -30.0)
@@ -1339,24 +1335,33 @@ func _ready() -> void:
 			"Must pick hamburgers when Mats is North and last was cough_syrup"
 		)
 
-		# Case B: Mats at South (z = 30.0), last_completed = hamburgers -> opposite side candidates are cough_syrup & milk
+		# Case B: Mats at South (z = 30.0), last_completed = hamburgers -> opposite side candidates are North errands (Walgroins, Smell, Taco Hell)
 		mats.global_position = Vector3(0.0, 0.0, 30.0)
 		obj_mgr.last_completed_errand = obj_mgr.get_errand_by_id(&"hamburgers")
-		for _i in range(20):
+		var north_locs_seen: Dictionary = {}
+		for _i in range(30):
 			var picked = obj_mgr._pick_next()
-			assert(
-				picked.id == &"cough_syrup" or picked.id == &"milk",
-				"Must pick North errand (cough_syrup or milk)"
-			)
+			var picked_target = obj_mgr.get_target_position(picked)
+			assert(picked_target.z < 0.0, "Must pick North errand when Mats is at South")
 			assert(picked.id != &"hamburgers", "Must exclude last completed errand")
+			assert(picked.location_id in [&"walgroins", &"smell", &"taco_hell"])
+			north_locs_seen[picked.location_id] = true
+		assert(
+			north_locs_seen.size() >= 2, "Should pick from multiple North locations across trials"
+		)
 
-		# Case C: Mats at South (z = 30.0), last_completed = cough_syrup -> opposite side candidate excluding cough_syrup is milk
+		# Case C: Mats at South (z = 30.0), last_completed = cough_syrup -> opposite side candidates prefer other locations
 		mats.global_position = Vector3(0.0, 0.0, 30.0)
 		obj_mgr.last_completed_errand = obj_mgr.get_errand_by_id(&"cough_syrup")
 		next_errand = obj_mgr._pick_next()
+		assert(next_errand.id != &"cough_syrup", "Must exclude last completed errand")
 		assert(
-			next_errand.id == &"milk",
-			"Must pick milk when cough_syrup is excluded on opposite side"
+			obj_mgr.get_target_position(next_errand).z < 0.0,
+			"Must pick North errand when Mats is at South"
+		)
+		assert(
+			next_errand.location_id in [&"smell", &"taco_hell"],
+			"Must prefer different North location when cough_syrup was last completed"
 		)
 
 		# Case D: Fallback when no candidates remain on opposite side:
@@ -1364,11 +1369,70 @@ func _ready() -> void:
 		mats.global_position = Vector3(0.0, 0.0, -30.0)
 		obj_mgr.last_completed_errand = obj_mgr.get_errand_by_id(&"hamburgers")
 		next_errand = obj_mgr._pick_next()
-		assert(
-			next_errand.id == &"cough_syrup" or next_errand.id == &"milk",
-			"Must fall back to any errand except last one"
-		)
 		assert(next_errand.id != &"hamburgers", "Fallback must exclude last completed errand")
+		assert(
+			obj_mgr.get_target_position(next_errand).z < 0.0,
+			"Fallback must pick errand from available side"
+		)
+
+		# 3b. Verify expanded location catalog and items
+		assert(obj_mgr.get_errand_by_id(&"tacos") != null, "Taco Hell tacos errand must exist")
+		assert(
+			obj_mgr.get_errand_by_id(&"burritos") != null, "Taco Hell burritos errand must exist"
+		)
+		assert(
+			obj_mgr.get_errand_by_id(&"quesadillas") != null,
+			"Taco Hell quesadillas errand must exist"
+		)
+		assert(
+			obj_mgr.get_errand_by_id(&"band_aids") != null, "Walgroins band-aids errand must exist"
+		)
+		assert(
+			obj_mgr.get_errand_by_id(&"beef_jerky") != null, "Smell beef jerky errand must exist"
+		)
+		var taco_errand = obj_mgr.get_errand_by_id(&"tacos")
+		assert(taco_errand.proper_store_name == "Taco Hell")
+		assert(taco_errand.generic_store_name == "the taco stand")
+		var walgroins_errand = obj_mgr.get_errand_by_id(&"cough_syrup")
+		assert(walgroins_errand.proper_store_name == "Walgroins")
+		assert(walgroins_errand.generic_store_name == "the pharmacy")
+		var smell_errand = obj_mgr.get_errand_by_id(&"milk")
+		assert(smell_errand.proper_store_name == "Smell")
+		assert(smell_errand.generic_store_name == "the convenience store")
+		var bk_errand = obj_mgr.get_errand_by_id(&"hamburgers")
+		assert(bk_errand.proper_store_name == "Booger King")
+		assert(bk_errand.generic_store_name == "the burger joint")
+
+		# 3c. Dialogue generation tests
+		var d_proper = ObjectiveManager.generate_dialogue(
+			"tacos",
+			"Taco Hell",
+			"the taco stand",
+			obj_mgr.objectives_data.get("dialogue_parts", {}),
+			false
+		)
+		assert(
+			d_proper["used_location_name"] == "Taco Hell",
+			"Must use proper name when use_generic is false"
+		)
+		assert(d_proper["call_line"].contains("Taco Hell"), "Call line must contain proper name")
+		assert(d_proper["call_line"].contains("tacos"), "Call line must contain item")
+
+		var d_generic = ObjectiveManager.generate_dialogue(
+			"tacos",
+			"Taco Hell",
+			"the taco stand",
+			obj_mgr.objectives_data.get("dialogue_parts", {}),
+			true
+		)
+		assert(
+			d_generic["used_location_name"] == "the taco stand",
+			"Must use generic name when use_generic is true"
+		)
+		assert(
+			d_generic["call_line"].contains("the taco stand"), "Call line must contain generic name"
+		)
+		assert(d_generic["call_line"].contains("tacos"), "Call line must contain item")
 		# 4. Completion delay test:
 		obj_mgr.current_state = ObjectiveManager.State.ACTIVE
 		obj_mgr.current_errand = obj_mgr.get_errand_by_id(&"cough_syrup")
@@ -2102,7 +2166,10 @@ func _ready() -> void:
 			obj_mgr.current_state == ObjectiveManager.State.RINGING, "First call must be ringing"
 		)
 		assert(obj_mgr.current_errand != null, "Current errand must be set")
-		assert(obj_mgr.current_errand.id == &"cough_syrup", "First errand must be cough_syrup")
+		assert(
+			obj_mgr.current_errand.location_id in [&"walgroins", &"smell", &"taco_hell"],
+			"First errand must target North"
+		)
 		var target_pos := obj_mgr.get_target_position(obj_mgr.current_errand)
 		assert(target_pos.z < 0.0, "First errand target must be on the north side (z < 0)")
 
@@ -2136,6 +2203,113 @@ func _ready() -> void:
 
 		# 4. Quit with exit code 0.
 		print("OBJECTIVES_TEST: SUCCESS - --test-objectives passed cleanly!")
+		get_tree().quit(0)
+		return
+	if "--test-start-screen" in _user_args:
+		await get_tree().process_frame
+		var start_screen: StartScreen = get_node_or_null("StartScreen")
+		assert(start_screen != null, "StartScreen must exist")
+
+		# 1. Size verification
+		var pane: Control = start_screen.get_node("RootControl/Pane")
+		var pane_width: float = pane.offset_right - pane.offset_left
+		var pane_height: float = pane.offset_bottom - pane.offset_top
+		assert(
+			pane_width >= 1100.0, "Start screen modal width must be >= 1100 (got %f)" % pane_width
+		)
+		assert(
+			pane_height >= 800.0, "Start screen modal height must be >= 800 (got %f)" % pane_height
+		)
+
+		# 2. Font size verification
+		var title_stroad: Label = start_screen.get_node(
+			"RootControl/Pane/Margin/Content/HeaderBox/LogoRow/TitleStroad"
+		)
+		var welcome_label: Label = start_screen.get_node("%WelcomeLabel")
+		var start_btn: Button = start_screen.get_node("%StartButton")
+		var quit_btn: Button = start_screen.get_node("%QuitButton")
+		var see_more_btn: Button = start_screen.get_node("%SeeMoreButton")
+		assert(title_stroad.get_theme_font_size("font_size") >= 70, "TitleStroad font_size >= 70")
+		assert(welcome_label.get_theme_font_size("font_size") >= 20, "WelcomeLabel font_size >= 20")
+		assert(start_btn.get_theme_font_size("font_size") >= 24, "StartButton font_size >= 24")
+		assert(quit_btn.get_theme_font_size("font_size") >= 24, "QuitButton font_size >= 24")
+		assert(see_more_btn.get_theme_font_size("font_size") >= 18, "SeeMoreButton font_size >= 18")
+
+		# 3. Interactivity & arrow navigation
+		start_screen.open_screen(StartScreen.Page.MAIN)
+		start_screen._is_loaded = true
+		start_screen.set_loading(false)
+		start_screen._setup_focus_navigation()
+		await get_tree().process_frame
+
+		start_btn.grab_focus()
+		assert(get_viewport().gui_get_focus_owner() == start_btn, "Start button must be focused")
+
+		# Arrow Right from Start -> Quit
+		start_screen._handle_arrow_navigation(KEY_RIGHT)
+		assert(
+			get_viewport().gui_get_focus_owner() == quit_btn,
+			"Arrow Right must move focus to Quit button"
+		)
+
+		# Arrow Left from Quit -> Start
+		start_screen._handle_arrow_navigation(KEY_LEFT)
+		assert(
+			get_viewport().gui_get_focus_owner() == start_btn,
+			"Arrow Left must move focus to Start button"
+		)
+
+		# Arrow Up from Start -> See More
+		start_screen._handle_arrow_navigation(KEY_UP)
+		assert(
+			get_viewport().gui_get_focus_owner() == see_more_btn,
+			"Arrow Up must move focus to See More button"
+		)
+
+		# Arrow Down from See More -> Start
+		start_screen._handle_arrow_navigation(KEY_DOWN)
+		assert(
+			get_viewport().gui_get_focus_owner() == start_btn,
+			"Arrow Down must move focus to Start button"
+		)
+
+		# Arrow Up from Quit -> See More
+		quit_btn.grab_focus()
+		start_screen._handle_arrow_navigation(KEY_UP)
+		assert(
+			get_viewport().gui_get_focus_owner() == see_more_btn,
+			"Arrow Up from Quit must move focus to See More button"
+		)
+
+		# Arrow Right from See More -> Quit
+		start_screen._handle_arrow_navigation(KEY_RIGHT)
+		assert(
+			get_viewport().gui_get_focus_owner() == quit_btn,
+			"Arrow Right from See More must move focus to Quit button"
+		)
+
+		# Test page switch to controls
+		start_screen.show_page(StartScreen.Page.CONTROLS)
+		await get_tree().process_frame
+		var back_btn: Button = start_screen.get_node("%ControlsBackButton")
+		var resume_btn: Button = start_screen.get_node("%ControlsResumeButton")
+		assert(
+			get_viewport().gui_get_focus_owner() == back_btn, "Controls page must focus Back button"
+		)
+
+		# Arrow navigation between Back and Resume
+		start_screen._handle_arrow_navigation(KEY_RIGHT)
+		assert(
+			get_viewport().gui_get_focus_owner() == resume_btn,
+			"Arrow Right must move focus to Resume button"
+		)
+		start_screen._handle_arrow_navigation(KEY_LEFT)
+		assert(
+			get_viewport().gui_get_focus_owner() == back_btn,
+			"Arrow Left must move focus to Back button"
+		)
+
+		print("START_SCREEN_TEST: SUCCESS - --test-start-screen passed cleanly!")
 		get_tree().quit(0)
 		return
 
@@ -2451,11 +2625,119 @@ func _physics_process(_delta: float) -> void:
 					left_leg.rotation.x < 0.1,
 					"Hip rotation must reset after respawn: %f" % left_leg.rotation.x
 				)
-				print("CART_TEST completed: mount, sit, exit, and die-while-riding verified!")
-				get_tree().quit(0)
-				return
+				print("Stage 4 passed! Now testing pushing shopping cart (stages 5-8)...")
+				_cart_test_stage = 5
+				_test_frames = 0
+				_cart_test_cart.global_position = Vector3(9.0, 0.1, -15.0)
+				_cart_test_cart.global_basis = Basis()
+				_cart_test_cart._current_speed = 0.0
+				# Place Mats alongside cart (in interaction area, but not behind)
+				mats.global_position = Vector3(10.0, 0.0, -15.0)
+				vis.rotation = Vector3.ZERO
 			elif _test_frames >= 300:
 				assert(false, "Timeout waiting for respawn after dying in cart")
+		elif _cart_test_stage == 5:
+			var hud: HUD = get_tree().get_first_node_in_group("hud") as HUD
+			if _test_frames == 2:
+				assert(
+					not _cart_test_cart.is_mats_behind(mats),
+					"Mats must not be behind cart when at side"
+				)
+				_cart_test_cart._update_prompt()
+				assert(
+					hud.action_label.text == "Space for Action",
+					"HUD prompt must be 'Space for Action' when at side"
+				)
+				# Move Mats behind cart
+				mats.global_position = Vector3(9.0, 0.0, -15.85)
+				_cart_test_cart._update_prompt()
+			elif _test_frames >= 5:
+				assert(_cart_test_cart.is_mats_behind(mats), "Mats must be detected behind cart")
+				assert(hud.action_label.visible, "HUD action label must be visible")
+				assert(
+					hud.action_label.text == "p to push",
+					(
+						"HUD prompt must be 'p to push' when behind cart, got: '%s'"
+						% hud.action_label.text
+					)
+				)
+				print("  Behind-cart detection and 'p to push' message verified!")
+				# Press 'p' to start pushing
+				var ev := InputEventKey.new()
+				ev.keycode = KEY_P
+				ev.pressed = true
+				_cart_test_cart._unhandled_input(ev)
+				assert(mats.is_pushing_cart, "Mats.is_pushing_cart must be true after pressing P")
+				assert(_cart_test_cart.is_being_pushed(), "Cart must be pushed after pressing P")
+				assert(_cart_test_cart.get_pusher() == mats, "Cart pusher must be mats")
+				assert(
+					hud.action_label.text == "Space to jump in",
+					"HUD prompt must show 'Space to jump in' while pushing"
+				)
+				print("  Start pushing verified!")
+				_cart_test_stage = 6
+				_test_frames = 0
+		elif _cart_test_stage == 6:
+			# Walk forward while pushing
+			mats.velocity = Vector3(0.0, 0.0, 3.0)
+			vis.rotation.y = 0.0
+			if _test_frames >= 20:
+				mats.velocity = Vector3.ZERO
+				var expected_cart_z := mats.global_position.z + 0.85
+				var actual_cart_z := _cart_test_cart.global_position.z
+				assert(
+					absf(actual_cart_z - expected_cart_z) < 0.1,
+					(
+						"Cart must follow Mats in front while walking: actual=%.3f expected=%.3f"
+						% [actual_cart_z, expected_cart_z]
+					)
+				)
+				print("  Cart following Mats while walking verified!")
+				# Stage 7: Press Space to jump into cart while pushing
+				var jump_ev := InputEventAction.new()
+				jump_ev.action = "jump"
+				jump_ev.pressed = true
+				_cart_test_cart._unhandled_input(jump_ev)
+				assert(not mats.is_pushing_cart, "Mats must stop pushing when jumping in")
+				assert(
+					_cart_test_cart.get_pusher() == null,
+					"Cart pusher must be cleared when jumping in"
+				)
+				assert(_cart_test_cart._rider == mats, "Cart rider must be set to mats")
+				_cart_test_stage = 7
+				_test_frames = 0
+		elif _cart_test_stage == 7:
+			if _test_frames >= 25:
+				assert(_cart_test_cart._rider == mats, "Mats must be riding in cart")
+				print("  Jumping into cart while pushing verified!")
+				# Exit cart
+				mats.exit_cart(_cart_test_cart.get_node("ExitPosition"))
+				_cart_test_stage = 8
+				_test_frames = 0
+		elif _cart_test_stage == 8:
+			if _test_frames >= 25:
+				assert(mats.is_physics_processing(), "Mats physics must resume after exit")
+				# Position Mats behind cart again to test stop pushing with 'p'
+				mats.global_position = _cart_test_cart.global_position - Vector3(0.0, 0.0, 0.85)
+				_cart_test_cart._update_prompt()
+				var hud: HUD = get_tree().get_first_node_in_group("hud") as HUD
+				assert(hud.action_label.text == "p to push", "Prompt must be 'p to push'")
+				var p_ev := InputEventKey.new()
+				p_ev.keycode = KEY_P
+				p_ev.pressed = true
+				_cart_test_cart._unhandled_input(p_ev)
+				assert(mats.is_pushing_cart, "Must start pushing after pressing P")
+				# Press P again to stop pushing
+				_cart_test_cart._unhandled_input(p_ev)
+				assert(not mats.is_pushing_cart, "Must stop pushing after pressing P again")
+				assert(_cart_test_cart.get_pusher() == null, "Pusher must be null")
+				assert(hud.action_label.text == "p to push", "Prompt must return to 'p to push'")
+				print("  P to stop pushing toggle verified!")
+				print(
+					"CART_TEST completed: mount, sit, exit, death, behind-detection, p-to-push, walk-pushing, space-jump-in, and stop-pushing verified!"
+				)
+				get_tree().quit(0)
+				return
 		elif _test_frames >= 120:
 			assert(false, "Timeout in CART_TEST")
 	if "--test-mats-collision" in _user_args:

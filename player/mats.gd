@@ -122,9 +122,14 @@ var _control_forward := Vector3.FORWARD
 var _control_right := Vector3.RIGHT
 var _has_control_basis := false
 var _mounted_cart: Node3D = null
+var _pushing_cart: ShoppingCart = null
 var _world_parent: Node = null
 var _mount_tween: Tween = null
 
+## True if Mats is currently pushing a shopping cart.
+var is_pushing_cart: bool:
+	get:
+		return _pushing_cart != null
 var _jacket_material: StandardMaterial3D = null
 var _jacket_trim_material: StandardMaterial3D = null
 
@@ -197,11 +202,10 @@ func _physics_process(delta: float) -> void:
 	velocity.z = horizontal.z
 
 	if was_on_floor:
-		if Input.is_action_just_pressed("jump"):
+		if Input.is_action_just_pressed("jump") and not is_pushing_cart:
 			velocity.y = sqrt(2.0 * gravity * jump_height)
 	else:
 		velocity.y -= gravity * delta
-
 	var y_before := global_position.y
 	if was_on_floor:
 		_try_step_up(horizontal * delta)
@@ -219,6 +223,9 @@ func _physics_process(delta: float) -> void:
 		_visual.rotation.y = lerp_angle(
 			_visual.rotation.y, target_yaw, 1.0 - exp(-turn_speed * delta)
 		)
+
+	if is_pushing_cart:
+		_update_pushing_cart(delta)
 
 	_animate(delta)
 
@@ -249,7 +256,8 @@ func _handle_slide_collisions(impact_direction: Vector3) -> void:
 		if collider is StreetTree:
 			collider.rustle(impact_direction)
 		elif collider and collider.has_method("roll_from"):
-			collider.roll_from(impact_direction)
+			if collider != _pushing_cart:
+				collider.roll_from(impact_direction)
 
 
 ## Hair always shows; headwear sits over it with hair peeking out below.
@@ -291,9 +299,76 @@ func set_shoe_color(color: Color) -> void:
 		material.albedo_color = shoe_color
 
 
+func get_pushed_cart() -> ShoppingCart:
+	return _pushing_cart
+
+
+func start_pushing_cart(cart: ShoppingCart) -> void:
+	_pushing_cart = cart
+	_visual.rotation.y = cart.global_rotation.y
+	const PUSH_DISTANCE := 0.85
+	var forward := Vector3(sin(_visual.rotation.y), 0.0, cos(_visual.rotation.y)).normalized()
+	global_position.x = cart.global_position.x - forward.x * PUSH_DISTANCE
+	global_position.z = cart.global_position.z - forward.z * PUSH_DISTANCE
+
+
+func stop_pushing_cart() -> void:
+	if _pushing_cart:
+		var cart := _pushing_cart
+		_pushing_cart = null
+		if cart.get_pusher() == self:
+			cart.stop_pushing()
+
+
+func _update_pushing_cart(_delta: float) -> void:
+	if not _pushing_cart or not is_instance_valid(_pushing_cart):
+		_pushing_cart = null
+		return
+
+	var forward := Vector3(sin(_visual.rotation.y), 0.0, cos(_visual.rotation.y)).normalized()
+	_pushing_cart.global_rotation.y = _visual.rotation.y
+
+	const PUSH_DISTANCE := 0.85
+	var target_cart_pos := global_position + forward * PUSH_DISTANCE
+
+	var space_state := get_world_3d().direct_space_state
+	var ray_from := Vector3(target_cart_pos.x, global_position.y + 1.0, target_cart_pos.z)
+	var ray_to := Vector3(target_cart_pos.x, global_position.y - 1.0, target_cart_pos.z)
+	var query := PhysicsRayQueryParameters3D.create(ray_from, ray_to)
+	query.collision_mask = collision_mask
+	query.exclude = [get_rid(), _pushing_cart.get_rid()]
+	var hit := space_state.intersect_ray(query)
+	if not hit.is_empty():
+		target_cart_pos.y = hit.position.y + 0.1
+	else:
+		target_cart_pos.y = global_position.y + 0.1
+
+	_pushing_cart.global_position.y = target_cart_pos.y
+
+	var horizontal_motion := Vector3(
+		target_cart_pos.x - _pushing_cart.global_position.x,
+		0.0,
+		target_cart_pos.z - _pushing_cart.global_position.z
+	)
+	if not horizontal_motion.is_zero_approx():
+		var col := _pushing_cart.move_and_collide(horizontal_motion)
+		if col:
+			var collider := col.get_collider()
+			if collider and collider.has_method("roll_from"):
+				collider.roll_from(forward * walk_speed)
+			global_position.x = _pushing_cart.global_position.x - forward.x * PUSH_DISTANCE
+			global_position.z = _pushing_cart.global_position.z - forward.z * PUSH_DISTANCE
+			velocity = velocity.slide(col.get_normal())
+
+
 func enter_cart(cart: Node3D, seat: Marker3D) -> void:
 	if _mounted_cart:
 		return
+	if _pushing_cart:
+		var pc := _pushing_cart
+		_pushing_cart = null
+		if pc.get_pusher() == self:
+			pc.stop_pushing()
 	_mounted_cart = cart
 	if not _world_parent or not is_instance_valid(_world_parent):
 		_world_parent = get_parent()
@@ -303,7 +378,6 @@ func enter_cart(cart: Node3D, seat: Marker3D) -> void:
 	set_physics_process(false)
 	_collision_shape.disabled = true
 	reparent(seat, true)
-
 	self.rotation.y = wrapf(self.rotation.y, -PI, PI)
 	_visual.rotation.y = wrapf(_visual.rotation.y, -PI, PI)
 
@@ -506,6 +580,11 @@ func die() -> void:
 	_phone_blend = 0.0
 	if _phone:
 		_phone.visible = false
+	if _pushing_cart:
+		var pc := _pushing_cart
+		_pushing_cart = null
+		if pc.get_pusher() == self:
+			pc.stop_pushing()
 	_dismount_cart()
 	if _collision_shape:
 		_collision_shape.set_deferred("disabled", true)
@@ -547,11 +626,15 @@ func die() -> void:
 
 
 func respawn() -> void:
+	if _pushing_cart:
+		var pc := _pushing_cart
+		_pushing_cart = null
+		if pc.get_pusher() == self:
+			pc.stop_pushing()
 	_dismount_cart()
 	set_physics_process(true)
 	global_transform = _spawn_transform
 	reset_physics_interpolation()
-	velocity = Vector3.ZERO
 	_stride_phase = 0.0
 	_squash = 0.0
 	_step_offset = 0.0
@@ -715,6 +798,14 @@ func _animate(delta: float, force_idle := false) -> void:
 		target_left_elbow = -0.3
 		target_right_elbow = -0.3
 		target_lean_x = 0.0
+	elif is_pushing_cart:
+		target_left_arm_x = -0.75
+		target_right_arm_x = -0.75
+		target_left_arm_z = 0.06
+		target_right_arm_z = -0.06
+		target_left_elbow = -0.25
+		target_right_elbow = -0.25
+		target_lean_x = 0.08 * walk_blend
 	var weight := 1.0 - exp(-POSE_SHARPNESS * delta)
 
 	var target_blend := 1.0 if _phone_mode != PhoneMode.NONE else 0.0

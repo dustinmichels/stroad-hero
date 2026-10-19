@@ -105,6 +105,7 @@ func _ready() -> void:
 		return
 	if quit_button and OS.has_feature("web"):
 		quit_button.visible = false
+	_setup_focus_navigation()
 
 	if start_button:
 		start_button.pressed.connect(start_game)
@@ -116,7 +117,6 @@ func _ready() -> void:
 		controls_back_button.pressed.connect(_on_back_pressed)
 	if controls_resume_button:
 		controls_resume_button.pressed.connect(start_game)
-
 	open_screen(Page.MAIN)
 
 	# In normal gameplay, gate start behind warmup frames
@@ -294,6 +294,104 @@ func _on_back_pressed() -> void:
 		show_page(Page.MAIN)
 
 
+func _setup_focus_navigation() -> void:
+	if not start_button or not see_more_button:
+		return
+
+	start_button.focus_mode = Control.FOCUS_ALL
+	see_more_button.focus_mode = Control.FOCUS_ALL
+
+	var has_quit := quit_button != null and quit_button.visible
+	if has_quit:
+		quit_button.focus_mode = Control.FOCUS_ALL
+
+		start_button.focus_neighbor_right = quit_button.get_path()
+		start_button.focus_neighbor_left = quit_button.get_path()
+		start_button.focus_neighbor_top = see_more_button.get_path()
+		start_button.focus_neighbor_bottom = see_more_button.get_path()
+
+		quit_button.focus_neighbor_left = start_button.get_path()
+		quit_button.focus_neighbor_right = start_button.get_path()
+		quit_button.focus_neighbor_top = see_more_button.get_path()
+		quit_button.focus_neighbor_bottom = see_more_button.get_path()
+
+		see_more_button.focus_neighbor_bottom = start_button.get_path()
+		see_more_button.focus_neighbor_top = start_button.get_path()
+		see_more_button.focus_neighbor_left = start_button.get_path()
+		see_more_button.focus_neighbor_right = quit_button.get_path()
+	else:
+		start_button.focus_neighbor_right = start_button.get_path()
+		start_button.focus_neighbor_left = start_button.get_path()
+		start_button.focus_neighbor_top = see_more_button.get_path()
+		start_button.focus_neighbor_bottom = see_more_button.get_path()
+
+		see_more_button.focus_neighbor_bottom = start_button.get_path()
+		see_more_button.focus_neighbor_top = start_button.get_path()
+		see_more_button.focus_neighbor_left = start_button.get_path()
+		see_more_button.focus_neighbor_right = start_button.get_path()
+
+	if controls_back_button and controls_resume_button:
+		controls_back_button.focus_mode = Control.FOCUS_ALL
+		controls_resume_button.focus_mode = Control.FOCUS_ALL
+		controls_back_button.focus_neighbor_right = controls_resume_button.get_path()
+		controls_back_button.focus_neighbor_left = controls_resume_button.get_path()
+		controls_resume_button.focus_neighbor_left = controls_back_button.get_path()
+		controls_resume_button.focus_neighbor_right = controls_back_button.get_path()
+
+
+func _handle_arrow_navigation(keycode: int) -> void:
+	if not _is_loaded:
+		return
+
+	if _current_page == Page.MAIN:
+		var focused := get_viewport().gui_get_focus_owner()
+		var has_quit := quit_button != null and quit_button.visible
+
+		if focused == start_button:
+			match keycode:
+				KEY_RIGHT, KEY_LEFT:
+					if has_quit:
+						quit_button.grab_focus()
+				KEY_UP, KEY_DOWN:
+					if see_more_button:
+						see_more_button.grab_focus()
+		elif focused == quit_button:
+			match keycode:
+				KEY_LEFT, KEY_RIGHT:
+					if start_button:
+						start_button.grab_focus()
+				KEY_UP, KEY_DOWN:
+					if see_more_button:
+						see_more_button.grab_focus()
+		elif focused == see_more_button:
+			match keycode:
+				KEY_DOWN, KEY_UP:
+					if start_button:
+						start_button.grab_focus()
+				KEY_LEFT:
+					if start_button:
+						start_button.grab_focus()
+				KEY_RIGHT:
+					if has_quit:
+						quit_button.grab_focus()
+					elif start_button:
+						start_button.grab_focus()
+		else:
+			if start_button:
+				start_button.grab_focus()
+	elif _current_page == Page.CONTROLS:
+		var focused := get_viewport().gui_get_focus_owner()
+		if focused == controls_back_button:
+			if controls_resume_button:
+				controls_resume_button.grab_focus()
+		elif focused == controls_resume_button:
+			if controls_back_button:
+				controls_back_button.grab_focus()
+		else:
+			if controls_back_button:
+				controls_back_button.grab_focus()
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if visible and _active:
 		if not _is_loaded:
@@ -323,12 +421,49 @@ func _unhandled_input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 				return
 
+			if event.keycode in [KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT]:
+				_handle_arrow_navigation(event.keycode)
+				get_viewport().set_input_as_handled()
+				return
+
 			if event.keycode in [KEY_SPACE, KEY_ENTER, KEY_KP_ENTER]:
 				var focused := get_viewport().gui_get_focus_owner()
-				if focused in [see_more_button, controls_back_button]:
-					# Let normal button GUI handle this
+				if focused == see_more_button:
+					_on_see_more_pressed()
+					get_viewport().set_input_as_handled()
+					return
+				if focused == quit_button:
+					quit_game()
+					get_viewport().set_input_as_handled()
+					return
+				if focused == controls_back_button:
+					_on_back_pressed()
+					get_viewport().set_input_as_handled()
+					return
+				if focused == controls_resume_button:
+					start_game()
+					get_viewport().set_input_as_handled()
 					return
 				start_game()
+				get_viewport().set_input_as_handled()
+				return
+		elif (
+			event.is_action_pressed("ui_up")
+			or event.is_action_pressed("ui_down")
+			or event.is_action_pressed("ui_left")
+			or event.is_action_pressed("ui_right")
+		):
+			var arrow_key := -1
+			if event.is_action_pressed("ui_up"):
+				arrow_key = KEY_UP
+			elif event.is_action_pressed("ui_down"):
+				arrow_key = KEY_DOWN
+			elif event.is_action_pressed("ui_left"):
+				arrow_key = KEY_LEFT
+			elif event.is_action_pressed("ui_right"):
+				arrow_key = KEY_RIGHT
+			if arrow_key != -1:
+				_handle_arrow_navigation(arrow_key)
 				get_viewport().set_input_as_handled()
 				return
 		elif event.is_action_pressed("jump") or event.is_action_pressed("ui_cancel"):
@@ -337,6 +472,19 @@ func _unhandled_input(event: InputEvent) -> void:
 					start_game()
 				else:
 					show_page(Page.MAIN)
+				get_viewport().set_input_as_handled()
+				return
+			var focused := get_viewport().gui_get_focus_owner()
+			if focused == see_more_button:
+				_on_see_more_pressed()
+				get_viewport().set_input_as_handled()
+				return
+			if focused == quit_button:
+				quit_game()
+				get_viewport().set_input_as_handled()
+				return
+			if focused == controls_back_button:
+				_on_back_pressed()
 				get_viewport().set_input_as_handled()
 				return
 			start_game()

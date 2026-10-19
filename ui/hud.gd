@@ -198,7 +198,7 @@ func _reset_spd_panel() -> void:
 		desc_label.modulate = Color(0.85, 0.65, 0.65, 0.9)
 
 
-func emphasize_death_spd(hold_duration: float = 0.8) -> void:
+func emphasize_death_spd(hold_duration: float = 1.2) -> void:
 	if not panel_container or not spd_label:
 		spd_count += 1
 		_update_display()
@@ -239,9 +239,9 @@ func emphasize_death_spd(hold_duration: float = 0.8) -> void:
 	var target_center_pos := (vp_size - panel_size) * 0.5
 	var target_scale := Vector2(2.5, 2.5)
 
-	var move_in_time := 0.22
+	var move_in_time := 0.35
 	var count_punch_time := maxf(hold_duration * 0.6, 0.12)
-	var shrink_time := 0.22
+	var shrink_time := 0.35
 
 	_spd_tween = create_tween()
 
@@ -341,12 +341,28 @@ func set_obj(value: int) -> void:
 	_update_display()
 
 
-func set_action_prompt(source: Node, active: bool) -> void:
+func set_action_prompt(source: Node, active: bool, text: String = "") -> void:
 	if active:
-		_action_prompt_sources[source] = true
+		_action_prompt_sources[source] = text
 	else:
 		_action_prompt_sources.erase(source)
 	action_label.visible = not _action_prompt_sources.is_empty()
+	if action_label.visible:
+		var prompt_text := ""
+		for src in _action_prompt_sources:
+			var t: String = _action_prompt_sources[src]
+			if not t.is_empty() and t != "Space for Action":
+				prompt_text = t
+				break
+		if prompt_text.is_empty():
+			for src in _action_prompt_sources:
+				var t: String = _action_prompt_sources[src]
+				if not t.is_empty():
+					prompt_text = t
+					break
+		if prompt_text.is_empty():
+			prompt_text = "Space for Action"
+		action_label.text = prompt_text
 
 
 func _resolve_objective_manager() -> void:

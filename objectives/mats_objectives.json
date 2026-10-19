@@ -1,0 +1,66 @@
+{
+  "dialogue_parts": {
+    "openings": [
+      "Hi Mats, are you having fun out there?",
+      "Mats schat...",
+      "Mats, m’n jongen..."
+    ],
+    "excuses": [
+      "I don't feel like cooking dinner tonight.",
+      "I just remembered another thing!",
+      "Could you grab one more item for your mother?"
+    ],
+    "requests": [
+      "Could you pick up some {item} at {location}?",
+      "Can you stop by {location} and get some {item}?",
+      "While you're out, swing by {location} for some {item}."
+    ]
+  },
+  "locations": [
+    {
+      "id": "walgroins",
+      "proper_name": "Walgroins",
+      "generic_name": "the pharmacy",
+      "target_path": "Props/Walgroins/Building/Doors",
+      "items": [
+        "cough syrup",
+        "band-aids",
+        "potato chips",
+        "toothpaste",
+        "batteries"
+      ]
+    },
+    {
+      "id": "booger_king",
+      "proper_name": "Booger King",
+      "generic_name": "the burger joint",
+      "target_path": "Props/BoogerKingSite/Building/Building/Tower/Doors",
+      "items": [
+        "hamburgers"
+      ]
+    },
+    {
+      "id": "taco_hell",
+      "proper_name": "Taco Hell",
+      "generic_name": "the taco stand",
+      "target_path": "Props/TacoHell/Building/MainArchPortico/Doors",
+      "items": [
+        "tacos",
+        "burritos",
+        "quesadillas"
+      ]
+    },
+    {
+      "id": "smell",
+      "proper_name": "Smell",
+      "generic_name": "the convenience store",
+      "target_path": "Props/SmellGasStation/Store/DoorGlass",
+      "items": [
+        "milk",
+        "cereal",
+        "chewing gum",
+        "beef jerky"
+      ]
+    }
+  ]
+}

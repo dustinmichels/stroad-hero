@@ -15,15 +15,19 @@ signal call_answered(errand: MatsErrand)
 signal objective_started(errand: MatsErrand)
 signal objective_completed(errand: MatsErrand, total: int)
 
-@export var initial_call_delay: float = 3.0
+@export var initial_call_delay: float = 8.0
 @export var next_call_delay: float = 4.0
 @export var arrive_radius: float = 2.5
+@export var generic_name_chance: float = 0.5
+@export var objectives_data_path: String = "res://objectives/mats_objectives.json"
 @export var mats_path: NodePath = NodePath("../Mats")
 
+var objectives_data: Dictionary = {}
 var current_state: State = State.IDLE
 var completed_count: int = 0
 var current_errand: MatsErrand = null
 var last_completed_errand: MatsErrand = null
+var recent_errand_ids: Array[StringName] = []
 var current_marker: ObjectiveMarker = null
 var errands: Array[MatsErrand] = []
 
@@ -59,8 +63,10 @@ var _setup_done: bool = false
 
 func _ready() -> void:
 	add_to_group("objective_manager")
+	if objectives_data.is_empty():
+		objectives_data = load_objectives_data(objectives_data_path)
 	if errands.is_empty():
-		errands = get_default_errands()
+		errands = build_errands_from_data(objectives_data)
 	_setup.call_deferred()
 
 
@@ -213,10 +219,10 @@ func start_call(errand: MatsErrand = null) -> void:
 	_call_timer = -1.0
 	if errand_to_use != null:
 		current_errand = errand_to_use
-	elif completed_count == 0:
-		current_errand = get_errand_by_id(&"cough_syrup")
 	else:
 		current_errand = _pick_next()
+	if current_errand and current_errand.call_line.is_empty():
+		refresh_errand_dialogue(current_errand, randf() < generic_name_chance)
 	transition_to(State.RINGING)
 	call_started.emit(current_errand)
 
@@ -313,14 +319,43 @@ func get_target_position(errand: MatsErrand) -> Vector3:
 	var node := get_target_node(errand)
 	if node:
 		return node.global_position
-	match errand.id:
-		&"cough_syrup":
-			return Vector3(-3.0, 1.3, -31.35)
-		&"milk":
-			return Vector3(-52.5, 1.6, -31.3)
-		&"hamburgers":
-			return Vector3(-47.3, 1.3, 29.4)
+	if errand != null:
+		match errand.location_id:
+			&"walgroins":
+				return Vector3(-3.0, 1.3, -31.35)
+			&"smell":
+				return Vector3(-52.5, 1.6, -31.3)
+			&"booger_king":
+				return Vector3(-47.3, 1.3, 29.4)
+			&"taco_hell":
+				return Vector3(31.5, 1.3, -27.75)
+		match errand.id:
+			&"cough_syrup", &"band_aids", &"potato_chips", &"toothpaste", &"batteries":
+				return Vector3(-3.0, 1.3, -31.35)
+			&"milk", &"cereal", &"chewing_gum", &"beef_jerky":
+				return Vector3(-52.5, 1.6, -31.3)
+			&"hamburgers":
+				return Vector3(-47.3, 1.3, 29.4)
+			&"tacos", &"burritos", &"quesadillas":
+				return Vector3(31.5, 1.3, -27.75)
 	return Vector3.ZERO
+
+
+func refresh_errand_dialogue(errand: MatsErrand, use_generic: bool = false) -> void:
+	if errand == null:
+		return
+	var dialogue_parts: Dictionary = objectives_data.get("dialogue_parts", {})
+	if dialogue_parts.is_empty():
+		dialogue_parts = DEFAULT_OBJECTIVES_DATA.get("dialogue_parts", {})
+	var res := generate_dialogue(
+		errand.item,
+		errand.proper_store_name,
+		errand.generic_store_name,
+		dialogue_parts,
+		use_generic
+	)
+	errand.call_line = res["call_line"]
+	errand.used_location_name = res["used_location_name"]
 
 
 func _pick_next() -> MatsErrand:
@@ -352,38 +387,242 @@ func _pick_next() -> MatsErrand:
 	if valid_candidates.is_empty():
 		valid_candidates = errands.duplicate()
 
-	return valid_candidates[randi() % valid_candidates.size()]
+	# Two-stage random selection:
+	# 1. Group candidate errands by location to prevent bias toward stores with more items
+	var loc_to_errands: Dictionary = {}
+	for errand in valid_candidates:
+		var lid := errand.location_id
+		if not loc_to_errands.has(lid):
+			loc_to_errands[lid] = []
+		loc_to_errands[lid].append(errand)
+
+	# 2. Pick a location at random, avoiding the last completed location if multiple options exist
+	var available_locations: Array = loc_to_errands.keys()
+	if last_completed_errand != null and available_locations.size() > 1:
+		var diff_locations: Array = []
+		for lid in available_locations:
+			if lid != last_completed_errand.location_id:
+				diff_locations.append(lid)
+		if not diff_locations.is_empty():
+			available_locations = diff_locations
+
+	var chosen_location = available_locations[randi() % available_locations.size()]
+	var location_errands: Array = loc_to_errands[chosen_location]
+
+	# 3. From the chosen location, pick an item at random, preferring items not recently completed
+	var item_candidates: Array[MatsErrand] = []
+	for errand in location_errands:
+		if not recent_errand_ids.has(errand.id):
+			item_candidates.append(errand)
+	if item_candidates.is_empty():
+		item_candidates.assign(location_errands)
+
+	var picked: MatsErrand = item_candidates[randi() % item_candidates.size()]
+	recent_errand_ids.append(picked.id)
+	if recent_errand_ids.size() > 4:
+		recent_errand_ids.pop_front()
+
+	var use_generic := randf() < generic_name_chance
+	refresh_errand_dialogue(picked, use_generic)
+	return picked
 
 
-const ERRANDS_DATA: Array[Dictionary] = [
+static func item_to_id(item_name: String) -> StringName:
+	return StringName(item_name.to_lower().replace("-", "_").replace(" ", "_"))
+
+
+static func load_objectives_data(
+	path: String = "res://objectives/mats_objectives.json"
+) -> Dictionary:
+	if not path.is_empty() and FileAccess.file_exists(path):
+		var file := FileAccess.open(path, FileAccess.READ)
+		if file:
+			var content := file.get_as_text()
+			var parsed = JSON.parse_string(content)
+			if parsed is Dictionary and parsed.has("locations") and parsed.has("dialogue_parts"):
+				return parsed
+	return DEFAULT_OBJECTIVES_DATA
+
+
+static func generate_dialogue(
+	item_name: String,
+	proper_name: String,
+	generic_name: String,
+	dialogue_parts: Dictionary,
+	use_generic: bool = false
+) -> Dictionary:
+	var openings: Array = dialogue_parts.get("openings", [])
+	var excuses: Array = dialogue_parts.get("excuses", [])
+	var requests: Array = dialogue_parts.get("requests", [])
+
+	var opening: String = openings[randi() % openings.size()] if not openings.is_empty() else ""
+	var excuse: String = excuses[randi() % excuses.size()] if not excuses.is_empty() else ""
+	var chosen_location: String = (
+		generic_name if use_generic and not generic_name.is_empty() else proper_name
+	)
+
+	var request_template: String = (
+		requests[randi() % requests.size()]
+		if not requests.is_empty()
+		else "Could you pick up some {item} at {location}?"
+	)
+	var request: String = request_template.replace("{item}", item_name).replace(
+		"{location}", chosen_location
+	)
+
+	var parts: Array[String] = []
+	if not opening.is_empty():
+		parts.append(opening)
+	if not excuse.is_empty():
+		parts.append(excuse)
+	if not request.is_empty():
+		parts.append(request)
+
+	var full_call_line: String = " ".join(parts)
+	return {
+		"call_line": full_call_line,
+		"used_location_name": chosen_location,
+		"opening": opening,
+		"excuse": excuse,
+		"request": request,
+	}
+
+
+static func build_errands_from_data(data: Dictionary) -> Array[MatsErrand]:
+	var list: Array[MatsErrand] = []
+	var dialogue_parts: Dictionary = data.get("dialogue_parts", {})
+	var locations: Array = data.get("locations", [])
+
+	for loc in locations:
+		if not loc is Dictionary:
+			continue
+		var loc_id_str: String = loc.get("id", "")
+		var loc_id := StringName(loc_id_str)
+		var proper_name: String = loc.get("proper_name", "")
+		var generic_name: String = loc.get("generic_name", "")
+		var target_path_str: String = loc.get("target_path", "")
+		if target_path_str.is_empty():
+			match loc_id:
+				&"walgroins":
+					target_path_str = "Props/Walgroins/Building/Doors"
+				&"booger_king":
+					target_path_str = "Props/BoogerKingSite/Building/Building/Tower/Doors"
+				&"taco_hell":
+					target_path_str = "Props/TacoHell/Building/MainArchPortico/Doors"
+				&"smell":
+					target_path_str = "Props/SmellGasStation/Store/DoorGlass"
+		var target_path := NodePath(target_path_str)
+		var items: Array = loc.get("items", [])
+
+		for item_raw in items:
+			var item_str := str(item_raw)
+			var errand_id := item_to_id(item_str)
+			var success := "Got the %s!" % item_str
+
+			var call_line := ""
+			var used_loc := proper_name
+			if errand_id == &"cough_syrup":
+				call_line = "Hello Mats darling, while you're out exploring, could you please pick up some cough syrup from Walgroins?"
+				used_loc = proper_name
+			else:
+				var res := generate_dialogue(
+					item_str, proper_name, generic_name, dialogue_parts, false
+				)
+				call_line = res["call_line"]
+				used_loc = res["used_location_name"]
+
+			var errand := MatsErrand.new(
+				errand_id,
+				item_str,
+				proper_name,
+				target_path,
+				call_line,
+				success,
+				loc_id,
+				proper_name,
+				generic_name,
+				used_loc
+			)
+			list.append(errand)
+
+	return list
+
+
+const DEFAULT_OBJECTIVES_DATA: Dictionary = {
+	"dialogue_parts":
 	{
-		"id": &"cough_syrup",
-		"item": "Cough syrup",
-		"store_name": "Walgroins",
-		"target_path": ^"Props/Walgroins/Building/Doors",
-		"call_line":
-		"Hello Mats darling, while you're out exploring, could you please pick up some cough syrup from Walgroins?",
-		"success_line": "Got the cough syrup!",
+		"openings":
+		[
+			"Hi Mats, are you having fun out there?",
+			"Mats schat...",
+			"Mats, m’n jongen...",
+		],
+		"excuses":
+		[
+			"I don't feel like cooking dinner tonight.",
+			"I just remembered another thing!",
+			"Could you grab one more item for your mother?",
+		],
+		"requests":
+		[
+			"Could you pick up some {item} at {location}?",
+			"Can you stop by {location} and get some {item}?",
+			"While you're out, swing by {location} for some {item}.",
+		],
 	},
-	{
-		"id": &"milk",
-		"item": "Milk",
-		"store_name": "Smell Food Mart",
-		"target_path": ^"Props/SmellGasStation/Store/DoorGlass",
-		"call_line":
-		"Mats, sweetie, we're out of milk. Could you grab some from the Smell on your way?",
-		"success_line": "Got the milk!",
-	},
-	{
-		"id": &"hamburgers",
-		"item": "Hamburgers",
-		"store_name": "Booger King",
-		"target_path": ^"Props/BoogerKingSite/Building/Building/Tower/Doors",
-		"call_line":
-		"Mats, honey, I don't feel like cooking. Pick up some hamburgers from Booger King for dinner?",
-		"success_line": "Got the hamburgers!",
-	},
-]
+	"locations":
+	[
+		{
+			"id": "walgroins",
+			"proper_name": "Walgroins",
+			"generic_name": "the pharmacy",
+			"target_path": "Props/Walgroins/Building/Doors",
+			"items":
+			[
+				"cough syrup",
+				"band-aids",
+				"potato chips",
+				"toothpaste",
+				"batteries",
+			],
+		},
+		{
+			"id": "booger_king",
+			"proper_name": "Booger King",
+			"generic_name": "the burger joint",
+			"target_path": "Props/BoogerKingSite/Building/Building/Tower/Doors",
+			"items":
+			[
+				"hamburgers",
+			],
+		},
+		{
+			"id": "taco_hell",
+			"proper_name": "Taco Hell",
+			"generic_name": "the taco stand",
+			"target_path": "Props/TacoHell/Building/MainArchPortico/Doors",
+			"items":
+			[
+				"tacos",
+				"burritos",
+				"quesadillas",
+			],
+		},
+		{
+			"id": "smell",
+			"proper_name": "Smell",
+			"generic_name": "the convenience store",
+			"target_path": "Props/SmellGasStation/Store/DoorGlass",
+			"items":
+			[
+				"milk",
+				"cereal",
+				"chewing gum",
+				"beef jerky",
+			],
+		},
+	],
+}
 
 
 static func create_errand_from_dict(data: Dictionary) -> MatsErrand:
@@ -398,7 +637,5 @@ static func create_errand_from_dict(data: Dictionary) -> MatsErrand:
 
 
 static func get_default_errands() -> Array[MatsErrand]:
-	var list: Array[MatsErrand] = []
-	for data in ERRANDS_DATA:
-		list.append(create_errand_from_dict(data))
-	return list
+	var data := load_objectives_data()
+	return build_errands_from_data(data)
