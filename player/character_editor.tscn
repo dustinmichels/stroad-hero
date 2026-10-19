@@ -1,7 +1,6 @@
-[gd_scene load_steps=17 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://player/character_editor.gd" id="1_editor"]
-[ext_resource type="PackedScene" path="res://player/mats.tscn" id="2_mats"]
 [ext_resource type="FontFile" path="res://fonts/ArchivoBlack-Regular.ttf" id="3_heading"]
 [ext_resource type="FontFile" path="res://fonts/Fredoka.ttf" id="4_body"]
 
@@ -220,8 +219,6 @@ environment = SubResource("PreviewEnvironment")
 rotation_degrees = Vector3(-35, 164, 0)
 light_color = Color(1, 0.96, 0.88, 1)
 light_energy = 1.4
-shadow_enabled = true
-
 [node name="PreviewCamera" type="Camera3D" parent="Pane/Margin/Content/Body/PreviewFrame/Preview/PreviewViewport"]
 unique_name_in_owner = true
 position = Vector3(0.95, 1.05, -3.2)
@@ -230,10 +227,6 @@ fov = 31.0
 [node name="Ground" type="MeshInstance3D" parent="Pane/Margin/Content/Body/PreviewFrame/Preview/PreviewViewport"]
 position = Vector3(0, -0.1, 0)
 mesh = SubResource("GroundMesh")
-
-[node name="PreviewMats" parent="Pane/Margin/Content/Body/PreviewFrame/Preview/PreviewViewport" instance=ExtResource("2_mats")]
-unique_name_in_owner = true
-preview_mode = true
 
 [node name="Options" type="VBoxContainer" parent="Pane/Margin/Content/Body"]
 custom_minimum_size = Vector2(440, 0)

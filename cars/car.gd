@@ -220,7 +220,15 @@ func _setup_wheels() -> void:
 	for car_model in visuals.get_children():
 		for child in car_model.get_children():
 			if child is Node3D and child.name.begins_with("Wheel"):
-				if child.has_node("Spoke"):
+				if (
+					child.has_node("Spoke")
+					or child.get_meta("baked_wheel", false)
+					or (
+						child is MeshInstance3D
+						and child.mesh
+						and child.mesh.get_meta("baked_wheel", false)
+					)
+				):
 					continue
 				var spoke := MeshInstance3D.new()
 				spoke.mesh = _spoke_mesh

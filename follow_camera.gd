@@ -48,9 +48,7 @@ func _process(delta: float) -> void:
 	var target_position := target.get_global_transform_interpolated().origin
 	var is_target_dead: bool = target.is_dead if target != null else false
 	if not is_target_dead:
-		var camera_left_pressed := (
-			Input.is_action_just_pressed("camera_left") and not _is_phone_call_showing()
-		)
+		var camera_left_pressed := Input.is_action_just_pressed("camera_left")
 		var yaw_step := int(camera_left_pressed) - int(Input.is_action_just_pressed("camera_right"))
 		var pitch_step := (
 			int(Input.is_action_just_pressed("camera_forward"))

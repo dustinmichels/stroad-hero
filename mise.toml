@@ -32,4 +32,4 @@ mkdir -p build/web
 description = "Build the Web export and serve locally at http://localhost:8080"
 depends = ["export-web"]
 raw = true
-run = "python3 -m http.server 8080 --directory build/web"
+run = "python3 scripts/serve_web.py 8080 --directory build/web"

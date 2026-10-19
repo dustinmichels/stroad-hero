@@ -172,7 +172,7 @@ func show_ringing(errand: MatsErrand = null) -> void:
 	in_call_panel.visible = false
 	ringing_panel.visible = true
 	caller_label.text = "MOM"
-	prompt_label.text = "[A] Answer"
+	prompt_label.text = "[Enter] Answer"
 	_start_ringing_animation()
 
 
@@ -314,10 +314,10 @@ func _is_answer_action(event: InputEvent) -> bool:
 		return true
 	if event is InputEventKey and event.is_pressed() and not event.is_echo():
 		if (
-			event.keycode == KEY_A
-			or event.physical_keycode == KEY_A
-			or event.keycode == KEY_ENTER
+			event.keycode == KEY_ENTER
 			or event.physical_keycode == KEY_ENTER
+			or event.keycode == KEY_KP_ENTER
+			or event.physical_keycode == KEY_KP_ENTER
 		):
 			return true
 	return false

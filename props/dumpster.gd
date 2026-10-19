@@ -30,14 +30,25 @@ func _ready() -> void:
 func _update_appearance() -> void:
 	var body: MeshInstance3D = _body_mesh if _body_mesh else get_node_or_null("Body")
 	if body and COLORS.has(dumpster_color):
-		var base_mat: StandardMaterial3D = body.material_override as StandardMaterial3D
+		var base_mat: StandardMaterial3D = null
+		if body.material_override != null:
+			base_mat = body.material_override as StandardMaterial3D
+		elif body.get_surface_override_material(0) != null:
+			base_mat = body.get_surface_override_material(0) as StandardMaterial3D
+		elif body.mesh and body.mesh.get_surface_count() > 0:
+			base_mat = body.mesh.surface_get_material(0) as StandardMaterial3D
+
 		var mat: StandardMaterial3D = base_mat.duplicate() if base_mat else StandardMaterial3D.new()
 		mat.albedo_color = COLORS[dumpster_color]
-		body.material_override = mat
-		for child_name in ["TopRim", "RibL", "RibM", "RibR"]:
-			var part: MeshInstance3D = get_node_or_null(child_name)
-			if part:
-				part.material_override = mat
+		if body.mesh and body.mesh.get_surface_count() > 1:
+			body.material_override = null
+			body.set_surface_override_material(0, mat)
+		else:
+			body.material_override = mat
+			for child_name in ["TopRim", "RibL", "RibM", "RibR"]:
+				var part: MeshInstance3D = get_node_or_null(child_name)
+				if part:
+					part.material_override = mat
 	var pivot: Node3D = _right_lid_pivot if _right_lid_pivot else get_node_or_null("RightLidPivot")
 	if pivot:
 		pivot.rotation.x = deg_to_rad(-42.0) if lid_open else 0.0

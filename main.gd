@@ -365,7 +365,7 @@ func _ready() -> void:
 			"TrafficManager must have seeded cars"
 		)
 		for c in traffic_mgr.lot_cars:
-			if c.global_position.z < 0.0:
+			if c.global_position.z < 0.0 and c.global_position.x > -30.0:
 				_test_car = c
 				break
 		_test_car.dwell_left = 0.0
@@ -377,7 +377,7 @@ func _ready() -> void:
 			"TrafficManager must have seeded cars"
 		)
 		for c in traffic_mgr.lot_cars:
-			if c.global_position.z < 0.0:
+			if c.global_position.z < 0.0 and c.global_position.x > -30.0:
 				_test_car = c
 				break
 		if _test_car.spot != null:
@@ -1526,7 +1526,8 @@ func _ready() -> void:
 			phone_call.in_call_panel.visible == false, "InCallPanel must be hidden while ringing"
 		)
 		assert(phone_call.caller_label.text == "MOM", "Caller must be MOM")
-		assert(phone_call.prompt_label.text == "[A] Answer", "Prompt must be [A] Answer")
+		assert(phone_call.prompt_label.text == "[Enter] Answer", "Prompt must be [Enter] Answer")
+		assert(mats.is_phone_ringing == true, "Mats must have phone ringing state")
 		assert(
 			phone_call._shake_tween != null and phone_call._shake_tween.is_valid(),
 			"Shake tween must be active while ringing"
@@ -1538,6 +1539,7 @@ func _ready() -> void:
 		assert(phone_call.is_in_call == true, "PhoneCall must be in_call")
 		assert(phone_call.ringing_panel.visible == false, "RingingPanel must be hidden")
 		assert(phone_call.in_call_panel.visible == true, "InCallPanel must be visible")
+		assert(mats.is_on_phone == true, "Mats must be holding phone to ear during call")
 		assert(phone_call.speaker_label.text == "Mom", "Speaker label must be Mom")
 		assert(
 			phone_call.dialogue_label.text == obj_mgr.current_errand.call_line,
@@ -1553,7 +1555,7 @@ func _ready() -> void:
 		)
 
 		# Test dismissal of dialogue:
-		assert(phone_call.ok_prompt_label.text == "[A] OK", "Prompt must be [A] OK")
+		assert(phone_call.ok_prompt_label.text == "[Enter] OK", "Prompt must be [Enter] OK")
 		var dismissed := [false]
 		phone_call.call_dismissed.connect(func(): dismissed[0] = true)
 		phone_call.dismiss()
@@ -1564,6 +1566,7 @@ func _ready() -> void:
 		)
 		assert(phone_call.visible == false, "PhoneCall must be hidden after dismiss")
 		assert(phone_call.is_in_call == false, "is_in_call must be false")
+		assert(mats.is_on_phone == false, "Mats must not be on phone after dismiss")
 		assert(
 			hud.objective_line.visible == true,
 			"Objective line must be visible when objective is active"
@@ -1581,17 +1584,26 @@ func _ready() -> void:
 
 		# Test _unhandled_input handling:
 		# 1. When hidden, input is ignored
-		var test_ev := InputEventKey.new()
-		test_ev.pressed = true
-		test_ev.keycode = KEY_A
-		test_ev.physical_keycode = KEY_A
-		phone_call._unhandled_input(test_ev)
+		var a_test_ev := InputEventKey.new()
+		a_test_ev.pressed = true
+		a_test_ev.keycode = KEY_A
+		a_test_ev.physical_keycode = KEY_A
+		phone_call._unhandled_input(a_test_ev)
 		assert(phone_call.visible == false, "Input while hidden must be ignored")
 
+		var test_ev := InputEventKey.new()
+		test_ev.pressed = true
+		test_ev.keycode = KEY_ENTER
+		test_ev.physical_keycode = KEY_ENTER
 		# 2. Ringing: input answers call
 		obj_mgr.current_state = ObjectiveManager.State.IDLE
 		obj_mgr.start_call(obj_mgr.get_errand_by_id(&"cough_syrup"))
 		assert(phone_call.is_ringing == true)
+		# Key A must not answer
+		phone_call._unhandled_input(a_test_ev)
+		assert(phone_call.is_ringing == true, "Key A must not answer call")
+		assert(phone_call.is_in_call == false)
+		# Enter must answer
 		phone_call._unhandled_input(test_ev)
 		assert(phone_call.is_in_call == true, "_unhandled_input must answer ringing call")
 		assert(obj_mgr.current_state == ObjectiveManager.State.IN_CALL)
@@ -1616,6 +1628,10 @@ func _ready() -> void:
 		enter_ev.pressed = true
 		enter_ev.physical_keycode = KEY_ENTER
 		assert(enter_ev.is_action_pressed("answer_phone"), "Enter must trigger answer_phone")
+		var a_ev := InputEventKey.new()
+		a_ev.pressed = true
+		a_ev.physical_keycode = KEY_A
+		assert(not a_ev.is_action_pressed("answer_phone"), "A must not trigger answer_phone")
 		var joy_ev := InputEventJoypadButton.new()
 		joy_ev.pressed = true
 		joy_ev.button_index = JOY_BUTTON_A

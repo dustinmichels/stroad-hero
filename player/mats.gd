@@ -24,6 +24,7 @@ signal respawned
 @export var respawn_delay := 1.25
 
 enum Headwear { HAIR, HAT, BEANIE }
+enum PhoneMode { NONE, RINGING, TALKING }
 
 @export_enum("Hair", "Red ball cap", "Beanie") var headwear: int = Headwear.HAIR
 @export var jacket_color := Color(0.96, 0.48, 0.1, 1.0)
@@ -127,6 +128,23 @@ var _mount_tween: Tween = null
 var _jacket_material: StandardMaterial3D = null
 var _jacket_trim_material: StandardMaterial3D = null
 
+var _phone_mode: PhoneMode = PhoneMode.NONE
+var _phone_blend := 0.0
+var _phone_arm_pose := Vector3.ZERO
+var _phone_elbow_pose := Vector3.ZERO
+var _phone_head_pose := Vector3.ZERO
+var _phone: Node3D = null
+
+## True if Mats is currently holding his phone to his ear during a call.
+var is_on_phone: bool:
+	get:
+		return _phone_mode == PhoneMode.TALKING
+
+## True if Mats has his phone out for an incoming call.
+var is_phone_ringing: bool:
+	get:
+		return _phone_mode == PhoneMode.RINGING
+
 
 func _ready() -> void:
 	_world_parent = get_parent()
@@ -158,6 +176,7 @@ func _ready() -> void:
 	set_jacket_color(jacket_color)
 	set_backpack_color(backpack_color)
 	set_shoe_color(shoe_color)
+	_build_phone()
 
 
 func _physics_process(delta: float) -> void:
@@ -483,6 +502,10 @@ func die() -> void:
 	_is_dead = true
 	_has_control_basis = false
 	velocity = Vector3.ZERO
+	end_phone_call()
+	_phone_blend = 0.0
+	if _phone:
+		_phone.visible = false
 	_dismount_cart()
 	if _collision_shape:
 		_collision_shape.set_deferred("disabled", true)
@@ -544,9 +567,72 @@ func respawn() -> void:
 	_right_arm.rotation.z = 0.0
 	if _head:
 		_head.rotation = Vector3.ZERO
+	end_phone_call()
+	_phone_blend = 0.0
+	if _phone:
+		_phone.visible = false
 	if _collision_shape:
 		_collision_shape.disabled = false
 	respawned.emit()
+
+
+func set_phone_state(mode: PhoneMode) -> void:
+	_phone_mode = mode
+	if _phone and mode != PhoneMode.NONE:
+		_phone.visible = true
+
+
+func answer_phone() -> void:
+	set_phone_state(PhoneMode.TALKING)
+
+
+func end_phone_call() -> void:
+	set_phone_state(PhoneMode.NONE)
+
+
+func set_on_phone(on_phone: bool) -> void:
+	if on_phone:
+		answer_phone()
+	else:
+		end_phone_call()
+
+
+func _build_phone() -> void:
+	if _phone or not _right_elbow:
+		return
+	_phone = Node3D.new()
+	_phone.name = "Phone"
+	_phone.visible = false
+	_phone.position = Vector3(0.0, -0.23, 0.02)
+	_phone.rotation = Vector3(0.0, 0.0, PI)
+
+	var body_mesh := BoxMesh.new()
+	body_mesh.size = Vector3(0.056, 0.11, 0.012)
+	var body_inst := MeshInstance3D.new()
+	body_inst.name = "Body"
+	body_inst.mesh = body_mesh
+	var body_mat := StandardMaterial3D.new()
+	body_mat.albedo_color = Color(0.14, 0.15, 0.18, 1.0)
+	body_mat.metallic = 0.6
+	body_mat.roughness = 0.35
+	body_inst.material_override = body_mat
+	_phone.add_child(body_inst)
+
+	var screen_mesh := BoxMesh.new()
+	screen_mesh.size = Vector3(0.048, 0.098, 0.002)
+	var screen_inst := MeshInstance3D.new()
+	screen_inst.name = "Screen"
+	screen_inst.mesh = screen_mesh
+	var screen_mat := StandardMaterial3D.new()
+	screen_mat.albedo_color = Color(0.05, 0.08, 0.12, 1.0)
+	screen_mat.emission_enabled = true
+	screen_mat.emission = Color(0.18, 0.65, 0.85, 1.0)
+	screen_mat.emission_energy_multiplier = 0.8
+	screen_inst.material_override = screen_mat
+	screen_inst.position = Vector3(0.0, 0.0, -0.006)
+	_phone.add_child(screen_inst)
+
+	_right_elbow.add_child(_phone)
 
 
 ## Lifts the body onto a low ledge blocking `motion`; floor snap settles it on top.
@@ -630,16 +716,51 @@ func _animate(delta: float, force_idle := false) -> void:
 		target_right_elbow = -0.3
 		target_lean_x = 0.0
 	var weight := 1.0 - exp(-POSE_SHARPNESS * delta)
+
+	var target_blend := 1.0 if _phone_mode != PhoneMode.NONE else 0.0
+	_phone_blend = move_toward(_phone_blend, target_blend, 4.0 * delta)
+	if _phone:
+		_phone.visible = _phone_blend > 0.0
+
+	var target_phone_arm := Vector3.ZERO
+	var target_phone_elbow := Vector3.ZERO
+	var target_phone_head := Vector3.ZERO
+
+	if _phone_mode == PhoneMode.TALKING:
+		target_phone_arm = Vector3(deg_to_rad(-108.0), deg_to_rad(40.0), deg_to_rad(24.0))
+		target_phone_elbow = Vector3(deg_to_rad(-112.0), deg_to_rad(-10.0), 0.0)
+		target_phone_head = Vector3(deg_to_rad(4.0), deg_to_rad(-10.0), deg_to_rad(-8.0))
+	elif _phone_mode == PhoneMode.RINGING:
+		target_phone_arm = Vector3(deg_to_rad(-45.0), deg_to_rad(20.0), deg_to_rad(15.0))
+		target_phone_elbow = Vector3(deg_to_rad(-85.0), 0.0, 0.0)
+		target_phone_head = Vector3(deg_to_rad(10.0), deg_to_rad(-8.0), 0.0)
+
+	var phone_trans_weight := 1.0 - exp(-12.0 * delta)
+	_phone_arm_pose = _phone_arm_pose.lerp(target_phone_arm, phone_trans_weight)
+	_phone_elbow_pose = _phone_elbow_pose.lerp(target_phone_elbow, phone_trans_weight)
+	_phone_head_pose = _phone_head_pose.lerp(target_phone_head, phone_trans_weight)
+
+	var final_right_arm_x := lerpf(target_right_arm_x, _phone_arm_pose.x, _phone_blend)
+	var final_right_arm_y := lerpf(0.0, _phone_arm_pose.y, _phone_blend)
+	var final_right_arm_z := lerpf(target_right_arm_z, _phone_arm_pose.z, _phone_blend)
+
+	var final_right_elbow_x := lerpf(target_right_elbow, _phone_elbow_pose.x, _phone_blend)
+	var final_right_elbow_y := lerpf(0.0, _phone_elbow_pose.y, _phone_blend)
+	var final_right_elbow_z := lerpf(0.0, _phone_elbow_pose.z, _phone_blend)
+
 	_left_leg.rotation.x = lerpf(_left_leg.rotation.x, target_left_leg_x, weight)
 	_right_leg.rotation.x = lerpf(_right_leg.rotation.x, target_right_leg_x, weight)
 	_left_arm.rotation.x = lerpf(_left_arm.rotation.x, target_left_arm_x, weight)
-	_right_arm.rotation.x = lerpf(_right_arm.rotation.x, target_right_arm_x, weight)
+	_right_arm.rotation.x = lerpf(_right_arm.rotation.x, final_right_arm_x, weight)
+	_right_arm.rotation.y = lerpf(_right_arm.rotation.y, final_right_arm_y, weight)
 	_left_arm.rotation.z = lerpf(_left_arm.rotation.z, target_left_arm_z, weight)
-	_right_arm.rotation.z = lerpf(_right_arm.rotation.z, target_right_arm_z, weight)
+	_right_arm.rotation.z = lerpf(_right_arm.rotation.z, final_right_arm_z, weight)
 	_left_knee.rotation.x = lerpf(_left_knee.rotation.x, target_left_knee, weight)
 	_right_knee.rotation.x = lerpf(_right_knee.rotation.x, target_right_knee, weight)
 	_left_elbow.rotation.x = lerpf(_left_elbow.rotation.x, target_left_elbow, weight)
-	_right_elbow.rotation.x = lerpf(_right_elbow.rotation.x, target_right_elbow, weight)
+	_right_elbow.rotation.x = lerpf(_right_elbow.rotation.x, final_right_elbow_x, weight)
+	_right_elbow.rotation.y = lerpf(_right_elbow.rotation.y, final_right_elbow_y, weight)
+	_right_elbow.rotation.z = lerpf(_right_elbow.rotation.z, final_right_elbow_z, weight)
 	_left_ankle.rotation.x = -ANKLE_LEVELING * (_left_leg.rotation.x + _left_knee.rotation.x)
 	_right_ankle.rotation.x = -ANKLE_LEVELING * (_right_leg.rotation.x + _right_knee.rotation.x)
 
@@ -675,9 +796,14 @@ func _animate(delta: float, force_idle := false) -> void:
 		var head_pitch := (breath * 0.02) * idle_blend
 		var head_roll := head_yaw * 0.15
 
-		_head.rotation.y = lerpf(_head.rotation.y, head_yaw, weight)
-		_head.rotation.x = lerpf(_head.rotation.x, head_pitch, weight)
-		_head.rotation.z = lerpf(_head.rotation.z, head_roll, weight)
+		var phone_nod := sin(_idle_time * IDLE_BREATH_RATE) * 0.02 * _phone_blend
+		var final_head_x := lerpf(head_pitch, _phone_head_pose.x + phone_nod, _phone_blend)
+		var final_head_y := lerpf(head_yaw, _phone_head_pose.y, _phone_blend)
+		var final_head_z := lerpf(head_roll, _phone_head_pose.z, _phone_blend)
+
+		_head.rotation.y = lerpf(_head.rotation.y, final_head_y, weight)
+		_head.rotation.x = lerpf(_head.rotation.x, final_head_x, weight)
+		_head.rotation.z = lerpf(_head.rotation.z, final_head_z, weight)
 
 	# Breathing scale + landing squash
 	_squash = move_toward(_squash, 0.0, 6.0 * delta)

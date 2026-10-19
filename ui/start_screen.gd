@@ -37,14 +37,72 @@ var _has_started_once: bool = false
 var _is_loaded: bool = false
 var _current_page: Page = Page.MAIN
 var _opened_via_h: bool = false
+const STAGGERED_WARMUP_STEPS: Array[Dictionary] = [
+	{
+		"names": ["Walgroins", "WalgroinsShoppingCarts"],
+		"pct": 87,
+		"label": "Warming up Walgroins...",
+	},
+	{
+		"names": ["TacoHell"],
+		"pct": 89,
+		"label": "Warming up Taco Hell...",
+	},
+	{
+		"names": ["BoogerKingSite"],
+		"pct": 91,
+		"label": "Warming up Booger King...",
+	},
+	{
+		"names": ["StripMall"],
+		"pct": 93,
+		"label": "Warming up Strip Mall...",
+	},
+	{
+		"names": ["CrampedInn"],
+		"pct": 95,
+		"label": "Warming up Cramped Inn...",
+	},
+	{
+		"names": ["SmellGasStation"],
+		"pct": 97,
+		"label": "Warming up Gas Station...",
+	},
+	{
+		"names": ["Streetlights", "Trees", "Flags", "OverheadRoadSign", "FireHydrant"],
+		"pct": 98,
+		"label": "Warming up street props...",
+	},
+]
+
+
+func _report_web_progress(pct: int, text: String) -> void:
+	if loading_label:
+		loading_label.text = text
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval(
+			(
+				"if (window.godotProgress) { window.godotProgress(%d, %s); }"
+				% [pct, JSON.stringify(text)]
+			)
+		)
+
+
+func _is_test_mode() -> bool:
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--test-"):
+			return true
+	for arg in OS.get_cmdline_args():
+		if arg.begins_with("--test-"):
+			return true
+	return false
 
 
 func _ready() -> void:
-	var user_args := OS.get_cmdline_user_args()
-	for arg in user_args:
-		if arg.begins_with("--test-"):
-			visible = false
-			return
+	if _is_test_mode():
+		visible = false
+		_mark_loaded()
+		return
 	if quit_button and OS.has_feature("web"):
 		quit_button.visible = false
 
@@ -61,17 +119,57 @@ func _ready() -> void:
 
 	open_screen(Page.MAIN)
 
-	# In CLI tests, mark ready immediately to avoid async race in asserts
-	for arg in user_args:
-		if arg.begins_with("--test-"):
-			_mark_loaded()
-			return
-
 	# In normal gameplay, gate start behind warmup frames
 	set_loading(true)
-	await get_tree().process_frame
-	await get_tree().process_frame
+	await _warmup_world()
 	_mark_loaded()
+
+
+func _warmup_world() -> void:
+	var props: Node3D = get_parent().get_node_or_null("Props") if get_parent() else null
+	if props:
+		for child in props.get_children():
+			if child is Node3D:
+				child.visible = false
+
+	_report_web_progress(85, "Warming up shaders...")
+	# Frame 1: major Props building groups start hidden so WebGL2 compiles base
+	# shaders (terrain, road, mats) without a huge Frame 1 spike.
+	await get_tree().process_frame
+	if not is_inside_tree():
+		return
+
+	if props:
+		for step in STAGGERED_WARMUP_STEPS:
+			for node_name in step["names"]:
+				var node := props.get_node_or_null(node_name) as Node3D
+				if node:
+					node.visible = true
+			_report_web_progress(step["pct"], step["label"])
+			await get_tree().process_frame
+			if not is_inside_tree():
+				return
+
+		# Ensure any remaining Props children are made visible
+		for child in props.get_children():
+			if child is Node3D and not child.visible:
+				child.visible = true
+		await get_tree().process_frame
+		if not is_inside_tree():
+			return
+	else:
+		await get_tree().process_frame
+		if not is_inside_tree():
+			return
+
+	var traffic_mgr = get_parent().get_node_or_null("TrafficManager") if get_parent() else null
+	if (
+		traffic_mgr
+		and "is_initial_traffic_ready" in traffic_mgr
+		and not traffic_mgr.is_initial_traffic_ready
+	):
+		_report_web_progress(99, "Spawning initial traffic...")
+		await traffic_mgr.initial_traffic_ready
 
 
 func set_loading(loading: bool) -> void:

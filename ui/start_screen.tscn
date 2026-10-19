@@ -941,7 +941,7 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.96, 0.98, 1)
 theme_override_fonts/font = ExtResource("3_heading")
 theme_override_font_sizes/font_size = 15
-text = "A / Enter"
+text = "Enter"
 
 [node name="DescLabel" type="Label" parent="RootControl/Pane/Margin/Content/ControlsPage/FullControlsCard/FullControlsContent/Grid/ColPhone"]
 layout_mode = 2
@@ -1024,7 +1024,7 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.72, 0.78, 0.86, 1)
 theme_override_fonts/font = ExtResource("4_body")
 theme_override_font_sizes/font_size = 15
-text = "Errand Loop: Mom calls with errands across the stroad. Press A or Enter to answer her call, reach the store to complete the errand, and build your OBJ score!"
+text = "Errand Loop: Mom calls with errands across the stroad. Press Enter to answer her call, reach the store to complete the errand, and build your OBJ score!"
 horizontal_alignment = 1
 autowrap_mode = 2
 

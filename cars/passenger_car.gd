@@ -13,15 +13,33 @@ const PASSENGER_TYPES: Array[CarType] = [
 	CarType.JEEP,
 ]
 
-const BODY_SCENES: Dictionary = {
-	CarType.SEDAN: preload("res://cars/bodies/sedan.tscn"),
-	CarType.SUV: preload("res://cars/bodies/suv.tscn"),
-	CarType.PICKUP: preload("res://cars/bodies/pickup.tscn"),
-	CarType.HATCHBACK: preload("res://cars/bodies/hatchback.tscn"),
-	CarType.MINIVAN: preload("res://cars/bodies/minivan.tscn"),
-	CarType.SPORTS: preload("res://cars/bodies/sports.tscn"),
-	CarType.JEEP: preload("res://cars/bodies/jeep.tscn"),
+const BODY_SCENE_PATHS: Dictionary = {
+	CarType.SEDAN: "res://cars/bodies/sedan.tscn",
+	CarType.SUV: "res://cars/bodies/suv.tscn",
+	CarType.PICKUP: "res://cars/bodies/pickup.tscn",
+	CarType.HATCHBACK: "res://cars/bodies/hatchback.tscn",
+	CarType.MINIVAN: "res://cars/bodies/minivan.tscn",
+	CarType.SPORTS: "res://cars/bodies/sports.tscn",
+	CarType.JEEP: "res://cars/bodies/jeep.tscn",
 }
+
+static var _body_scenes: Dictionary = {}
+
+static var BODY_SCENES: Dictionary:
+	get:
+		for type in BODY_SCENE_PATHS:
+			if not _body_scenes.has(type):
+				_body_scenes[type] = load(BODY_SCENE_PATHS[type])
+		return _body_scenes
+
+
+static func get_body_scene(type: CarType) -> PackedScene:
+	if not _body_scenes.has(type):
+		var path: String = BODY_SCENE_PATHS.get(type, "")
+		if path != "":
+			_body_scenes[type] = load(path)
+	return _body_scenes.get(type)
+
 
 const BODY_NODE_PATHS: Dictionary = {
 	CarType.SEDAN: ^"Sedan",
@@ -108,9 +126,20 @@ const PAINTED_NODE_NAMES: Array[StringName] = [
 ]
 
 static var _rng: RandomNumberGenerator = null
+static var _paint_materials: Dictionary = {}
 
 @export var body_color: Color = Color(0, 0, 0, 0)
 var _paint_material: StandardMaterial3D = null
+
+
+static func get_paint_material(color: Color) -> StandardMaterial3D:
+	if not _paint_materials.has(color):
+		var mat := StandardMaterial3D.new()
+		mat.roughness = 0.32
+		mat.metallic = 0.15
+		mat.albedo_color = color
+		_paint_materials[color] = mat
+	return _paint_materials[color]
 
 
 static func _get_rng() -> RandomNumberGenerator:
@@ -147,7 +176,7 @@ func _apply_visual_type() -> void:
 			visuals.remove_child(model)
 			model.free()
 
-		var body_scene: PackedScene = BODY_SCENES[car_type]
+		var body_scene: PackedScene = get_body_scene(car_type)
 		var active_model := body_scene.instantiate() as Node3D
 		assert(active_model != null)
 		if OS.is_debug_build() and ProjectSettings.get_setting("debug/bake_preview", false):
@@ -184,11 +213,7 @@ func _apply_paint_material() -> void:
 	elif body_color == Color(0, 0, 0, 0):
 		var rng := _get_rng()
 		body_color = PAINT_PALETTE[rng.randi_range(0, PAINT_PALETTE.size() - 1)]
-	if _paint_material == null:
-		_paint_material = StandardMaterial3D.new()
-		_paint_material.roughness = 0.32
-		_paint_material.metallic = 0.15
-	_paint_material.albedo_color = body_color
+	_paint_material = get_paint_material(body_color)
 
 	var active_model := _get_node_for_type(car_type)
 	if not active_model:

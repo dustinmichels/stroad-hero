@@ -27,6 +27,7 @@ var _action_prompt_sources := {}
 var _default_margin_pos := Vector2(20.0, 20.0)
 var _fade_tween: Tween
 var _spd_tween: Tween
+var _spd_placeholder: Control = null
 
 
 func _ready() -> void:
@@ -175,65 +176,144 @@ func fade_to_black(duration: float = 0.4) -> void:
 	await _fade_tween.finished
 
 
-func emphasize_death_spd(hold_duration: float = 0.8) -> void:
-	spd_count += 1
-	_update_display()
+func _reset_spd_panel() -> void:
+	if _spd_tween and _spd_tween.is_valid():
+		_spd_tween.kill()
+	if _spd_placeholder and is_instance_valid(_spd_placeholder):
+		var p_parent := _spd_placeholder.get_parent()
+		if p_parent:
+			p_parent.remove_child(_spd_placeholder)
+		_spd_placeholder.queue_free()
+		_spd_placeholder = null
+	if panel_container:
+		panel_container.top_level = false
+		panel_container.z_index = 0
+		panel_container.scale = Vector2.ONE
+		panel_container.pivot_offset = Vector2.ZERO
+		panel_container.position = Vector2.ZERO
+	if spd_label:
+		spd_label.modulate = Color.WHITE
+		spd_label.scale = Vector2.ONE
+	if desc_label:
+		desc_label.modulate = Color(0.85, 0.65, 0.65, 0.9)
 
-	if not margin_container or not spd_label:
+
+func emphasize_death_spd(hold_duration: float = 0.8) -> void:
+	if not panel_container or not spd_label:
+		spd_count += 1
+		_update_display()
 		if is_inside_tree():
 			await get_tree().create_timer(hold_duration).timeout
 		return
 
-	if _spd_tween and _spd_tween.is_valid():
-		_spd_tween.kill()
+	_reset_spd_panel()
+
+	var parent := panel_container.get_parent()
+	if not parent:
+		spd_count += 1
+		_update_display()
+		if is_inside_tree():
+			await get_tree().create_timer(hold_duration).timeout
+		return
+
+	# Show current count before incrementing
+	_update_display()
+
+	# Create placeholder in HBoxContainer to hold OBJ panel in place
+	_spd_placeholder = Control.new()
+	_spd_placeholder.name = "SpdPlaceholder"
+	_spd_placeholder.custom_minimum_size = panel_container.size
+	parent.add_child(_spd_placeholder)
+	parent.move_child(_spd_placeholder, panel_container.get_index())
+
+	var start_pos := panel_container.global_position
+	var panel_size := panel_container.size
+
+	panel_container.top_level = true
+	panel_container.z_index = 10
+	panel_container.global_position = start_pos
+	panel_container.pivot_offset = panel_size * 0.5
+	panel_container.scale = Vector2.ONE
+
+	var vp_size := get_viewport().get_visible_rect().size
+	var target_center_pos := (vp_size - panel_size) * 0.5
+	var target_scale := Vector2(2.5, 2.5)
+
+	var move_in_time := 0.22
+	var count_punch_time := maxf(hold_duration * 0.6, 0.12)
+	var shrink_time := 0.22
+
 	_spd_tween = create_tween()
 
-	margin_container.pivot_offset = Vector2.ZERO
+	# 1. Make it big, in middle of the screen
 	(
 		_spd_tween
-		. tween_property(margin_container, "scale", Vector2(1.65, 1.65), 0.25)
+		. tween_property(panel_container, "global_position", target_center_pos, move_in_time)
 		. set_trans(Tween.TRANS_BACK)
 		. set_ease(Tween.EASE_OUT)
 	)
 	(
 		_spd_tween
 		. parallel()
-		. tween_property(
-			margin_container, "position", _default_margin_pos + Vector2(24.0, 24.0), 0.25
-		)
+		. tween_property(panel_container, "scale", target_scale, move_in_time)
 		. set_trans(Tween.TRANS_BACK)
 		. set_ease(Tween.EASE_OUT)
 	)
-	spd_label.modulate = Color(1.0, 0.2, 0.2, 1.0)
 	if desc_label:
-		desc_label.modulate = Color(1.0, 0.9, 0.9, 1.0)
-	_spd_tween.parallel().tween_property(spd_label, "modulate", Color(1.0, 0.45, 0.45, 1.0), 0.25)
+		_spd_tween.parallel().tween_property(
+			desc_label, "modulate", Color(1.0, 0.9, 0.9, 1.0), move_in_time
+		)
 
-	var half_hold := hold_duration * 0.5
+	# 2. Count up
+	_spd_tween.tween_callback(
+		func():
+			spd_count += 1
+			_update_display()
+			_animate_increment(spd_label, Color(1.0, 0.2, 0.2, 1.0))
+	)
+	var punch_scale := target_scale * 1.15
+	var half_punch := count_punch_time * 0.5
 	(
 		_spd_tween
-		. tween_property(margin_container, "scale", Vector2(1.58, 1.58), half_hold)
-		. set_trans(Tween.TRANS_SINE)
+		. tween_property(panel_container, "scale", punch_scale, half_punch)
+		. set_trans(Tween.TRANS_QUAD)
+		. set_ease(Tween.EASE_OUT)
+	)
+	(
+		_spd_tween
+		. tween_property(panel_container, "scale", target_scale, half_punch)
+		. set_trans(Tween.TRANS_QUAD)
+		. set_ease(Tween.EASE_IN)
+	)
+
+	# 3. Shrink back into its spot
+	(
+		_spd_tween
+		. tween_property(panel_container, "scale", Vector2.ONE, shrink_time)
+		. set_trans(Tween.TRANS_CUBIC)
 		. set_ease(Tween.EASE_IN_OUT)
 	)
 	(
 		_spd_tween
-		. tween_property(margin_container, "scale", Vector2(1.65, 1.65), half_hold)
-		. set_trans(Tween.TRANS_SINE)
+		. parallel()
+		. tween_property(panel_container, "global_position", start_pos, shrink_time)
+		. set_trans(Tween.TRANS_CUBIC)
 		. set_ease(Tween.EASE_IN_OUT)
 	)
+	if desc_label:
+		_spd_tween.parallel().tween_property(
+			desc_label, "modulate", Color(0.85, 0.65, 0.65, 0.9), shrink_time
+		)
 
 	await _spd_tween.finished
+	_reset_spd_panel()
 
 
 func fade_from_black(duration: float = 0.45) -> void:
 	if _fade_tween and _fade_tween.is_valid():
 		_fade_tween.kill()
-	if _spd_tween and _spd_tween.is_valid():
-		_spd_tween.kill()
 
 	_fade_tween = create_tween()
-	_spd_tween = create_tween()
 
 	if fade_overlay:
 		(
@@ -243,26 +323,7 @@ func fade_from_black(duration: float = 0.45) -> void:
 			. set_ease(Tween.EASE_IN_OUT)
 		)
 
-	if margin_container:
-		(
-			_spd_tween
-			. tween_property(margin_container, "scale", Vector2(1.0, 1.0), duration)
-			. set_trans(Tween.TRANS_CUBIC)
-			. set_ease(Tween.EASE_OUT)
-		)
-		(
-			_spd_tween
-			. parallel()
-			. tween_property(margin_container, "position", _default_margin_pos, duration)
-			. set_trans(Tween.TRANS_CUBIC)
-			. set_ease(Tween.EASE_OUT)
-		)
-	if spd_label:
-		_spd_tween.parallel().tween_property(spd_label, "modulate", Color.WHITE, duration)
-	if desc_label:
-		_spd_tween.parallel().tween_property(
-			desc_label, "modulate", Color(0.85, 0.65, 0.65, 0.9), duration
-		)
+	_reset_spd_panel()
 
 	if fade_overlay:
 		await _fade_tween.finished

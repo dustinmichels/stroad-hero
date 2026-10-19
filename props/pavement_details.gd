@@ -30,6 +30,19 @@ const TIRE_MARKS := [
 
 
 func _ready() -> void:
+	if (
+		has_node("PavementDetailMesh")
+		or (get_parent() != null and get_parent().has_node("BakedStaticMesh"))
+	):
+		return
+	build_mesh()
+
+
+func build_mesh() -> MeshInstance3D:
+	var existing := get_node_or_null("PavementDetailMesh") as MeshInstance3D
+	if existing != null:
+		return existing
+
 	var mesh := ArrayMesh.new()
 	_build_cracks(mesh)
 	_build_tire_marks(mesh)
@@ -39,6 +52,7 @@ func _ready() -> void:
 	pavement_mesh.mesh = mesh
 	pavement_mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(pavement_mesh)
+	return pavement_mesh
 
 
 func _build_cracks(mesh: ArrayMesh) -> void:

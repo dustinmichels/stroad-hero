@@ -1,12 +1,55 @@
 class_name TrafficManager
 extends Node3D
 
-const PassengerCarScene = preload("res://cars/passenger_car.tscn")
-const BusScene = preload("res://cars/bus.tscn")
-const TaxiScene = preload("res://cars/taxi.tscn")
-const TruckScene = preload("res://cars/truck.tscn")
-const VanScene = preload("res://cars/van.tscn")
-const ShippingTruckScene = preload("res://cars/shipping_truck.tscn")
+const PASSENGER_CAR_SCENE_PATH := "res://cars/passenger_car.tscn"
+const BUS_SCENE_PATH := "res://cars/bus.tscn"
+const TAXI_SCENE_PATH := "res://cars/taxi.tscn"
+const TRUCK_SCENE_PATH := "res://cars/truck.tscn"
+const VAN_SCENE_PATH := "res://cars/van.tscn"
+const SHIPPING_TRUCK_SCENE_PATH := "res://cars/shipping_truck.tscn"
+
+static var _passenger_car_scene: PackedScene
+static var _bus_scene: PackedScene
+static var _taxi_scene: PackedScene
+static var _truck_scene: PackedScene
+static var _van_scene: PackedScene
+static var _shipping_truck_scene: PackedScene
+
+static var PassengerCarScene: PackedScene:
+	get:
+		if _passenger_car_scene == null:
+			_passenger_car_scene = load(PASSENGER_CAR_SCENE_PATH)
+		return _passenger_car_scene
+
+static var BusScene: PackedScene:
+	get:
+		if _bus_scene == null:
+			_bus_scene = load(BUS_SCENE_PATH)
+		return _bus_scene
+
+static var TaxiScene: PackedScene:
+	get:
+		if _taxi_scene == null:
+			_taxi_scene = load(TAXI_SCENE_PATH)
+		return _taxi_scene
+
+static var TruckScene: PackedScene:
+	get:
+		if _truck_scene == null:
+			_truck_scene = load(TRUCK_SCENE_PATH)
+		return _truck_scene
+
+static var VanScene: PackedScene:
+	get:
+		if _van_scene == null:
+			_van_scene = load(VAN_SCENE_PATH)
+		return _van_scene
+
+static var ShippingTruckScene: PackedScene:
+	get:
+		if _shipping_truck_scene == null:
+			_shipping_truck_scene = load(SHIPPING_TRUCK_SCENE_PATH)
+		return _shipping_truck_scene
 
 
 class Lane:
@@ -89,6 +132,9 @@ class Lane:
 		return true
 
 
+signal initial_traffic_ready
+
+var is_initial_traffic_ready: bool = false
 var lanes: Array[Lane] = []
 var lot: ParkingLot = null
 var lot_cars: Array[Car] = []
@@ -169,8 +215,13 @@ func _ready() -> void:
 		ParkingLot.south_merge_route(&"cramped_inn"),
 	]
 	_setup_lanes()
-	_pre_populate_traffic()
-	_seed_parked_cars()
+	if _is_test_mode():
+		_pre_populate_traffic()
+		_seed_parked_cars()
+		is_initial_traffic_ready = true
+		initial_traffic_ready.emit()
+	else:
+		_spawn_initial_traffic_staged()
 
 
 func _setup_lanes() -> void:
@@ -208,25 +259,77 @@ func _pick_seeded_spots() -> Array[ParkingSpot]:
 func _seed_parked_cars() -> void:
 	var chosen_spots := _pick_seeded_spots()
 	for spot in chosen_spots:
-		var car: Car = PassengerCarScene.instantiate()
-		var chosen_type: Car.CarType = PassengerCar.pick_passenger_car_type(true)
-		car.car_type = chosen_type
-		car.speed = 0.0
-		car.desired_speed = 0.0
-		add_child(car)
-		car.lane_id = -1
-		if spot.serves.has(&"cramped_inn") or spot.transform.origin.z > 0.0:
-			car.merge_target_lane = 3
-		else:
-			car.merge_target_lane = 0
-		car.state = Car.State.PARKED
-		car.transform = spot.transform
-		car.global_transform = spot.transform
-		lot.reserve(spot, car)
-		lot.occupy(spot)
-		car.dwell_left = randf_range(5.0, 40.0)
-		lot_cars.append(car)
-		stats["cars_spawned"] += 1
+		_seed_parked_car_at(spot)
+
+
+func _seed_parked_car_at(spot: ParkingSpot) -> void:
+	var car: Car = PassengerCarScene.instantiate()
+	var chosen_type: Car.CarType = PassengerCar.pick_passenger_car_type(true)
+	car.car_type = chosen_type
+	car.speed = 0.0
+	car.desired_speed = 0.0
+	add_child(car)
+	car.lane_id = -1
+	if spot.serves.has(&"cramped_inn") or spot.transform.origin.z > 0.0:
+		car.merge_target_lane = 3
+	else:
+		car.merge_target_lane = 0
+	car.state = Car.State.PARKED
+	car.transform = spot.transform
+	car.global_transform = spot.transform
+	lot.reserve(spot, car)
+	lot.occupy(spot)
+	car.dwell_left = randf_range(5.0, 40.0)
+	lot_cars.append(car)
+	stats["cars_spawned"] += 1
+
+
+func _spawn_initial_traffic_staged() -> void:
+	const BATCH_SIZE: int = 4
+	var count := 0
+
+	for lane in lanes:
+		var dist1 := randf_range(43.0, 60.0)
+		_spawn_car_at(lane, dist1)
+		count += 1
+		if count >= BATCH_SIZE:
+			count = 0
+			await get_tree().process_frame
+			if not is_inside_tree():
+				return
+		if randf() > 0.3:
+			var dist2 := dist1 + randf_range(20.0, 35.0)
+			if dist2 < lane.length - 10.0:
+				_spawn_car_at(lane, dist2)
+				count += 1
+				if count >= BATCH_SIZE:
+					count = 0
+					await get_tree().process_frame
+					if not is_inside_tree():
+						return
+
+	var chosen_spots := _pick_seeded_spots()
+	for spot in chosen_spots:
+		_seed_parked_car_at(spot)
+		count += 1
+		if count >= BATCH_SIZE:
+			count = 0
+			await get_tree().process_frame
+			if not is_inside_tree():
+				return
+
+	is_initial_traffic_ready = true
+	initial_traffic_ready.emit()
+
+
+func _is_test_mode() -> bool:
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--test-"):
+			return true
+	for arg in OS.get_cmdline_args():
+		if arg.begins_with("--test-"):
+			return true
+	return false
 
 
 func _physics_process(delta: float) -> void:

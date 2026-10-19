@@ -11,8 +11,8 @@ Mats is the player character in Stroad Hero—a stylized low-poly kid (approxima
 | **Walk / Turn**      | Arrow Keys (`move_up`, `move_down`, `move_left`, `move_right`) | Move Mats forward/backward and turn in world space.                                                  |
 | **Jump / Hop**       | Space (`jump`)                                                 | Jump while on foot.                                                                                  |
 | **Shopping Cart**    | Space (`jump`)                                                 | Mount or dismount an abandoned shopping cart when standing nearby.                                   |
-| **Answer Phone**     | **A**, **Enter**, or Gamepad A (`answer_phone`)                | Answer Mom's incoming phone calls for errands; dismiss in-call dialogue.                             |
-| **Rotate Camera**    | A / D (`camera_left`, `camera_right`)                          | Orbit camera around Mats (yaw). _Ignored while phone call overlay is active._                        |
+| **Answer Phone**     | **Enter** or Gamepad A (`answer_phone`)                        | Answer Mom's incoming phone calls for errands; dismiss in-call dialogue.                             |
+| **Rotate Camera**    | A / D (`camera_left`, `camera_right`)                          | Orbit camera around Mats (yaw).                                                                      |
 | **Tilt Camera**      | W / S (`camera_forward`, `camera_back`)                        | Pitch camera up and down.                                                                            |
 | **Reset Camera**     | R (`camera_reset`)                                             | Re-center camera to default angle and distance behind Mats.                                          |
 | **Character Editor** | C (`character_editor`)                                         | Open customization screen to change jacket color, headwear (cap, beanie), backpack, and shoe colors. |
@@ -28,13 +28,13 @@ Mats's primary objective loop involves running errands for Mom across the stroad
 
 1. **Incoming Call**:
    - Mom calls Mats on his phone after a short initial delay or following the completion of a previous errand.
-   - A ringing phone banner appears with a pulsing phone handset icon, the caller ID "MOM", and the prompt `[A] Answer`.
-   - Press the `answer_phone` action (**A**, **Enter**, or **Gamepad A**) to answer.
+   - A ringing phone banner appears with a pulsing phone handset icon, the caller ID "MOM", and the prompt `[Enter] Answer`.
+   - Press the `answer_phone` action (**Enter** or **Gamepad A**) to answer.
 
 2. **Dialogue Box**:
    - Mom explains what item she needs via typewriter-style dialogue.
    - Mats's movement input is frozen during the call so he doesn't walk into traffic while talking, but world traffic and physics continue uninterrupted.
-   - Press **A** or **Enter** (`[A] OK`) to acknowledge and start the errand.
+   - Press **Enter** (`[Enter] OK`) to acknowledge and start the errand.
 
 3. **Store Objectives & Routing**:
    - The errand targets one of the commercial destinations along the stroad:

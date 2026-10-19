@@ -33,11 +33,11 @@ const UNSELECTED_MODULATE := Color(0.7, 0.72, 0.74, 1.0)
 @export var row_style: StyleBox
 @export var row_selected_style: StyleBox
 
-@onready var _preview: Mats = %PreviewMats
 @onready var _camera: Camera3D = %PreviewCamera
 @onready var _viewport: SubViewport = %PreviewViewport
 @onready var _player: Mats = get_node_or_null(player_path)
 
+var _preview: Mats = null
 var _was_paused := false
 var _selected_row := 0
 var _headwear_index := 0
@@ -66,7 +66,8 @@ func _process(delta: float) -> void:
 		return
 	_preview_turn_time = fmod(_preview_turn_time + delta, PREVIEW_TURN_PERIOD)
 	var turn_progress := 0.5 - 0.5 * cos(_preview_turn_time * TAU / PREVIEW_TURN_PERIOD)
-	_preview.rotation.y = turn_progress * PI
+	if _preview:
+		_preview.rotation.y = turn_progress * PI
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -97,9 +98,11 @@ func open_editor() -> void:
 	_was_paused = get_tree().paused
 	get_tree().paused = true
 	_selected_row = 0
+	_ensure_preview_instantiated()
 	_sync_from_player()
 	_preview_turn_time = 0.0
-	_preview.rotation.y = 0.0
+	if _preview:
+		_preview.rotation.y = 0.0
 	_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	visible = true
 
@@ -168,7 +171,8 @@ func _on_shoe_step(direction: int) -> void:
 
 func _set_headwear(value: int) -> void:
 	_headwear_index = value
-	_preview.set_headwear(value)
+	if _preview:
+		_preview.set_headwear(value)
 	if _player:
 		_player.set_headwear(value)
 	_refresh_selection()
@@ -177,7 +181,8 @@ func _set_headwear(value: int) -> void:
 func _set_jacket_color(index: int) -> void:
 	_jacket_index = index
 	var color: Color = JACKET_COLORS[index]
-	_preview.set_jacket_color(color)
+	if _preview:
+		_preview.set_jacket_color(color)
 	if _player:
 		_player.set_jacket_color(color)
 	_refresh_selection()
@@ -186,7 +191,8 @@ func _set_jacket_color(index: int) -> void:
 func _set_backpack_color(index: int) -> void:
 	_backpack_index = index
 	var color: Color = BACKPACK_COLORS[index]
-	_preview.set_backpack_color(color)
+	if _preview:
+		_preview.set_backpack_color(color)
 	if _player:
 		_player.set_backpack_color(color)
 	_refresh_selection()
@@ -195,7 +201,8 @@ func _set_backpack_color(index: int) -> void:
 func _set_shoe_color(index: int) -> void:
 	_shoe_index = index
 	var color: Color = SHOE_COLORS[index]
-	_preview.set_shoe_color(color)
+	if _preview:
+		_preview.set_shoe_color(color)
 	if _player:
 		_player.set_shoe_color(color)
 	_refresh_selection()
@@ -234,3 +241,18 @@ func _refresh_selection() -> void:
 func _style_row(row: PanelContainer, selected: bool) -> void:
 	row.add_theme_stylebox_override("panel", row_selected_style if selected else row_style)
 	row.modulate = Color.WHITE if selected else UNSELECTED_MODULATE
+
+
+func _ensure_preview_instantiated() -> void:
+	if _preview != null and is_instance_valid(_preview):
+		return
+	if %PreviewViewport.has_node("PreviewMats"):
+		_preview = %PreviewViewport.get_node("PreviewMats") as Mats
+		return
+	var mats_scene: PackedScene = load("res://player/mats.tscn")
+	if mats_scene:
+		var instance: Mats = mats_scene.instantiate() as Mats
+		instance.name = "PreviewMats"
+		instance.preview_mode = true
+		%PreviewViewport.add_child(instance)
+		_preview = instance

@@ -42,6 +42,10 @@ var mats: Mats = null:
 				mats.died.connect(_on_mats_died)
 			if not mats.respawned.is_connected(_on_mats_respawned):
 				mats.respawned.connect(_on_mats_respawned)
+			if current_state == State.RINGING:
+				mats.set_phone_state(Mats.PhoneMode.RINGING)
+			elif current_state == State.IN_CALL:
+				mats.set_phone_state(Mats.PhoneMode.TALKING)
 var hud: HUD = null
 var _is_mats_dead: bool = false
 var _start_screen: StartScreen = null
@@ -178,6 +182,13 @@ func transition_to(new_state: State) -> void:
 		_spawn_marker()
 	elif old_state == State.ACTIVE and new_state != State.COMPLETE:
 		_despawn_marker(false)
+	if mats:
+		if new_state == State.RINGING:
+			mats.set_phone_state(Mats.PhoneMode.RINGING)
+		elif new_state == State.IN_CALL:
+			mats.set_phone_state(Mats.PhoneMode.TALKING)
+		elif new_state == State.IDLE or new_state == State.ACTIVE or new_state == State.COMPLETE:
+			mats.end_phone_call()
 	state_changed.emit(old_state, new_state)
 
 
