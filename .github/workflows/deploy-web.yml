@@ -64,6 +64,9 @@ jobs:
           if ! grep -q "addons/mesh_baker/plugin.cfg" project.godot; then
             printf '\n[editor_plugins]\n\nenabled=PackedStringArray("res://addons/mesh_baker/plugin.cfg")\n' >> project.godot
           fi
+          if ! grep -q "import/blender/enabled" project.godot; then
+            printf '\n[filesystem]\n\nimport/blender/enabled=false\n' >> project.godot
+          fi
           godot --headless --import
           godot --headless --verbose --export-release "Web" build/web/index.html
 
