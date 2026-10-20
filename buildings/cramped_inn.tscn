@@ -1,6 +1,7 @@
-[gd_scene load_steps=41 format=3 uid="uid://cwuyboq2ow2qx"]
+[gd_scene load_steps=43 format=3 uid="uid://cwuyboq2ow2qx"]
 
 [ext_resource type="FontFile" uid="uid://cavsuaq6pcfkn" path="res://fonts/Lobster-Regular.ttf" id="1_lobster"]
+[ext_resource type="PackedScene" path="res://props/us_flag.tscn" id="2_flag"]
 
 [sub_resource type="BoxShape3D" id="Shape_Building"]
 size = Vector3(24, 13.5, 14)
@@ -217,6 +218,10 @@ size = Vector3(1.6, 0.45, 0.8)
 
 [sub_resource type="BoxShape3D" id="Shape_SignPillarCol"]
 size = Vector3(0.52, 7.5, 0.6)
+
+[sub_resource type="BoxMesh" id="Mesh_FlagMountBracket"]
+material = SubResource("Mat_Frame")
+size = Vector3(0.18, 0.24, 0.04)
 
 [node name="CrampedInn" type="Node3D"]
 
@@ -646,6 +651,22 @@ mesh = SubResource("Mesh_CanopyColumn")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.65, 0.45, 14.8)
 mesh = SubResource("Mesh_ColumnBase")
 
+
+[node name="FlagBracketCanopyL" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.35, 2.7, 15.26)
+mesh = SubResource("Mesh_FlagMountBracket")
+
+[node name="FlagCanopyL" parent="Building" instance=ExtResource("2_flag")]
+transform = Transform3D(0.9659258, -0.1830127, -0.1830127, 0, 0.70710677, -0.70710677, 0.25881904, 0.68301266, 0.68301266, -11.35, 2.7, 15.28)
+flag_size = 3
+
+[node name="FlagBracketCanopyR" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.65, 2.7, 15.26)
+mesh = SubResource("Mesh_FlagMountBracket")
+
+[node name="FlagCanopyR" parent="Building" instance=ExtResource("2_flag")]
+transform = Transform3D(0.9659258, 0.1830127, 0.1830127, 0, 0.70710677, -0.70710677, -0.25881904, 0.68301266, 0.68301266, -1.65, 2.7, 15.28)
+flag_size = 3
 [node name="CanopyClearance" type="Label3D" parent="Building"]
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.5, 4.42, 15.53)

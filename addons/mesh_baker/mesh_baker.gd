@@ -1032,6 +1032,7 @@ static func bake_flags(container: Node3D, actual_owner: Node) -> void:
 		&"Truck",
 		&"Ball",
 		&"Cleat",
+		&"Bracket",
 	]
 	for flag in container.get_children():
 		if not (flag is Node3D):
@@ -1048,6 +1049,8 @@ static func bake_flags(container: Node3D, actual_owner: Node) -> void:
 				active_name = "Large"
 			2:
 				active_name = "Giant"
+			3:
+				active_name = "Mounted"
 		var active_node := visuals.get_node_or_null(active_name) as Node3D
 		if active_node == null:
 			continue

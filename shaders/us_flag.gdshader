@@ -10,6 +10,7 @@ uniform float flag_height = 1.30;
 uniform float time_offset = 0.0;
 uniform vec2 wind_direction = vec2(0.978, 0.208);
 uniform float wind_strength : hint_range(0.0, 3.0) = 1.0;
+uniform float gravity_droop : hint_range(0.0, 0.5) = 0.0;
 
 // Flag colors (Official US Flag / Old Glory specs)
 uniform vec3 red_color : source_color = vec3(0.698, 0.133, 0.204);
@@ -62,6 +63,7 @@ void vertex() {
 	// Vertical flutter & gravity sag
 	float flutter_y = cos(x * wave_frequency * 1.1 - t * wave_speed * 0.95 + v_world_pos.x * 0.2) * (wave_amplitude * 0.22) * wave_factor;
 	VERTEX.y += flutter_y;
+	VERTEX.y -= gravity_droop * pow(x, 1.4);
 	// Slight horizontal contraction along X as cloth folds
 	VERTEX.x -= (wave_amplitude * 0.14) * wave_factor * wave_factor;
 }

@@ -40,10 +40,13 @@ EXTENDED_TESTS = [
     "--test-objective-manager",
     "--test-mats-cart",
     "--test-mats-collision",
+    "--test-mats-sprint",
     "--test-start-screen",
+    "--test-startup",
     "--test-verify-render",
     "--test-powerlines",
     "--test-chainlink-fence",
+    "--test-stroad-tunnels",
     "--test-foliage-wind",
 ]
 BENCHMARKS = [

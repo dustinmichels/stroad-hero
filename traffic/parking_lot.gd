@@ -3,14 +3,43 @@ extends Node3D
 
 const STALL_SPACING := 4.0
 const ROWS := [
-	{"z": -32.5, "x0": -18.0, "count": 9, "nose": -1.0, "serves": &"walgroins"},  # N row, nose -Z
-	{"z": -18.5, "x0": -18.0, "count": 6, "nose": 1.0, "serves": &"walgroins"},  # S row, nose +Z
-	{"z": -18.5, "x0": 28.0, "count": 4, "nose": 1.0, "serves": &"taco_hell"},  # Taco row, nose +Z
-	{"z": 28.0, "x0": 22.0, "count": 3, "nose": 1.0, "serves": &"cramped_inn"},  # CI West row, nose +Z
-	{"z": 28.0, "x0": 54.0, "count": 2, "nose": 1.0, "serves": &"cramped_inn"},  # CI East row, nose +Z
-	{"z": 30.0, "x0": -19.0, "count": 8, "nose": 1.0, "serves": &"strip_mall"},  # Mall row, nose +Z
-	{"z": -31.0, "x0": -50.0, "count": 2, "nose": -1.0, "serves": &"smell_store"},  # Smell store row, nose -Z
-	{"z": -25.2, "x0": -61.75, "count": 2, "spacing": 5.5, "nose": -1.0, "serves": &"smell_gas"},  # Smell gas row, nose -Z
+	{"z": -32.5, "x0": -18.0, "count": 9, "nose": -1.0, "serves": &"walgroins", "site": &"north"},  # N row, nose -Z
+	{"z": -18.5, "x0": -18.0, "count": 6, "nose": 1.0, "serves": &"walgroins", "site": &"north"},  # S row, nose +Z
+	{"z": -18.5, "x0": 28.0, "count": 4, "nose": 1.0, "serves": &"taco_hell", "site": &"north"},  # Taco row, nose +Z
+	{
+		"z": 28.0,
+		"x0": 22.0,
+		"count": 3,
+		"nose": 1.0,
+		"serves": &"cramped_inn",
+		"site": &"cramped_inn"
+	},  # CI West row, nose +Z
+	{
+		"z": 28.0,
+		"x0": 54.0,
+		"count": 2,
+		"nose": 1.0,
+		"serves": &"cramped_inn",
+		"site": &"cramped_inn"
+	},  # CI East row, nose +Z
+	{
+		"z": 30.0,
+		"x0": -19.0,
+		"count": 8,
+		"nose": 1.0,
+		"serves": &"strip_mall",
+		"site": &"strip_mall"
+	},  # Mall row, nose +Z
+	{"z": -31.0, "x0": -50.0, "count": 2, "nose": -1.0, "serves": &"smell_store", "site": &"smell"},  # Smell store row, nose -Z
+	{
+		"z": -25.2,
+		"x0": -61.75,
+		"count": 2,
+		"spacing": 5.5,
+		"nose": -1.0,
+		"serves": &"smell_gas",
+		"site": &"smell"
+	},  # Smell gas row, nose -Z
 ]
 const ENTRANCES: Dictionary[StringName, Vector3] = {
 	&"walgroins": Vector3(-3, 0, -36),
@@ -83,46 +112,213 @@ const SOUTH_LOTS: Dictionary[StringName, Dictionary] = {
 		"exit_aisle": Vector2(26.25, 25.5),
 	},
 }
-## Spots south of the road west of this x belong to the strip mall, east to Cramped Inn.
-const SOUTH_LOT_SPLIT_X := 16.0
+## Unified authoritative site registry
+const SITES: Dictionary[StringName, Dictionary] = {
+	&"north":
+	{
+		"kind": ParkingSite.Kind.PARKING_LOT,
+		"served_destinations": [&"walgroins", &"taco_hell"],
+		"lane_id": 0,
+		"turn_in": TURN_IN_START,
+		"entry_x": ENTRY_X,
+		"exit_x": EXIT_X,
+		"wait": WAIT_POINT,
+		"merge_end": MERGE_END,
+		"entry_aisle": Vector2(AISLE_Z_WB, AISLE_Z_EB),
+		"exit_aisle": Vector2(AISLE_Z_EB, AISLE_Z_WB),
+		"reverse_run": 6.0,
+	},
+	&"smell":
+	{
+		"kind": ParkingSite.Kind.PARKING_LOT,
+		"served_destinations": [&"smell_store", &"smell_gas"],
+		"lane_id": 0,
+		"turn_in": SMELL_TURN_IN_START,
+		"entry_x": SMELL_ENTRY_X,
+		"exit_x": SMELL_EXIT_X,
+		"wait": SMELL_WAIT_POINT,
+		"merge_end": SMELL_MERGE_END,
+		"entry_aisle": Vector2(SMELL_AISLE_Z, SMELL_AISLE_Z),
+		"exit_aisle": Vector2(SMELL_AISLE_Z, SMELL_AISLE_Z),
+		"reverse_run": -3.0,
+	},
+	&"cramped_inn":
+	{
+		"kind": ParkingSite.Kind.PARKING_LOT,
+		"served_destinations": [&"cramped_inn"],
+		"lane_id": 3,
+		"turn_in": CI_TURN_IN_START,
+		"entry_x": CI_ENTRY_X,
+		"exit_x": CI_EXIT_X,
+		"wait": CI_WAIT_POINT,
+		"merge_end": CI_MERGE_END,
+		"entry_aisle": Vector2(21.5, 20.5),
+		"exit_aisle": Vector2(24.25, 23.5),
+		"reverse_run": SOUTH_REVERSE_RUN,
+	},
+	&"strip_mall":
+	{
+		"kind": ParkingSite.Kind.PARKING_LOT,
+		"served_destinations": [&"strip_mall"],
+		"lane_id": 3,
+		"turn_in": SM_TURN_IN_START,
+		"entry_x": SM_ENTRY_X,
+		"exit_x": SM_EXIT_X,
+		"wait": SM_WAIT_POINT,
+		"merge_end": SM_MERGE_END,
+		"entry_aisle": Vector2(23.5, 22.5),
+		"exit_aisle": Vector2(26.25, 25.5),
+		"reverse_run": SOUTH_REVERSE_RUN,
+	},
+	&"taco_hell_drive_thru":
+	{
+		"kind": ParkingSite.Kind.DRIVE_THRU,
+		"served_destinations": [&"taco_hell_drive_thru"],
+		"lane_id": 0,
+		"turn_in": TURN_IN_START,
+		"entry_x": ENTRY_X,
+		"exit_x": EXIT_X,
+		"wait": WAIT_POINT,
+		"merge_end": MERGE_END,
+		"order_dist": TACO_DT_ORDER_DIST,
+		"pickup_dist": TACO_DT_PICKUP_DIST,
+	},
+	&"booger_king":
+	{
+		"kind": ParkingSite.Kind.DRIVE_THRU,
+		"served_destinations": [&"booger_king"],
+		"lane_id": 3,
+		"turn_in": BK_TURN_IN_START,
+		"wait": BK_WAIT_POINT,
+		"merge_end": BK_MERGE_END,
+		"order_dist": BK_DT_ORDER_DIST,
+		"pickup_dist": BK_DT_PICKUP_DIST,
+	},
+}
+
+
+static func get_site_for_destination(dest: StringName) -> StringName:
+	for site_id in SITES:
+		var site_cfg: Dictionary = SITES[site_id]
+		var served: Array = site_cfg.get("served_destinations", [])
+		if served.has(dest):
+			return site_id
+	return &""
+
+
+static func get_site_cfg(site_id: StringName) -> Dictionary:
+	return SITES.get(site_id, {})
+
+
+static func get_drive_thru_order_dist(dest_or_site: StringName) -> float:
+	var site_id := (
+		dest_or_site if SITES.has(dest_or_site) else get_site_for_destination(dest_or_site)
+	)
+	return SITES.get(site_id, {}).get("order_dist", TACO_DT_ORDER_DIST)
+
+
+static func get_drive_thru_pickup_dist(dest_or_site: StringName) -> float:
+	var site_id := (
+		dest_or_site if SITES.has(dest_or_site) else get_site_for_destination(dest_or_site)
+	)
+	return SITES.get(site_id, {}).get("pickup_dist", TACO_DT_PICKUP_DIST)
+
+
+static func site_merge_route(site_id: StringName, radius: float = 4.0) -> Curve3D:
+	var cfg := get_site_cfg(site_id)
+	if cfg.is_empty():
+		return merge_route(radius)
+	var wait_pos: Vector3 = cfg["wait"]
+	var lane_id: int = cfg.get("lane_id", 0)
+	var curb_lane_z := -9.375 if lane_id == 0 else 9.375
+	var exit_x: float = cfg.get("exit_x", wait_pos.x)
+	var end_pos: Vector3 = cfg["merge_end"]
+	var pts := PackedVector3Array(
+		[
+			wait_pos,
+			Vector3(exit_x, 0.0, curb_lane_z),
+			end_pos,
+		]
+	)
+	return PathBuilder.build(pts, radius)
+
+
+static func get_site_for_wait_point(lane_id: int, x: float) -> StringName:
+	var best_site: StringName = &""
+	var best_d := INF
+	for site_id in SITES:
+		var cfg: Dictionary = SITES[site_id]
+		if cfg.get("lane_id", -1) != lane_id:
+			continue
+		var wait_pos: Vector3 = cfg.get("wait", Vector3.ZERO)
+		var d := absf(wait_pos.x - x)
+		if d < best_d:
+			best_d = d
+			best_site = site_id
+	return best_site
+
+
+static func merge_path(lane_id: int, x: float, radius: float = 4.0) -> Curve3D:
+	var site_id := get_site_for_wait_point(lane_id, x)
+	if site_id != &"":
+		return site_merge_route(site_id, radius)
+	return merge_route(radius)
+
+
+static func merge_x(lane_id: int, x: float) -> float:
+	var site_id := get_site_for_wait_point(lane_id, x)
+	if site_id != &"":
+		var cfg: Dictionary = SITES[site_id]
+		return cfg.get("wait", Vector3.ZERO).x
+	return 9.0 if lane_id == 0 else -40.5
+
+
+static func drive_thru_route(dest: StringName, radius: float = 4.0) -> Curve3D:
+	if dest == &"booger_king":
+		return booger_king_drive_thru_route(radius)
+	return taco_hell_drive_thru_route(radius)
+
+
 const SOUTH_REVERSE_RUN := 3.0
 
 
-## Which south lot a spot belongs to, or &"" for the north lots.
+## Which south lot a spot belongs to, or &"" for other lots.
 static func south_lot(spot) -> StringName:
 	if spot is ParkingSpot:
+		if spot.site_id == &"strip_mall" or spot.site_id == &"cramped_inn":
+			return spot.site_id
 		for site in SOUTH_LOTS:
 			if spot.serves.has(site):
 				return site
-	var pos := _spot_position(spot)
-	if pos.z <= 0.0:
-		return &""
-	return &"strip_mall" if pos.x < SOUTH_LOT_SPLIT_X else &"cramped_inn"
+	return &""
 
 
 static func is_smell(spot) -> bool:
 	if spot is ParkingSpot:
+		if spot.site_id == &"smell":
+			return true
 		for s in spot.serves:
 			if s == &"smell_store" or s == &"smell_gas":
 				return true
-	var pos := _spot_position(spot)
-	return pos.z <= 0.0 and pos.x < -30.0
+	return false
 
 
 static func lot_group(spot) -> StringName:
-	var s_lot := south_lot(spot)
-	if s_lot != &"":
-		return s_lot
-	if is_smell(spot):
-		return &"smell"
+	if spot is ParkingSpot:
+		if spot.site_id != &"":
+			return spot.site_id
+		var s_lot := south_lot(spot)
+		if s_lot != &"":
+			return s_lot
+		if is_smell(spot):
+			return &"smell"
 	return &"north"
 
 
 static func dest_group(dest: StringName) -> StringName:
-	if SOUTH_LOTS.has(dest):
-		return dest
-	if dest == &"smell_store" or dest == &"smell_gas":
-		return &"smell"
+	var site_id := get_site_for_destination(dest)
+	if site_id != &"":
+		return site_id
 	return &"north"
 
 
@@ -442,37 +638,15 @@ static func smell_exit_route(spot, radius := 4.0) -> Curve3D:
 
 
 static func smell_merge_route(radius := 4.0) -> Curve3D:
-	var pts := PackedVector3Array(
-		[
-			SMELL_WAIT_POINT,
-			Vector3(SMELL_EXIT_X, 0.0, -9.375),
-			SMELL_MERGE_END,
-		]
-	)
-	return PathBuilder.build(pts, radius)
+	return site_merge_route(&"smell", radius)
 
 
 static func south_merge_route(site: StringName, radius := 4.0) -> Curve3D:
-	var lot_cfg: Dictionary = SOUTH_LOTS[site]
-	var pts := PackedVector3Array(
-		[
-			lot_cfg["wait"],
-			Vector3(lot_cfg["exit_x"], 0.0, 9.375),
-			lot_cfg["merge_end"],
-		]
-	)
-	return PathBuilder.build(pts, radius)
+	return site_merge_route(site, radius)
 
 
 static func merge_route(radius := 4.0) -> Curve3D:
-	var pts := PackedVector3Array(
-		[
-			WAIT_POINT,
-			Vector3(EXIT_X, 0.0, -9.375),
-			MERGE_END,
-		]
-	)
-	return PathBuilder.build(pts, radius)
+	return site_merge_route(&"north", radius)
 
 
 static func taco_hell_drive_thru_route(radius := 4.0) -> Curve3D:
@@ -510,14 +684,7 @@ static func booger_king_drive_thru_route(radius := 4.0) -> Curve3D:
 
 
 static func booger_king_merge_route(radius := 4.0) -> Curve3D:
-	var pts := PackedVector3Array(
-		[
-			BK_WAIT_POINT,
-			Vector3(-40.5, 0.0, 9.375),
-			BK_MERGE_END,
-		]
-	)
-	return PathBuilder.build(pts, radius)
+	return site_merge_route(&"booger_king", radius)
 
 
 func _init() -> void:
@@ -538,6 +705,7 @@ func _build_spots() -> void:
 		var count: int = row["count"]
 		var nose: float = row["nose"]
 		var serves_name: StringName = row["serves"]
+		var site_name: StringName = row.get("site", &"north")
 		var rot_y: float = PI / 2.0 if nose < 0.0 else -PI / 2.0
 		var spot_basis := Basis(Vector3.UP, rot_y)
 
@@ -550,6 +718,7 @@ func _build_spots() -> void:
 			spot.transform = Transform3D(spot_basis, Vector3(x, 0.05, z))
 			var serves_arr: Array[StringName] = [serves_name]
 			spot.serves = serves_arr
+			spot.site_id = site_name
 			spot.lot = self
 			spot.entry_route = ParkingLot.entry_route(spot)
 			spot.reverse_route = ParkingLot.reverse_route(spot)

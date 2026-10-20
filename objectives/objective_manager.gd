@@ -83,21 +83,8 @@ func _setup() -> void:
 	_setup_done = true
 	_discover_destination_anchors()
 	_resolve_dependencies()
-	if _is_test_mode():
-		_started_once = true
-		start_call()
-	elif auto_start:
+	if auto_start:
 		start_objective_flow()
-
-
-func _is_test_mode() -> bool:
-	for arg in OS.get_cmdline_user_args():
-		if arg.begins_with("--test-"):
-			return true
-	for arg in OS.get_cmdline_args():
-		if arg.begins_with("--test-"):
-			return true
-	return false
 
 
 func _resolve_dependencies() -> void:
@@ -151,6 +138,10 @@ func get_destination_anchor(location_id: StringName) -> Node3D:
 	if anchor != null and is_instance_valid(anchor):
 		return anchor as Node3D
 	return null
+
+
+func has_destination(location_id: StringName) -> bool:
+	return get_destination_anchor(location_id) != null
 
 
 func start_objective_flow() -> void:

@@ -5,8 +5,18 @@ extends CharacterBody3D
 
 signal died(death_position: Vector3)
 signal respawned
+signal stamina_changed(current: float, max_val: float)
+signal sprint_started
+signal sprint_stopped
+signal stamina_depleted
 
 @export var walk_speed := 5.5
+@export var sprint_speed := 8.5
+@export var max_stamina := 100.0
+@export var stamina := 100.0
+@export var sprint_drain_rate := 25.0
+@export var stamina_recovery_rate := 30.0
+@export var stamina_recovery_delay := 0.5
 @export var acceleration := 30.0
 @export var deceleration := 40.0
 @export var jump_height := 0.5
@@ -135,6 +145,9 @@ var _mount_tween: Tween = null
 var is_pushing_cart: bool:
 	get:
 		return _pushing_cart != null
+var is_sprinting := false
+var is_exhausted := false
+var _stamina_recovery_timer := 0.0
 var _jacket_material: StandardMaterial3D = null
 var _jacket_trim_material: StandardMaterial3D = null
 
@@ -200,12 +213,14 @@ func _physics_process(delta: float) -> void:
 	var direction := _movement_direction(input)
 	var was_on_floor := is_on_floor()
 
+	_update_sprint_and_stamina(delta, input, direction)
+
+	var target_speed := sprint_speed if is_sprinting else walk_speed
 	var horizontal := Vector3(velocity.x, 0.0, velocity.z)
 	var rate := acceleration if direction != Vector3.ZERO else deceleration
-	horizontal = horizontal.move_toward(direction * walk_speed, rate * delta)
+	horizontal = horizontal.move_toward(direction * target_speed, rate * delta)
 	velocity.x = horizontal.x
 	velocity.z = horizontal.z
-
 	if was_on_floor:
 		if Input.is_action_just_pressed("jump") and not is_pushing_cart:
 			velocity.y = sqrt(2.0 * gravity * jump_height)
@@ -233,6 +248,46 @@ func _physics_process(delta: float) -> void:
 		_update_pushing_cart(delta)
 
 	_animate(delta)
+
+
+func _update_sprint_and_stamina(delta: float, input: Vector2, direction: Vector3) -> void:
+	var sprint_pressed := Input.is_action_pressed("sprint") or Input.is_key_pressed(KEY_SHIFT)
+	var is_moving := not input.is_zero_approx() and direction != Vector3.ZERO
+	var can_sprint := not is_pushing_cart and _mounted_cart == null
+
+	if is_exhausted and stamina >= max_stamina * 0.25:
+		is_exhausted = false
+
+	var wants_sprint := sprint_pressed and is_moving and can_sprint
+
+	if wants_sprint and not is_exhausted and stamina > 0.0:
+		if not is_sprinting:
+			is_sprinting = true
+			sprint_started.emit()
+		var old_stamina := stamina
+		stamina = maxf(0.0, stamina - sprint_drain_rate * delta)
+		_stamina_recovery_timer = stamina_recovery_delay
+		if stamina != old_stamina:
+			stamina_changed.emit(stamina, max_stamina)
+		if stamina <= 0.0:
+			stamina = 0.0
+			is_exhausted = true
+			is_sprinting = false
+			sprint_stopped.emit()
+			stamina_depleted.emit()
+	else:
+		if is_sprinting:
+			is_sprinting = false
+			sprint_stopped.emit()
+		if _stamina_recovery_timer > 0.0:
+			_stamina_recovery_timer = maxf(0.0, _stamina_recovery_timer - delta)
+		elif stamina < max_stamina:
+			var old_stamina := stamina
+			stamina = minf(max_stamina, stamina + stamina_recovery_rate * delta)
+			if stamina != old_stamina:
+				stamina_changed.emit(stamina, max_stamina)
+			if is_exhausted and stamina >= max_stamina * 0.25:
+				is_exhausted = false
 
 
 func _movement_direction(input: Vector2) -> Vector3:
@@ -589,6 +644,9 @@ func die() -> void:
 	_is_dead = true
 	_has_control_basis = false
 	velocity = Vector3.ZERO
+	if is_sprinting:
+		is_sprinting = false
+		sprint_stopped.emit()
 	end_phone_call()
 	_phone_blend = 0.0
 	if _phone:
@@ -672,6 +730,11 @@ func respawn() -> void:
 	if _collision_shape:
 		_collision_shape.disabled = false
 	respawned.emit()
+	stamina = max_stamina
+	is_sprinting = false
+	is_exhausted = false
+	_stamina_recovery_timer = 0.0
+	stamina_changed.emit(stamina, max_stamina)
 
 
 func set_phone_state(mode: PhoneMode) -> void:
@@ -760,6 +823,11 @@ func _animate(delta: float, force_idle := false) -> void:
 		if on_floor
 		else 0.0
 	)
+	var sprint_blend := (
+		clampf((speed - walk_speed) / (sprint_speed - walk_speed), 0.0, 1.0)
+		if on_floor and sprint_speed > walk_speed
+		else 0.0
+	)
 
 	_idle_time += delta
 	var stride_rate := lerpf(STRIDE_RATE_WALK, STRIDE_RATE_RUN, run_blend)
@@ -769,7 +837,7 @@ func _animate(delta: float, force_idle := false) -> void:
 	var sway := sin(_idle_time * IDLE_SWAY_RATE)
 
 	# Leg targets
-	var leg_swing := lerpf(LEG_SWING, RUN_LEG_SWING, run_blend)
+	var leg_swing := lerpf(LEG_SWING, RUN_LEG_SWING + 0.05 * sprint_blend, run_blend)
 	var leg_x := swing * leg_swing * walk_blend
 	var idle_leg_l := maxf(0.0, sway) * 0.04 * idle_blend
 	var idle_leg_r := maxf(0.0, -sway) * 0.04 * idle_blend
@@ -778,7 +846,7 @@ func _animate(delta: float, force_idle := false) -> void:
 	var target_right_leg_x := -leg_x + idle_leg_r + squash_hip
 
 	# Arm targets
-	var arm_swing := lerpf(ARM_SWING, RUN_ARM_SWING, run_blend)
+	var arm_swing := lerpf(ARM_SWING, RUN_ARM_SWING + 0.08 * sprint_blend, run_blend)
 	var walk_arm_x := -swing * arm_swing * walk_blend
 	var idle_arm_x := (0.02 + cos(_idle_time * IDLE_BREATH_RATE) * IDLE_ARM_BREATH_X) * idle_blend
 	var base_arm_z := IDLE_ARM_REST_Z + breath * IDLE_ARM_BREATH_Z * idle_blend
@@ -822,7 +890,7 @@ func _animate(delta: float, force_idle := false) -> void:
 	var target_right_elbow := -(
 		elbow_rest + ELBOW_SWING * maxf(0.0, -swing) * walk_blend + elbow_wobble_r
 	)
-	var target_lean_x := RUN_LEAN * run_blend
+	var target_lean_x := (RUN_LEAN + 0.05 * sprint_blend) * run_blend
 	if not on_floor:
 		# Mid-hop: legs split with knees tucked, arms flung out.
 		target_left_leg_x = 0.45

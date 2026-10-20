@@ -10,6 +10,8 @@ enum State {
 var id: int = 0
 var transform: Transform3D = Transform3D.IDENTITY
 var serves: Array[StringName] = []
+var site: ParkingSite = null
+var site_id: StringName = &""
 var state := State.FREE
 var car: Car = null
 var lot: ParkingLot = null

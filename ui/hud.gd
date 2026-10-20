@@ -19,6 +19,8 @@ extends CanvasLayer
 
 @onready var objective_arrow: ObjectiveArrow = %ObjectiveArrow
 @onready var objective_toast: ObjectiveToast = %ObjectiveToast
+const StaminaWheelClass = preload("res://ui/stamina_wheel.gd")
+var stamina_wheel: StaminaWheel = null
 var objective_manager: ObjectiveManager = null
 var current_objective_text: String = ""
 const WeatherDisplayClass = preload("res://ui/weather_display.gd")
@@ -40,6 +42,7 @@ func _ready() -> void:
 	_setup_fade_overlay()
 	_setup_weather_display()
 	_setup_objective_toast()
+	_setup_stamina_wheel()
 	if margin_container:
 		_default_margin_pos = margin_container.position
 		margin_container.pivot_offset = Vector2.ZERO
@@ -90,6 +93,21 @@ func _setup_objective_toast() -> void:
 		objective_toast.name = "ObjectiveToast"
 		objective_toast.unique_name_in_owner = true
 		add_child(objective_toast)
+
+
+func _setup_stamina_wheel() -> void:
+	var existing := get_node_or_null("%StaminaWheel") as StaminaWheel
+	if existing:
+		stamina_wheel = existing
+	elif not stamina_wheel:
+		stamina_wheel = StaminaWheelClass.new()
+		stamina_wheel.name = "StaminaWheel"
+		stamina_wheel.unique_name_in_owner = true
+		add_child(stamina_wheel)
+	if player and stamina_wheel:
+		stamina_wheel.mats = player as Mats
+	if _camera and stamina_wheel:
+		stamina_wheel.camera = _camera
 
 
 func _setup_weather_display() -> void:
@@ -398,6 +416,8 @@ func set_player(p: Node3D) -> void:
 	player = p
 	if objective_arrow:
 		objective_arrow.mats = p as Mats
+	if stamina_wheel:
+		stamina_wheel.mats = p as Mats
 
 
 func set_camera(cam: Camera3D) -> void:
@@ -405,6 +425,8 @@ func set_camera(cam: Camera3D) -> void:
 	_camera = cam
 	if objective_arrow:
 		objective_arrow.camera = cam
+	if stamina_wheel:
+		stamina_wheel.camera = cam
 
 
 func set_start_screen(screen: StartScreen) -> void:

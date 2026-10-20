@@ -1,5 +1,46 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="PackedScene" path="res://cars/bodies/f150.blend" id="1_model"]
 
+[sub_resource type="StandardMaterial3D" id="Mat_CoalStack"]
+albedo_color = Color(0.055, 0.06, 0.065, 1)
+metallic = 0.9
+roughness = 0.28
+
+[sub_resource type="CylinderMesh" id="Mesh_CoalStack"]
+material = SubResource("Mat_CoalStack")
+top_radius = 0.095
+bottom_radius = 0.095
+height = 1.2
+radial_segments = 16
+
+[sub_resource type="CylinderMesh" id="Mesh_CoalStackTip"]
+material = SubResource("Mat_CoalStack")
+top_radius = 0.14
+bottom_radius = 0.095
+height = 0.16
+radial_segments = 16
+
 [node name="F150" instance=ExtResource("1_model")]
+
+[node name="ExhaustStackL" type="Node3D" parent="."]
+position = Vector3(-1.1, 2.55, 0.72)
+
+[node name="Pipe" type="MeshInstance3D" parent="ExhaustStackL"]
+position = Vector3(0, -0.68, 0)
+mesh = SubResource("Mesh_CoalStack")
+
+[node name="Tip" type="MeshInstance3D" parent="ExhaustStackL"]
+position = Vector3(0, -0.08, 0)
+mesh = SubResource("Mesh_CoalStackTip")
+
+[node name="ExhaustStackR" type="Node3D" parent="."]
+position = Vector3(-1.1, 2.55, -0.72)
+
+[node name="Pipe" type="MeshInstance3D" parent="ExhaustStackR"]
+position = Vector3(0, -0.68, 0)
+mesh = SubResource("Mesh_CoalStack")
+
+[node name="Tip" type="MeshInstance3D" parent="ExhaustStackR"]
+position = Vector3(0, -0.08, 0)
+mesh = SubResource("Mesh_CoalStackTip")

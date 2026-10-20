@@ -227,9 +227,13 @@ static var _exhaust_mesh: CylinderMesh = null
 static var _exhaust_mat: StandardMaterial3D = null
 static var _smog_quad_mesh: QuadMesh = null
 static var _smog_material: StandardMaterial3D = null
+static var _smog_material_alt: StandardMaterial3D = null
 static var _smog_gradient: Gradient = null
+static var _coal_gradient: Gradient = null
 static var _smog_scale_curve: Curve = null
+static var _coal_scale_curve: Curve = null
 static var _smog_texture: ImageTexture = null
+static var _smog_texture_alt: ImageTexture = null
 @onready var _collision_shape: CollisionShape3D = get_node_or_null("CollisionShape3D")
 var blocker: AnimatableBody3D = null
 var _blocker_shape: CollisionShape3D = null
@@ -612,6 +616,67 @@ func _update_signals(delta: float) -> void:
 			s.visible = false
 
 
+static func _generate_plume_image(size: int, variant: int) -> Image:
+	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	var center := Vector2((size - 1) * 0.5, (size - 1) * 0.5)
+	var half := float(size) * 0.5
+
+	var lobes: Array = []
+	if variant == 0:
+		# Puffy cumulus billow: broad central body with rounded outer lobes
+		lobes = [
+			[Vector2(0.0, 0.0), 0.62, 1.0],
+			[Vector2(-0.28, 0.16), 0.46, 0.90],
+			[Vector2(0.26, 0.22), 0.44, 0.90],
+			[Vector2(-0.22, -0.24), 0.42, 0.88],
+			[Vector2(0.28, -0.18), 0.45, 0.88],
+			[Vector2(0.04, 0.34), 0.40, 0.82],
+		]
+	else:
+		# Wispy swirling plume: asymmetric elongated lobes
+		lobes = [
+			[Vector2(0.04, -0.05), 0.58, 1.0],
+			[Vector2(-0.32, -0.12), 0.44, 0.88],
+			[Vector2(0.30, 0.16), 0.45, 0.90],
+			[Vector2(-0.14, 0.28), 0.42, 0.84],
+			[Vector2(0.18, -0.26), 0.38, 0.82],
+			[Vector2(-0.16, -0.22), 0.40, 0.80],
+		]
+
+	for y in range(size):
+		for x in range(size):
+			var nx := (float(x) - center.x) / half
+			var ny := (float(y) - center.y) / half
+			var dist_c := sqrt(nx * nx + ny * ny)
+			if dist_c >= 0.98:
+				img.set_pixel(x, y, Color(1.0, 1.0, 1.0, 0.0))
+				continue
+
+			var ang := atan2(ny, nx)
+			var wobble := (
+				1.0
+				+ 0.10 * sin(ang * 3.0 + (0.5 if variant == 0 else -0.7))
+				+ 0.07 * cos(ang * 5.0 + float(variant) * 1.5)
+			)
+
+			var density := 0.0
+			for lobe in lobes:
+				var lpos: Vector2 = lobe[0]
+				var lrad: float = lobe[1] * wobble
+				var lweight: float = lobe[2]
+				var d := (Vector2(nx, ny) - lpos).length() / lrad
+				if d < 1.0:
+					var t := 1.0 - d
+					var la := t * t * (3.0 - 2.0 * t) * lweight
+					density = 1.0 - (1.0 - density) * (1.0 - la)
+
+			var edge_fade := clampf((0.96 - dist_c) / 0.16, 0.0, 1.0)
+			var a := clampf(density * edge_fade, 0.0, 1.0)
+			img.set_pixel(x, y, Color(1.0, 1.0, 1.0, a))
+
+	return img
+
+
 static func _init_exhaust_resources() -> void:
 	if _exhaust_mesh != null:
 		return
@@ -629,28 +694,15 @@ static func _init_exhaust_resources() -> void:
 	_exhaust_mesh.radial_segments = 16
 	_exhaust_mesh.material = _exhaust_mat
 
-	var size := 32
-	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
-	var center := Vector2((size - 1) * 0.5, (size - 1) * 0.5)
-	var max_r := size * 0.40
-	for y in range(size):
-		for x in range(size):
-			var dx := float(x) - center.x
-			var dy := float(y) - center.y
-			var dist := sqrt(dx * dx + dy * dy) / max_r
-			var ang := atan2(dy, dx)
-			var r_mod := 1.0 + 0.14 * sin(ang * 3.0 + 0.4) + 0.09 * cos(ang * 2.0 - 0.6)
-			var d_norm := dist / r_mod
-			if d_norm >= 1.0:
-				img.set_pixel(x, y, Color(1.0, 1.0, 1.0, 0.0))
-			else:
-				var t := 1.0 - d_norm
-				var a := t * t * (3.0 - 2.0 * t)
-				img.set_pixel(x, y, Color(1.0, 1.0, 1.0, a))
-	_smog_texture = ImageTexture.create_from_image(img)
+	var size := 48
+	var img_billow := _generate_plume_image(size, 0)
+	_smog_texture = ImageTexture.create_from_image(img_billow)
+
+	var img_wisp := _generate_plume_image(size, 1)
+	_smog_texture_alt = ImageTexture.create_from_image(img_wisp)
 
 	_smog_quad_mesh = QuadMesh.new()
-	_smog_quad_mesh.size = Vector2(0.36, 0.36)
+	_smog_quad_mesh.size = Vector2(0.56, 0.56)
 
 	_smog_material = StandardMaterial3D.new()
 	_smog_material.resource_name = "CarSmogMaterial"
@@ -661,17 +713,44 @@ static func _init_exhaust_resources() -> void:
 	_smog_material.billboard_keep_scale = true
 	_smog_material.albedo_texture = _smog_texture
 
+	_smog_material_alt = StandardMaterial3D.new()
+	_smog_material_alt.resource_name = "CarSmogMaterialAlt"
+	_smog_material_alt.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_smog_material_alt.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_smog_material_alt.vertex_color_use_as_albedo = true
+	_smog_material_alt.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	_smog_material_alt.billboard_keep_scale = true
+	_smog_material_alt.albedo_texture = _smog_texture_alt
+
 	_smog_gradient = Gradient.new()
-	_smog_gradient.set_color(0, Color(0.76, 0.77, 0.79, 0.0))
-	_smog_gradient.add_point(0.12, Color(0.76, 0.77, 0.79, 0.28))
-	_smog_gradient.add_point(0.40, Color(0.80, 0.81, 0.83, 0.17))
-	_smog_gradient.add_point(0.72, Color(0.85, 0.86, 0.88, 0.07))
-	_smog_gradient.set_color(_smog_gradient.get_point_count() - 1, Color(0.90, 0.90, 0.92, 0.0))
+	_smog_gradient.set_color(0, Color(1.0, 1.0, 1.0, 0.0))
+	_smog_gradient.add_point(0.08, Color(1.0, 1.0, 1.0, 0.28))
+	_smog_gradient.add_point(0.32, Color(1.0, 1.0, 1.0, 0.19))
+	_smog_gradient.add_point(0.65, Color(1.0, 1.0, 1.0, 0.09))
+	_smog_gradient.add_point(0.86, Color(1.0, 1.0, 1.0, 0.02))
+	_smog_gradient.set_color(_smog_gradient.get_point_count() - 1, Color(1.0, 1.0, 1.0, 0.0))
+
+	_coal_gradient = Gradient.new()
+	_coal_gradient.set_color(0, Color(0.14, 0.13, 0.12, 0.0))
+	_coal_gradient.add_point(0.06, Color(0.12, 0.11, 0.10, 0.68))
+	_coal_gradient.add_point(0.36, Color(0.16, 0.15, 0.14, 0.52))
+	_coal_gradient.add_point(0.70, Color(0.22, 0.21, 0.20, 0.24))
+	_coal_gradient.add_point(0.90, Color(0.26, 0.25, 0.24, 0.07))
+	_coal_gradient.set_color(_coal_gradient.get_point_count() - 1, Color(0.28, 0.28, 0.28, 0.0))
 
 	_smog_scale_curve = Curve.new()
-	_smog_scale_curve.add_point(Vector2(0.0, 0.45))
-	_smog_scale_curve.add_point(Vector2(0.35, 0.95))
-	_smog_scale_curve.add_point(Vector2(1.0, 1.55))
+	_smog_scale_curve.add_point(Vector2(0.0, 0.22))
+	_smog_scale_curve.add_point(Vector2(0.16, 0.58))
+	_smog_scale_curve.add_point(Vector2(0.42, 1.12))
+	_smog_scale_curve.add_point(Vector2(0.72, 1.62))
+	_smog_scale_curve.add_point(Vector2(1.0, 2.05))
+
+	_coal_scale_curve = Curve.new()
+	_coal_scale_curve.add_point(Vector2(0.0, 0.28))
+	_coal_scale_curve.add_point(Vector2(0.14, 0.78))
+	_coal_scale_curve.add_point(Vector2(0.40, 1.50))
+	_coal_scale_curve.add_point(Vector2(0.70, 2.20))
+	_coal_scale_curve.add_point(Vector2(1.0, 2.75))
 
 
 func _roll_exhaust() -> bool:
@@ -782,65 +861,146 @@ func _create_smog_emitter(parent: Node3D, node_name: String, local_pos: Vector3)
 	var emitter := CPUParticles3D.new()
 	emitter.name = node_name
 	emitter.mesh = _smog_quad_mesh
-	emitter.material_override = _smog_material
-	emitter.color_ramp = _smog_gradient
-	emitter.scale_amount_curve = _smog_scale_curve
 	emitter.local_coords = false
 	emitter.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	emitter.visibility_range_end = 100.0
 
-	var base_amount := 12
-	var base_lifetime := 1.05
-	var vel_min := 0.7
-	var vel_max := 1.6
+	var base_amount := 20
+	var base_lifetime := 1.2
+	var vel_min := 0.8
+	var vel_max := 1.8
 	var tint := Color(1.0, 1.0, 1.0, 1.0)
+	var scale_min := 0.65
+	var scale_max := 1.35
+	var emitter_mat: StandardMaterial3D = _smog_material
+	var use_coal_curve := false
 
 	match car_type:
-		CarType.TRUCK, CarType.SHIPPING_TRUCK, CarType.BUS, CarType.PICKUP, CarType.F150, CarType.VAN:
-			base_amount = randi_range(14, 18)
-			base_lifetime = randf_range(1.1, 1.3)
-			vel_min = 0.6
-			vel_max = 1.5
-			var tone := randf_range(0.80, 0.88)
-			tint = Color(tone, tone * 0.98, tone * 0.95, randf_range(0.95, 1.05))
-		CarType.SPORTS:
-			base_amount = randi_range(7, 10)
-			base_lifetime = randf_range(0.75, 0.95)
-			vel_min = 1.0
-			vel_max = 2.0
-			tint = Color(0.94, 0.95, 0.98, randf_range(0.65, 0.80))
-		_:
-			base_amount = randi_range(10, 14)
-			base_lifetime = randf_range(0.9, 1.1)
-			vel_min = 0.7
+		CarType.F150:
+			base_amount = randi_range(34, 44)
+			base_lifetime = randf_range(1.6, 2.1)
+			vel_min = 1.3
+			vel_max = 2.4
+			scale_min = 0.95
+			scale_max = 1.85
+			tint = Color(0.12, 0.105, 0.09, randf_range(0.85, 0.95))
+			emitter_mat = _smog_material
+			use_coal_curve = true
+		CarType.TRUCK, CarType.SHIPPING_TRUCK, CarType.BUS:
+			# Heavy commercial diesel
+			base_amount = randi_range(20, 28)
+			base_lifetime = randf_range(1.15, 1.45)
+			vel_min = 0.8
 			vel_max = 1.6
-			var tone := randf_range(0.88, 0.96)
-			tint = Color(tone, tone, tone * 1.02, randf_range(0.75, 0.92))
-
+			scale_min = randf_range(0.75, 0.90)
+			scale_max = randf_range(1.30, 1.60)
+			var tone := randf_range(0.66, 0.78)
+			tint = Color(tone, tone * 0.98, tone * 0.96, randf_range(0.85, 1.05))
+			emitter_mat = _smog_material if randf() > 0.3 else _smog_material_alt
+		CarType.PICKUP, CarType.VAN:
+			# Utility workhorses
+			base_amount = randi_range(15, 22)
+			base_lifetime = randf_range(1.00, 1.25)
+			vel_min = 0.7
+			vel_max = 1.5
+			scale_min = randf_range(0.65, 0.78)
+			scale_max = randf_range(1.15, 1.45)
+			var tone := randf_range(0.80, 0.90)
+			tint = Color(tone, tone * 0.99, tone * 0.97, randf_range(0.75, 0.95))
+			emitter_mat = _smog_material if randf() > 0.4 else _smog_material_alt
+		CarType.SPORTS:
+			# Sports cars: rapid exhaust jets, wispy plume, brisk dissipation
+			base_amount = randi_range(10, 15)
+			base_lifetime = randf_range(0.75, 0.95)
+			vel_min = 1.3
+			vel_max = 2.2
+			scale_min = randf_range(0.45, 0.58)
+			scale_max = randf_range(0.85, 1.10)
+			tint = Color(0.94, 0.96, 1.0, randf_range(0.48, 0.62))
+			emitter_mat = _smog_material_alt
+		_:
+			# Passenger cars (Sedan, SUV, Taxi, Hatchback, Minivan, Jeep)
+			# Rolled personality for rich visual diversity
+			var tier := randf()
+			if tier < 0.25:
+				# Clean / modern vehicle: faint wispy vapor
+				base_amount = randi_range(10, 14)
+				base_lifetime = randf_range(0.85, 1.05)
+				vel_min = 0.7
+				vel_max = 1.4
+				scale_min = randf_range(0.45, 0.58)
+				scale_max = randf_range(0.80, 1.05)
+				tint = Color(
+					randf_range(0.92, 0.97),
+					randf_range(0.93, 0.98),
+					randf_range(0.96, 1.0),
+					randf_range(0.35, 0.50)
+				)
+				emitter_mat = _smog_material_alt
+			elif tier < 0.80:
+				# Standard commuter: classic soft gray-white billowing plume
+				base_amount = randi_range(14, 20)
+				base_lifetime = randf_range(0.95, 1.20)
+				vel_min = 0.7
+				vel_max = 1.5
+				scale_min = randf_range(0.58, 0.72)
+				scale_max = randf_range(1.05, 1.30)
+				var tone := randf_range(0.86, 0.94)
+				tint = Color(tone, tone, tone * 1.02, randf_range(0.60, 0.80))
+				emitter_mat = _smog_material if randf() > 0.4 else _smog_material_alt
+			else:
+				# High-mileage beater / smoker: puffier, heavier plume
+				base_amount = randi_range(18, 25)
+				base_lifetime = randf_range(1.15, 1.40)
+				vel_min = 0.8
+				vel_max = 1.6
+				scale_min = randf_range(0.70, 0.85)
+				scale_max = randf_range(1.30, 1.60)
+				tint = Color(
+					randf_range(0.74, 0.84),
+					randf_range(0.72, 0.81),
+					randf_range(0.68, 0.77),
+					randf_range(0.85, 1.05)
+				)
+				emitter_mat = _smog_material
+	emitter.material_override = emitter_mat
+	emitter.color_ramp = _coal_gradient if car_type == CarType.F150 else _smog_gradient
+	emitter.scale_amount_curve = _coal_scale_curve if use_coal_curve else _smog_scale_curve
 	emitter.amount = base_amount
 	emitter.lifetime = base_lifetime
-	emitter.lifetime_randomness = 0.35
+	emitter.lifetime_randomness = randf_range(0.35, 0.50)
 	emitter.color = tint
 
-	emitter.direction = Vector3(-1.0, randf_range(0.25, 0.40), 0.0)
-	emitter.spread = randf_range(20.0, 26.0)
+	if car_type == CarType.F150:
+		emitter.direction = Vector3(-0.65, 1.0, 0.0).normalized()
+		emitter.spread = randf_range(30.0, 38.0)
+	elif car_type == CarType.SPORTS:
+		emitter.direction = Vector3(-1.0, randf_range(0.15, 0.28), 0.0)
+		emitter.spread = randf_range(14.0, 20.0)
+	else:
+		emitter.direction = Vector3(-1.0, randf_range(0.20, 0.38), randf_range(-0.12, 0.12))
+		emitter.spread = randf_range(20.0, 28.0)
+
 	emitter.initial_velocity_min = vel_min
 	emitter.initial_velocity_max = vel_max
-
-	emitter.scale_amount_min = 0.55
-	emitter.scale_amount_max = 1.15
+	emitter.scale_amount_min = scale_min
+	emitter.scale_amount_max = scale_max
 
 	emitter.angle_min = 0.0
 	emitter.angle_max = 360.0
-	emitter.angular_velocity_min = -18.0
-	emitter.angular_velocity_max = 18.0
+	emitter.angular_velocity_min = randf_range(-28.0, -14.0)
+	emitter.angular_velocity_max = randf_range(14.0, 28.0)
 
-	emitter.tangential_accel_min = -0.3
-	emitter.tangential_accel_max = 0.3
+	emitter.tangential_accel_min = randf_range(-0.45, -0.15)
+	emitter.tangential_accel_max = randf_range(0.15, 0.45)
 
-	emitter.gravity = Vector3(0.0, randf_range(0.35, 0.55), 0.0)
-	emitter.damping_min = 0.7
-	emitter.damping_max = 1.3
+	if car_type == CarType.F150:
+		emitter.gravity = Vector3(0.0, randf_range(0.85, 1.25), 0.0)
+	else:
+		emitter.gravity = Vector3(0.0, randf_range(0.38, 0.65), 0.0)
+
+	emitter.damping_min = randf_range(0.8, 1.1)
+	emitter.damping_max = randf_range(1.2, 1.6)
 
 	emitter.position = local_pos
 	emitter.emitting = false

@@ -8,9 +8,6 @@ enum Page { MAIN, CONTROLS }
 const SCRIM_COLOR_START := Color(0.03, 0.04, 0.055, 1.0)
 const SCRIM_COLOR_PAUSED := Color(0.03, 0.04, 0.055, 0.85)
 
-@export var props: Node3D = null
-@export var traffic_manager: Node = null
-
 @onready var root_control: Control = $RootControl
 @onready var scrim: ColorRect = $RootControl/Scrim
 @onready var pane: PanelContainer = $RootControl/Pane
@@ -40,43 +37,33 @@ var _has_started_once: bool = false
 var _is_loaded: bool = false
 var _current_page: Page = Page.MAIN
 var _opened_via_h: bool = false
-const STAGGERED_WARMUP_STEPS: Array[Dictionary] = [
-	{
-		"names": ["Walgroins", "WalgroinsShoppingCarts"],
-		"pct": 87,
-		"label": "Warming up Walgroins...",
-	},
-	{
-		"names": ["TacoHell"],
-		"pct": 89,
-		"label": "Warming up Taco Hell...",
-	},
-	{
-		"names": ["BoogerKingSite"],
-		"pct": 91,
-		"label": "Warming up Booger King...",
-	},
-	{
-		"names": ["StripMall"],
-		"pct": 93,
-		"label": "Warming up Strip Mall...",
-	},
-	{
-		"names": ["CrampedInn"],
-		"pct": 95,
-		"label": "Warming up Cramped Inn...",
-	},
-	{
-		"names": ["SmellGasStation"],
-		"pct": 97,
-		"label": "Warming up Gas Station...",
-	},
-	{
-		"names": ["Streetlights", "Trees", "Flags", "OverheadRoadSign", "FireHydrant"],
-		"pct": 98,
-		"label": "Warming up street props...",
-	},
-]
+var _warmup: WorldWarmup = null
+
+
+func set_warmup(warmup: WorldWarmup) -> void:
+	if _warmup == warmup:
+		return
+	if _warmup:
+		if _warmup.progress_reported.is_connected(_on_warmup_progress):
+			_warmup.progress_reported.disconnect(_on_warmup_progress)
+		if _warmup.completed.is_connected(_on_warmup_completed):
+			_warmup.completed.disconnect(_on_warmup_completed)
+	_warmup = warmup
+	if _warmup:
+		_warmup.progress_reported.connect(_on_warmup_progress)
+		_warmup.completed.connect(_on_warmup_completed)
+		if _warmup.is_completed():
+			_mark_loaded()
+		else:
+			set_loading(true)
+
+
+func _on_warmup_progress(pct: int, text: String) -> void:
+	_report_web_progress(pct, text)
+
+
+func _on_warmup_completed() -> void:
+	_mark_loaded()
 
 
 func _report_web_progress(pct: int, text: String) -> void:
@@ -91,21 +78,21 @@ func _report_web_progress(pct: int, text: String) -> void:
 		)
 
 
-func _is_test_mode() -> bool:
-	for arg in OS.get_cmdline_user_args():
-		if arg.begins_with("--test-"):
-			return true
-	for arg in OS.get_cmdline_args():
-		if arg.begins_with("--test-"):
-			return true
-	return false
+var skip_start_screen: bool = false
+
+
+func dismiss_immediately() -> void:
+	visible = false
+	_mark_loaded()
+	_has_started_once = true
+	get_tree().paused = false
+	started.emit.call_deferred()
 
 
 func _ready() -> void:
 	add_to_group("start_screen")
-	if _is_test_mode():
-		visible = false
-		_mark_loaded()
+	if skip_start_screen:
+		dismiss_immediately()
 		return
 	if quit_button and OS.has_feature("web"):
 		quit_button.visible = false
@@ -124,64 +111,37 @@ func _ready() -> void:
 	open_screen(Page.MAIN)
 
 	# In normal gameplay, gate start behind warmup frames
-	set_loading(true)
-	await _warmup_world()
-	_mark_loaded()
+	if _warmup:
+		if _warmup.is_completed():
+			_mark_loaded()
+		else:
+			set_loading(true)
+	else:
+		set_loading(true)
+		call_deferred("_start_default_warmup_if_needed")
 
 
-func _warmup_world() -> void:
-	var target_props := props
-	if target_props == null and is_inside_tree():
+func _start_default_warmup_if_needed() -> void:
+	if _warmup != null:
+		return
+	_start_default_warmup()
+
+
+func _start_default_warmup() -> void:
+	var target_props: Node3D = null
+	if is_inside_tree():
 		target_props = get_tree().get_first_node_in_group("props") as Node3D
 	if target_props == null and get_parent():
 		target_props = get_parent().get_node_or_null("Props") as Node3D
-	if target_props:
-		for child in target_props.get_children():
-			if child is Node3D:
-				child.visible = false
 
-	_report_web_progress(85, "Warming up shaders...")
-	# Frame 1: major Props building groups start hidden so WebGL2 compiles base
-	# shaders (terrain, road, mats) without a huge Frame 1 spike.
-	await get_tree().process_frame
-	if not is_inside_tree():
-		return
-
-	if target_props:
-		for step in STAGGERED_WARMUP_STEPS:
-			for node_name in step["names"]:
-				var node := target_props.get_node_or_null(node_name) as Node3D
-				if node:
-					node.visible = true
-			_report_web_progress(step["pct"], step["label"])
-			await get_tree().process_frame
-			if not is_inside_tree():
-				return
-
-		# Ensure any remaining Props children are made visible
-		for child in target_props.get_children():
-			if child is Node3D and not child.visible:
-				child.visible = true
-		await get_tree().process_frame
-		if not is_inside_tree():
-			return
-	else:
-		await get_tree().process_frame
-		if not is_inside_tree():
-			return
-
-	var target_tm := traffic_manager
-	if target_tm == null and is_inside_tree():
+	var target_tm: Node = null
+	if is_inside_tree():
 		target_tm = get_tree().get_first_node_in_group("traffic_manager")
 	if target_tm == null and get_parent():
 		target_tm = get_parent().get_node_or_null("TrafficManager")
-	if (
-		target_tm
-		and "is_initial_traffic_ready" in target_tm
-		and not target_tm.is_initial_traffic_ready
-	):
-		_report_web_progress(99, "Spawning initial traffic...")
-		await target_tm.initial_traffic_ready
+	var warmup := WorldWarmup.new()
+	set_warmup(warmup)
+	warmup.start_warmup(get_tree(), target_props, target_tm)
 
 
 func set_loading(loading: bool) -> void:

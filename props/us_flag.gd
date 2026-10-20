@@ -6,6 +6,7 @@ enum FlagSize {
 	STANDARD,
 	LARGE,
 	GIANT,
+	MOUNTED,
 }
 
 const SIZE_CONFIG := {
@@ -32,6 +33,14 @@ const SIZE_CONFIG := {
 		"flag_y": 15.55,
 		"rope_offset": 0.16,
 		"rope_y": 9.6,
+	},
+	FlagSize.MOUNTED:
+	{
+		"node_name": "Mounted",
+		"flag_half_width": 0.575,
+		"flag_y": 1.45,
+		"rope_offset": 0.0,
+		"rope_y": 0.0,
 	},
 }
 
@@ -94,6 +103,8 @@ func _apply_flag_size() -> void:
 		FlagSize.GIANT:
 			active_node = visuals.get_node_or_null("Giant")
 
+		FlagSize.MOUNTED:
+			active_node = visuals.get_node_or_null("Mounted")
 	if active_node:
 		active_node.visible = true
 
@@ -115,6 +126,36 @@ func _update_wind_orientation(delta: float, snap: bool = false) -> void:
 
 	var flag_mesh := active_node.get_node_or_null("Flag") as MeshInstance3D
 	var rope_mesh := active_node.get_node_or_null("Rope") as MeshInstance3D
+	if flag_size == FlagSize.MOUNTED:
+		if flag_mesh:
+			var mount_wind_dir: Vector3 = GameState.wind_direction
+			mount_wind_dir.y = 0.0
+			if mount_wind_dir.is_zero_approx():
+				mount_wind_dir = Vector3.RIGHT
+			mount_wind_dir = mount_wind_dir.normalized()
+
+			var mount_wind_spd: float = GameState.wind_speed
+			var wind_lean := clampf(mount_wind_spd * 0.05, 0.0, 0.08)
+			wind_lean *= 0.8 + sin(_time * 1.2 + _phase_offset) * 0.2
+			var world_hang := (Vector3.DOWN + mount_wind_dir * wind_lean).normalized()
+
+			# Keep the cloth face stable while gravity controls its long axis.
+			var world_normal := active_node.global_basis.z.normalized()
+			world_normal = (world_normal - world_hang * world_normal.dot(world_hang)).normalized()
+			var world_across := world_normal.cross(world_hang).normalized()
+			var local_basis := (
+				active_node.global_basis.inverse() * Basis(world_hang, world_across, world_normal)
+			)
+
+			var half_w: float = config["flag_half_width"]
+			var fy: float = config["flag_y"]
+			var mount_point := Vector3(0.0, fy, 0.0)
+			flag_mesh.transform = Transform3D(local_basis, mount_point + local_basis.x * half_w)
+
+			var mat := flag_mesh.get_active_material(0) as ShaderMaterial
+			if mat:
+				mat.set_shader_parameter("wind_strength", clampf(mount_wind_spd * 0.25, 0.2, 0.6))
+		return
 
 	# Query global wind direction from GameState
 	var wind_dir: Vector3 = GameState.wind_direction
@@ -173,6 +214,10 @@ func _update_collision() -> void:
 	)
 	if not col:
 		return
+	if flag_size == FlagSize.MOUNTED:
+		col.disabled = true
+		return
+	col.disabled = false
 
 	var radius: float = 0.20
 	var height: float = 8.0

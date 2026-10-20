@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://ui/hud.gd" id="1_hud"]
 [ext_resource type="PackedScene" path="res://ui/phone_call.tscn" id="2_phone_call"]
@@ -6,6 +6,7 @@
 [ext_resource type="FontFile" path="res://fonts/Overpass-SemiBold.ttf" id="4_font_semibold"]
 [ext_resource type="Script" path="res://ui/objective_arrow.gd" id="5_arrow"]
 [ext_resource type="Script" path="res://ui/objective_toast.gd" id="6_toast"]
+[ext_resource type="Script" path="res://ui/stamina_wheel.gd" id="7_stamina"]
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hud"]
 content_margin_left = 16.0
 content_margin_top = 10.0
@@ -187,3 +188,13 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("6_toast")
+
+[node name="StaminaWheel" type="Control" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 3
+anchors_preset = 0
+offset_right = 44.0
+offset_bottom = 44.0
+mouse_filter = 2
+script = ExtResource("7_stamina")
