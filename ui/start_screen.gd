@@ -8,6 +8,9 @@ enum Page { MAIN, CONTROLS }
 const SCRIM_COLOR_START := Color(0.03, 0.04, 0.055, 1.0)
 const SCRIM_COLOR_PAUSED := Color(0.03, 0.04, 0.055, 0.85)
 
+@export var props: Node3D = null
+@export var traffic_manager: Node = null
+
 @onready var root_control: Control = $RootControl
 @onready var scrim: ColorRect = $RootControl/Scrim
 @onready var pane: PanelContainer = $RootControl/Pane
@@ -99,6 +102,7 @@ func _is_test_mode() -> bool:
 
 
 func _ready() -> void:
+	add_to_group("start_screen")
 	if _is_test_mode():
 		visible = false
 		_mark_loaded()
@@ -126,9 +130,13 @@ func _ready() -> void:
 
 
 func _warmup_world() -> void:
-	var props: Node3D = get_parent().get_node_or_null("Props") if get_parent() else null
-	if props:
-		for child in props.get_children():
+	var target_props := props
+	if target_props == null and is_inside_tree():
+		target_props = get_tree().get_first_node_in_group("props") as Node3D
+	if target_props == null and get_parent():
+		target_props = get_parent().get_node_or_null("Props") as Node3D
+	if target_props:
+		for child in target_props.get_children():
 			if child is Node3D:
 				child.visible = false
 
@@ -139,10 +147,10 @@ func _warmup_world() -> void:
 	if not is_inside_tree():
 		return
 
-	if props:
+	if target_props:
 		for step in STAGGERED_WARMUP_STEPS:
 			for node_name in step["names"]:
-				var node := props.get_node_or_null(node_name) as Node3D
+				var node := target_props.get_node_or_null(node_name) as Node3D
 				if node:
 					node.visible = true
 			_report_web_progress(step["pct"], step["label"])
@@ -151,7 +159,7 @@ func _warmup_world() -> void:
 				return
 
 		# Ensure any remaining Props children are made visible
-		for child in props.get_children():
+		for child in target_props.get_children():
 			if child is Node3D and not child.visible:
 				child.visible = true
 		await get_tree().process_frame
@@ -162,14 +170,18 @@ func _warmup_world() -> void:
 		if not is_inside_tree():
 			return
 
-	var traffic_mgr = get_parent().get_node_or_null("TrafficManager") if get_parent() else null
+	var target_tm := traffic_manager
+	if target_tm == null and is_inside_tree():
+		target_tm = get_tree().get_first_node_in_group("traffic_manager")
+	if target_tm == null and get_parent():
+		target_tm = get_parent().get_node_or_null("TrafficManager")
 	if (
-		traffic_mgr
-		and "is_initial_traffic_ready" in traffic_mgr
-		and not traffic_mgr.is_initial_traffic_ready
+		target_tm
+		and "is_initial_traffic_ready" in target_tm
+		and not target_tm.is_initial_traffic_ready
 	):
 		_report_web_progress(99, "Spawning initial traffic...")
-		await traffic_mgr.initial_traffic_ready
+		await target_tm.initial_traffic_ready
 
 
 func set_loading(loading: bool) -> void:

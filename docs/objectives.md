@@ -104,20 +104,20 @@ Errands are specified in `objectives/mats_objectives.json` with in-code fallback
 
 The stroad runs along the $X$-axis. North is $-Z$ and South is $+Z$. Sidewalks sit at $z \approx \pm 9.1\text{ m}$.
 
-| Store ID      | Proper Name | Generic Name          | Stroad Side  | Scene Target Node Path                               | Fallback Coordinate $(X, Y, Z)$ | Item Pool                                                   |
-| ------------- | ----------- | --------------------- | ------------ | ---------------------------------------------------- | ------------------------------- | ----------------------------------------------------------- |
-| `walgroins`   | Walgroins   | the pharmacy          | North ($-Z$) | `Props/Walgroins/Building/Doors`                     | $(-3.0, 1.3, -31.35)$           | cough syrup, band-aids, potato chips, toothpaste, batteries |
-| `smell`       | Smell       | the convenience store | North ($-Z$) | `Props/SmellGasStation/Store/DoorGlass`              | $(-52.5, 1.6, -31.3)$           | milk, cereal, chewing gum, beef jerky                       |
-| `booger_king` | Booger King | the burger joint      | South ($+Z$) | `Props/BoogerKingSite/Building/Building/Tower/Doors` | $(-47.3, 1.3, 29.4)$            | hamburgers                                                  |
-| `taco_hell`   | Taco Hell   | the taco stand        | North ($-Z$) | `Props/TacoHell/Building/MainArchPortico/Doors`      | $(31.5, 1.3, -27.75)$           | tacos, burritos, quesadillas                                |
+| Store ID      | Proper Name | Generic Name          | Stroad Side  | Anchor Node Path                          | Item Pool                                                   |
+| ------------- | ----------- | --------------------- | ------------ | ----------------------------------------- | ----------------------------------------------------------- |
+| `walgroins`   | Walgroins   | the pharmacy          | North ($-Z$) | `Props/Walgroins/DestinationAnchor`       | cough syrup, band-aids, potato chips, toothpaste, batteries |
+| `smell`       | Smell       | the convenience store | North ($-Z$) | `Props/SmellGasStation/DestinationAnchor` | milk, cereal, chewing gum, beef jerky                       |
+| `booger_king` | Booger King | the burger joint      | South ($+Z$) | `Props/BoogerKingSite/DestinationAnchor`  | hamburgers                                                  |
+| `taco_hell`   | Taco Hell   | the taco stand        | North ($-Z$) | `Props/TacoHell/DestinationAnchor`        | tacos, burritos, quesadillas                                |
 
 ### Dynamic Position Resolution
 
 `ObjectiveManager.get_target_position(errand)` resolves destinations dynamically:
 
-1. Searches for the node at `errand.target_path` in `Main`'s scene tree.
-2. If found, uses its `global_position`. This guarantees that if buildings or props are moved, objectives follow automatically.
-3. If the node is not found (e.g. in isolated unit tests), falls back to the exact pre-calculated world coordinates in the table above.
+1. Looks up the registered `DestinationAnchor` for `errand.location_id`.
+2. If found, uses its `global_position`. This guarantees that if buildings or sites are moved or visual geometries are reorganized, objectives follow automatically.
+3. If no anchor is bound or found (e.g. in misconfigured setups or unanchored tests), reports an error via `push_error` and returns `Vector3.ZERO`. Unbound destinations cannot silently complete at coordinate fallbacks.
 
 ---
 
@@ -232,13 +232,13 @@ Constructed programmatically in `objectives/objective_marker.gd`:
 
 ## 7. Edge Cases & Safeguards
 
-| Scenario                  | Behavior / Mitigation                                                                                                                                      |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Start Screen Open**     | Phone call timers pause while `StartScreen` is visible. Calls never interrupt the title/controls screen.                                                   |
-| **Character Editor Open** | Phone call panels and objective arrows hide when `CharacterEditor` opens. Timers pause; resumed when closed.                                               |
-| **Already at Entrance**   | If Mats is already within $2.5\text{ m}$ of a store entrance when an errand starts, arrival triggers cleanly on the next physics tick.                     |
-| **Building Node Missing** | If a target door node path cannot be resolved in `Main`, `get_target_position()` falls back to hardcoded world coordinates.                                |
-| **Web Export Fonts**      | Handset icons, checkmarks, and triangles are drawn via `_draw()` primitives rather than Unicode emoji, preventing missing glyph boxes on the WebGL export. |
+| Scenario                       | Behavior / Mitigation                                                                                                                                          |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Start Screen Open**          | Phone call timers pause while `StartScreen` is visible. Calls never interrupt the title/controls screen.                                                       |
+| **Character Editor Open**      | Phone call panels and objective arrows hide when `CharacterEditor` opens. Timers pause; resumed when closed.                                                   |
+| **Already at Entrance**        | If Mats is already within $2.5\text{ m}$ of a store entrance when an errand starts, arrival triggers cleanly on the next physics tick.                         |
+| **Destination Anchor Missing** | If a destination anchor is unbound or cannot be resolved, `get_target_position()` reports an error and returns `Vector3.ZERO` rather than completing silently. |
+| **Web Export Fonts**           | Handset icons, checkmarks, and triangles are drawn via `_draw()` primitives rather than Unicode emoji, preventing missing glyph boxes on the WebGL export.     |
 
 ---
 

@@ -30,12 +30,13 @@ const PREVIEW_TURN_PERIOD := 8.0
 const UNSELECTED_MODULATE := Color(0.7, 0.72, 0.74, 1.0)
 
 @export var player_path: NodePath
+@export var player_node: Mats = null
 @export var row_style: StyleBox
 @export var row_selected_style: StyleBox
 
 @onready var _camera: Camera3D = %PreviewCamera
 @onready var _viewport: SubViewport = %PreviewViewport
-@onready var _player: Mats = get_node_or_null(player_path)
+@onready var _player: Mats = player_node if player_node else get_node_or_null(player_path)
 
 var _preview: Mats = null
 var _was_paused := false
@@ -48,6 +49,9 @@ var _preview_turn_time := 0.0
 
 
 func _ready() -> void:
+	add_to_group("character_editor")
+	if _player == null and is_inside_tree():
+		_player = get_tree().get_first_node_in_group("player") as Mats
 	_camera.look_at(Vector3(0.0, 0.72, 0.0))
 	%HeadPrevious.pressed.connect(_on_headwear_step.bind(-1))
 	%HeadNext.pressed.connect(_on_headwear_step.bind(1))
@@ -59,6 +63,10 @@ func _ready() -> void:
 	%ShoeNext.pressed.connect(_on_shoe_step.bind(1))
 	%CloseButton.pressed.connect(close_editor)
 	visible = false
+
+
+func set_player(p: Mats) -> void:
+	_player = p
 
 
 func _process(delta: float) -> void:

@@ -21,7 +21,6 @@
       "id": "walgroins",
       "proper_name": "Walgroins",
       "generic_name": "the pharmacy",
-      "target_path": "Props/Walgroins/Building/Doors",
       "items": [
         "cough syrup",
         "band-aids",
@@ -34,7 +33,6 @@
       "id": "booger_king",
       "proper_name": "Booger King",
       "generic_name": "the burger joint",
-      "target_path": "Props/BoogerKingSite/Building/Building/Tower/Doors",
       "items": [
         "hamburgers"
       ]
@@ -43,7 +41,6 @@
       "id": "taco_hell",
       "proper_name": "Taco Hell",
       "generic_name": "the taco stand",
-      "target_path": "Props/TacoHell/Building/MainArchPortico/Doors",
       "items": [
         "tacos",
         "burritos",
@@ -54,7 +51,6 @@
       "id": "smell",
       "proper_name": "Smell",
       "generic_name": "the convenience store",
-      "target_path": "Props/SmellGasStation/Store/DoorGlass",
       "items": [
         "milk",
         "cereal",

@@ -64,69 +64,86 @@ func _setup_distance_label() -> void:
 
 
 func _resolve_dependencies() -> void:
-	if not objective_manager:
-		objective_manager = (
-			get_tree().get_first_node_in_group("objective_manager") as ObjectiveManager
-		)
-		if not objective_manager and get_parent():
-			var hud := get_parent() as HUD
-			if hud and hud.objective_manager:
-				objective_manager = hud.objective_manager
-	if not mats:
+	var hud := get_parent() as HUD
+	if not objective_manager and is_inside_tree():
+		if hud and hud.objective_manager:
+			objective_manager = hud.objective_manager
+		else:
+			objective_manager = (
+				get_tree().get_first_node_in_group("objective_manager") as ObjectiveManager
+			)
+	if not mats and is_inside_tree():
 		if objective_manager and objective_manager.mats:
 			mats = objective_manager.mats
+		elif hud and hud.player is Mats:
+			mats = hud.player as Mats
 		else:
 			mats = get_tree().get_first_node_in_group("player") as Mats
-			if not mats and is_inside_tree() and get_tree().root:
-				mats = get_tree().root.find_child("Mats", true, false) as Mats
-	if not _phone_call and get_parent():
-		_phone_call = get_parent().get_node_or_null("PhoneCall") as PhoneCall
-	_find_start_screen()
-	_find_character_editor()
+	if not _phone_call and hud:
+		_phone_call = hud.get_node_or_null("PhoneCall") as PhoneCall
+	if not _start_screen and is_inside_tree():
+		_find_start_screen()
+	if not _character_editor and is_inside_tree():
+		_find_character_editor()
+	_resolve_camera()
+
+
+func set_start_screen(s: StartScreen) -> void:
+	if _start_screen and is_instance_valid(_start_screen):
+		if _start_screen.visibility_changed.is_connected(_on_start_screen_visibility_changed):
+			_start_screen.visibility_changed.disconnect(_on_start_screen_visibility_changed)
+	_start_screen = s
+	if _start_screen:
+		if not _start_screen.visibility_changed.is_connected(_on_start_screen_visibility_changed):
+			_start_screen.visibility_changed.connect(_on_start_screen_visibility_changed)
+
+
+func set_character_editor(c: CharacterEditor) -> void:
+	if _character_editor and is_instance_valid(_character_editor):
+		if _character_editor.visibility_changed.is_connected(
+			_on_character_editor_visibility_changed
+		):
+			_character_editor.visibility_changed.disconnect(_on_character_editor_visibility_changed)
+	_character_editor = c
+	if _character_editor:
+		if not _character_editor.visibility_changed.is_connected(
+			_on_character_editor_visibility_changed
+		):
+			_character_editor.visibility_changed.connect(_on_character_editor_visibility_changed)
+
+
+func set_phone_call(p: PhoneCall) -> void:
+	_phone_call = p
 
 
 func _find_start_screen() -> StartScreen:
 	if _start_screen and is_instance_valid(_start_screen):
 		return _start_screen
-	if (
-		get_parent()
-		and get_parent().get_parent()
-		and get_parent().get_parent().has_node("StartScreen")
-	):
-		_start_screen = get_parent().get_parent().get_node("StartScreen") as StartScreen
-	elif is_inside_tree() and get_tree().root:
-		_start_screen = get_tree().root.find_child("StartScreen", true, false) as StartScreen
-	if (
-		_start_screen
-		and not _start_screen.visibility_changed.is_connected(_on_start_screen_visibility_changed)
-	):
-		_start_screen.visibility_changed.connect(_on_start_screen_visibility_changed)
-	return _start_screen
+	if is_inside_tree():
+		var hud := get_parent() as HUD
+		if hud and hud.start_screen:
+			set_start_screen(hud.start_screen)
+			return _start_screen
+		var screen := get_tree().get_first_node_in_group("start_screen") as StartScreen
+		if screen:
+			set_start_screen(screen)
+			return _start_screen
+	return null
 
 
 func _find_character_editor() -> CharacterEditor:
 	if _character_editor and is_instance_valid(_character_editor):
 		return _character_editor
-	if (
-		get_parent()
-		and get_parent().get_parent()
-		and get_parent().get_parent().has_node("CharacterEditor")
-	):
-		_character_editor = (
-			get_parent().get_parent().get_node("CharacterEditor") as CharacterEditor
-		)
-	elif is_inside_tree() and get_tree().root:
-		_character_editor = (
-			get_tree().root.find_child("CharacterEditor", true, false) as CharacterEditor
-		)
-	if (
-		_character_editor
-		and not _character_editor.visibility_changed.is_connected(
-			_on_character_editor_visibility_changed
-		)
-	):
-		_character_editor.visibility_changed.connect(_on_character_editor_visibility_changed)
-	return _character_editor
+	if is_inside_tree():
+		var hud := get_parent() as HUD
+		if hud and hud.character_editor:
+			set_character_editor(hud.character_editor)
+			return _character_editor
+		var editor := get_tree().get_first_node_in_group("character_editor") as CharacterEditor
+		if editor:
+			set_character_editor(editor)
+			return _character_editor
+	return null
 
 
 func _on_start_screen_visibility_changed() -> void:
@@ -135,6 +152,21 @@ func _on_start_screen_visibility_changed() -> void:
 
 func _on_character_editor_visibility_changed() -> void:
 	update_arrow()
+
+
+func _resolve_camera() -> void:
+	if camera and is_instance_valid(camera) and camera.is_inside_tree():
+		return
+	var vp := get_viewport()
+	if vp:
+		var cam := vp.get_camera_3d()
+		if cam:
+			camera = cam
+			return
+	if is_inside_tree():
+		var cam_node := get_tree().get_first_node_in_group("camera") as Camera3D
+		if cam_node:
+			camera = cam_node
 
 
 func _get_active_camera() -> Camera3D:
@@ -146,25 +178,16 @@ func _get_active_camera() -> Camera3D:
 		if cam:
 			camera = cam
 			return cam
-	if is_inside_tree() and get_tree().root:
-		var cam_node := get_tree().root.find_child("Camera3D", true, false) as Camera3D
-		if cam_node:
-			camera = cam_node
-			return cam_node
 	return null
 
 
 func _is_hidden_by_overlay() -> bool:
-	var start_screen := _find_start_screen()
-	if start_screen and is_instance_valid(start_screen) and start_screen.visible:
+	if _start_screen and is_instance_valid(_start_screen) and _start_screen.visible:
 		return true
 
-	var char_editor := _find_character_editor()
-	if char_editor and is_instance_valid(char_editor) and char_editor.visible:
+	if _character_editor and is_instance_valid(_character_editor) and _character_editor.visible:
 		return true
 
-	if not _phone_call and get_parent():
-		_phone_call = get_parent().get_node_or_null("PhoneCall") as PhoneCall
 	if (
 		_phone_call
 		and is_instance_valid(_phone_call)

@@ -1,5 +1,9 @@
 class_name HUD
 extends CanvasLayer
+@export var player: Node3D = null
+@export var camera: Camera3D = null
+@export var start_screen: StartScreen = null
+@export var character_editor: CharacterEditor = null
 
 @onready var spd_label: Label = %SpdLabel
 @onready var desc_label: Label = %DescLabel
@@ -41,6 +45,10 @@ func _ready() -> void:
 		margin_container.pivot_offset = Vector2.ZERO
 	_update_display()
 	add_to_group("hud")
+	_resolve_player.call_deferred()
+	_resolve_camera.call_deferred()
+	_resolve_start_screen.call_deferred()
+	_resolve_character_editor.call_deferred()
 	_resolve_objective_manager.call_deferred()
 
 
@@ -386,6 +394,74 @@ func set_action_prompt(source: Node, active: bool, text: String = "") -> void:
 		_update_action_label_position()
 
 
+func set_player(p: Node3D) -> void:
+	player = p
+	if objective_arrow:
+		objective_arrow.mats = p as Mats
+
+
+func set_camera(cam: Camera3D) -> void:
+	camera = cam
+	_camera = cam
+	if objective_arrow:
+		objective_arrow.camera = cam
+
+
+func set_start_screen(screen: StartScreen) -> void:
+	start_screen = screen
+	if objective_arrow:
+		objective_arrow.set_start_screen(screen)
+
+
+func set_character_editor(editor: CharacterEditor) -> void:
+	character_editor = editor
+	if objective_arrow:
+		objective_arrow.set_character_editor(editor)
+	if phone_call:
+		phone_call.set_character_editor(editor)
+	if objective_toast:
+		objective_toast.set_character_editor(editor)
+
+
+func _resolve_start_screen() -> void:
+	if start_screen == null and is_inside_tree():
+		var screen := get_tree().get_first_node_in_group("start_screen") as StartScreen
+		if screen:
+			set_start_screen(screen)
+
+
+func _resolve_character_editor() -> void:
+	if character_editor == null and is_inside_tree():
+		var editor := get_tree().get_first_node_in_group("character_editor") as CharacterEditor
+		if editor:
+			set_character_editor(editor)
+
+
+func _resolve_player() -> void:
+	if player == null and is_inside_tree():
+		var p := get_tree().get_first_node_in_group("player") as Node3D
+		if p:
+			set_player(p)
+
+
+func _resolve_camera() -> void:
+	if _camera != null and is_instance_valid(_camera) and _camera.is_inside_tree():
+		return
+	if camera != null and is_instance_valid(camera) and camera.is_inside_tree():
+		_camera = camera
+		return
+	var vp := get_viewport()
+	if vp:
+		var vp_cam := vp.get_camera_3d()
+		if vp_cam:
+			_camera = vp_cam
+			return
+	if is_inside_tree():
+		var cam_node := get_tree().get_first_node_in_group("camera") as Camera3D
+		if cam_node:
+			_camera = cam_node
+
+
 func _get_active_camera() -> Camera3D:
 	if _camera and is_instance_valid(_camera) and _camera.is_inside_tree():
 		return _camera
@@ -395,11 +471,6 @@ func _get_active_camera() -> Camera3D:
 		if vp_cam:
 			_camera = vp_cam
 			return _camera
-	if is_inside_tree() and get_tree().root:
-		var cam_node := get_tree().root.find_child("Camera3D", true, false) as Camera3D
-		if cam_node:
-			_camera = cam_node
-			return cam_node
 	return null
 
 
@@ -424,19 +495,16 @@ func _update_action_label_position() -> void:
 	var target_pos: Vector3
 	if active_source is Node3D:
 		target_pos = (active_source as Node3D).global_position
-		var mats := get_tree().get_first_node_in_group("player") as Node3D
-		if mats and is_instance_valid(mats) and not mats.is_dead:
-			var dist := target_pos.distance_to(mats.global_position)
+		if player and is_instance_valid(player) and not player.get("is_dead"):
+			var dist := target_pos.distance_to(player.global_position)
 			if dist < 3.0:
-				target_pos = (target_pos + mats.global_position) * 0.5
+				target_pos = (target_pos + player.global_position) * 0.5
 		target_pos.y += 1.25
 	else:
-		var mats := get_tree().get_first_node_in_group("player") as Node3D
-		if mats and is_instance_valid(mats):
-			target_pos = mats.global_position + Vector3(0.0, 1.4, 0.0)
+		if player and is_instance_valid(player):
+			target_pos = player.global_position + Vector3(0.0, 1.4, 0.0)
 		else:
 			return
-
 	var cam := _get_active_camera()
 	if not cam:
 		return
@@ -462,8 +530,6 @@ func _resolve_objective_manager() -> void:
 	if objective_manager:
 		return
 	var mgr := get_tree().get_first_node_in_group("objective_manager") as ObjectiveManager
-	if not mgr and get_parent():
-		mgr = get_parent().get_node_or_null("ObjectiveManager") as ObjectiveManager
 	if mgr:
 		set_objective_manager(mgr)
 
@@ -484,6 +550,8 @@ func set_objective_manager(mgr: ObjectiveManager) -> void:
 		objective_manager.objective_completed.connect(_on_objective_completed)
 		objective_manager.state_changed.connect(_on_objective_state_changed)
 		_sync_objective_manager_state()
+	if phone_call:
+		phone_call.set_objective_manager(mgr)
 	if objective_arrow:
 		objective_arrow.objective_manager = mgr
 

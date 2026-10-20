@@ -4,15 +4,18 @@ extends Node3D
 ## Functional controller for Taco Hell Drive-Thru.
 ## Dynamically updates the menu board LCD screen, order speaker status LED,
 ## and pickup window signage when vehicles or Mats approach.
+@export var traffic_manager: Node = null
+@export var player: CharacterBody3D = null
 
 @onready var lcd_label: Label3D = get_node_or_null("MenuBoard/LcdLabel")
 @onready var speaker_led: MeshInstance3D = get_node_or_null("OrderingSpeaker/Housing/StatusLed")
 @onready var pickup_label: Label3D = get_node_or_null("PickupLabel")
+@onready var order_zone: Area3D = get_node_or_null("OrderZone")
+@onready var pickup_zone: Area3D = get_node_or_null("PickupZone")
 
 var _order_number: int = 24
 var _was_order_active: bool = false
 var _was_pickup_active: bool = false
-
 const IDLE_LCD_TEXT := "[ORDER CONFIRMATION]\nWELCOME TO TACO HELL\nPLEASE ORDER AT SPEAKER"
 const IDLE_PICKUP_TEXT := "PICK UP"
 
@@ -30,6 +33,26 @@ var _led_idle_material: StandardMaterial3D = null
 func _ready() -> void:
 	_init_materials()
 	_update_lcd_idle()
+	_resolve_dependencies()
+
+
+func set_traffic_manager(tm: Node) -> void:
+	traffic_manager = tm
+
+
+func set_player(p: CharacterBody3D) -> void:
+	player = p
+
+
+func _resolve_dependencies() -> void:
+	if traffic_manager == null and is_inside_tree():
+		var tm_node := get_tree().get_first_node_in_group("traffic_manager")
+		if tm_node:
+			traffic_manager = tm_node
+	if player == null and is_inside_tree():
+		var p_node := get_tree().get_first_node_in_group("player") as CharacterBody3D
+		if p_node:
+			player = p_node
 
 
 func _init_materials() -> void:
@@ -55,29 +78,23 @@ func _physics_process(_delta: float) -> void:
 	var is_player_ordering := false
 
 	# 1. Check overlapping areas/bodies from Area3D zones
-	var oz: Area3D = get_node_or_null("OrderZone")
-	var pz: Area3D = get_node_or_null("PickupZone")
-	if oz != null:
-		for a in oz.get_overlapping_areas():
+	if order_zone != null:
+		for a in order_zone.get_overlapping_areas():
 			if a is Area3D:
 				order_active = true
-		for b in oz.get_overlapping_bodies():
+		for b in order_zone.get_overlapping_bodies():
 			if b is CharacterBody3D:
 				order_active = true
 				is_player_ordering = true
-	if pz != null:
-		for a in pz.get_overlapping_areas():
+	if pickup_zone != null:
+		for a in pickup_zone.get_overlapping_areas():
 			if a is Area3D:
 				pickup_active = true
-		for b in pz.get_overlapping_bodies():
+		for b in pickup_zone.get_overlapping_bodies():
 			if b is CharacterBody3D:
 				pickup_active = true
 
 	# 2. Check active vehicles in TrafficManager
-	var tm = get_node_or_null("/root/Main/TrafficManager")
-	if tm == null and get_tree() != null and get_tree().current_scene != null:
-		tm = get_tree().current_scene.get_node_or_null("TrafficManager")
-
 	var global_order_pos := (
 		global_transform.origin + global_transform.basis * Vector3(-12.0, 0.0, -2.0)
 	)
@@ -85,25 +102,23 @@ func _physics_process(_delta: float) -> void:
 		global_transform.origin + global_transform.basis * Vector3(12.0, 0.0, 0.0)
 	)
 
-	if tm != null:
-		for car in tm.lot_cars:
-			if is_instance_valid(car):
-				if car.global_position.distance_to(global_order_pos) < 3.5:
-					order_active = true
-				elif car.global_position.distance_to(global_pickup_pos) < 3.5:
-					pickup_active = true
+	if traffic_manager != null and is_instance_valid(traffic_manager):
+		var lot_cars_val = traffic_manager.get("lot_cars")
+		if lot_cars_val is Array:
+			for car in lot_cars_val:
+				if is_instance_valid(car):
+					if car.global_position.distance_to(global_order_pos) < 3.5:
+						order_active = true
+					elif car.global_position.distance_to(global_pickup_pos) < 3.5:
+						pickup_active = true
 
 	# 3. Check player
-	var player = get_node_or_null("/root/Main/Mats")
-	if player == null and get_tree() != null and get_tree().current_scene != null:
-		player = get_tree().current_scene.get_node_or_null("Mats")
 	if player != null and is_instance_valid(player):
 		if player.global_position.distance_to(global_order_pos) < 3.2:
 			order_active = true
 			is_player_ordering = true
 		elif player.global_position.distance_to(global_pickup_pos) < 3.2:
 			pickup_active = true
-
 	# Update presentation
 	if order_active:
 		if not _was_order_active:

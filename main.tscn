@@ -29,8 +29,12 @@
 [ext_resource type="PackedScene" path="res://props/billboard.tscn" id="27_billboard"]
 [ext_resource type="PackedScene" path="res://buildings/consumer_car_care.tscn" id="28_car_care"]
 [ext_resource type="PackedScene" path="res://buildings/frontage_retail.tscn" id="29_frontage_retail"]
+[ext_resource type="Texture2D" uid="uid://c4rtysbab4j7o" path="res://props/jewelry_ring.png" id="30_0rl1p"]
 [ext_resource type="PackedScene" path="res://buildings/frontage_commercial.tscn" id="30_frontage_commercial"]
 [ext_resource type="PackedScene" path="res://props/billboard_offset.tscn" id="31_billboard_offset"]
+[ext_resource type="PackedScene" path="res://props/powerline.tscn" id="32_powerline"]
+[ext_resource type="PackedScene" path="res://props/chainlink_fence.tscn" id="33_fence"]
+[ext_resource type="ArrayMesh" path="res://props/connector_turn_yellow_line.res" id="34_connector_turn_yellow_line"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.35, 0.55, 0.85, 1)
@@ -59,10 +63,10 @@ shader_parameter/dry_grass = Color(0.46, 0.43, 0.2, 1)
 
 [sub_resource type="PlaneMesh" id="Mesh_Ground"]
 material = SubResource("Mat_Grass")
-size = Vector2(360, 240)
+size = Vector2(380, 260)
 
 [sub_resource type="BoxShape3D" id="Shape_Ground"]
-size = Vector3(360, 1, 240)
+size = Vector3(380, 1, 260)
 
 [sub_resource type="ShaderMaterial" id="Mat_Asphalt"]
 render_priority = 0
@@ -83,11 +87,16 @@ size = Vector3(250, 0.1, 22.5)
 render_priority = 0
 shader = ExtResource("24_sidewalk_shader")
 shader_parameter/concrete_base = Color(0.67, 0.66, 0.65, 1)
-shader_parameter/curb_color = Color(0.72, 0.71, 0.70, 1)
-shader_parameter/joint_color = Color(0.22, 0.21, 0.20, 1)
+shader_parameter/curb_color = Color(0.72, 0.71, 0.7, 1)
+shader_parameter/joint_color = Color(0.22, 0.21, 0.2, 1)
+shader_parameter/dirt_color = Color(0.3, 0.26, 0.22, 1)
+shader_parameter/weed_color = Color(0.22, 0.4, 0.12, 1)
+shader_parameter/weed_color_alt = Color(0.44, 0.56, 0.15, 1)
 shader_parameter/slab_length = 1.5
 shader_parameter/joint_width = 0.052
 shader_parameter/roughness_base = 0.78
+shader_parameter/crack_frequency = 0.55
+shader_parameter/weed_frequency = 0.6
 
 [sub_resource type="BoxMesh" id="Mesh_SidewalkSouthWest"]
 material = SubResource("Mat_Concrete")
@@ -180,71 +189,6 @@ size = Vector3(10, 0.1, 3.45)
 [sub_resource type="BoxShape3D" id="Shape_DrivewayApron"]
 size = Vector3(10, 0.1, 3.45)
 
-[sub_resource type="StandardMaterial3D" id="Mat_YellowMarking"]
-albedo_color = Color(0.96, 0.78, 0.1, 1)
-
-[sub_resource type="BoxMesh" id="Mesh_YellowLine"]
-material = SubResource("Mat_YellowMarking")
-size = Vector3(250, 0.12, 0.18)
-
-[sub_resource type="StandardMaterial3D" id="Mat_WhiteMarking"]
-albedo_color = Color(0.92, 0.92, 0.94, 1)
-
-[sub_resource type="BoxMesh" id="Mesh_WhiteDash"]
-material = SubResource("Mat_WhiteMarking")
-size = Vector3(2.8, 0.12, 0.18)
-
-[sub_resource type="BoxMesh" id="Mesh_WhiteLine"]
-material = SubResource("Mat_WhiteMarking")
-size = Vector3(250, 0.12, 0.18)
-
-[sub_resource type="ShaderMaterial" id="Mat_ParkingAsphalt"]
-render_priority = 0
-shader = ExtResource("20_pavement_shader")
-shader_parameter/asphalt_base = Color(0.17, 0.18, 0.21, 1)
-shader_parameter/asphalt_worn = Color(0.25, 0.26, 0.29, 1)
-shader_parameter/aggregate_color = Color(0.35, 0.36, 0.39, 1)
-shader_parameter/roughness_base = 0.85
-
-[sub_resource type="BoxMesh" id="Mesh_ParkingApron"]
-material = SubResource("Mat_ParkingAsphalt")
-size = Vector3(52, 0.1, 21.3)
-
-[sub_resource type="BoxShape3D" id="Shape_ParkingApron"]
-size = Vector3(52, 0.1, 21.3)
-
-[sub_resource type="BoxMesh" id="Mesh_ParkingStripe"]
-material = SubResource("Mat_WhiteMarking")
-size = Vector3(0.18, 0.12, 4.5)
-
-[sub_resource type="BoxMesh" id="Mesh_TacoParkingApron"]
-material = SubResource("Mat_ParkingAsphalt")
-size = Vector3(25, 0.1, 21.3)
-
-[sub_resource type="BoxShape3D" id="Shape_TacoParkingApron"]
-size = Vector3(25, 0.1, 21.3)
-
-[sub_resource type="BoxMesh" id="Mesh_HamptonParkingLot"]
-material = SubResource("Mat_ParkingAsphalt")
-size = Vector3(46, 0.1, 20)
-
-[sub_resource type="BoxShape3D" id="Shape_HamptonParkingLot"]
-size = Vector3(46, 0.1, 20)
-
-[sub_resource type="BoxMesh" id="Mesh_HamptonDriveway"]
-material = SubResource("Mat_Asphalt")
-size = Vector3(11, 0.1, 5.75)
-
-[sub_resource type="BoxShape3D" id="Shape_HamptonDriveway"]
-size = Vector3(11, 0.1, 5.75)
-
-[sub_resource type="BoxMesh" id="Mesh_DorfParkingApron"]
-material = SubResource("Mat_ParkingAsphalt")
-size = Vector3(44, 0.1, 21.3)
-
-[sub_resource type="BoxShape3D" id="Shape_DorfParkingApron"]
-size = Vector3(44, 0.1, 21.3)
-
 [sub_resource type="BoxMesh" id="Mesh_GrassGapSouthWest"]
 material = SubResource("Mat_Grass")
 size = Vector3(54, 0.1, 1.15)
@@ -317,10 +261,10 @@ size = Vector3(74.5, 0.1, 0.6)
 
 [sub_resource type="BoxMesh" id="Mesh_ConnectorRoad"]
 material = SubResource("Mat_Asphalt")
-size = Vector3(9.0, 0.1, 14.0)
+size = Vector3(9, 0.1, 14)
 
 [sub_resource type="BoxShape3D" id="Shape_ConnectorRoad"]
-size = Vector3(9.0, 0.1, 14.0)
+size = Vector3(9, 0.1, 14)
 
 [sub_resource type="BoxMesh" id="Mesh_TurnFilletWest"]
 material = SubResource("Mat_Asphalt")
@@ -345,59 +289,32 @@ size = Vector3(4.5, 0.1, 4.5)
 
 [sub_resource type="BoxMesh" id="Mesh_FrontageRoad"]
 material = SubResource("Mat_Asphalt")
-size = Vector3(104.5, 0.1, 7.0)
+size = Vector3(104.5, 0.1, 7)
 
 [sub_resource type="BoxShape3D" id="Shape_FrontageRoad"]
-size = Vector3(104.5, 0.1, 7.0)
+size = Vector3(104.5, 0.1, 7)
 
 [sub_resource type="BoxMesh" id="Mesh_DrivewayFrontage_Retail"]
 material = SubResource("Mat_Asphalt")
-size = Vector3(9.0, 0.1, 3.5)
+size = Vector3(9, 0.1, 3.5)
 
 [sub_resource type="BoxShape3D" id="Shape_DrivewayFrontage_Retail"]
-size = Vector3(9.0, 0.1, 3.5)
+size = Vector3(9, 0.1, 3.5)
 
 [sub_resource type="BoxMesh" id="Mesh_DrivewayFrontage_CarCare"]
 material = SubResource("Mat_Asphalt")
-size = Vector3(10.0, 0.1, 4.5)
+size = Vector3(10, 0.1, 3.5)
 
 [sub_resource type="BoxShape3D" id="Shape_DrivewayFrontage_CarCare"]
-size = Vector3(10.0, 0.1, 4.5)
+size = Vector3(10, 0.1, 3.5)
 
 [sub_resource type="BoxMesh" id="Mesh_DrivewayFrontage_Commercial"]
 material = SubResource("Mat_Asphalt")
-size = Vector3(9.0, 0.1, 3.5)
+size = Vector3(9, 0.1, 3.5)
 
 [sub_resource type="BoxShape3D" id="Shape_DrivewayFrontage_Commercial"]
-size = Vector3(9.0, 0.1, 3.5)
+size = Vector3(9, 0.1, 3.5)
 
-[sub_resource type="BoxMesh" id="Mesh_FrontageYellowLine"]
-material = SubResource("Mat_YellowMarking")
-size = Vector3(94.0, 0.12, 0.14)
-
-[sub_resource type="BoxMesh" id="Mesh_FrontageWhiteLine"]
-material = SubResource("Mat_WhiteMarking")
-size = Vector3(94.0, 0.12, 0.14)
-
-[sub_resource type="BoxMesh" id="Mesh_FrontageWhiteLineSouth"]
-material = SubResource("Mat_WhiteMarking")
-size = Vector3(104.5, 0.12, 0.14)
-
-[sub_resource type="BoxMesh" id="Mesh_ConnectorYellowLine"]
-material = SubResource("Mat_YellowMarking")
-size = Vector3(0.14, 0.12, 10.75)
-
-[sub_resource type="BoxMesh" id="Mesh_ConnectorWhiteLineWest"]
-material = SubResource("Mat_WhiteMarking")
-size = Vector3(0.14, 0.12, 13.0)
-
-[sub_resource type="BoxMesh" id="Mesh_ConnectorWhiteLineEast"]
-material = SubResource("Mat_WhiteMarking")
-size = Vector3(0.14, 0.12, 8.5)
-
-[sub_resource type="BoxMesh" id="Mesh_TurnArcSeg"]
-material = SubResource("Mat_YellowMarking")
-size = Vector3(1.57, 0.12, 0.14)
 [sub_resource type="BoxMesh" id="Mesh_GrassGapNorthFarWest"]
 material = SubResource("Mat_Grass")
 size = Vector3(34.5, 0.1, 1.15)
@@ -454,6 +371,95 @@ size = Vector3(133, 0.1, 0.6)
 [sub_resource type="BoxShape3D" id="Shape_ShoulderNorthEast"]
 size = Vector3(133, 0.1, 0.6)
 
+[sub_resource type="StandardMaterial3D" id="Mat_YellowMarking"]
+albedo_color = Color(0.96, 0.78, 0.1, 1)
+
+[sub_resource type="BoxMesh" id="Mesh_YellowLine"]
+material = SubResource("Mat_YellowMarking")
+size = Vector3(250, 0.12, 0.18)
+
+[sub_resource type="StandardMaterial3D" id="Mat_WhiteMarking"]
+albedo_color = Color(0.92, 0.92, 0.94, 1)
+
+[sub_resource type="BoxMesh" id="Mesh_WhiteLine"]
+material = SubResource("Mat_WhiteMarking")
+size = Vector3(250, 0.12, 0.18)
+
+[sub_resource type="BoxMesh" id="Mesh_WhiteDash"]
+material = SubResource("Mat_WhiteMarking")
+size = Vector3(2.8, 0.12, 0.18)
+
+[sub_resource type="BoxMesh" id="Mesh_ConnectorYellowLine"]
+material = SubResource("Mat_YellowMarking")
+size = Vector3(0.14, 0.12, 10.75)
+
+[sub_resource type="BoxMesh" id="Mesh_FrontageYellowLine"]
+material = SubResource("Mat_YellowMarking")
+size = Vector3(94, 0.12, 0.14)
+
+[sub_resource type="BoxMesh" id="Mesh_FrontageWhiteLine"]
+material = SubResource("Mat_WhiteMarking")
+size = Vector3(94, 0.12, 0.14)
+
+[sub_resource type="BoxMesh" id="Mesh_FrontageWhiteLineSouth"]
+material = SubResource("Mat_WhiteMarking")
+size = Vector3(104.5, 0.12, 0.14)
+
+[sub_resource type="BoxMesh" id="Mesh_ConnectorWhiteLineWest"]
+material = SubResource("Mat_WhiteMarking")
+size = Vector3(0.14, 0.12, 13)
+
+[sub_resource type="BoxMesh" id="Mesh_ConnectorWhiteLineEast"]
+material = SubResource("Mat_WhiteMarking")
+size = Vector3(0.14, 0.12, 8.5)
+
+[sub_resource type="ShaderMaterial" id="Mat_ParkingAsphalt"]
+render_priority = 0
+shader = ExtResource("20_pavement_shader")
+shader_parameter/asphalt_base = Color(0.17, 0.18, 0.21, 1)
+shader_parameter/asphalt_worn = Color(0.25, 0.26, 0.29, 1)
+shader_parameter/aggregate_color = Color(0.35, 0.36, 0.39, 1)
+shader_parameter/roughness_base = 0.85
+
+[sub_resource type="BoxMesh" id="Mesh_ParkingApron"]
+material = SubResource("Mat_ParkingAsphalt")
+size = Vector3(52, 0.1, 21.3)
+
+[sub_resource type="BoxShape3D" id="Shape_ParkingApron"]
+size = Vector3(52, 0.1, 21.3)
+
+[sub_resource type="BoxMesh" id="Mesh_ParkingStripe"]
+material = SubResource("Mat_WhiteMarking")
+size = Vector3(0.18, 0.12, 4.5)
+
+[sub_resource type="BoxMesh" id="Mesh_TacoParkingApron"]
+material = SubResource("Mat_ParkingAsphalt")
+size = Vector3(25, 0.1, 21.3)
+
+[sub_resource type="BoxShape3D" id="Shape_TacoParkingApron"]
+size = Vector3(25, 0.1, 21.3)
+
+[sub_resource type="BoxMesh" id="Mesh_HamptonParkingLot"]
+material = SubResource("Mat_ParkingAsphalt")
+size = Vector3(46, 0.1, 20)
+
+[sub_resource type="BoxShape3D" id="Shape_HamptonParkingLot"]
+size = Vector3(46, 0.1, 20)
+
+[sub_resource type="BoxMesh" id="Mesh_HamptonDriveway"]
+material = SubResource("Mat_Asphalt")
+size = Vector3(11, 0.1, 5.75)
+
+[sub_resource type="BoxShape3D" id="Shape_HamptonDriveway"]
+size = Vector3(11, 0.1, 5.75)
+
+[sub_resource type="BoxMesh" id="Mesh_DorfParkingApron"]
+material = SubResource("Mat_ParkingAsphalt")
+size = Vector3(44, 0.1, 21.3)
+
+[sub_resource type="BoxShape3D" id="Shape_DorfParkingApron"]
+size = Vector3(44, 0.1, 21.3)
+
 [node name="Main" type="Node3D" unique_id=997726887]
 script = ExtResource("3_main")
 
@@ -491,6 +497,8 @@ mesh = SubResource("Mesh_Ground")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="GroundTerrain/StaticBody3D" unique_id=1567514051]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 shape = SubResource("Shape_Ground")
+
+[node name="BoundaryFence" parent="." unique_id=317537464 instance=ExtResource("33_fence")]
 
 [node name="Mats" parent="." unique_id=380876934 instance=ExtResource("2_mats")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 13.85)
@@ -576,12 +584,13 @@ mesh = SubResource("Mesh_SidewalkSouthEast")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Road/SidewalkSouthEast/StaticBody3D" unique_id=393040399]
 shape = SubResource("Shape_SidewalkSouthEast")
 
-[node name="SidewalkSouthEast_PostRamp" type="MeshInstance3D" parent="Road"]
+[node name="SidewalkSouthEast_PostRamp" type="MeshInstance3D" parent="Road" unique_id=1847475751]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 112.75, 0.12, 13.85)
 mesh = SubResource("Mesh_SidewalkSouthEast_Post")
-[node name="StaticBody3D" type="StaticBody3D" parent="Road/SidewalkSouthEast_PostRamp"]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/SidewalkSouthEast_PostRamp/StaticBody3D"]
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/SidewalkSouthEast_PostRamp" unique_id=210600341]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/SidewalkSouthEast_PostRamp/StaticBody3D" unique_id=1186982598]
 shape = SubResource("Shape_SidewalkSouthEast_Post")
 
 [node name="SidewalkNorthWest" type="MeshInstance3D" parent="Road" unique_id=175538317]
@@ -647,238 +656,238 @@ mesh = SubResource("Mesh_DrivewayApron")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Road/DrivewayApron/StaticBody3D" unique_id=598249219]
 shape = SubResource("Shape_DrivewayApron")
 
-[node name="GrassGapSouthWest" type="MeshInstance3D" parent="Road"]
+[node name="GrassGapSouthWest" type="MeshInstance3D" parent="Road" unique_id=919571049]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -73, 0.05, 12.425)
 mesh = SubResource("Mesh_GrassGapSouthWest")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Road/GrassGapSouthWest"]
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/GrassGapSouthWest" unique_id=1610863164]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/GrassGapSouthWest/StaticBody3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/GrassGapSouthWest/StaticBody3D" unique_id=883071357]
 shape = SubResource("Shape_GrassGapSouthWest")
 
-[node name="ShoulderSouthWest" type="MeshInstance3D" parent="Road"]
+[node name="ShoulderSouthWest" type="MeshInstance3D" parent="Road" unique_id=256020883]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -73, 0.05, 11.55)
 mesh = SubResource("Mesh_ShoulderSouthWest")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Road/ShoulderSouthWest"]
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/ShoulderSouthWest" unique_id=1645714141]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/ShoulderSouthWest/StaticBody3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/ShoulderSouthWest/StaticBody3D" unique_id=2058703747]
 shape = SubResource("Shape_ShoulderSouthWest")
 
-[node name="GrassGapSouthMidWest" type="MeshInstance3D" parent="Road"]
+[node name="GrassGapSouthMidWest" type="MeshInstance3D" parent="Road" unique_id=1581515948]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23.75, 0.05, 12.425)
 mesh = SubResource("Mesh_GrassGapSouthMidWest")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Road/GrassGapSouthMidWest"]
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/GrassGapSouthMidWest" unique_id=1044968612]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/GrassGapSouthMidWest/StaticBody3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/GrassGapSouthMidWest/StaticBody3D" unique_id=1601569920]
 shape = SubResource("Shape_GrassGapSouthMidWest")
 
-[node name="ShoulderSouthMidWest" type="MeshInstance3D" parent="Road"]
+[node name="ShoulderSouthMidWest" type="MeshInstance3D" parent="Road" unique_id=464968707]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23.75, 0.05, 11.55)
 mesh = SubResource("Mesh_ShoulderSouthMidWest")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Road/ShoulderSouthMidWest"]
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/ShoulderSouthMidWest" unique_id=984529284]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/ShoulderSouthMidWest/StaticBody3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/ShoulderSouthMidWest/StaticBody3D" unique_id=212316122]
 shape = SubResource("Shape_ShoulderSouthMidWest")
 
-[node name="GrassGapSouthMidEast" type="MeshInstance3D" parent="Road"]
+[node name="GrassGapSouthMidEast" type="MeshInstance3D" parent="Road" unique_id=1595094713]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.25, 0.05, 12.425)
 mesh = SubResource("Mesh_GrassGapSouthMidEast")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Road/GrassGapSouthMidEast"]
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/GrassGapSouthMidEast" unique_id=1531642808]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/GrassGapSouthMidEast/StaticBody3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/GrassGapSouthMidEast/StaticBody3D" unique_id=1721253997]
 shape = SubResource("Shape_GrassGapSouthMidEast")
 
-[node name="ShoulderSouthMidEast" type="MeshInstance3D" parent="Road"]
+[node name="ShoulderSouthMidEast" type="MeshInstance3D" parent="Road" unique_id=35706766]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.25, 0.05, 11.55)
 mesh = SubResource("Mesh_ShoulderSouthMidEast")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Road/ShoulderSouthMidEast"]
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/ShoulderSouthMidEast" unique_id=495329727]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/ShoulderSouthMidEast/StaticBody3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/ShoulderSouthMidEast/StaticBody3D" unique_id=783205599]
 shape = SubResource("Shape_ShoulderSouthMidEast")
 
-[node name="GrassGapSouthEast" type="MeshInstance3D" parent="Road"]
+[node name="GrassGapSouthEast" type="MeshInstance3D" parent="Road" unique_id=40448426]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 52.25, 0.05, 12.425)
 mesh = SubResource("Mesh_GrassGapSouthEast")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Road/GrassGapSouthEast"]
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/GrassGapSouthEast" unique_id=343192206]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/GrassGapSouthEast/StaticBody3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/GrassGapSouthEast/StaticBody3D" unique_id=1423992621]
 shape = SubResource("Shape_GrassGapSouthEast")
 
-[node name="GrassGapSouthEast_PostRamp" type="MeshInstance3D" parent="Road"]
+[node name="GrassGapSouthEast_PostRamp" type="MeshInstance3D" parent="Road" unique_id=311124470]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 112.75, 0.05, 12.425)
 mesh = SubResource("Mesh_GrassGapSouthEast_Post")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Road/GrassGapSouthEast_PostRamp"]
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/GrassGapSouthEast_PostRamp" unique_id=209021070]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/GrassGapSouthEast_PostRamp/StaticBody3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/GrassGapSouthEast_PostRamp/StaticBody3D" unique_id=99946780]
 shape = SubResource("Shape_GrassGapSouthEast_Post")
 
-[node name="ShoulderSouthEast" type="MeshInstance3D" parent="Road"]
+[node name="ShoulderSouthEast" type="MeshInstance3D" parent="Road" unique_id=1415720822]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 52.25, 0.05, 11.55)
 mesh = SubResource("Mesh_ShoulderSouthEast")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Road/ShoulderSouthEast"]
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/ShoulderSouthEast" unique_id=1951153782]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/ShoulderSouthEast/StaticBody3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/ShoulderSouthEast/StaticBody3D" unique_id=2008673830]
 shape = SubResource("Shape_ShoulderSouthEast")
 
-[node name="ShoulderSouthEast_PostRamp" type="MeshInstance3D" parent="Road"]
+[node name="ShoulderSouthEast_PostRamp" type="MeshInstance3D" parent="Road" unique_id=1556907145]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 112.75, 0.05, 11.55)
 mesh = SubResource("Mesh_ShoulderSouthEast_Post")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Road/ShoulderSouthEast_PostRamp"]
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/ShoulderSouthEast_PostRamp" unique_id=230801661]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/ShoulderSouthEast_PostRamp/StaticBody3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/ShoulderSouthEast_PostRamp/StaticBody3D" unique_id=969959512]
 shape = SubResource("Shape_ShoulderSouthEast_Post")
 
-[node name="ConnectorRoad" type="MeshInstance3D" parent="Road"]
+[node name="ConnectorRoad" type="MeshInstance3D" parent="Road" unique_id=165786502]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 68, 0.05, 18.25)
 mesh = SubResource("Mesh_ConnectorRoad")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Road/ConnectorRoad"]
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/ConnectorRoad" unique_id=1666454400]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/ConnectorRoad/StaticBody3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/ConnectorRoad/StaticBody3D" unique_id=1395409431]
 shape = SubResource("Shape_ConnectorRoad")
 
-[node name="TurnFilletWest" type="MeshInstance3D" parent="Road"]
+[node name="TurnFilletWest" type="MeshInstance3D" parent="Road" unique_id=1551187966]
 transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 62.2, 0.05, 12.5)
 mesh = SubResource("Mesh_TurnFilletWest")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Road/TurnFilletWest"]
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/TurnFilletWest" unique_id=1408439031]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/TurnFilletWest/StaticBody3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/TurnFilletWest/StaticBody3D" unique_id=224920900]
 shape = SubResource("Shape_TurnFilletWest")
 
-[node name="TurnFilletEast" type="MeshInstance3D" parent="Road"]
+[node name="TurnFilletEast" type="MeshInstance3D" parent="Road" unique_id=127171896]
 transform = Transform3D(0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, 0.707107, 73.8, 0.05, 12.5)
 mesh = SubResource("Mesh_TurnFilletEast")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Road/TurnFilletEast"]
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/TurnFilletEast" unique_id=1418073386]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/TurnFilletEast/StaticBody3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/TurnFilletEast/StaticBody3D" unique_id=606219314]
 shape = SubResource("Shape_TurnFilletEast")
 
-[node name="ConnectorTurnFillet" type="MeshInstance3D" parent="Road"]
+[node name="ConnectorTurnFillet" type="MeshInstance3D" parent="Road" unique_id=1512187972]
 transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 73.8, 0.05, 23.2)
 mesh = SubResource("Mesh_ConnectorTurnFillet")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Road/ConnectorTurnFillet"]
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/ConnectorTurnFillet" unique_id=528112326]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/ConnectorTurnFillet/StaticBody3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/ConnectorTurnFillet/StaticBody3D" unique_id=1848337620]
 shape = SubResource("Shape_ConnectorTurnFillet")
 
-[node name="FrontageRoad" type="MeshInstance3D" parent="Road"]
+[node name="FrontageRoad" type="MeshInstance3D" parent="Road" unique_id=270418813]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 115.75, 0.05, 28)
 mesh = SubResource("Mesh_FrontageRoad")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Road/FrontageRoad"]
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/FrontageRoad" unique_id=501470365]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/FrontageRoad/StaticBody3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/FrontageRoad/StaticBody3D" unique_id=1739385274]
 shape = SubResource("Shape_FrontageRoad")
 
-[node name="DrivewayFrontage_Retail" type="MeshInstance3D" parent="Road"]
+[node name="DrivewayFrontage_Retail" type="MeshInstance3D" parent="Road" unique_id=1723898171]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 88, 0.05, 33.25)
 mesh = SubResource("Mesh_DrivewayFrontage_Retail")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Road/DrivewayFrontage_Retail"]
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/DrivewayFrontage_Retail" unique_id=1358530760]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/DrivewayFrontage_Retail/StaticBody3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/DrivewayFrontage_Retail/StaticBody3D" unique_id=130344351]
 shape = SubResource("Shape_DrivewayFrontage_Retail")
 
-[node name="DrivewayFrontage_CarCare" type="MeshInstance3D" parent="Road"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 120, 0.05, 33.5)
+[node name="DrivewayFrontage_CarCare" type="MeshInstance3D" parent="Road" unique_id=1818792882]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 120, 0.05, 33.25)
 mesh = SubResource("Mesh_DrivewayFrontage_CarCare")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Road/DrivewayFrontage_CarCare"]
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/DrivewayFrontage_CarCare" unique_id=905336346]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/DrivewayFrontage_CarCare/StaticBody3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/DrivewayFrontage_CarCare/StaticBody3D" unique_id=808083171]
 shape = SubResource("Shape_DrivewayFrontage_CarCare")
 
-[node name="DrivewayFrontage_Commercial" type="MeshInstance3D" parent="Road"]
+[node name="DrivewayFrontage_Commercial" type="MeshInstance3D" parent="Road" unique_id=1372225571]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 150, 0.05, 33.25)
 mesh = SubResource("Mesh_DrivewayFrontage_Commercial")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Road/DrivewayFrontage_Commercial"]
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/DrivewayFrontage_Commercial" unique_id=457701532]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/DrivewayFrontage_Commercial/StaticBody3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/DrivewayFrontage_Commercial/StaticBody3D" unique_id=1283245914]
 shape = SubResource("Shape_DrivewayFrontage_Commercial")
 
-[node name="GrassGapNorthFarWest" type="MeshInstance3D" parent="Road"]
+[node name="GrassGapNorthFarWest" type="MeshInstance3D" parent="Road" unique_id=1330243112]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -82.75, 0.05, -12.425)
 mesh = SubResource("Mesh_GrassGapNorthFarWest")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Road/GrassGapNorthFarWest"]
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/GrassGapNorthFarWest" unique_id=1210999956]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/GrassGapNorthFarWest/StaticBody3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/GrassGapNorthFarWest/StaticBody3D" unique_id=355440257]
 shape = SubResource("Shape_GrassGapNorthFarWest")
 
-[node name="ShoulderNorthFarWest" type="MeshInstance3D" parent="Road"]
+[node name="ShoulderNorthFarWest" type="MeshInstance3D" parent="Road" unique_id=1530476369]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -82.75, 0.05, -11.55)
 mesh = SubResource("Mesh_ShoulderNorthFarWest")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Road/ShoulderNorthFarWest"]
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/ShoulderNorthFarWest" unique_id=587770532]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/ShoulderNorthFarWest/StaticBody3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/ShoulderNorthFarWest/StaticBody3D" unique_id=1702407356]
 shape = SubResource("Shape_ShoulderNorthFarWest")
 
-[node name="GrassGapNorthSmellMid" type="MeshInstance3D" parent="Road"]
+[node name="GrassGapNorthSmellMid" type="MeshInstance3D" parent="Road" unique_id=475292788]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -54.5, 0.05, -12.425)
 mesh = SubResource("Mesh_GrassGapNorthSmellMid")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Road/GrassGapNorthSmellMid"]
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/GrassGapNorthSmellMid" unique_id=456547489]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/GrassGapNorthSmellMid/StaticBody3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/GrassGapNorthSmellMid/StaticBody3D" unique_id=789427672]
 shape = SubResource("Shape_GrassGapNorthSmellMid")
 
-[node name="ShoulderNorthSmellMid" type="MeshInstance3D" parent="Road"]
+[node name="ShoulderNorthSmellMid" type="MeshInstance3D" parent="Road" unique_id=63117137]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -54.5, 0.05, -11.55)
 mesh = SubResource("Mesh_ShoulderNorthSmellMid")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Road/ShoulderNorthSmellMid"]
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/ShoulderNorthSmellMid" unique_id=1374539229]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/ShoulderNorthSmellMid/StaticBody3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/ShoulderNorthSmellMid/StaticBody3D" unique_id=246399193]
 shape = SubResource("Shape_ShoulderNorthSmellMid")
 
-[node name="GrassGapNorthWest" type="MeshInstance3D" parent="Road"]
+[node name="GrassGapNorthWest" type="MeshInstance3D" parent="Road" unique_id=714341908]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.25, 0.05, -12.425)
 mesh = SubResource("Mesh_GrassGapNorthWest")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Road/GrassGapNorthWest"]
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/GrassGapNorthWest" unique_id=317681811]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/GrassGapNorthWest/StaticBody3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/GrassGapNorthWest/StaticBody3D" unique_id=1215193707]
 shape = SubResource("Shape_GrassGapNorthWest")
 
-[node name="ShoulderNorthWest" type="MeshInstance3D" parent="Road"]
+[node name="ShoulderNorthWest" type="MeshInstance3D" parent="Road" unique_id=1099950105]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.25, 0.05, -11.55)
 mesh = SubResource("Mesh_ShoulderNorthWest")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Road/ShoulderNorthWest"]
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/ShoulderNorthWest" unique_id=381089367]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/ShoulderNorthWest/StaticBody3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/ShoulderNorthWest/StaticBody3D" unique_id=2126921053]
 shape = SubResource("Shape_ShoulderNorthWest")
 
-[node name="GrassGapNorthEast" type="MeshInstance3D" parent="Road"]
+[node name="GrassGapNorthEast" type="MeshInstance3D" parent="Road" unique_id=1087242000]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 83.5, 0.05, -12.425)
 mesh = SubResource("Mesh_GrassGapNorthEast")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Road/GrassGapNorthEast"]
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/GrassGapNorthEast" unique_id=1333945768]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/GrassGapNorthEast/StaticBody3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/GrassGapNorthEast/StaticBody3D" unique_id=837081482]
 shape = SubResource("Shape_GrassGapNorthEast")
 
-[node name="ShoulderNorthEast" type="MeshInstance3D" parent="Road"]
+[node name="ShoulderNorthEast" type="MeshInstance3D" parent="Road" unique_id=743813085]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 83.5, 0.05, -11.55)
 mesh = SubResource("Mesh_ShoulderNorthEast")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Road/ShoulderNorthEast"]
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/ShoulderNorthEast" unique_id=1607649054]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/ShoulderNorthEast/StaticBody3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/ShoulderNorthEast/StaticBody3D" unique_id=1686589171]
 shape = SubResource("Shape_ShoulderNorthEast")
 
 [node name="Markings" type="Node3D" parent="Road" unique_id=1276183779]
@@ -891,11 +900,11 @@ mesh = SubResource("Mesh_YellowLine")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25, 0.06, -0.16)
 mesh = SubResource("Mesh_YellowLine")
 
-[node name="EdgeLineSouth" type="MeshInstance3D" parent="Road/Markings"]
+[node name="EdgeLineSouth" type="MeshInstance3D" parent="Road/Markings" unique_id=1093360921]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25, 0.06, 11.25)
 mesh = SubResource("Mesh_WhiteLine")
 
-[node name="EdgeLineNorth" type="MeshInstance3D" parent="Road/Markings"]
+[node name="EdgeLineNorth" type="MeshInstance3D" parent="Road/Markings" unique_id=728054092]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25, 0.06, -11.25)
 mesh = SubResource("Mesh_WhiteLine")
 
@@ -1139,267 +1148,283 @@ mesh = SubResource("Mesh_WhiteDash")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 144, 0.06, 3.75)
 mesh = SubResource("Mesh_WhiteDash")
 
-[node name="LaneDashEastOuter_-88" type="MeshInstance3D" parent="Road/Markings"]
+[node name="LaneDashEastOuter_-88" type="MeshInstance3D" parent="Road/Markings" unique_id=803278279]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -88, 0.06, -7.5)
 mesh = SubResource("Mesh_WhiteDash")
 
-[node name="LaneDashWestOuter_-88" type="MeshInstance3D" parent="Road/Markings"]
+[node name="LaneDashWestOuter_-88" type="MeshInstance3D" parent="Road/Markings" unique_id=87020281]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -88, 0.06, 7.5)
 mesh = SubResource("Mesh_WhiteDash")
-[node name="LaneDashEastOuter_-80" type="MeshInstance3D" parent="Road/Markings"]
+
+[node name="LaneDashEastOuter_-80" type="MeshInstance3D" parent="Road/Markings" unique_id=62067219]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -80, 0.06, -7.5)
 mesh = SubResource("Mesh_WhiteDash")
 
-[node name="LaneDashWestOuter_-80" type="MeshInstance3D" parent="Road/Markings"]
+[node name="LaneDashWestOuter_-80" type="MeshInstance3D" parent="Road/Markings" unique_id=269982812]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -80, 0.06, 7.5)
 mesh = SubResource("Mesh_WhiteDash")
-[node name="LaneDashEastOuter_-72" type="MeshInstance3D" parent="Road/Markings"]
+
+[node name="LaneDashEastOuter_-72" type="MeshInstance3D" parent="Road/Markings" unique_id=1613801160]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -72, 0.06, -7.5)
 mesh = SubResource("Mesh_WhiteDash")
 
-[node name="LaneDashWestOuter_-72" type="MeshInstance3D" parent="Road/Markings"]
+[node name="LaneDashWestOuter_-72" type="MeshInstance3D" parent="Road/Markings" unique_id=637283771]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -72, 0.06, 7.5)
 mesh = SubResource("Mesh_WhiteDash")
-[node name="LaneDashEastOuter_-64" type="MeshInstance3D" parent="Road/Markings"]
+
+[node name="LaneDashEastOuter_-64" type="MeshInstance3D" parent="Road/Markings" unique_id=81920170]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -64, 0.06, -7.5)
 mesh = SubResource("Mesh_WhiteDash")
 
-[node name="LaneDashWestOuter_-64" type="MeshInstance3D" parent="Road/Markings"]
+[node name="LaneDashWestOuter_-64" type="MeshInstance3D" parent="Road/Markings" unique_id=522366495]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -64, 0.06, 7.5)
 mesh = SubResource("Mesh_WhiteDash")
-[node name="LaneDashEastOuter_-56" type="MeshInstance3D" parent="Road/Markings"]
+
+[node name="LaneDashEastOuter_-56" type="MeshInstance3D" parent="Road/Markings" unique_id=1070747733]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -56, 0.06, -7.5)
 mesh = SubResource("Mesh_WhiteDash")
 
-[node name="LaneDashWestOuter_-56" type="MeshInstance3D" parent="Road/Markings"]
+[node name="LaneDashWestOuter_-56" type="MeshInstance3D" parent="Road/Markings" unique_id=1228470771]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -56, 0.06, 7.5)
 mesh = SubResource("Mesh_WhiteDash")
-[node name="LaneDashEastOuter_-48" type="MeshInstance3D" parent="Road/Markings"]
+
+[node name="LaneDashEastOuter_-48" type="MeshInstance3D" parent="Road/Markings" unique_id=1761668206]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -48, 0.06, -7.5)
 mesh = SubResource("Mesh_WhiteDash")
 
-[node name="LaneDashWestOuter_-48" type="MeshInstance3D" parent="Road/Markings"]
+[node name="LaneDashWestOuter_-48" type="MeshInstance3D" parent="Road/Markings" unique_id=1849139207]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -48, 0.06, 7.5)
 mesh = SubResource("Mesh_WhiteDash")
-[node name="LaneDashEastOuter_-40" type="MeshInstance3D" parent="Road/Markings"]
+
+[node name="LaneDashEastOuter_-40" type="MeshInstance3D" parent="Road/Markings" unique_id=78368305]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40, 0.06, -7.5)
 mesh = SubResource("Mesh_WhiteDash")
 
-[node name="LaneDashWestOuter_-40" type="MeshInstance3D" parent="Road/Markings"]
+[node name="LaneDashWestOuter_-40" type="MeshInstance3D" parent="Road/Markings" unique_id=952312985]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40, 0.06, 7.5)
 mesh = SubResource("Mesh_WhiteDash")
-[node name="LaneDashEastOuter_-32" type="MeshInstance3D" parent="Road/Markings"]
+
+[node name="LaneDashEastOuter_-32" type="MeshInstance3D" parent="Road/Markings" unique_id=355110813]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -32, 0.06, -7.5)
 mesh = SubResource("Mesh_WhiteDash")
 
-[node name="LaneDashWestOuter_-32" type="MeshInstance3D" parent="Road/Markings"]
+[node name="LaneDashWestOuter_-32" type="MeshInstance3D" parent="Road/Markings" unique_id=1534806334]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -32, 0.06, 7.5)
 mesh = SubResource("Mesh_WhiteDash")
-[node name="LaneDashEastOuter_-24" type="MeshInstance3D" parent="Road/Markings"]
+
+[node name="LaneDashEastOuter_-24" type="MeshInstance3D" parent="Road/Markings" unique_id=375360080]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, 0.06, -7.5)
 mesh = SubResource("Mesh_WhiteDash")
 
-[node name="LaneDashWestOuter_-24" type="MeshInstance3D" parent="Road/Markings"]
+[node name="LaneDashWestOuter_-24" type="MeshInstance3D" parent="Road/Markings" unique_id=1220815084]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, 0.06, 7.5)
 mesh = SubResource("Mesh_WhiteDash")
-[node name="LaneDashEastOuter_-16" type="MeshInstance3D" parent="Road/Markings"]
+
+[node name="LaneDashEastOuter_-16" type="MeshInstance3D" parent="Road/Markings" unique_id=1971538373]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 0.06, -7.5)
 mesh = SubResource("Mesh_WhiteDash")
 
-[node name="LaneDashWestOuter_-16" type="MeshInstance3D" parent="Road/Markings"]
+[node name="LaneDashWestOuter_-16" type="MeshInstance3D" parent="Road/Markings" unique_id=580632909]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 0.06, 7.5)
 mesh = SubResource("Mesh_WhiteDash")
-[node name="LaneDashEastOuter_-8" type="MeshInstance3D" parent="Road/Markings"]
+
+[node name="LaneDashEastOuter_-8" type="MeshInstance3D" parent="Road/Markings" unique_id=1460233867]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0.06, -7.5)
 mesh = SubResource("Mesh_WhiteDash")
 
-[node name="LaneDashWestOuter_-8" type="MeshInstance3D" parent="Road/Markings"]
+[node name="LaneDashWestOuter_-8" type="MeshInstance3D" parent="Road/Markings" unique_id=1698446018]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0.06, 7.5)
 mesh = SubResource("Mesh_WhiteDash")
-[node name="LaneDashEastOuter_0" type="MeshInstance3D" parent="Road/Markings"]
+
+[node name="LaneDashEastOuter_0" type="MeshInstance3D" parent="Road/Markings" unique_id=1380974634]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06, -7.5)
 mesh = SubResource("Mesh_WhiteDash")
 
-[node name="LaneDashWestOuter_0" type="MeshInstance3D" parent="Road/Markings"]
+[node name="LaneDashWestOuter_0" type="MeshInstance3D" parent="Road/Markings" unique_id=2083042997]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06, 7.5)
 mesh = SubResource("Mesh_WhiteDash")
-[node name="LaneDashEastOuter_8" type="MeshInstance3D" parent="Road/Markings"]
+
+[node name="LaneDashEastOuter_8" type="MeshInstance3D" parent="Road/Markings" unique_id=1170535032]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.06, -7.5)
 mesh = SubResource("Mesh_WhiteDash")
 
-[node name="LaneDashWestOuter_8" type="MeshInstance3D" parent="Road/Markings"]
+[node name="LaneDashWestOuter_8" type="MeshInstance3D" parent="Road/Markings" unique_id=1551152338]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.06, 7.5)
 mesh = SubResource("Mesh_WhiteDash")
-[node name="LaneDashEastOuter_16" type="MeshInstance3D" parent="Road/Markings"]
+
+[node name="LaneDashEastOuter_16" type="MeshInstance3D" parent="Road/Markings" unique_id=823798390]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0.06, -7.5)
 mesh = SubResource("Mesh_WhiteDash")
 
-[node name="LaneDashWestOuter_16" type="MeshInstance3D" parent="Road/Markings"]
+[node name="LaneDashWestOuter_16" type="MeshInstance3D" parent="Road/Markings" unique_id=263017755]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0.06, 7.5)
 mesh = SubResource("Mesh_WhiteDash")
-[node name="LaneDashEastOuter_24" type="MeshInstance3D" parent="Road/Markings"]
+
+[node name="LaneDashEastOuter_24" type="MeshInstance3D" parent="Road/Markings" unique_id=1428435561]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 0.06, -7.5)
 mesh = SubResource("Mesh_WhiteDash")
 
-[node name="LaneDashWestOuter_24" type="MeshInstance3D" parent="Road/Markings"]
+[node name="LaneDashWestOuter_24" type="MeshInstance3D" parent="Road/Markings" unique_id=434275690]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 0.06, 7.5)
 mesh = SubResource("Mesh_WhiteDash")
-[node name="LaneDashEastOuter_32" type="MeshInstance3D" parent="Road/Markings"]
+
+[node name="LaneDashEastOuter_32" type="MeshInstance3D" parent="Road/Markings" unique_id=738447295]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, 0.06, -7.5)
 mesh = SubResource("Mesh_WhiteDash")
 
-[node name="LaneDashWestOuter_32" type="MeshInstance3D" parent="Road/Markings"]
+[node name="LaneDashWestOuter_32" type="MeshInstance3D" parent="Road/Markings" unique_id=126879500]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, 0.06, 7.5)
 mesh = SubResource("Mesh_WhiteDash")
-[node name="LaneDashEastOuter_40" type="MeshInstance3D" parent="Road/Markings"]
+
+[node name="LaneDashEastOuter_40" type="MeshInstance3D" parent="Road/Markings" unique_id=753395383]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0.06, -7.5)
 mesh = SubResource("Mesh_WhiteDash")
 
-[node name="LaneDashWestOuter_40" type="MeshInstance3D" parent="Road/Markings"]
+[node name="LaneDashWestOuter_40" type="MeshInstance3D" parent="Road/Markings" unique_id=1557188683]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0.06, 7.5)
 mesh = SubResource("Mesh_WhiteDash")
-[node name="LaneDashEastOuter_48" type="MeshInstance3D" parent="Road/Markings"]
+
+[node name="LaneDashEastOuter_48" type="MeshInstance3D" parent="Road/Markings" unique_id=1440457591]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48, 0.06, -7.5)
 mesh = SubResource("Mesh_WhiteDash")
 
-[node name="LaneDashWestOuter_48" type="MeshInstance3D" parent="Road/Markings"]
+[node name="LaneDashWestOuter_48" type="MeshInstance3D" parent="Road/Markings" unique_id=386598197]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48, 0.06, 7.5)
 mesh = SubResource("Mesh_WhiteDash")
-[node name="LaneDashEastOuter_56" type="MeshInstance3D" parent="Road/Markings"]
+
+[node name="LaneDashEastOuter_56" type="MeshInstance3D" parent="Road/Markings" unique_id=1720705372]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 56, 0.06, -7.5)
 mesh = SubResource("Mesh_WhiteDash")
 
-[node name="LaneDashWestOuter_56" type="MeshInstance3D" parent="Road/Markings"]
+[node name="LaneDashWestOuter_56" type="MeshInstance3D" parent="Road/Markings" unique_id=1981127277]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 56, 0.06, 7.5)
 mesh = SubResource("Mesh_WhiteDash")
-[node name="LaneDashEastOuter_64" type="MeshInstance3D" parent="Road/Markings"]
+
+[node name="LaneDashEastOuter_64" type="MeshInstance3D" parent="Road/Markings" unique_id=2137609234]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64, 0.06, -7.5)
 mesh = SubResource("Mesh_WhiteDash")
 
-[node name="LaneDashWestOuter_64" type="MeshInstance3D" parent="Road/Markings"]
+[node name="LaneDashWestOuter_64" type="MeshInstance3D" parent="Road/Markings" unique_id=661565868]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64, 0.06, 7.5)
 mesh = SubResource("Mesh_WhiteDash")
-[node name="LaneDashEastOuter_72" type="MeshInstance3D" parent="Road/Markings"]
+
+[node name="LaneDashEastOuter_72" type="MeshInstance3D" parent="Road/Markings" unique_id=223038088]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 72, 0.06, -7.5)
 mesh = SubResource("Mesh_WhiteDash")
 
-[node name="LaneDashWestOuter_72" type="MeshInstance3D" parent="Road/Markings"]
+[node name="LaneDashWestOuter_72" type="MeshInstance3D" parent="Road/Markings" unique_id=1031261661]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 72, 0.06, 7.5)
 mesh = SubResource("Mesh_WhiteDash")
-[node name="LaneDashEastOuter_80" type="MeshInstance3D" parent="Road/Markings"]
+
+[node name="LaneDashEastOuter_80" type="MeshInstance3D" parent="Road/Markings" unique_id=1375604059]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 80, 0.06, -7.5)
 mesh = SubResource("Mesh_WhiteDash")
 
-[node name="LaneDashWestOuter_80" type="MeshInstance3D" parent="Road/Markings"]
+[node name="LaneDashWestOuter_80" type="MeshInstance3D" parent="Road/Markings" unique_id=656272454]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 80, 0.06, 7.5)
 mesh = SubResource("Mesh_WhiteDash")
-[node name="LaneDashEastOuter_88" type="MeshInstance3D" parent="Road/Markings"]
+
+[node name="LaneDashEastOuter_88" type="MeshInstance3D" parent="Road/Markings" unique_id=997575446]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 88, 0.06, -7.5)
 mesh = SubResource("Mesh_WhiteDash")
 
-[node name="LaneDashWestOuter_88" type="MeshInstance3D" parent="Road/Markings"]
+[node name="LaneDashWestOuter_88" type="MeshInstance3D" parent="Road/Markings" unique_id=2114799579]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 88, 0.06, 7.5)
 mesh = SubResource("Mesh_WhiteDash")
-[node name="LaneDashEastOuter_96" type="MeshInstance3D" parent="Road/Markings"]
+
+[node name="LaneDashEastOuter_96" type="MeshInstance3D" parent="Road/Markings" unique_id=9149420]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 96, 0.06, -7.5)
 mesh = SubResource("Mesh_WhiteDash")
 
-[node name="LaneDashWestOuter_96" type="MeshInstance3D" parent="Road/Markings"]
+[node name="LaneDashWestOuter_96" type="MeshInstance3D" parent="Road/Markings" unique_id=2144306491]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 96, 0.06, 7.5)
 mesh = SubResource("Mesh_WhiteDash")
-[node name="LaneDashEastOuter_104" type="MeshInstance3D" parent="Road/Markings"]
+
+[node name="LaneDashEastOuter_104" type="MeshInstance3D" parent="Road/Markings" unique_id=2028007601]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 104, 0.06, -7.5)
 mesh = SubResource("Mesh_WhiteDash")
 
-[node name="LaneDashWestOuter_104" type="MeshInstance3D" parent="Road/Markings"]
+[node name="LaneDashWestOuter_104" type="MeshInstance3D" parent="Road/Markings" unique_id=879994718]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 104, 0.06, 7.5)
 mesh = SubResource("Mesh_WhiteDash")
-[node name="LaneDashEastOuter_112" type="MeshInstance3D" parent="Road/Markings"]
+
+[node name="LaneDashEastOuter_112" type="MeshInstance3D" parent="Road/Markings" unique_id=371923024]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 112, 0.06, -7.5)
 mesh = SubResource("Mesh_WhiteDash")
 
-[node name="LaneDashWestOuter_112" type="MeshInstance3D" parent="Road/Markings"]
+[node name="LaneDashWestOuter_112" type="MeshInstance3D" parent="Road/Markings" unique_id=1934941003]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 112, 0.06, 7.5)
 mesh = SubResource("Mesh_WhiteDash")
-[node name="LaneDashEastOuter_120" type="MeshInstance3D" parent="Road/Markings"]
+
+[node name="LaneDashEastOuter_120" type="MeshInstance3D" parent="Road/Markings" unique_id=552253518]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 120, 0.06, -7.5)
 mesh = SubResource("Mesh_WhiteDash")
 
-[node name="LaneDashWestOuter_120" type="MeshInstance3D" parent="Road/Markings"]
+[node name="LaneDashWestOuter_120" type="MeshInstance3D" parent="Road/Markings" unique_id=1398571901]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 120, 0.06, 7.5)
 mesh = SubResource("Mesh_WhiteDash")
-[node name="LaneDashEastOuter_128" type="MeshInstance3D" parent="Road/Markings"]
+
+[node name="LaneDashEastOuter_128" type="MeshInstance3D" parent="Road/Markings" unique_id=239662277]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 128, 0.06, -7.5)
 mesh = SubResource("Mesh_WhiteDash")
 
-[node name="LaneDashWestOuter_128" type="MeshInstance3D" parent="Road/Markings"]
+[node name="LaneDashWestOuter_128" type="MeshInstance3D" parent="Road/Markings" unique_id=1266422492]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 128, 0.06, 7.5)
 mesh = SubResource("Mesh_WhiteDash")
-[node name="LaneDashEastOuter_136" type="MeshInstance3D" parent="Road/Markings"]
+
+[node name="LaneDashEastOuter_136" type="MeshInstance3D" parent="Road/Markings" unique_id=374659619]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 136, 0.06, -7.5)
 mesh = SubResource("Mesh_WhiteDash")
 
-[node name="LaneDashWestOuter_136" type="MeshInstance3D" parent="Road/Markings"]
+[node name="LaneDashWestOuter_136" type="MeshInstance3D" parent="Road/Markings" unique_id=1296325371]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 136, 0.06, 7.5)
 mesh = SubResource("Mesh_WhiteDash")
-[node name="LaneDashEastOuter_144" type="MeshInstance3D" parent="Road/Markings"]
+
+[node name="LaneDashEastOuter_144" type="MeshInstance3D" parent="Road/Markings" unique_id=1131965461]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 144, 0.06, -7.5)
 mesh = SubResource("Mesh_WhiteDash")
 
-[node name="LaneDashWestOuter_144" type="MeshInstance3D" parent="Road/Markings"]
+[node name="LaneDashWestOuter_144" type="MeshInstance3D" parent="Road/Markings" unique_id=150476748]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 144, 0.06, 7.5)
 mesh = SubResource("Mesh_WhiteDash")
-[node name="ConnectorYellowLine" type="MeshInstance3D" parent="Road/Markings"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 68, 0.06, 16.625)
+
+[node name="ConnectorYellowLine1" type="MeshInstance3D" parent="Road/Markings" unique_id=981210466]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 67.9, 0.06, 16.625)
 mesh = SubResource("Mesh_ConnectorYellowLine")
 
-[node name="TurnArc_0" type="MeshInstance3D" parent="Road/Markings"]
-transform = Transform3D(0.13053, 0, 0.99144, 0, 1, 0, -0.99144, 0, 0.13053, 68.102, 0.06, 22.776)
-mesh = SubResource("Mesh_TurnArcSeg")
+[node name="ConnectorYellowLine2" type="MeshInstance3D" parent="Road/Markings" unique_id=705155597]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 68.1, 0.06, 16.625)
+mesh = SubResource("Mesh_ConnectorYellowLine")
 
-[node name="TurnArc_1" type="MeshInstance3D" parent="Road/Markings"]
-transform = Transform3D(0.38268, 0, 0.92388, 0, 1, 0, -0.92388, 0, 0.38268, 68.504, 0.06, 24.276)
-mesh = SubResource("Mesh_TurnArcSeg")
+[node name="ConnectorTurnYellowLine" type="MeshInstance3D" parent="Road/Markings" unique_id=1988074879]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 74, 0.06, 22)
+material_override = SubResource("Mat_YellowMarking")
+mesh = ExtResource("34_connector_turn_yellow_line")
 
-[node name="TurnArc_2" type="MeshInstance3D" parent="Road/Markings"]
-transform = Transform3D(0.60876, 0, 0.79335, 0, 1, 0, -0.79335, 0, 0.60876, 69.281, 0.06, 25.621)
-mesh = SubResource("Mesh_TurnArcSeg")
-
-[node name="TurnArc_3" type="MeshInstance3D" parent="Road/Markings"]
-transform = Transform3D(0.79335, 0, 0.60876, 0, 1, 0, -0.60876, 0, 0.79335, 70.379, 0.06, 26.719)
-mesh = SubResource("Mesh_TurnArcSeg")
-
-[node name="TurnArc_4" type="MeshInstance3D" parent="Road/Markings"]
-transform = Transform3D(0.92388, 0, 0.38268, 0, 1, 0, -0.38268, 0, 0.92388, 71.724, 0.06, 27.496)
-mesh = SubResource("Mesh_TurnArcSeg")
-
-[node name="TurnArc_5" type="MeshInstance3D" parent="Road/Markings"]
-transform = Transform3D(0.99144, 0, 0.13053, 0, 1, 0, -0.13053, 0, 0.99144, 73.224, 0.06, 27.898)
-mesh = SubResource("Mesh_TurnArcSeg")
-
-[node name="FrontageYellowLine1" type="MeshInstance3D" parent="Road/Markings"]
+[node name="FrontageYellowLine1" type="MeshInstance3D" parent="Road/Markings" unique_id=854381887]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 121, 0.06, 27.9)
 mesh = SubResource("Mesh_FrontageYellowLine")
 
-[node name="FrontageYellowLine2" type="MeshInstance3D" parent="Road/Markings"]
+[node name="FrontageYellowLine2" type="MeshInstance3D" parent="Road/Markings" unique_id=250106654]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 121, 0.06, 28.1)
 mesh = SubResource("Mesh_FrontageYellowLine")
 
-[node name="FrontageWhiteLineNorth" type="MeshInstance3D" parent="Road/Markings"]
+[node name="FrontageWhiteLineNorth" type="MeshInstance3D" parent="Road/Markings" unique_id=374040422]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 122.25, 0.06, 24.65)
 mesh = SubResource("Mesh_FrontageWhiteLine")
 
-[node name="FrontageWhiteLineSouth" type="MeshInstance3D" parent="Road/Markings"]
+[node name="FrontageWhiteLineSouth" type="MeshInstance3D" parent="Road/Markings" unique_id=826456123]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 115.75, 0.06, 31.35)
 mesh = SubResource("Mesh_FrontageWhiteLineSouth")
 
-[node name="ConnectorWhiteLineWest" type="MeshInstance3D" parent="Road/Markings"]
+[node name="ConnectorWhiteLineWest" type="MeshInstance3D" parent="Road/Markings" unique_id=1291192345]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 63.65, 0.06, 18)
 mesh = SubResource("Mesh_ConnectorWhiteLineWest")
 
-[node name="ConnectorWhiteLineEast" type="MeshInstance3D" parent="Road/Markings"]
+[node name="ConnectorWhiteLineEast" type="MeshInstance3D" parent="Road/Markings" unique_id=807669185]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 72.35, 0.06, 15.5)
 mesh = SubResource("Mesh_ConnectorWhiteLineEast")
+
 [node name="Parking" type="Node3D" parent="." unique_id=1161850307]
 
 [node name="ParkingLot" type="MeshInstance3D" parent="Parking" unique_id=781763629]
@@ -1665,22 +1690,35 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -55, 0, -29.7)
 [node name="Dorf" parent="Props" unique_id=2059943636 instance=ExtResource("26_dorf")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 100, 0, -40)
 
-[node name="Billboard" parent="Props" instance=ExtResource("27_billboard")]
+[node name="Billboard" parent="Props" unique_id=1495113245 instance=ExtResource("27_billboard")]
 transform = Transform3D(0.939693, 0, -0.34202, 0, 1, 0, 0.34202, 0, 0.939693, 62, 0, -20)
 
 [node name="FireHydrant" parent="Props" unique_id=1723070049 instance=ExtResource("15_hydrant")]
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 4, 0.245, 12.1)
-[node name="FrontageRetail" parent="Props" instance=ExtResource("29_frontage_retail")]
+
+[node name="FrontageRetail" parent="Props" unique_id=159800445 instance=ExtResource("29_frontage_retail")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 88, 0, 45)
 
-[node name="ConsumerCarCare" parent="Props" instance=ExtResource("28_car_care")]
+[node name="ConsumerCarCare" parent="Props" unique_id=535765291 instance=ExtResource("28_car_care")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 120, 0, 47)
 
-[node name="FrontageCommercial" parent="Props" instance=ExtResource("30_frontage_commercial")]
+[node name="FrontageCommercial" parent="Props" unique_id=741806017 instance=ExtResource("30_frontage_commercial")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 150, 0, 45)
 
-[node name="BillboardFrontageMedian" parent="Props" instance=ExtResource("31_billboard_offset")]
+[node name="BillboardFrontageMedian" parent="Props" unique_id=1749826145 instance=ExtResource("31_billboard_offset")]
 transform = Transform3D(0.965926, 0, 0.258819, 0, 1, 0, -0.258819, 0, 0.965926, 104, 0, 19.5)
+headline_text = "Simon G."
+tagline_text = "Nature Coast 🌲 Jewelers"
+contact_text = "Turn Right Now • 352-686-4515 ➔"
+disclaimer_text = "NATURE COAST JEWELERS • SPRING HILL, FL"
+show_banner = false
+portrait_texture = ExtResource("30_0rl1p")
+background_color = Color(0.96, 0.97, 0.98, 1)
+headline_color = Color(0.18, 0.22, 0.24, 1)
+tagline_color = Color(0.12, 0.28, 0.18, 1)
+contact_color = Color(0.15, 0.18, 0.2, 1)
+disclaimer_color = Color(0.4, 0.45, 0.5, 1)
+
 [node name="WalgroinsShoppingCarts" type="Node3D" parent="Props" unique_id=800406151]
 
 [node name="Cart_Abandoned_WestApron" parent="Props/WalgroinsShoppingCarts" unique_id=456138327 instance=ExtResource("17_cart")]
@@ -1732,14 +1770,16 @@ transform = Transform3D(-1, 0, 1.22465e-16, 0, 1, 0, -1.22465e-16, 0, -1, -66, 0
 
 [node name="Streetlight_66_m9.8" parent="Props/Streetlights" unique_id=117227173 instance=ExtResource("8_lamp")]
 transform = Transform3D(-1, 0, 1.22465e-16, 0, 1, 0, -1.22465e-16, 0, -1, 66, 0, -12.1)
-[node name="Streetlight_Frontage_88" parent="Props/Streetlights" instance=ExtResource("8_lamp")]
+
+[node name="Streetlight_Frontage_88" parent="Props/Streetlights" unique_id=1677978060 instance=ExtResource("8_lamp")]
 transform = Transform3D(-1, 0, 1.22465e-16, 0, 1, 0, -1.22465e-16, 0, -1, 88, 0, 24.2)
 
-[node name="Streetlight_Frontage_120" parent="Props/Streetlights" instance=ExtResource("8_lamp")]
+[node name="Streetlight_Frontage_120" parent="Props/Streetlights" unique_id=286705921 instance=ExtResource("8_lamp")]
 transform = Transform3D(-1, 0, 1.22465e-16, 0, 1, 0, -1.22465e-16, 0, -1, 120, 0, 24.2)
 
-[node name="Streetlight_Frontage_150" parent="Props/Streetlights" instance=ExtResource("8_lamp")]
+[node name="Streetlight_Frontage_150" parent="Props/Streetlights" unique_id=999207185 instance=ExtResource("8_lamp")]
 transform = Transform3D(-1, 0, 1.22465e-16, 0, 1, 0, -1.22465e-16, 0, -1, 150, 0, 24.2)
+
 [node name="Trees" type="Node3D" parent="Props" unique_id=1613321626]
 
 [node name="Tree_m22_11" parent="Props/Trees" unique_id=1201302378 instance=ExtResource("9_tree")]
@@ -1795,26 +1835,28 @@ tree_type = 2
 [node name="Tree_75_m11" parent="Props/Trees" unique_id=1817032470 instance=ExtResource("9_tree")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 100, 0, -52)
 tree_type = 5
-[node name="Tree_FrontageMedian_82" parent="Props/Trees" instance=ExtResource("9_tree")]
+
+[node name="Tree_FrontageMedian_82" parent="Props/Trees" unique_id=281065446 instance=ExtResource("9_tree")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 82, 0, 19.5)
 tree_type = 6
 
-[node name="Tree_FrontageMedian_102" parent="Props/Trees" instance=ExtResource("9_tree")]
+[node name="Tree_FrontageMedian_102" parent="Props/Trees" unique_id=83478254 instance=ExtResource("9_tree")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 102, 0, 20)
 tree_type = 5
 
-[node name="Tree_FrontageMedian_122" parent="Props/Trees" instance=ExtResource("9_tree")]
+[node name="Tree_FrontageMedian_122" parent="Props/Trees" unique_id=950900190 instance=ExtResource("9_tree")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 122, 0, 19)
 tree_type = 6
 
-[node name="Tree_FrontageMedian_142" parent="Props/Trees" instance=ExtResource("9_tree")]
+[node name="Tree_FrontageMedian_142" parent="Props/Trees" unique_id=239333646 instance=ExtResource("9_tree")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 142, 0, 20.5)
 tree_type = 5
 
-[node name="Tree_FrontageMedian_160" parent="Props/Trees" instance=ExtResource("9_tree")]
+[node name="Tree_FrontageMedian_160" parent="Props/Trees" unique_id=224554866 instance=ExtResource("9_tree")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 160, 0, 19.5)
 tree_type = 6
-[node name="Tree_LiveOak_Mall" parent="Props/Trees" instance=ExtResource("9_tree")]
+
+[node name="Tree_LiveOak_Mall" parent="Props/Trees" unique_id=1791726635 instance=ExtResource("9_tree")]
 transform = Transform3D(0.965926, 0, 0.258819, 0, 1, 0, -0.258819, 0, 0.965926, -14, 0, 16.5)
 tree_type = 6
 
@@ -1842,3 +1884,32 @@ flag_size = 1
 
 [node name="Flag_CrampedInnEast" parent="Props/Flags" unique_id=691767306 instance=ExtResource("14_flag")]
 transform = Transform3D(0.99863, 0, 0.052336, 0, 1, 0, -0.052336, 0, 0.99863, 61, 0, 15.85)
+
+[node name="Powerlines" type="Node3D" parent="Props" unique_id=856942670]
+
+[node name="Powerline_m85" parent="Props/Powerlines" unique_id=1630704023 instance=ExtResource("32_powerline")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -85, 0, -16)
+
+[node name="Powerline_m53" parent="Props/Powerlines" unique_id=279026478 instance=ExtResource("32_powerline")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -53, 0, -16)
+has_transformer = true
+
+[node name="Powerline_m21" parent="Props/Powerlines" unique_id=592198176 instance=ExtResource("32_powerline")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21, 0, -16)
+
+[node name="Powerline_15" parent="Props/Powerlines" unique_id=113946106 instance=ExtResource("32_powerline")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, -16)
+has_transformer = true
+
+[node name="Powerline_48" parent="Props/Powerlines" unique_id=1960349585 instance=ExtResource("32_powerline")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48, 0, -16)
+
+[node name="Powerline_80" parent="Props/Powerlines" unique_id=799970098 instance=ExtResource("32_powerline")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 80, 0, -16)
+
+[node name="Powerline_112" parent="Props/Powerlines" unique_id=1433348325 instance=ExtResource("32_powerline")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 112, 0, -16)
+has_transformer = true
+
+[node name="Powerline_145" parent="Props/Powerlines" unique_id=1481779184 instance=ExtResource("32_powerline")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 145, 0, -16)

@@ -41,6 +41,10 @@ EXTENDED_TESTS = [
     "--test-mats-cart",
     "--test-mats-collision",
     "--test-start-screen",
+    "--test-verify-render",
+    "--test-powerlines",
+    "--test-chainlink-fence",
+    "--test-foliage-wind",
 ]
 BENCHMARKS = [
     "--bench-physics",

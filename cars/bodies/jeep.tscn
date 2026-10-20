@@ -1,13 +1,23 @@
 [gd_scene format=3]
 
+[ext_resource type="Texture2D" path="res://cars/textures/grit_roughness.tres" id="1_grit_rough"]
+[ext_resource type="Texture2D" path="res://cars/textures/grit_normal.tres" id="2_grit_norm"]
+
 [sub_resource type="StandardMaterial3D" id="Mat_CarDarkTrim"]
 albedo_color = Color(0.12, 0.13, 0.15, 1)
 roughness = 0.75
 
 [sub_resource type="StandardMaterial3D" id="Mat_CarJeep"]
 albedo_color = Color(0.18, 0.38, 0.24, 1)
-metallic = 0.15
-roughness = 0.32
+metallic = 0.1
+roughness = 0.7
+roughness_texture = ExtResource("1_grit_rough")
+roughness_texture_channel = 0
+normal_enabled = true
+normal_scale = 0.45
+normal_texture = ExtResource("2_grit_norm")
+uv1_triplanar = true
+uv1_scale = Vector3(0.6, 0.6, 0.6)
 
 [sub_resource type="StandardMaterial3D" id="Mat_Headlight"]
 albedo_color = Color(1, 0.98, 0.85, 1)

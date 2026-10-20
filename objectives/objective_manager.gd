@@ -21,6 +21,7 @@ signal objective_completed(errand: MatsErrand, total: int)
 @export var generic_name_chance: float = 0.5
 @export var objectives_data_path: String = "res://objectives/mats_objectives.json"
 @export var mats_path: NodePath = NodePath("../Mats")
+@export var auto_start: bool = false
 
 var objectives_data: Dictionary = {}
 var current_state: State = State.IDLE
@@ -30,7 +31,7 @@ var last_completed_errand: MatsErrand = null
 var recent_errand_ids: Array[StringName] = []
 var current_marker: ObjectiveMarker = null
 var errands: Array[MatsErrand] = []
-
+var destination_anchors: Dictionary = {}  # Dictionary[StringName, Node3D]
 var mats: Mats = null:
 	set(value):
 		if mats == value:
@@ -52,10 +53,8 @@ var mats: Mats = null:
 				mats.set_phone_state(Mats.PhoneMode.TALKING)
 var hud: HUD = null
 var _is_mats_dead: bool = false
-var _start_screen: StartScreen = null
 var _pending_errand: MatsErrand = null
 var _call_timer: float = -1.0
-var _start_screen_connected: bool = false
 var _started_once: bool = false
 
 var _setup_done: bool = false
@@ -76,29 +75,19 @@ func _exit_tree() -> void:
 			mats.died.disconnect(_on_mats_died)
 		if mats.respawned.is_connected(_on_mats_respawned):
 			mats.respawned.disconnect(_on_mats_respawned)
-	var start_screen := _find_start_screen()
-	if start_screen and start_screen.has_signal("started"):
-		if start_screen.started.is_connected(_on_start_screen_started):
-			start_screen.started.disconnect(_on_start_screen_started)
 
 
 func _setup() -> void:
 	if _setup_done:
 		return
 	_setup_done = true
+	_discover_destination_anchors()
 	_resolve_dependencies()
 	if _is_test_mode():
 		_started_once = true
 		start_call()
-	else:
-		var start_screen := _find_start_screen()
-		if start_screen and not _start_screen_connected:
-			if start_screen.has_signal("started"):
-				start_screen.started.connect(_on_start_screen_started)
-				_start_screen_connected = true
-		elif not start_screen:
-			_started_once = true
-			_schedule_call(initial_call_delay)
+	elif auto_start:
+		start_objective_flow()
 
 
 func _is_test_mode() -> bool:
@@ -112,34 +101,67 @@ func _is_test_mode() -> bool:
 
 
 func _resolve_dependencies() -> void:
-	if mats == null:
+	if mats == null and is_inside_tree():
 		if has_node(mats_path):
 			mats = get_node(mats_path) as Mats
-		elif get_parent() and get_parent().has_node("Mats"):
-			mats = get_parent().get_node("Mats") as Mats
-	if mats:
-		if not mats.died.is_connected(_on_mats_died):
-			mats.died.connect(_on_mats_died)
-		if not mats.respawned.is_connected(_on_mats_respawned):
-			mats.respawned.connect(_on_mats_respawned)
+		else:
+			mats = get_tree().get_first_node_in_group("player") as Mats
 
 	if hud == null and is_inside_tree():
 		hud = get_tree().get_first_node_in_group("hud") as HUD
 
 
-func _find_start_screen() -> StartScreen:
-	if _start_screen and is_instance_valid(_start_screen):
-		return _start_screen
-	if get_parent() and get_parent().has_node("StartScreen"):
-		_start_screen = get_parent().get_node("StartScreen") as StartScreen
-	return _start_screen
+func _discover_destination_anchors() -> void:
+	var default_bindings: Dictionary = {
+		&"walgroins": ^"Props/Walgroins/DestinationAnchor",
+		&"booger_king": ^"Props/BoogerKingSite/DestinationAnchor",
+		&"taco_hell": ^"Props/TacoHell/DestinationAnchor",
+		&"smell": ^"Props/SmellGasStation/DestinationAnchor",
+	}
+	var parent := get_parent()
+	for loc_id in default_bindings:
+		if destination_anchors.has(loc_id) and is_instance_valid(destination_anchors[loc_id]):
+			continue
+		var anchor_path: NodePath = default_bindings[loc_id]
+		if parent and parent.has_node(anchor_path):
+			register_destination(loc_id, parent.get_node(anchor_path) as Node3D)
+		elif has_node(anchor_path):
+			register_destination(loc_id, get_node(anchor_path) as Node3D)
 
 
-func _on_start_screen_started() -> void:
+func register_destination(location_id: StringName, anchor_node: Node3D) -> void:
+	if location_id.is_empty() or anchor_node == null:
+		return
+	destination_anchors[location_id] = anchor_node
+
+
+func bind_destinations(bindings: Dictionary) -> void:
+	for loc_id in bindings:
+		var val = bindings[loc_id]
+		if val is Node3D:
+			register_destination(loc_id if loc_id is StringName else StringName(str(loc_id)), val)
+
+
+func unregister_destination(location_id: StringName) -> void:
+	destination_anchors.erase(location_id)
+
+
+func get_destination_anchor(location_id: StringName) -> Node3D:
+	var anchor = destination_anchors.get(location_id)
+	if anchor != null and is_instance_valid(anchor):
+		return anchor as Node3D
+	return null
+
+
+func start_objective_flow() -> void:
 	if _started_once:
 		return
 	_started_once = true
 	_schedule_call(initial_call_delay)
+
+
+func _on_start_screen_started() -> void:
+	start_objective_flow()
 
 
 func _on_mats_died(_pos: Vector3) -> void:
@@ -153,9 +175,6 @@ func _on_mats_respawned() -> void:
 func _process(delta: float) -> void:
 	if _call_timer >= 0.0:
 		if get_tree().paused:
-			return
-		var start_screen := _find_start_screen()
-		if start_screen and start_screen.visible:
 			return
 		_call_timer -= delta
 		if _call_timer <= 0.0:
@@ -207,11 +226,6 @@ func start_call(errand: MatsErrand = null) -> void:
 		return
 	var errand_to_use := errand if errand != null else _pending_errand
 	if is_inside_tree() and get_tree().paused:
-		_pending_errand = errand_to_use
-		_call_timer = 0.0
-		return
-	var start_screen := _find_start_screen()
-	if start_screen and start_screen.visible:
 		_pending_errand = errand_to_use
 		_call_timer = 0.0
 		return
@@ -306,12 +320,17 @@ func get_errand_by_id(errand_id: StringName) -> MatsErrand:
 
 
 func get_target_node(errand: MatsErrand) -> Node3D:
-	if errand == null or errand.target_path.is_empty():
+	if errand == null:
 		return null
-	if get_parent() and get_parent().has_node(errand.target_path):
-		return get_parent().get_node(errand.target_path) as Node3D
-	if has_node(errand.target_path):
-		return get_node(errand.target_path) as Node3D
+	if not errand.location_id.is_empty():
+		var anchor := get_destination_anchor(errand.location_id)
+		if anchor != null:
+			return anchor
+	if not errand.target_path.is_empty():
+		if get_parent() and get_parent().has_node(errand.target_path):
+			return get_parent().get_node(errand.target_path) as Node3D
+		if has_node(errand.target_path):
+			return get_node(errand.target_path) as Node3D
 	return null
 
 
@@ -320,24 +339,12 @@ func get_target_position(errand: MatsErrand) -> Vector3:
 	if node:
 		return node.global_position
 	if errand != null:
-		match errand.location_id:
-			&"walgroins":
-				return Vector3(-3.0, 1.3, -35.35)
-			&"smell":
-				return Vector3(-52.5, 1.6, -35.3)
-			&"booger_king":
-				return Vector3(-47.3, 1.3, 33.4)
-			&"taco_hell":
-				return Vector3(31.5, 1.3, -31.75)
-		match errand.id:
-			&"cough_syrup", &"band_aids", &"potato_chips", &"toothpaste", &"batteries":
-				return Vector3(-3.0, 1.3, -35.35)
-			&"milk", &"cereal", &"chewing_gum", &"beef_jerky":
-				return Vector3(-52.5, 1.6, -35.3)
-			&"hamburgers":
-				return Vector3(-47.3, 1.3, 33.4)
-			&"tacos", &"burritos", &"quesadillas":
-				return Vector3(31.5, 1.3, -31.75)
+		push_error(
+			(
+				"ObjectiveManager: Unbound destination for errand '%s' (location '%s')"
+				% [errand.id, errand.location_id]
+			)
+		)
 	return Vector3.ZERO
 
 
@@ -500,18 +507,7 @@ static func build_errands_from_data(data: Dictionary) -> Array[MatsErrand]:
 		var loc_id := StringName(loc_id_str)
 		var proper_name: String = loc.get("proper_name", "")
 		var generic_name: String = loc.get("generic_name", "")
-		var target_path_str: String = loc.get("target_path", "")
-		if target_path_str.is_empty():
-			match loc_id:
-				&"walgroins":
-					target_path_str = "Props/Walgroins/Building/Doors"
-				&"booger_king":
-					target_path_str = "Props/BoogerKingSite/Building/Building/Tower/Doors"
-				&"taco_hell":
-					target_path_str = "Props/TacoHell/Building/MainArchPortico/Doors"
-				&"smell":
-					target_path_str = "Props/SmellGasStation/Store/DoorGlass"
-		var target_path := NodePath(target_path_str)
+		var target_path := NodePath(loc.get("target_path", ""))
 		var items: Array = loc.get("items", [])
 
 		for item_raw in items:
@@ -576,7 +572,6 @@ const DEFAULT_OBJECTIVES_DATA: Dictionary = {
 			"id": "walgroins",
 			"proper_name": "Walgroins",
 			"generic_name": "the pharmacy",
-			"target_path": "Props/Walgroins/Building/Doors",
 			"items":
 			[
 				"cough syrup",
@@ -590,7 +585,6 @@ const DEFAULT_OBJECTIVES_DATA: Dictionary = {
 			"id": "booger_king",
 			"proper_name": "Booger King",
 			"generic_name": "the burger joint",
-			"target_path": "Props/BoogerKingSite/Building/Building/Tower/Doors",
 			"items":
 			[
 				"hamburgers",
@@ -600,7 +594,6 @@ const DEFAULT_OBJECTIVES_DATA: Dictionary = {
 			"id": "taco_hell",
 			"proper_name": "Taco Hell",
 			"generic_name": "the taco stand",
-			"target_path": "Props/TacoHell/Building/MainArchPortico/Doors",
 			"items":
 			[
 				"tacos",
@@ -612,7 +605,6 @@ const DEFAULT_OBJECTIVES_DATA: Dictionary = {
 			"id": "smell",
 			"proper_name": "Smell",
 			"generic_name": "the convenience store",
-			"target_path": "Props/SmellGasStation/Store/DoorGlass",
 			"items":
 			[
 				"milk",

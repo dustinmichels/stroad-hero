@@ -3,9 +3,12 @@ extends CharacterBody3D
 
 @export var roll_speed := 4.0
 @export var rolling_friction := 1.5
+@export var hud: HUD = null
 
 @onready var _interaction_area: Area3D = $InteractionArea
-@onready var _hud := get_tree().get_first_node_in_group("hud") as HUD
+@onready var _hud: HUD = (
+	hud if hud else (get_tree().get_first_node_in_group("hud") as HUD if is_inside_tree() else null)
+)
 @onready var _seat: Marker3D = $Seat
 @onready var _exit_position: Marker3D = $ExitPosition
 
@@ -17,9 +20,19 @@ var _last_was_behind := false
 
 
 func _ready() -> void:
+	if _hud == null:
+		if hud != null:
+			_hud = hud
+		elif is_inside_tree():
+			_hud = get_tree().get_first_node_in_group("hud") as HUD
 	_interaction_area.body_entered.connect(_on_body_entered)
 	_interaction_area.body_exited.connect(_on_body_exited)
 	_update_prompt()
+
+
+func set_hud(h: HUD) -> void:
+	hud = h
+	_hud = h
 
 
 func _exit_tree() -> void:
@@ -214,8 +227,6 @@ func _on_body_exited(body: Node3D) -> void:
 
 
 func _update_prompt() -> void:
-	if not _hud:
-		_hud = get_tree().get_first_node_in_group("hud") as HUD
 	if not _hud:
 		return
 	if _rider != null:

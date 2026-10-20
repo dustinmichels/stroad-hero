@@ -96,10 +96,10 @@ roughness = 0.5
 
 [sub_resource type="BoxMesh" id="Mesh_Apron"]
 material = SubResource("Mat_ApronConcrete")
-size = Vector3(38, 0.1, 18)
+size = Vector3(35, 0.1, 18)
 
 [sub_resource type="BoxShape3D" id="Shape_Apron"]
-size = Vector3(38, 0.1, 18)
+size = Vector3(35, 0.1, 18)
 
 [sub_resource type="BoxMesh" id="Mesh_Stripe"]
 material = SubResource("Mat_PavementStripe")
@@ -268,7 +268,7 @@ size = Vector3(0.24, 0.28, 0.48)
 [node name="Site" type="Node3D" parent="."]
 
 [node name="ParkingApron" type="MeshInstance3D" parent="Site"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, -3)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 0.05, -3)
 mesh = SubResource("Mesh_Apron")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="Site/ParkingApron"]

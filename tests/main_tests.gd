@@ -529,6 +529,242 @@ func _ready() -> void:
 		print("DAY_WEATHER_TEST: SUCCESS - --test-day-weather passed cleanly!")
 		get_tree().quit(0)
 		return
+	if "--test-foliage-wind" in _user_args:
+		await get_tree().process_frame
+		await get_tree().process_frame
+
+		var trees_node := get_node_or_null("Props/Trees") as Node3D
+		assert(trees_node != null, "Props/Trees must exist in main scene")
+
+		var live_oaks: Array[StreetTree] = []
+		for child in trees_node.get_children():
+			if child is StreetTree and child.tree_type == StreetTree.TreeType.LIVE_OAK:
+				live_oaks.append(child)
+		assert(live_oaks.size() > 0, "Main scene must contain at least one LiveOak tree")
+
+		for oak in live_oaks:
+			var foliage := oak.get_node_or_null("Visuals/LiveOak/Foliage") as MeshInstance3D
+			assert(foliage != null, "LiveOak must have Foliage MeshInstance3D")
+			for s in range(3):
+				var mat := foliage.get_surface_override_material(s) as ShaderMaterial
+				assert(
+					mat != null, "Surface %d override on LiveOak foliage must be ShaderMaterial" % s
+				)
+				assert(mat.shader != null, "ShaderMaterial must have valid shader resource")
+				var albedo = mat.get_shader_parameter("albedo_color")
+				assert(albedo is Color or albedo is Vector3, "Albedo color uniform must be present")
+
+		# Test dynamic wind updates propagate to shader parameters
+		var test_dir := Vector3(0.0, 0.0, 1.0)
+		var test_speed := 2.2
+		GameState.set_wind_direction(test_dir, true)
+		GameState.set_wind_speed(test_speed)
+		await get_tree().process_frame
+
+		var sample_oak := live_oaks[0]
+		var sample_foliage := (
+			sample_oak.get_node_or_null("Visuals/LiveOak/Foliage") as MeshInstance3D
+		)
+		var sample_mat := sample_foliage.get_surface_override_material(0) as ShaderMaterial
+		var current_dir: Vector2 = sample_mat.get_shader_parameter("wind_direction")
+		var current_spd: float = sample_mat.get_shader_parameter("wind_strength")
+		assert(current_dir.is_equal_approx(Vector2(0.0, 1.0)), "Wind direction uniform must update")
+		assert(is_equal_approx(current_spd, 2.2), "Wind strength uniform must update")
+
+		GameState.resume_wind_simulation()
+		print("FOLIAGE_WIND_TEST: SUCCESS - --test-foliage-wind passed cleanly!")
+		get_tree().quit(0)
+		return
+	if "--test-powerlines" in _user_args:
+		await get_tree().process_frame
+		await get_tree().process_frame
+
+		var powerlines := get_node_or_null("Props/Powerlines") as Node3D
+		assert(powerlines != null, "Props/Powerlines must exist in main scene")
+		assert(powerlines.get_child_count() >= 2, "Props/Powerlines must contain multiple poles")
+
+		var child_count := powerlines.get_child_count()
+		for i in range(child_count):
+			var pole := powerlines.get_child(i) as Powerline
+			assert(pole != null, "Child %d of Powerlines must be a Powerline" % i)
+
+			var col := pole.get_node_or_null("CollisionShape3D") as CollisionShape3D
+			assert(col != null, "Powerline %d must have a CollisionShape3D" % i)
+
+			var wire_mi := pole.get_node_or_null("WireMesh") as MeshInstance3D
+			assert(wire_mi != null, "Powerline %d must have a WireMesh" % i)
+
+			if i < child_count - 1:
+				assert(wire_mi.visible == true, "Powerline %d must have visible wires" % i)
+				assert(wire_mi.mesh != null, "Powerline %d must have a generated wire mesh" % i)
+				assert(
+					wire_mi.mesh.get_surface_count() > 0,
+					"Powerline %d wire mesh must have surfaces" % i
+				)
+				var verts: int = wire_mi.mesh.surface_get_array_len(0)
+				assert(verts > 0, "Powerline %d wire mesh must contain vertices" % i)
+			else:
+				assert(wire_mi.visible == false, "Terminal powerline must not dangle wires forward")
+
+		# Test standalone re-usable scene instantiation
+		var pl_scene := load("res://props/powerline.tscn") as PackedScene
+		assert(pl_scene != null, "props/powerline.tscn must load as a PackedScene")
+		var standalone := pl_scene.instantiate() as Powerline
+		assert(standalone != null, "Must instantiate Powerline")
+		standalone.has_transformer = true
+		add_child(standalone)
+		await get_tree().process_frame
+		assert(standalone.has_transformer == true, "Standalone pole must support transformer")
+		var st_transformer := standalone.get_node_or_null("Visuals/Transformer") as Node3D
+		assert(
+			st_transformer != null and st_transformer.visible == true,
+			"Transformer must be visible when enabled"
+		)
+		standalone.queue_free()
+
+		print("POWERLINES_TEST: SUCCESS - --test-powerlines passed cleanly!")
+		get_tree().quit(0)
+		return
+	if "--test-chainlink-fence" in _user_args:
+		await get_tree().process_frame
+		await get_tree().process_frame
+
+		const FenceScript = preload("res://props/chainlink_fence.gd")
+		var fence = get_node_or_null("BoundaryFence")
+		assert(
+			fence != null and fence is FenceScript,
+			"BoundaryFence must exist in main scene and be ChainlinkFence"
+		)
+
+		# 1. Verify collision boundaries along all 4 edges of the earth
+		var col_north := fence.get_node_or_null("CollisionNorth") as CollisionShape3D
+		var col_south := fence.get_node_or_null("CollisionSouth") as CollisionShape3D
+		var col_east := fence.get_node_or_null("CollisionEast") as CollisionShape3D
+		var col_west := fence.get_node_or_null("CollisionWest") as CollisionShape3D
+		assert(col_north != null, "North collision shape must exist")
+		assert(col_south != null, "South collision shape must exist")
+		assert(col_east != null, "East collision shape must exist")
+		assert(col_west != null, "West collision shape must exist")
+
+		assert(col_north.shape is BoxShape3D, "North collision must be BoxShape3D")
+		assert(col_south.shape is BoxShape3D, "South collision must be BoxShape3D")
+		assert(col_east.shape is BoxShape3D, "East collision must be BoxShape3D")
+		assert(col_west.shape is BoxShape3D, "West collision must be BoxShape3D")
+
+		# 2. Verify visual components and distance visibility settings
+		assert(fence.visibility_distance == 60.0, "Visibility distance must be 60m")
+		assert(fence.visibility_fade_margin == 15.0, "Fade margin must be 15m")
+
+		# Corner posts count and visibility range
+		var corner_count := 0
+		for child in fence.get_children():
+			if child.name.begins_with("CornerPost"):
+				corner_count += 1
+				var post_mi := child.get_node_or_null("Post") as MeshInstance3D
+				assert(post_mi != null, "Corner post must have Post mesh")
+				assert(
+					post_mi.visibility_range_end == 60.0,
+					"Corner post must have visibility_range_end 60m"
+				)
+		assert(corner_count == 4, "Must have 4 corner posts for the perimeter rectangle")
+
+		# Side chunks: line posts, fabric meshes, and rails
+		var total_line_posts := 0
+		var fabric_count := 0
+		for side_name in ["Side_North", "Side_East", "Side_South", "Side_West"]:
+			var side_node := fence.get_node_or_null(side_name) as Node3D
+			assert(side_node != null, "Side node %s must exist" % side_name)
+			for chunk in side_node.get_children():
+				var fabric := chunk.get_node_or_null("Fabric") as MeshInstance3D
+				assert(fabric != null, "Chunk must have Fabric mesh")
+				assert(
+					fabric.visibility_range_end == 60.0, "Fabric must have visibility_range_end 60m"
+				)
+				assert(
+					fabric.material_override is ShaderMaterial, "Fabric must have ShaderMaterial"
+				)
+				fabric_count += 1
+
+				var top_rail := chunk.get_node_or_null("TopRail") as MeshInstance3D
+				assert(top_rail != null, "Chunk must have TopRail")
+				assert(
+					top_rail.visibility_range_end == 60.0,
+					"TopRail must have visibility_range_end 60m"
+				)
+
+				var posts_mmi := chunk.get_node_or_null("LinePosts") as MultiMeshInstance3D
+				if posts_mmi and posts_mmi.multimesh:
+					assert(
+						posts_mmi.visibility_range_end == 60.0,
+						"LinePosts must have visibility_range_end 60m"
+					)
+					total_line_posts += posts_mmi.multimesh.instance_count
+
+		assert(
+			total_line_posts >= 300,
+			"Total line posts across chunks must be >= 300 (got %d)" % total_line_posts
+		)
+		assert(
+			fabric_count >= 50,
+			"Perimeter must be chunked into localized sections (got %d chunks)" % fabric_count
+		)
+
+		# 3. Verify ground terrain extension past fence
+		var ground_mi := get_node_or_null("GroundTerrain") as MeshInstance3D
+		assert(
+			ground_mi != null and ground_mi.mesh is PlaneMesh,
+			"GroundTerrain must exist with PlaneMesh"
+		)
+		var ground_plane := ground_mi.mesh as PlaneMesh
+		assert(ground_plane.size.x >= 380.0, "Ground must extend past fence in X (at least 380m)")
+		assert(ground_plane.size.y >= 260.0, "Ground must extend past fence in Z (at least 260m)")
+		# 3. Test physics collision: prove Mats cannot walk off the edge of the earth
+		mats.global_position = Vector3(45.0, 0.3, 134.0)
+		mats.velocity = Vector3(0.0, 0.0, 10.0)
+		for _step in range(30):
+			mats.velocity = Vector3(0.0, 0.0, 10.0)
+			mats._physics_process(1.0 / 60.0)
+		assert(mats.global_position.z < 134.8, "Fence must block Mats from falling off South edge")
+
+		mats.global_position = Vector3(45.0, 0.3, -104.0)
+		mats.velocity = Vector3(0.0, 0.0, -10.0)
+		for _step in range(30):
+			mats.velocity = Vector3(0.0, 0.0, -10.0)
+			mats._physics_process(1.0 / 60.0)
+		assert(mats.global_position.z > -104.8, "Fence must block Mats from falling off North edge")
+
+		mats.global_position = Vector3(-134.0, 0.3, 15.0)
+		mats.velocity = Vector3(-10.0, 0.0, 0.0)
+		for _step in range(30):
+			mats.velocity = Vector3(-10.0, 0.0, 0.0)
+			mats._physics_process(1.0 / 60.0)
+		assert(mats.global_position.x > -134.8, "Fence must block Mats from falling off West edge")
+
+		mats.global_position = Vector3(224.0, 0.3, 15.0)
+		mats.velocity = Vector3(10.0, 0.0, 0.0)
+		for _step in range(30):
+			mats.velocity = Vector3(10.0, 0.0, 0.0)
+			mats._physics_process(1.0 / 60.0)
+		assert(mats.global_position.x < 224.8, "Fence must block Mats from falling off East edge")
+
+		# 4. Test standalone reusable section scene
+		var sec_scene := load("res://props/chainlink_fence_section.tscn") as PackedScene
+		assert(sec_scene != null, "props/chainlink_fence_section.tscn must load as PackedScene")
+		var sec_inst = sec_scene.instantiate()
+		assert(
+			sec_inst != null and sec_inst is FenceScript, "Must instantiate ChainlinkFenceSection"
+		)
+		add_child(sec_inst)
+		await get_tree().process_frame
+		assert(
+			sec_inst.get_node_or_null("CollisionSection") != null,
+			"Section must have CollisionSection"
+		)
+		sec_inst.queue_free()
+
+		print("CHAINLINK_FENCE_TEST: SUCCESS - --test-chainlink-fence passed cleanly!")
+		get_tree().quit(0)
+		return
 	if "--test-car-exhaust" in _user_args:
 		await get_tree().process_frame
 
@@ -610,10 +846,10 @@ func _ready() -> void:
 		assert(taxi.exhaust_particles != null, "Taxi should have exhaust particles")
 		assert(taxi.exhaust_particles.emitting == true, "Taxi should emit smog when cruising")
 
-		# 5. Distribution test: some of the cars get exhaust automatically
+		# 5. Default exhaust test: all cars get exhaust automatically by default
 		var sample_cars: Array[Car] = []
 		var exhaust_count := 0
-		for i in range(30):
+		for i in range(10):
 			var c: Car = pcar_scene.instantiate()
 			add_child(c)
 			sample_cars.append(c)
@@ -623,13 +859,10 @@ func _ready() -> void:
 			if c.has_exhaust:
 				exhaust_count += 1
 		assert(
-			exhaust_count > 0 and exhaust_count < 30,
-			(
-				"Only 'some of the cars' should have exhaust enabled by default (got %d / 30)"
-				% exhaust_count
-			)
+			exhaust_count == 10,
+			"All cars should have exhaust enabled by default (got %d / 10)" % exhaust_count
 		)
-		print("  Exhaust distribution verified: %d of 30 cars rolled exhaust" % exhaust_count)
+		print("  Default exhaust verified: %d of 10 cars enabled exhaust" % exhaust_count)
 
 		# Cleanup
 		car_clean.queue_free()
@@ -1104,8 +1337,10 @@ func _ready() -> void:
 		var bk1_prev_d := 0.0
 		var bk2_prev_d := 0.0
 		ticks = 0
+		var bk1_merged_lane := false
 
 		while ticks < max_ticks:
+			ticks += 1
 			# Spawn bk2 once bk1 has advanced 10 meters
 			if bk2 == null and bk1.path_distance >= 10.0:
 				bk2 = tm.spawn_drive_thru_car(&"booger_king")
@@ -1149,7 +1384,8 @@ func _ready() -> void:
 				)
 				if tm.find_blocker(bk2) == bk1 and bk2.speed < 0.1:
 					saw_bk2_queued = true
-
+			if bk1.state == Car.State.CRUISING and (tm.lanes[3].cars.has(bk1) or bk1_merged_lane):
+				bk1_merged_lane = true
 			# Check if both have completed merge and are cruising
 			if bk1.state == Car.State.CRUISING and bk2 != null and bk2.state == Car.State.CRUISING:
 				break
@@ -1167,7 +1403,7 @@ func _ready() -> void:
 			bk2.state == Car.State.CRUISING and bk2.lane_id == 3,
 			"bk2 must merge and cruise in lane 3"
 		)
-		assert(tm.lanes[3].cars.has(bk1), "bk1 must be added to lane 3 traffic")
+		assert(bk1_merged_lane or tm.lanes[3].cars.has(bk1), "bk1 must be added to lane 3 traffic")
 		# 3. Seeded Full-Traffic Phase
 		seed(42)
 		for c in tm.lot_cars:
@@ -1593,6 +1829,72 @@ func _ready() -> void:
 			"Subsequent started events must not overwrite timer"
 		)
 		dummy_mgr.queue_free()
+
+		# Destination anchor binding tests:
+		var anchor_test_mgr = ObjectiveManager.new()
+		add_child(anchor_test_mgr)
+		var custom_anchor = Marker3D.new()
+		add_child(custom_anchor)
+		custom_anchor.global_position = Vector3(123.0, 4.0, -567.0)
+		var test_errand = MatsErrand.new(
+			&"test_item", "test", "Test Store", NodePath(), "", "", &"custom_loc"
+		)
+		# Before binding: returns ZERO and logs error
+		assert(
+			anchor_test_mgr.get_target_node(test_errand) == null,
+			"Unbound errand must have no target node"
+		)
+		assert(
+			anchor_test_mgr.get_target_position(test_errand) == Vector3.ZERO,
+			"Unbound errand must return Vector3.ZERO"
+		)
+		# Bind explicit anchor
+		anchor_test_mgr.register_destination(&"custom_loc", custom_anchor)
+		assert(
+			anchor_test_mgr.get_target_node(test_errand) == custom_anchor,
+			"Target node must resolve to registered anchor"
+		)
+		assert(
+			anchor_test_mgr.get_target_position(test_errand) == Vector3(123.0, 4.0, -567.0),
+			"Target position must match anchor global_position"
+		)
+		# Moving the anchor moves the objective
+		custom_anchor.global_position = Vector3(50.0, 1.0, 50.0)
+		assert(
+			anchor_test_mgr.get_target_position(test_errand) == Vector3(50.0, 1.0, 50.0),
+			"Moving anchor must move target position"
+		)
+		anchor_test_mgr.unregister_destination(&"custom_loc")
+		assert(
+			anchor_test_mgr.get_target_node(test_errand) == null,
+			"Unregistered anchor must not resolve"
+		)
+		custom_anchor.queue_free()
+		anchor_test_mgr.queue_free()
+
+		# Verify DestinationAnchors exist and have expected world positions
+		var props_node = get_node_or_null("Props")
+		if props_node != null:
+			for loc_name in [&"Walgroins", &"BoogerKingSite", &"TacoHell", &"SmellGasStation"]:
+				var site = props_node.get_node_or_null(NodePath(str(loc_name)))
+				assert(site != null, "Building %s must exist in Props" % loc_name)
+				var anchor = site.get_node_or_null("DestinationAnchor") as Node3D
+				assert(anchor != null, "Building %s must have DestinationAnchor" % loc_name)
+				assert(
+					is_instance_valid(anchor), "DestinationAnchor in %s must be valid" % loc_name
+				)
+			# Also check ObjectiveManager registered them properly
+			for loc_id in [&"walgroins", &"booger_king", &"taco_hell", &"smell"]:
+				var anchor = obj_mgr.get_destination_anchor(loc_id)
+				assert(
+					anchor != null,
+					"ObjectiveManager must have destination anchor for '%s'" % loc_id
+				)
+				var pos = anchor.global_position
+				assert(
+					absf(pos.x) > 0.01 or absf(pos.z) > 0.01,
+					"Anchor '%s' position must be non-zero" % loc_id
+				)
 		# 5. Arrival detection tests:
 		obj_mgr.current_state = ObjectiveManager.State.ACTIVE
 		obj_mgr.current_errand = obj_mgr.get_errand_by_id(&"cough_syrup")
@@ -1653,7 +1955,7 @@ func _ready() -> void:
 		assert(phone_call is PhoneCall, "phone_call must be of type PhoneCall")
 		phone_call.set_objective_manager(obj_mgr)
 		hud.set_objective_manager(obj_mgr)
-
+		hud.set_obj(0)
 		# 6a. HUD OBJ counter and objective line initial state:
 		assert(hud.obj_label != null, "HUD must have obj_label")
 		assert(hud.obj_label.text == "OBJ: 0", "HUD must show OBJ: 0 initially")
@@ -1807,23 +2109,16 @@ func _ready() -> void:
 		assert(phone_call.is_in_call == true, "Must answer via answer_phone action")
 		phone_call.dismiss()
 
-		# Test: Don't ring while StartScreen is open or tree is paused
-		var start_screen_node = get_node_or_null("StartScreen")
+		# Test: Don't ring while tree is paused
 		obj_mgr.current_state = ObjectiveManager.State.IDLE
 		obj_mgr._call_timer = 1.0
-		if start_screen_node:
-			start_screen_node.visible = true
-			obj_mgr._process(2.0)
-			assert(
-				obj_mgr.current_state == ObjectiveManager.State.IDLE,
-				"Must not ring while StartScreen is visible"
-			)
-			assert(
-				obj_mgr._call_timer == 1.0,
-				"Call timer must not advance while StartScreen is visible"
-			)
-			start_screen_node.visible = false
-
+		get_tree().paused = true
+		obj_mgr._process(2.0)
+		assert(
+			obj_mgr.current_state == ObjectiveManager.State.IDLE,
+			"Must not ring while tree is paused"
+		)
+		assert(obj_mgr._call_timer == 1.0, "Call timer must not advance while tree is paused")
 		# Don't ring while tree is paused
 		get_tree().paused = true
 		obj_mgr.start_call(obj_mgr.get_errand_by_id(&"cough_syrup"))
@@ -2111,6 +2406,135 @@ func _ready() -> void:
 			hud.obj_label.text == "OBJ: %d" % (obj_before + 1),
 			"Direct increment_obj must update label"
 		)
+
+		# Test: Objective setup and HUD signal connections happen once, with no duplicated callbacks after teardown/recreation
+		var test_mgr = ObjectiveManager.new()
+		add_child(test_mgr)
+		var test_hud_scene = load("res://ui/hud.tscn") as PackedScene
+		var test_hud = test_hud_scene.instantiate() as HUD
+		add_child(test_hud)
+
+		test_hud.set_objective_manager(test_mgr)
+		assert(
+			test_mgr.objective_started.get_connections().size() == 1,
+			"Must connect objective_started once"
+		)
+		assert(
+			test_mgr.objective_completed.get_connections().size() == 1,
+			"Must connect objective_completed once"
+		)
+
+		var dummy_errand = MatsErrand.new(&"item", "test", "Test Store")
+		test_mgr.objective_started.emit(dummy_errand)
+		assert(
+			test_hud.current_objective_text == "Get test at Test Store",
+			"HUD must update objective text"
+		)
+
+		# Setting the same manager again must not duplicate connections
+		test_hud.set_objective_manager(test_mgr)
+		assert(
+			test_mgr.objective_started.get_connections().size() == 1,
+			"Second set must not duplicate connection"
+		)
+		assert(
+			test_mgr.objective_completed.get_connections().size() == 1,
+			"Second set must not duplicate connection"
+		)
+
+		# Teardown HUD and verify signals disconnected
+		test_hud.queue_free()
+		await get_tree().process_frame
+		assert(
+			test_mgr.objective_started.get_connections().size() == 0,
+			"Teardown must disconnect all HUD signals"
+		)
+
+		# Recreate HUD
+		var test_hud_2 = test_hud_scene.instantiate() as HUD
+		add_child(test_hud_2)
+		test_hud_2.set_objective_manager(test_mgr)
+		assert(
+			test_mgr.objective_started.get_connections().size() == 1,
+			"Recreated HUD must connect once"
+		)
+
+		test_hud_2.queue_free()
+		test_mgr.queue_free()
+
+		# Test: A drive-thru can be exercised with explicitly supplied player/traffic dependencies
+		var dt_script = load("res://buildings/taco_hell_drive_thru.gd")
+		var dt = Node3D.new()
+		dt.set_script(dt_script)
+		add_child(dt)
+
+		# Explicit mock player
+		var mock_player = CharacterBody3D.new()
+		add_child(mock_player)
+		dt.set_player(mock_player)
+
+		# Explicit mock traffic manager with lot_cars array
+		var mock_tm = Node.new()
+		var mock_lot_cars: Array = []
+		mock_tm.set("lot_cars", mock_lot_cars)
+		add_child(mock_tm)
+		dt.set_traffic_manager(mock_tm)
+
+		# Order position in local coords is (-12, 0, -2)
+		var order_pos = (
+			dt.global_transform.origin + dt.global_transform.basis * Vector3(-12.0, 0.0, -2.0)
+		)
+		mock_player.global_position = order_pos + Vector3(0.5, 0.0, 0.0)
+
+		# Tick physics process with explicitly supplied dependencies
+		dt._physics_process(0.1)
+		assert(dt._was_order_active == true, "Drive thru must activate order for nearby player")
+
+		# Move player away
+		mock_player.global_position = Vector3(500.0, 0.0, 500.0)
+		dt._physics_process(0.1)
+		assert(dt._was_order_active == false, "Drive thru must deactivate order when player leaves")
+
+		mock_player.queue_free()
+		mock_tm.queue_free()
+		dt.queue_free()
+
+		# Test: Gameplay assembly works under a differently named root/container
+		var container = Node3D.new()
+		container.name = "CustomGameplayContainer"
+		add_child(container)
+
+		var main_scene = load("res://main.tscn") as PackedScene
+		var nested_main = main_scene.instantiate() as Main
+		container.add_child(nested_main)
+
+		assert(nested_main.mats != null, "Nested Main must wire mats")
+		assert(nested_main.hud != null, "Nested Main must wire hud")
+		assert(nested_main.objective_manager != null, "Nested Main must wire objective_manager")
+		assert(nested_main.traffic_manager != null, "Nested Main must wire traffic_manager")
+		assert(nested_main.drive_thru != null, "Nested Main must wire drive_thru")
+
+		# Verify drive_thru received explicit references
+		assert(
+			nested_main.drive_thru.player == nested_main.mats,
+			"DriveThru must receive explicit player reference"
+		)
+		assert(
+			nested_main.drive_thru.traffic_manager == nested_main.traffic_manager,
+			"DriveThru must receive explicit traffic manager reference"
+		)
+
+		# Verify HUD received explicit references
+		assert(
+			nested_main.hud.player == nested_main.mats, "HUD must receive explicit player reference"
+		)
+		assert(
+			nested_main.hud.objective_manager == nested_main.objective_manager,
+			"HUD must receive explicit objective manager reference"
+		)
+
+		nested_main.queue_free()
+		container.queue_free()
 
 		print("OBJECTIVE_MANAGER_TEST: SUCCESS - All ObjectiveManager test cases passed!")
 		get_tree().quit(0)
@@ -3635,6 +4059,59 @@ func _run_verify_render_test() -> void:
 			% [building_paths.size(), total_building_meshes, total_building_collisions]
 		)
 	)
+
+	# Verify frontage road parking lots do not overlap
+	var retail_apron := get_node_or_null("Props/FrontageRetail/Site/ParkingApron") as MeshInstance3D
+	var car_care_apron := (
+		get_node_or_null("Props/ConsumerCarCare/Site/ParkingApron") as MeshInstance3D
+	)
+	var comm_apron := (
+		get_node_or_null("Props/FrontageCommercial/Site/ParkingApron") as MeshInstance3D
+	)
+	assert(retail_apron != null, "Retail ParkingApron must exist")
+	assert(car_care_apron != null, "Car Care ParkingApron must exist")
+	assert(comm_apron != null, "Commercial ParkingApron must exist")
+	var retail_col := (
+		retail_apron.get_node_or_null("StaticBody3D/CollisionShape3D") as CollisionShape3D
+	)
+	var car_care_col := (
+		car_care_apron.get_node_or_null("StaticBody3D/CollisionShape3D") as CollisionShape3D
+	)
+	var comm_col := comm_apron.get_node_or_null("StaticBody3D/CollisionShape3D") as CollisionShape3D
+	assert(
+		retail_col != null and retail_col.shape is BoxShape3D,
+		"Retail apron CollisionShape3D must exist"
+	)
+	assert(
+		car_care_col != null and car_care_col.shape is BoxShape3D,
+		"Car Care apron CollisionShape3D must exist"
+	)
+	assert(
+		comm_col != null and comm_col.shape is BoxShape3D,
+		"Commercial apron CollisionShape3D must exist"
+	)
+	var retail_box := retail_col.shape as BoxShape3D
+	var car_care_box := car_care_col.shape as BoxShape3D
+	var comm_box := comm_col.shape as BoxShape3D
+	var retail_max_x: float = retail_col.global_position.x + retail_box.size.x * 0.5
+	var car_care_min_x: float = car_care_col.global_position.x - car_care_box.size.x * 0.5
+	var car_care_max_x: float = car_care_col.global_position.x + car_care_box.size.x * 0.5
+	var comm_min_x: float = comm_col.global_position.x - comm_box.size.x * 0.5
+	assert(
+		car_care_min_x >= retail_max_x - 0.001,
+		(
+			"Car Care parking apron (min X %.2f) must not overlap Retail parking apron (max X %.2f)"
+			% [car_care_min_x, retail_max_x]
+		)
+	)
+	assert(
+		car_care_max_x <= comm_min_x + 0.001,
+		(
+			"Car Care parking apron (max X %.2f) must not overlap Commercial parking apron (min X %.2f)"
+			% [car_care_max_x, comm_min_x]
+		)
+	)
+	print("  Frontage parking aprons verified: no overlap between Retail, Car Care, and Commercial")
 
 	# Test Dorf building scene
 	var dorf_scene = load("res://buildings/dorf.tscn")

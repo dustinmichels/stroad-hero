@@ -151,38 +151,13 @@ var _paint_material: StandardMaterial3D = null
 
 static func _get_grit_roughness_texture() -> NoiseTexture2D:
 	if _grit_roughness_texture == null:
-		var noise := FastNoiseLite.new()
-		noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
-		noise.frequency = 0.08
-		noise.fractal_octaves = 3
-		noise.fractal_gain = 0.55
-		noise.fractal_lacunarity = 2.0
-
-		_grit_roughness_texture = NoiseTexture2D.new()
-		_grit_roughness_texture.width = 256
-		_grit_roughness_texture.height = 256
-		_grit_roughness_texture.seamless = true
-		_grit_roughness_texture.generate_mipmaps = true
-		_grit_roughness_texture.noise = noise
+		_grit_roughness_texture = load("res://cars/textures/grit_roughness.tres")
 	return _grit_roughness_texture
 
 
 static func _get_grit_normal_texture() -> NoiseTexture2D:
 	if _grit_normal_texture == null:
-		var noise := FastNoiseLite.new()
-		noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
-		noise.frequency = 0.12
-		noise.fractal_octaves = 2
-		noise.fractal_gain = 0.5
-
-		_grit_normal_texture = NoiseTexture2D.new()
-		_grit_normal_texture.width = 256
-		_grit_normal_texture.height = 256
-		_grit_normal_texture.seamless = true
-		_grit_normal_texture.generate_mipmaps = true
-		_grit_normal_texture.as_normal_map = true
-		_grit_normal_texture.bump_strength = 2.0
-		_grit_normal_texture.noise = noise
+		_grit_normal_texture = load("res://cars/textures/grit_normal.tres")
 	return _grit_normal_texture
 
 

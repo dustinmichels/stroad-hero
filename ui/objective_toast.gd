@@ -30,21 +30,13 @@ func _exit_tree() -> void:
 			_character_editor.visibility_changed.disconnect(_on_character_editor_visibility_changed)
 
 
-func _find_character_editor() -> CharacterEditor:
+func set_character_editor(c: CharacterEditor) -> void:
 	if _character_editor and is_instance_valid(_character_editor):
-		return _character_editor
-	if (
-		get_parent()
-		and get_parent().get_parent()
-		and get_parent().get_parent().has_node("CharacterEditor")
-	):
-		_character_editor = (
-			get_parent().get_parent().get_node("CharacterEditor") as CharacterEditor
-		)
-	elif is_inside_tree() and get_tree().root:
-		_character_editor = (
-			get_tree().root.find_child("CharacterEditor", true, false) as CharacterEditor
-		)
+		if _character_editor.visibility_changed.is_connected(
+			_on_character_editor_visibility_changed
+		):
+			_character_editor.visibility_changed.disconnect(_on_character_editor_visibility_changed)
+	_character_editor = c
 	if (
 		_character_editor
 		and not _character_editor.visibility_changed.is_connected(
@@ -52,7 +44,21 @@ func _find_character_editor() -> CharacterEditor:
 		)
 	):
 		_character_editor.visibility_changed.connect(_on_character_editor_visibility_changed)
-	return _character_editor
+
+
+func _find_character_editor() -> CharacterEditor:
+	if _character_editor and is_instance_valid(_character_editor):
+		return _character_editor
+	if is_inside_tree():
+		var hud := get_parent() as HUD
+		if hud and hud.character_editor:
+			set_character_editor(hud.character_editor)
+			return _character_editor
+		var editor := get_tree().get_first_node_in_group("character_editor") as CharacterEditor
+		if editor:
+			set_character_editor(editor)
+			return _character_editor
+	return null
 
 
 func _on_character_editor_visibility_changed() -> void:

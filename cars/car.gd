@@ -675,17 +675,7 @@ static func _init_exhaust_resources() -> void:
 
 
 func _roll_exhaust() -> bool:
-	match car_type:
-		CarType.PICKUP, CarType.F150, CarType.TRUCK, CarType.VAN, CarType.SHIPPING_TRUCK:
-			return randf() < 0.50
-		CarType.BUS:
-			return randf() < 0.40
-		CarType.SEDAN, CarType.HATCHBACK, CarType.SUV, CarType.MINIVAN, CarType.JEEP, CarType.TAXI:
-			return randf() < 0.35
-		CarType.SPORTS:
-			return randf() < 0.15
-		_:
-			return randf() < 0.35
+	return true
 
 
 func _setup_exhaust() -> void:

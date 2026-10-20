@@ -17,6 +17,11 @@ enum TreeType {
 		tree_type = value
 		_apply_tree_type()
 
+const FOLIAGE_SHADER: Shader = preload("res://shaders/foliage_wind.gdshader")
+
+static var _live_oak_materials: Array[ShaderMaterial] = []
+static var _wind_connected: bool = false
+
 @onready var _visuals: Node3D = $Visuals
 @onready var _collision_shape: CollisionShape3D = $CollisionShape3D
 var _rustle_tween: Tween
@@ -25,6 +30,7 @@ var _rustle_tween: Tween
 func _ready() -> void:
 	_apply_tree_type()
 	if not Engine.is_editor_hint():
+		_ensure_wind_connected()
 		var visuals := _visuals if _visuals else get_node_or_null("Visuals")
 		if visuals:
 			var active: Node3D = null
@@ -134,7 +140,62 @@ func _apply_tree_type() -> void:
 	if active_node:
 		active_node.scale.y = height_scale
 		active_node.visible = true
+		if tree_type == TreeType.LIVE_OAK:
+			_apply_live_oak_foliage(active_node)
 	_update_dimensions()
+
+
+static func _get_or_create_live_oak_materials() -> Array[ShaderMaterial]:
+	if not _live_oak_materials.is_empty():
+		return _live_oak_materials
+
+	var colors: Array[Color] = [
+		Color(0.2601, 0.41, 0.2478, 1.0),
+		Color(0.3656, 0.542, 0.3035, 1.0),
+		Color(0.5169, 0.6652, 0.3575, 1.0),
+	]
+	var wind_dir := GameState.wind_direction_2d if GameState else Vector2(0.978, 0.208)
+	var wind_spd := GameState.wind_speed if GameState else 1.0
+	for col in colors:
+		var mat := ShaderMaterial.new()
+		mat.shader = FOLIAGE_SHADER
+		mat.set_shader_parameter("albedo_color", col)
+		mat.set_shader_parameter("roughness", 0.85)
+		mat.set_shader_parameter("specular", 0.2)
+		mat.set_shader_parameter("wind_direction", wind_dir)
+		mat.set_shader_parameter("wind_strength", wind_spd)
+		_live_oak_materials.append(mat)
+	return _live_oak_materials
+
+
+static func _ensure_wind_connected() -> void:
+	if GameState and GameState.instance:
+		if (
+			not _wind_connected
+			or not GameState.instance.wind_changed.is_connected(_on_global_wind_changed)
+		):
+			GameState.instance.wind_changed.connect(_on_global_wind_changed)
+			_wind_connected = true
+		_on_global_wind_changed(GameState.wind_direction, GameState.wind_speed)
+
+
+static func _on_global_wind_changed(direction: Vector3, speed: float) -> void:
+	if _live_oak_materials.is_empty():
+		return
+	var dir_2d := Vector2(direction.x, direction.z)
+	for mat in _live_oak_materials:
+		mat.set_shader_parameter("wind_direction", dir_2d)
+		mat.set_shader_parameter("wind_strength", speed)
+
+
+func _apply_live_oak_foliage(active_node: Node3D) -> void:
+	var foliage := active_node.get_node_or_null("Foliage") as MeshInstance3D
+	if not foliage or not foliage.mesh:
+		return
+	var mats := _get_or_create_live_oak_materials()
+	for i in range(mini(mats.size(), foliage.mesh.get_surface_count())):
+		if foliage.get_surface_override_material(i) != mats[i]:
+			foliage.set_surface_override_material(i, mats[i])
 
 
 func _update_dimensions() -> void:

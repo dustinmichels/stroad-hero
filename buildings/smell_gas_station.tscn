@@ -359,6 +359,9 @@ material = SubResource("Mat_PricePanel")
 size = Vector3(2.3, 0.95, 0.02)
 
 [node name="SmellGasStation" type="Node3D"]
+[node name="DestinationAnchor" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 1.7, -5.59)
+
 
 [node name="Forecourt" type="StaticBody3D" parent="."]
 

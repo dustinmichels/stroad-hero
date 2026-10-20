@@ -958,7 +958,8 @@ static func bake_trees(container: Node3D, actual_owner: Node) -> void:
 				height_scale = 1.25
 			5:
 				active_name = "Palm"
-
+			6:
+				active_name = "LiveOak"
 		var active_node := visuals.get_node_or_null(active_name) as Node3D
 		if active_node == null:
 			continue
@@ -1231,7 +1232,7 @@ static func bake_main_scene(root: Node3D) -> Node3D:
 	if props != null:
 		bake_bollards(props, root)
 		for child in props.get_children():
-			if child.name in [&"Streetlights", &"Trees", &"Flags"]:
+			if child.name in [&"Streetlights", &"Trees", &"Flags", &"Powerlines"]:
 				continue
 			if child.name == &"WalgroinsShoppingCarts":
 				for cart in child.get_children():

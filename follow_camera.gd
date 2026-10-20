@@ -25,6 +25,7 @@ var _is_swinging := false
 
 
 func _ready() -> void:
+	add_to_group("camera")
 	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	if not InputMap.has_action("camera_reset"):
 		InputMap.add_action("camera_reset")
@@ -32,6 +33,19 @@ func _ready() -> void:
 		event.physical_keycode = KEY_R
 		InputMap.action_add_event("camera_reset", event)
 
+	if not target and is_inside_tree():
+		target = get_tree().get_first_node_in_group("player") as Mats
+	if target:
+		set_target(target)
+
+
+func set_target(new_target: Mats) -> void:
+	if target and is_instance_valid(target) and target != new_target:
+		if target.died.is_connected(_on_target_died):
+			target.died.disconnect(_on_target_died)
+		if target.respawned.is_connected(_on_target_respawned):
+			target.respawned.disconnect(_on_target_respawned)
+	target = new_target
 	if not target:
 		return
 	var offset := global_position - target.global_position
@@ -42,8 +56,18 @@ func _ready() -> void:
 	_pitch_framing_offset = rotation.x - (-scene_pitch)
 	_default_pitch = clampf(scene_pitch - PITCH_STEP, MIN_PITCH, MAX_PITCH)
 	snap_to_target()
-	target.died.connect(_on_target_died)
-	target.respawned.connect(_on_target_respawned)
+	if not target.died.is_connected(_on_target_died):
+		target.died.connect(_on_target_died)
+	if not target.respawned.is_connected(_on_target_respawned):
+		target.respawned.connect(_on_target_respawned)
+
+
+func _exit_tree() -> void:
+	if target and is_instance_valid(target):
+		if target.died.is_connected(_on_target_died):
+			target.died.disconnect(_on_target_died)
+		if target.respawned.is_connected(_on_target_respawned):
+			target.respawned.disconnect(_on_target_respawned)
 
 
 func _process(delta: float) -> void:

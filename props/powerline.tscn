@@ -1,0 +1,216 @@
+[gd_scene load_steps=22 format=3]
+
+[ext_resource type="Script" path="res://props/powerline.gd" id="1_script"]
+
+[sub_resource type="CylinderShape3D" id="Shape_Pole"]
+height = 3.5
+radius = 0.22
+
+[sub_resource type="StandardMaterial3D" id="Mat_CreosoteWood"]
+albedo_color = Color(0.28, 0.22, 0.17, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Mat_CrossarmWood"]
+albedo_color = Color(0.33, 0.26, 0.19, 1)
+roughness = 0.85
+
+[sub_resource type="StandardMaterial3D" id="Mat_GalvanizedSteel"]
+albedo_color = Color(0.42, 0.44, 0.46, 1)
+metallic = 0.8
+roughness = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Mat_InsulatorPorcelain"]
+albedo_color = Color(0.18, 0.11, 0.08, 1)
+roughness = 0.25
+metallic = 0.1
+
+[sub_resource type="StandardMaterial3D" id="Mat_TransformerMetal"]
+albedo_color = Color(0.56, 0.58, 0.6, 1)
+metallic = 0.7
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_PowerCable"]
+albedo_color = Color(0.12, 0.12, 0.14, 1)
+roughness = 0.8
+metallic = 0.2
+cull_mode = 2
+
+[sub_resource type="CylinderMesh" id="Mesh_Pole"]
+material = SubResource("Mat_CreosoteWood")
+top_radius = 0.12
+bottom_radius = 0.16
+height = 10.2
+radial_segments = 16
+
+[sub_resource type="BoxMesh" id="Mesh_GroundMolding"]
+material = SubResource("Mat_GalvanizedSteel")
+size = Vector3(0.025, 10.2, 0.025)
+
+[sub_resource type="BoxMesh" id="Mesh_TopCrossarm"]
+material = SubResource("Mat_CrossarmWood")
+size = Vector3(0.12, 0.12, 2.5)
+
+[sub_resource type="BoxMesh" id="Mesh_TopBrace"]
+material = SubResource("Mat_GalvanizedSteel")
+size = Vector3(0.035, 0.95, 0.035)
+
+[sub_resource type="CylinderMesh" id="Mesh_InsulatorLarge"]
+material = SubResource("Mat_InsulatorPorcelain")
+top_radius = 0.04
+bottom_radius = 0.055
+height = 0.24
+radial_segments = 12
+
+[sub_resource type="BoxMesh" id="Mesh_LowerCrossarm"]
+material = SubResource("Mat_CrossarmWood")
+size = Vector3(0.1, 0.1, 1.8)
+
+[sub_resource type="BoxMesh" id="Mesh_LowerBrace"]
+material = SubResource("Mat_GalvanizedSteel")
+size = Vector3(0.03, 0.7, 0.03)
+
+[sub_resource type="CylinderMesh" id="Mesh_InsulatorSmall"]
+material = SubResource("Mat_InsulatorPorcelain")
+top_radius = 0.032
+bottom_radius = 0.045
+height = 0.18
+radial_segments = 12
+
+[sub_resource type="BoxMesh" id="Mesh_TelecomBracket"]
+material = SubResource("Mat_GalvanizedSteel")
+size = Vector3(0.04, 0.04, 0.26)
+
+[sub_resource type="CylinderMesh" id="Mesh_TelecomSpool"]
+material = SubResource("Mat_InsulatorPorcelain")
+top_radius = 0.035
+bottom_radius = 0.035
+height = 0.06
+radial_segments = 10
+
+[sub_resource type="CylinderMesh" id="Mesh_TransformerTank"]
+material = SubResource("Mat_TransformerMetal")
+top_radius = 0.22
+bottom_radius = 0.22
+height = 0.7
+radial_segments = 16
+
+[sub_resource type="CylinderMesh" id="Mesh_TransformerLid"]
+material = SubResource("Mat_TransformerMetal")
+top_radius = 0.24
+bottom_radius = 0.24
+height = 0.05
+radial_segments = 16
+
+[sub_resource type="CylinderMesh" id="Mesh_Bushing"]
+material = SubResource("Mat_InsulatorPorcelain")
+top_radius = 0.03
+bottom_radius = 0.04
+height = 0.2
+radial_segments = 10
+
+[sub_resource type="BoxMesh" id="Mesh_TransformerBracket"]
+material = SubResource("Mat_GalvanizedSteel")
+size = Vector3(0.08, 0.05, 0.2)
+
+[sub_resource type="BoxMesh" id="Mesh_JumperWire"]
+material = SubResource("Mat_PowerCable")
+size = Vector3(0.02, 0.65, 0.02)
+
+[node name="Powerline" type="StaticBody3D"]
+script = ExtResource("1_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, 0)
+shape = SubResource("Shape_Pole")
+
+[node name="Visuals" type="Node3D" parent="."]
+
+[node name="Pole" type="MeshInstance3D" parent="Visuals"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.1, 0)
+mesh = SubResource("Mesh_Pole")
+
+[node name="GroundMolding" type="MeshInstance3D" parent="Visuals"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.135, 5.1, 0)
+mesh = SubResource("Mesh_GroundMolding")
+
+[node name="TopCrossarm" type="MeshInstance3D" parent="Visuals"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9.4, 0)
+mesh = SubResource("Mesh_TopCrossarm")
+
+[node name="TopBraceLeft" type="MeshInstance3D" parent="Visuals"]
+transform = Transform3D(1, 0, 0, 0, 0.766044, -0.642788, 0, 0.642788, 0.766044, 0, 8.95, -0.45)
+mesh = SubResource("Mesh_TopBrace")
+
+[node name="TopBraceRight" type="MeshInstance3D" parent="Visuals"]
+transform = Transform3D(1, 0, 0, 0, 0.766044, 0.642788, 0, -0.642788, 0.766044, 0, 8.95, 0.45)
+mesh = SubResource("Mesh_TopBrace")
+
+[node name="InsulatorTopLeft" type="MeshInstance3D" parent="Visuals"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9.58, -1.05)
+mesh = SubResource("Mesh_InsulatorLarge")
+
+[node name="InsulatorTopRight" type="MeshInstance3D" parent="Visuals"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9.58, 1.05)
+mesh = SubResource("Mesh_InsulatorLarge")
+
+[node name="InsulatorTopCenter" type="MeshInstance3D" parent="Visuals"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10.15, 0)
+mesh = SubResource("Mesh_InsulatorLarge")
+
+[node name="LowerCrossarm" type="MeshInstance3D" parent="Visuals"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.1, 0)
+mesh = SubResource("Mesh_LowerCrossarm")
+
+[node name="LowerBraceLeft" type="MeshInstance3D" parent="Visuals"]
+transform = Transform3D(1, 0, 0, 0, 0.766044, -0.642788, 0, 0.642788, 0.766044, 0, 7.75, -0.32)
+mesh = SubResource("Mesh_LowerBrace")
+
+[node name="LowerBraceRight" type="MeshInstance3D" parent="Visuals"]
+transform = Transform3D(1, 0, 0, 0, 0.766044, 0.642788, 0, -0.642788, 0.766044, 0, 7.75, 0.32)
+mesh = SubResource("Mesh_LowerBrace")
+
+[node name="InsulatorLowerLeft" type="MeshInstance3D" parent="Visuals"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.24, -0.65)
+mesh = SubResource("Mesh_InsulatorSmall")
+
+[node name="InsulatorLowerRight" type="MeshInstance3D" parent="Visuals"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.24, 0.65)
+mesh = SubResource("Mesh_InsulatorSmall")
+
+[node name="TelecomBracket" type="MeshInstance3D" parent="Visuals"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, 0.13)
+mesh = SubResource("Mesh_TelecomBracket")
+
+[node name="TelecomSpool" type="MeshInstance3D" parent="Visuals"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, 0.22)
+mesh = SubResource("Mesh_TelecomSpool")
+
+[node name="Transformer" type="Node3D" parent="Visuals"]
+visible = false
+
+[node name="Tank" type="MeshInstance3D" parent="Visuals/Transformer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.25, 0.38)
+mesh = SubResource("Mesh_TransformerTank")
+
+[node name="Lid" type="MeshInstance3D" parent="Visuals/Transformer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.62, 0.38)
+mesh = SubResource("Mesh_TransformerLid")
+
+[node name="BushingPrimary" type="MeshInstance3D" parent="Visuals/Transformer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.74, 0.43)
+mesh = SubResource("Mesh_Bushing")
+
+[node name="BracketUpper" type="MeshInstance3D" parent="Visuals/Transformer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.45, 0.2)
+mesh = SubResource("Mesh_TransformerBracket")
+
+[node name="BracketLower" type="MeshInstance3D" parent="Visuals/Transformer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.05, 0.2)
+mesh = SubResource("Mesh_TransformerBracket")
+
+[node name="JumperWire" type="MeshInstance3D" parent="Visuals/Transformer"]
+transform = Transform3D(1, 0, 0, 0, 0.88, -0.47, 0, 0.47, 0.88, 0, 8.08, 0.54)
+mesh = SubResource("Mesh_JumperWire")
+
+[node name="WireMesh" type="MeshInstance3D" parent="."]
+cast_shadow = 0
