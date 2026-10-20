@@ -19,7 +19,7 @@ signal respawned
 ## Seconds for screen fade transitions.
 @export var fade_duration := 0.4
 ## Seconds to emphasize the SPD counter while screen is dark.
-@export var spd_emphasis_duration := 0.8
+@export var spd_emphasis_duration := 1.5
 ## Seconds to pause at death position before respawning (legacy/fallback without HUD).
 @export var respawn_delay := 1.25
 

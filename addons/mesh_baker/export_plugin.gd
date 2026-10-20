@@ -10,7 +10,7 @@ func _get_name() -> String:
 
 
 func _get_customization_configuration_hash() -> int:
-	return 5
+	return 7
 
 
 func _begin_customize_scenes(platform: EditorExportPlatform, features: PackedStringArray) -> bool:

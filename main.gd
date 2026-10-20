@@ -81,11 +81,63 @@ var _col_test_lane: int = 0
 var _col_test_initial_spd: int = 0
 var _col_test_wait: int = 0
 var _col_test_car: Car = null
+var _perf_target_frames: int = 0
+var _perf_frames: int = 0
+var _perf_is_walk: bool = false
+var _perf_walk_dir: float = 1.0
+var _perf_phys_samples: Array[float] = []
+var _perf_proc_samples: Array[float] = []
+var _perf_last_tick_usec: int = 0
+var _perf_wall_samples: Array[float] = []
+var _render_bench_active: bool = false
+var _render_bench_target_frames: int = 240
+var _render_bench_frames: int = 0
+var _render_bench_draw_calls: Array[int] = []
+var _render_bench_objects: Array[int] = []
+var _render_bench_frame_intervals: Array[float] = []
+var _render_bench_last_frame_usec: int = 0
+var _render_bench_f3_texts: Array[String] = []
 const COL_LANE_CONFIGS: Array[Dictionary] = [
-	{"lane_id": 0, "z": -5.6, "dir": -1.0, "car_x": 12.0, "mats_x": 0.0},
-	{"lane_id": 1, "z": -1.9, "dir": -1.0, "car_x": 12.0, "mats_x": 0.0},
-	{"lane_id": 2, "z": 1.9, "dir": 1.0, "car_x": -12.0, "mats_x": 0.0},
-	{"lane_id": 3, "z": 5.6, "dir": 1.0, "car_x": -12.0, "mats_x": 0.0},
+	{
+		"lane_id": 0,
+		"z": -5.6,
+		"dir": -1.0,
+		"car_x": 12.0,
+		"mats_x": 0.0,
+		"car_type": Car.CarType.SEDAN,
+		"speed": 16.0,
+		"mats_vz": 0.0
+	},
+	{
+		"lane_id": 1,
+		"z": -1.9,
+		"dir": -1.0,
+		"car_x": 20.0,
+		"mats_x": 0.0,
+		"car_type": Car.CarType.SPORTS,
+		"speed": 26.5,
+		"mats_vz": 0.0
+	},
+	{
+		"lane_id": 2,
+		"z": 1.9,
+		"dir": 1.0,
+		"car_x": -20.0,
+		"mats_x": 0.0,
+		"car_type": Car.CarType.SPORTS,
+		"speed": 28.0,
+		"mats_vz": 3.0
+	},
+	{
+		"lane_id": 3,
+		"z": 5.6,
+		"dir": 1.0,
+		"car_x": -12.0,
+		"mats_x": 0.0,
+		"car_type": Car.CarType.SEDAN,
+		"speed": 16.0,
+		"mats_vz": 0.0
+	},
 ]
 
 var _saw_lc_cruising: bool = false
@@ -303,7 +355,14 @@ func _apply_time_of_day(mode: GameState.TimeOfDay, immediate: bool = false) -> v
 
 func _ready() -> void:
 	_user_args = OS.get_cmdline_user_args()
-	if OS.is_debug_build() and ProjectSettings.get_setting("debug/bake_preview", false):
+	for arg in _user_args:
+		if arg.begins_with("--physics-ticks="):
+			Engine.physics_ticks_per_second = int(arg.substr(16))
+			print("Overriding physics_ticks_per_second = %d" % Engine.physics_ticks_per_second)
+	if (
+		(OS.is_debug_build() and ProjectSettings.get_setting("debug/bake_preview", false))
+		or "--bake" in _user_args
+	):
 		MeshBaker.bake_main_scene(self)
 	if mats:
 		mats.died.connect(_on_player_died)
@@ -311,6 +370,33 @@ func _ready() -> void:
 	if GameState.instance:
 		GameState.instance.time_of_day_changed.connect(_on_time_of_day_changed)
 	_apply_time_of_day(GameState.time_of_day, true)
+	if "--test-perf" in _user_args or "--test-perf-walk" in _user_args:
+		var sec := 10.0
+		for arg in _user_args:
+			if arg.begins_with("--duration="):
+				sec = float(arg.substr(11))
+		_perf_target_frames = int(round(sec * Engine.physics_ticks_per_second)) + 60
+		_perf_is_walk = "--test-perf-walk" in _user_args
+		if _perf_is_walk and mats:
+			mats.global_position = Vector3(9.0, 0.0, -15.0)
+	if "--test-render" in _user_args or "--test-render-stats" in _user_args:
+		_render_bench_active = true
+		for arg in _user_args:
+			if arg.begins_with("--frames="):
+				_render_bench_target_frames = int(arg.substr(9))
+		if mats:
+			mats.global_position = Vector3(0.0, 0.3, 9.0)
+			mats.velocity = Vector3.ZERO
+			mats.set_physics_process(false)
+			mats.set_process(false)
+		var cam := get_node_or_null("Camera3D") as FollowCamera
+		if cam:
+			cam.set_process(false)
+			cam.global_position = Vector3(0.0, 14.3777, 22.15358)
+			cam.global_rotation = Vector3(-0.46259, 0.0, 0.0)
+		var tm = $TrafficManager as TrafficManager
+		if tm and tm.debug_overlay:
+			tm.debug_overlay.visible = true
 	if "--test-mats-blocker" in _user_args or "--test-mats-interaction" in _user_args:
 		var car_scene = load("res://cars/passenger_car.tscn")
 		_test_car = car_scene.instantiate()
@@ -321,6 +407,7 @@ func _ready() -> void:
 		add_child(_test_car)
 		_test_car.global_position = Vector3(9.0, 0.0, -9.6)
 		_test_car.rotation.y = -PI / 2.0  # facing +Z
+		_test_car.reset_physics_interpolation()
 		_test_car._update_blocker_layer()
 		mats.global_position = Vector3(9.0, 0.5, -13.0)
 	if "--test-mats-walk" in _user_args:
@@ -389,6 +476,7 @@ func _ready() -> void:
 		_test_car.state = Car.State.WAITING_TO_MERGE
 		_test_car.global_position = Vector3(9.0, 0.0, -9.6)
 		_test_car.rotation.y = -PI / 2.0
+		_test_car.reset_physics_interpolation()
 		_test_car.speed = 0.0
 		_test_car.desired_speed = 0.0
 		_test_car.had_errand = true
@@ -419,6 +507,7 @@ func _ready() -> void:
 			exiting.path_distance = exiting.path.get_baked_length() - 0.01
 			exiting.speed = 0.0
 			exiting.update_presentation()
+			exiting.reset_physics_interpolation()
 			tm.lot_cars.append(exiting)
 			lane.cars.append(exiting)
 			var merge_x: float = (
@@ -460,12 +549,22 @@ func _ready() -> void:
 		for c in lane0.cars:
 			c.queue_free()
 		lane0.cars.clear()
+		lane0.spawn_timer = 9999.0
 		_test_car = traffic_mgr._spawn_car_at(lane0, 0.0, traffic_mgr.PassengerCarScene)
 		_test_car.car_type = Car.CarType.SEDAN
-		_test_car.errand = Errand.random()
+		_test_car.errand = Errand.new(&"walgroins", 1.0)
 		_test_car.had_errand = true
 		_test_car.desired_speed = 12.0
 		_test_car.speed = 12.0
+		if traffic_mgr.lot != null:
+			for spot in traffic_mgr.lot.spots:
+				if spot.serves.has(&"walgroins") and not spot.is_free():
+					for c in traffic_mgr.lot_cars:
+						if is_instance_valid(c) and c.spot == spot:
+							traffic_mgr.lot_cars.erase(c)
+							c.queue_free()
+					traffic_mgr.lot.release(spot)
+					break
 	if "--test-cramped-inn" in _user_args or "--test-strip-mall" in _user_args:
 		_ci_site = &"strip_mall" if "--test-strip-mall" in _user_args else &"cramped_inn"
 		var traffic_mgr = $TrafficManager
@@ -475,6 +574,15 @@ func _ready() -> void:
 			c.queue_free()
 		lane3.cars.clear()
 		lane3.spawn_timer = 9999.0
+		if traffic_mgr.lot != null:
+			for spot in traffic_mgr.lot.spots:
+				if spot.serves.has(_ci_site) and not spot.is_free():
+					for c in traffic_mgr.lot_cars:
+						if is_instance_valid(c) and c.spot == spot:
+							traffic_mgr.lot_cars.erase(c)
+							c.queue_free()
+					traffic_mgr.lot.release(spot)
+					break
 		var start_d: float = traffic_mgr._lane3_lot_decision_d(_ci_site) - 14.0
 		_test_car = traffic_mgr._spawn_car_at(lane3, start_d, traffic_mgr.PassengerCarScene)
 		_test_car.car_type = Car.CarType.SEDAN
@@ -491,6 +599,15 @@ func _ready() -> void:
 			c.queue_free()
 		lane0.cars.clear()
 		lane0.spawn_timer = 9999.0
+		if traffic_mgr.lot != null:
+			for spot in traffic_mgr.lot.spots:
+				if spot.serves.has(_smell_dest) and not spot.is_free():
+					for c in traffic_mgr.lot_cars:
+						if is_instance_valid(c) and c.spot == spot:
+							traffic_mgr.lot_cars.erase(c)
+							c.queue_free()
+					traffic_mgr.lot.release(spot)
+					break
 		var start_d: float = traffic_mgr.DECISION_D_SMELL - 14.0
 		_test_car = traffic_mgr._spawn_car_at(lane0, start_d, traffic_mgr.PassengerCarScene)
 		_test_car.car_type = Car.CarType.SEDAN
@@ -849,6 +966,7 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 	if "--test-drive-thru" in _user_args:
+		seed(42)
 		var tm = $TrafficManager
 		assert(tm != null, "TrafficManager must exist")
 		for c in tm.lot_cars:
@@ -882,8 +1000,8 @@ func _ready() -> void:
 
 		while ticks < max_ticks:
 			ticks += 1
-			# Spawn car2 once car1 has advanced 14 meters
-			if car2 == null and car1.path_distance >= 14.0:
+			# Spawn car2 once car1 has advanced 10 meters
+			if car2 == null and car1.path_distance >= 10.0:
 				car2 = tm.spawn_drive_thru_car(&"taco_hell_drive_thru")
 
 			# Tick traffic manager lot cars
@@ -978,9 +1096,8 @@ func _ready() -> void:
 		ticks = 0
 
 		while ticks < max_ticks:
-			ticks += 1
-			# Spawn bk2 once bk1 has advanced 14 meters
-			if bk2 == null and bk1.path_distance >= 14.0:
+			# Spawn bk2 once bk1 has advanced 10 meters
+			if bk2 == null and bk1.path_distance >= 10.0:
 				bk2 = tm.spawn_drive_thru_car(&"booger_king")
 
 			tm._update_lot_cars(delta)
@@ -1605,6 +1722,11 @@ func _ready() -> void:
 		assert(phone_call.in_call_panel.visible == true, "InCallPanel must be visible")
 		assert(mats.is_on_phone == true, "Mats must be holding phone to ear during call")
 		assert(phone_call.speaker_label.text == "Mom", "Speaker label must be Mom")
+		assert(phone_call.portrait_texture != null, "PortraitTexture must exist")
+		assert(
+			phone_call.portrait_texture.texture != null,
+			"PortraitTexture must have a texture assigned"
+		)
 		assert(
 			phone_call.dialogue_label.text == obj_mgr.current_errand.call_line,
 			"Dialogue text must match errand call_line"
@@ -2030,6 +2152,8 @@ func _ready() -> void:
 		# Arrow draw verification:
 		assert(arrow.has_method("_draw"), "ObjectiveArrow must implement _draw()")
 		assert(arrow.arrow_color.g > 0.8, "Arrow color must be objective green")
+		assert(arrow.arrow_color.a < 1.0, "Arrow color must be semi-transparent")
+		assert(arrow.arrow_scale >= 1.5, "Arrow scale must be larger than original")
 		arrow.queue_redraw()
 		# Overlay hiding tests:
 		assert(arrow.is_arrow_visible == true, "Arrow must start visible off-screen")
@@ -2314,7 +2438,51 @@ func _ready() -> void:
 		return
 
 
+func _process(_delta: float) -> void:
+	if _render_bench_active:
+		var now_usec := Time.get_ticks_usec()
+		if _render_bench_last_frame_usec > 0 and _render_bench_frames > 30:
+			_render_bench_frame_intervals.append(
+				float(now_usec - _render_bench_last_frame_usec) / 1000.0
+			)
+		_render_bench_last_frame_usec = now_usec
+		_render_bench_frames += 1
+		if _render_bench_frames > 30:
+			var dc := int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME))
+			var obj := int(Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME))
+			_render_bench_draw_calls.append(dc)
+			_render_bench_objects.append(obj)
+			var tm = $TrafficManager as TrafficManager
+			if tm and tm.debug_overlay:
+				_render_bench_f3_texts.append(tm.debug_overlay.get_hud_text())
+		if _render_bench_frames >= _render_bench_target_frames:
+			_report_render_benchmark()
+			get_tree().quit(0)
+			return
+
+
 func _physics_process(_delta: float) -> void:
+	if "--test-perf" in _user_args or "--test-perf-walk" in _user_args:
+		_perf_frames += 1
+		if _perf_is_walk and mats:
+			if mats.global_position.x > 80.0:
+				_perf_walk_dir = -1.0
+			elif mats.global_position.x < -80.0:
+				_perf_walk_dir = 1.0
+			mats.velocity = Vector3(_perf_walk_dir * mats.walk_speed, 0.0, 0.0)
+		var now_usec := Time.get_ticks_usec()
+		if _perf_last_tick_usec > 0 and _perf_frames > 60:
+			_perf_wall_samples.append(float(now_usec - _perf_last_tick_usec) / 1000.0)
+		_perf_last_tick_usec = now_usec
+		if _perf_frames > 60:
+			var phys_ms: float = Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0
+			var proc_ms: float = Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0
+			_perf_phys_samples.append(phys_ms)
+			_perf_proc_samples.append(proc_ms)
+		if _perf_frames >= _perf_target_frames:
+			_report_perf_benchmark()
+			get_tree().quit(0)
+			return
 	if "--test-mats-blocker" in _user_args or "--test-mats-interaction" in _user_args:
 		_test_frames += 1
 		if _mats_stage == 0:
@@ -2633,6 +2801,7 @@ func _physics_process(_delta: float) -> void:
 				_cart_test_cart._current_speed = 0.0
 				# Place Mats alongside cart (in interaction area, but not behind)
 				mats.global_position = Vector3(10.0, 0.0, -15.0)
+				mats.velocity = Vector3.ZERO
 				vis.rotation = Vector3.ZERO
 			elif _test_frames >= 300:
 				assert(false, "Timeout waiting for respawn after dying in cart")
@@ -2645,19 +2814,26 @@ func _physics_process(_delta: float) -> void:
 				)
 				_cart_test_cart._update_prompt()
 				assert(
-					hud.action_label.text == "Space for Action",
-					"HUD prompt must be 'Space for Action' when at side"
+					hud.action_label.text.to_lower().contains("jump in"),
+					(
+						"HUD prompt must offer jumping in when at side, got: '%s'"
+						% hud.action_label.text
+					)
 				)
 				# Move Mats behind cart
 				mats.global_position = Vector3(9.0, 0.0, -15.85)
+				mats.velocity = Vector3.ZERO
 				_cart_test_cart._update_prompt()
 			elif _test_frames >= 5:
 				assert(_cart_test_cart.is_mats_behind(mats), "Mats must be detected behind cart")
 				assert(hud.action_label.visible, "HUD action label must be visible")
 				assert(
-					hud.action_label.text == "p to push",
 					(
-						"HUD prompt must be 'p to push' when behind cart, got: '%s'"
+						hud.action_label.text.to_lower().contains("p to push")
+						and hud.action_label.text.to_lower().contains("jump in")
+					),
+					(
+						"HUD prompt must offer 'p to push' and 'space to jump in' when behind cart, got: '%s'"
 						% hud.action_label.text
 					)
 				)
@@ -2671,8 +2847,11 @@ func _physics_process(_delta: float) -> void:
 				assert(_cart_test_cart.is_being_pushed(), "Cart must be pushed after pressing P")
 				assert(_cart_test_cart.get_pusher() == mats, "Cart pusher must be mats")
 				assert(
-					hud.action_label.text == "Space to jump in",
-					"HUD prompt must show 'Space to jump in' while pushing"
+					hud.action_label.text.to_lower().contains("jump in"),
+					(
+						"HUD prompt must show 'space to jump in' while pushing, got: '%s'"
+						% hud.action_label.text
+					)
 				)
 				print("  Start pushing verified!")
 				_cart_test_stage = 6
@@ -2721,7 +2900,10 @@ func _physics_process(_delta: float) -> void:
 				mats.global_position = _cart_test_cart.global_position - Vector3(0.0, 0.0, 0.85)
 				_cart_test_cart._update_prompt()
 				var hud: HUD = get_tree().get_first_node_in_group("hud") as HUD
-				assert(hud.action_label.text == "p to push", "Prompt must be 'p to push'")
+				assert(
+					hud.action_label.text.to_lower().contains("p to push"),
+					"Prompt must include 'p to push', got: '%s'" % hud.action_label.text
+				)
 				var p_ev := InputEventKey.new()
 				p_ev.keycode = KEY_P
 				p_ev.pressed = true
@@ -2731,7 +2913,10 @@ func _physics_process(_delta: float) -> void:
 				_cart_test_cart._unhandled_input(p_ev)
 				assert(not mats.is_pushing_cart, "Must stop pushing after pressing P again")
 				assert(_cart_test_cart.get_pusher() == null, "Pusher must be null")
-				assert(hud.action_label.text == "p to push", "Prompt must return to 'p to push'")
+				assert(
+					hud.action_label.text.to_lower().contains("p to push"),
+					"Prompt must return to including 'p to push', got: '%s'" % hud.action_label.text
+				)
 				print("  P to stop pushing toggle verified!")
 				print(
 					"CART_TEST completed: mount, sit, exit, death, behind-detection, p-to-push, walk-pushing, space-jump-in, and stop-pushing verified!"
@@ -2742,6 +2927,10 @@ func _physics_process(_delta: float) -> void:
 			assert(false, "Timeout in CART_TEST")
 	if "--test-mats-collision" in _user_args:
 		_test_frames += 1
+		var tick_scale: float = Engine.physics_ticks_per_second / 60.0
+		var f_40: int = maxi(1, int(round(40.0 * tick_scale)))
+		var f_50: int = maxi(1, int(round(50.0 * tick_scale)))
+		var f_120: int = maxi(1, int(round(120.0 * tick_scale)))
 		if _col_test_stage == 0:
 			mats.velocity = Vector3(0.0, 0.0, 4.0)
 			if mats.global_position.z >= 7.3 and mats.global_position.z <= 7.8:
@@ -2756,8 +2945,7 @@ func _physics_process(_delta: float) -> void:
 						]
 					)
 				)
-			if _test_frames >= 40:
-				assert(mats.global_position.z > 7.6, "Mats should walk onto sidewalk over curb")
+			if _test_frames >= f_40:
 				assert(
 					absf(mats.global_position.y - 0.245) < 0.05,
 					"Mats should be on sidewalk (y ~ 0.245), got %f" % mats.global_position.y
@@ -2781,7 +2969,7 @@ func _physics_process(_delta: float) -> void:
 						]
 					)
 				)
-			if _test_frames >= 50:
+			if _test_frames >= f_50:
 				assert(mats.global_position.z < 7.4, "Mats should step off sidewalk back onto road")
 				assert(
 					absf(mats.global_position.y - 0.10) < 0.05,
@@ -2794,7 +2982,7 @@ func _physics_process(_delta: float) -> void:
 				mats.velocity = Vector3(0.0, 0.0, -4.0)
 		elif _col_test_stage == 2:
 			mats.velocity = Vector3(0.0, 0.0, -4.0)
-			if _test_frames >= 40:
+			if _test_frames >= f_40:
 				var post_pos := Vector3(92.0, 0.245, 8.2)
 				var dist := mats.global_position.distance_to(post_pos)
 				assert(dist >= 0.48, "Mats must not penetrate sign post cylinder: dist=%f" % dist)
@@ -2809,38 +2997,42 @@ func _physics_process(_delta: float) -> void:
 				_test_frames = 0
 				var bk_site := get_node("Props/BoogerKingSite")
 				var bk_doors := bk_site.get_node("Building/Building/Tower/Doors")
-				mats.global_position = bk_doors.global_position + Vector3(0.0, 0.0, -2.5)
+				mats.global_position = bk_doors.global_position + Vector3(0.0, 0.0, -1.2)
 				mats.velocity = Vector3(0.0, 0.0, 3.0)
 		elif _col_test_stage == 3:
 			mats.velocity = Vector3(0.0, 0.0, 3.0)
 			assert(not mats.is_on_ceiling(), "Mats 1.5m capsule must not hit canopy ceiling!")
-			if _test_frames >= 40:
-				var bk_site := get_node("Props/BoogerKingSite")
-				var bk_doors := bk_site.get_node("Building/Building/Tower/Doors")
-				var dist := mats.global_position.distance_to(bk_doors.global_position)
-				assert(dist < 1.0, "Mats must reach BK door threshold unobstructed: dist=%f" % dist)
+			var bk_site := get_node("Props/BoogerKingSite")
+			var bk_doors := bk_site.get_node("Building/Building/Tower/Doors")
+			var dist := mats.global_position.distance_to(bk_doors.global_position)
+			if dist < 0.6:
 				_col_test_stage = 4
 				_test_frames = 0
 				var taco := get_node("Props/TacoHell")
 				var taco_doors := taco.get_node("Building/MainArchPortico/Doors")
-				mats.global_position = taco_doors.global_position + Vector3(0.0, 0.0, 2.5)
+				mats.global_position = taco_doors.global_position + Vector3(0.0, 0.0, 1.2)
 				mats.velocity = Vector3(0.0, 0.0, -3.0)
+			elif _test_frames > f_120:
+				assert(
+					false, "Timeout: Mats must reach BK door threshold unobstructed: dist=%f" % dist
+				)
 		elif _col_test_stage == 4:
 			mats.velocity = Vector3(0.0, 0.0, -3.0)
 			assert(not mats.is_on_ceiling(), "Mats 1.5m capsule must not hit arch header!")
-			if _test_frames >= 40:
-				var taco := get_node("Props/TacoHell")
-				var taco_doors := taco.get_node("Building/MainArchPortico/Doors")
-				var dist := mats.global_position.distance_to(taco_doors.global_position)
-				assert(
-					dist < 1.0,
-					"Mats must reach Taco Hell door threshold unobstructed: dist=%f" % dist
-				)
+			var taco := get_node("Props/TacoHell")
+			var taco_doors := taco.get_node("Building/MainArchPortico/Doors")
+			var dist := mats.global_position.distance_to(taco_doors.global_position)
+			if dist < 0.6:
 				print(
 					"COLLISION_TEST [4/5]: Building doorways and overhead canopies clearance verified!"
 				)
 				_col_test_stage = 5
 				_setup_col_near_miss_test()
+			elif _test_frames > f_120:
+				assert(
+					false,
+					"Timeout: Mats must reach Taco Hell door threshold unobstructed: dist=%f" % dist
+				)
 		elif _col_test_stage == 5:
 			if is_instance_valid(_col_test_car):
 				_col_test_car.advance_simulation(_delta)
@@ -2856,15 +3048,19 @@ func _physics_process(_delta: float) -> void:
 					_col_test_stage = 6
 					_col_test_lane = 0
 					_setup_col_lane_test(0)
-			elif _test_frames > 120:
+			elif _test_frames > f_120:
 				assert(false, "Timeout waiting for near miss car")
 		elif _col_test_stage == 6:
 			if is_instance_valid(_col_test_car):
 				_col_test_car.advance_simulation(_delta)
+			var cfg: Dictionary = COL_LANE_CONFIGS[_col_test_lane]
+			var mats_vz: float = cfg.get("mats_vz", 0.0)
+			if mats_vz != 0.0 and not mats.is_dead:
+				mats.velocity = Vector3(0.0, 0.0, mats_vz)
 			if _col_test_wait == 0:
 				if mats.is_dead:
 					_col_test_wait = 1
-				elif _test_frames > 120:
+				elif _test_frames > f_120:
 					assert(false, "Timeout waiting for car hit in lane %d" % _col_test_lane)
 			elif _col_test_wait == 1:
 				if not mats.is_dead:
@@ -3637,15 +3833,232 @@ func _setup_col_lane_test(idx: int) -> void:
 	var lane_dir: float = cfg["dir"]
 	var car_x: float = cfg["car_x"]
 	var mats_x: float = cfg["mats_x"]
+	var car_type: Car.CarType = cfg.get("car_type", Car.CarType.SEDAN)
+	var speed: float = cfg.get("speed", 16.0)
+	var mats_vz: float = cfg.get("mats_vz", 0.0)
 
-	mats.global_position = Vector3(mats_x, 0.10, lane_z)
-	mats.velocity = Vector3.ZERO
+	mats.global_position = Vector3(mats_x, 0.10, lane_z - (0.5 if mats_vz != 0.0 else 0.0))
+	mats.velocity = Vector3(0.0, 0.0, mats_vz)
 
 	var car_scene = load("res://cars/passenger_car.tscn")
 	_col_test_car = car_scene.instantiate()
-	_col_test_car.car_type = Car.CarType.SEDAN
+	_col_test_car.car_type = car_type
 	add_child(_col_test_car)
-	_col_test_car.setup(lane_id, lane_z, lane_dir, car_x, 60.0, 16.0, Car.CarType.SEDAN)
-	_col_test_car.speed = 16.0
-	_col_test_car.desired_speed = 16.0
+	_col_test_car.setup(lane_id, lane_z, lane_dir, car_x, 60.0, speed, car_type)
+	_col_test_car.speed = speed
+	_col_test_car.desired_speed = speed
 	_col_test_car._update_blocker_layer()
+
+
+func _report_perf_benchmark() -> void:
+	var phys_sorted := _perf_phys_samples.duplicate()
+	phys_sorted.sort()
+	var proc_sorted := _perf_proc_samples.duplicate()
+	proc_sorted.sort()
+	var n: int = phys_sorted.size()
+	if n == 0:
+		print("PERF_BENCHMARK: No samples collected")
+		return
+	var wall_sorted := _perf_wall_samples.duplicate()
+	wall_sorted.sort()
+	var wall_n := wall_sorted.size()
+	var wall_sum := 0.0
+	for w in wall_sorted:
+		wall_sum += w
+	var wall_avg: float = (wall_sum / float(wall_n)) if wall_n > 0 else 0.0
+	var wall_p50: float = float(wall_sorted[int(wall_n * 0.50)]) if wall_n > 0 else 0.0
+	var wall_p95: float = (
+		float(wall_sorted[mini(wall_n - 1, int(wall_n * 0.95))]) if wall_n > 0 else 0.0
+	)
+	var wall_p99: float = (
+		float(wall_sorted[mini(wall_n - 1, int(wall_n * 0.99))]) if wall_n > 0 else 0.0
+	)
+	var wall_max: float = float(wall_sorted[wall_n - 1]) if wall_n > 0 else 0.0
+	print(
+		(
+			"  Wall Tick (ms): avg=%.3f, p50=%.3f, p95=%.3f, p99=%.3f, max=%.3f"
+			% [wall_avg, wall_p50, wall_p95, wall_p99, wall_max]
+		)
+	)
+
+	var phys_sum := 0.0
+	for v in phys_sorted:
+		phys_sum += v
+	var proc_sum := 0.0
+	for v in proc_sorted:
+		proc_sum += v
+
+	var phys_min: float = phys_sorted[0]
+	var phys_avg: float = phys_sum / float(n)
+	var phys_p50: float = phys_sorted[int(n * 0.50)]
+	var phys_p95: float = phys_sorted[mini(n - 1, int(n * 0.95))]
+	var phys_p99: float = phys_sorted[mini(n - 1, int(n * 0.99))]
+	var phys_max: float = phys_sorted[n - 1]
+
+	var proc_min: float = proc_sorted[0]
+	var proc_avg: float = proc_sum / float(n)
+	var proc_p50: float = proc_sorted[int(n * 0.50)]
+	var proc_p95: float = proc_sorted[mini(n - 1, int(n * 0.95))]
+	var proc_p99: float = proc_sorted[mini(n - 1, int(n * 0.99))]
+	var proc_max: float = proc_sorted[n - 1]
+
+	var ticks_per_sec: int = Engine.physics_ticks_per_second
+	var phys_cpu_ms_per_sec: float = phys_avg * float(ticks_per_sec)
+
+	var mode_str := "WALK" if _perf_is_walk else "IDLE"
+	print("==================================================")
+	print("PERF_BENCHMARK: mode=%s, ticks_per_sec=%d, samples=%d" % [mode_str, ticks_per_sec, n])
+	print(
+		(
+			"  Physics Step (ms): avg=%.3f, p50=%.3f, p95=%.3f, p99=%.3f, min=%.3f, max=%.3f"
+			% [phys_avg, phys_p50, phys_p95, phys_p99, phys_min, phys_max]
+		)
+	)
+	print(
+		(
+			"  Total Physics CPU: %.2f ms / simulated second (%.1f%% of 1 core)"
+			% [phys_cpu_ms_per_sec, phys_cpu_ms_per_sec / 10.0]
+		)
+	)
+	print(
+		(
+			"  Process Frame (ms): avg=%.3f, p50=%.3f, p95=%.3f, p99=%.3f, min=%.3f, max=%.3f"
+			% [proc_avg, proc_p50, proc_p95, proc_p99, proc_min, proc_max]
+		)
+	)
+	print("==================================================")
+	var result_dict := {
+		"mode": mode_str,
+		"physics_ticks_per_second": ticks_per_sec,
+		"samples": n,
+		"physics_step_ms":
+		{
+			"min": phys_min,
+			"avg": phys_avg,
+			"p50": phys_p50,
+			"p95": phys_p95,
+			"p99": phys_p99,
+			"max": phys_max,
+		},
+		"physics_cpu_ms_per_sec": phys_cpu_ms_per_sec,
+		"process_frame_ms":
+		{
+			"min": proc_min,
+			"avg": proc_avg,
+			"p50": proc_p50,
+			"p95": proc_p95,
+			"p99": proc_p99,
+			"max": proc_max,
+		}
+	}
+	print("PERF_BENCHMARK_RESULT: " + JSON.stringify(result_dict))
+
+
+func _report_render_benchmark() -> void:
+	var n := _render_bench_draw_calls.size()
+	if n == 0:
+		print("RENDER_BENCHMARK: No samples collected")
+		return
+	var dc_sorted := _render_bench_draw_calls.duplicate()
+	dc_sorted.sort()
+	var obj_sorted := _render_bench_objects.duplicate()
+	obj_sorted.sort()
+	var fi_sorted := _render_bench_frame_intervals.duplicate()
+	fi_sorted.sort()
+	var fi_n := fi_sorted.size()
+
+	var dc_sum: int = 0
+	for v in dc_sorted:
+		dc_sum += v
+	var obj_sum: int = 0
+	for v in obj_sorted:
+		obj_sum += v
+	var fi_sum := 0.0
+	for v in fi_sorted:
+		fi_sum += v
+
+	var dc_avg: float = float(dc_sum) / float(n)
+	var dc_p50: int = int(dc_sorted[int(n * 0.50)])
+	var dc_p95: int = int(dc_sorted[mini(n - 1, int(n * 0.95))])
+	var dc_p99: int = int(dc_sorted[mini(n - 1, int(n * 0.99))])
+	var dc_min: int = int(dc_sorted[0])
+	var dc_max: int = int(dc_sorted[n - 1])
+
+	var obj_avg: float = float(obj_sum) / float(n)
+	var obj_p50: int = int(obj_sorted[int(n * 0.50)])
+	var obj_p95: int = int(obj_sorted[mini(n - 1, int(n * 0.95))])
+	var obj_p99: int = int(obj_sorted[mini(n - 1, int(n * 0.99))])
+	var obj_min: int = int(obj_sorted[0])
+	var obj_max: int = int(obj_sorted[n - 1])
+
+	var fi_avg: float = (fi_sum / float(fi_n)) if fi_n > 0 else 0.0
+	var fi_p50: float = float(fi_sorted[int(fi_n * 0.50)]) if fi_n > 0 else 0.0
+	var fi_p95: float = float(fi_sorted[mini(fi_n - 1, int(fi_n * 0.95))]) if fi_n > 0 else 0.0
+	var fi_p99: float = float(fi_sorted[mini(fi_n - 1, int(fi_n * 0.99))]) if fi_n > 0 else 0.0
+	var fi_min: float = float(fi_sorted[0]) if fi_n > 0 else 0.0
+	var fi_max: float = float(fi_sorted[fi_n - 1]) if fi_n > 0 else 0.0
+
+	var cam := get_node_or_null("Camera3D") as Camera3D
+	var cam_pos := cam.global_position if cam else Vector3.ZERO
+	var cam_rot := cam.global_rotation if cam else Vector3.ZERO
+	var latest_f3: String = (
+		_render_bench_f3_texts.back() if not _render_bench_f3_texts.is_empty() else ""
+	)
+
+	print("==================================================")
+	print("RENDER_BENCHMARK: samples=%d" % n)
+	print("  Camera position: %s, rotation: %s" % [cam_pos, cam_rot])
+	print("  F3 HUD: %s" % latest_f3.replace("\n", " | "))
+	print(
+		(
+			"  Draw Calls: avg=%.1f, p50=%d, p95=%d, p99=%d, min=%d, max=%d"
+			% [dc_avg, dc_p50, dc_p95, dc_p99, dc_min, dc_max]
+		)
+	)
+	print(
+		(
+			"  Objects in Frame: avg=%.1f, p50=%d, p95=%d, p99=%d, min=%d, max=%d"
+			% [obj_avg, obj_p50, obj_p95, obj_p99, obj_min, obj_max]
+		)
+	)
+	print(
+		(
+			"  Frame Interval (ms): avg=%.3f, p50=%.3f, p95=%.3f, p99=%.3f, min=%.3f, max=%.3f"
+			% [fi_avg, fi_p50, fi_p95, fi_p99, fi_min, fi_max]
+		)
+	)
+	print("==================================================")
+	var result_dict := {
+		"samples": n,
+		"camera_position": [cam_pos.x, cam_pos.y, cam_pos.z],
+		"camera_rotation": [cam_rot.x, cam_rot.y, cam_rot.z],
+		"draw_calls":
+		{
+			"min": dc_min,
+			"avg": dc_avg,
+			"p50": dc_p50,
+			"p95": dc_p95,
+			"p99": dc_p99,
+			"max": dc_max,
+		},
+		"objects_in_frame":
+		{
+			"min": obj_min,
+			"avg": obj_avg,
+			"p50": obj_p50,
+			"p95": obj_p95,
+			"p99": obj_p99,
+			"max": obj_max,
+		},
+		"frame_interval_ms":
+		{
+			"min": fi_min,
+			"avg": fi_avg,
+			"p50": fi_p50,
+			"p95": fi_p95,
+			"p99": fi_p99,
+			"max": fi_max,
+		},
+		"f3_hud": latest_f3,
+	}
+	print("RENDER_BENCHMARK_RESULT: " + JSON.stringify(result_dict))

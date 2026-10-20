@@ -277,6 +277,7 @@ func _seed_parked_car_at(spot: ParkingSpot) -> void:
 	car.state = Car.State.PARKED
 	car.transform = spot.transform
 	car.global_transform = spot.transform
+	car.reset_physics_interpolation()
 	lot.reserve(spot, car)
 	lot.occupy(spot)
 	car.dwell_left = randf_range(5.0, 40.0)
@@ -417,6 +418,7 @@ func _update_lot_cars(delta: float) -> void:
 				else:
 					car.dwell_left = randf_range(5.0, 40.0)
 				car.update_presentation()
+				car.reset_physics_interpolation()
 				car._update_blocker_layer()
 			surviving_cars.append(car)
 		elif car.state == Car.State.DRIVE_THRU:
@@ -488,6 +490,7 @@ func _update_lot_cars(delta: float) -> void:
 				car.state = Car.State.WAITING_TO_MERGE
 				car.merge_wait_time = 0.0
 				car.update_presentation()
+				car.reset_physics_interpolation()
 				car._update_blocker_layer()
 			surviving_cars.append(car)
 		elif car.state == Car.State.PARKED:
@@ -581,6 +584,7 @@ func _update_lot_cars(delta: float) -> void:
 				car.state = Car.State.WAITING_TO_MERGE
 				car.merge_wait_time = 0.0
 				car.update_presentation()
+				car.reset_physics_interpolation()
 				car._update_blocker_layer()
 			surviving_cars.append(car)
 		elif car.state == Car.State.WAITING_TO_MERGE:
@@ -654,6 +658,7 @@ func _update_lot_cars(delta: float) -> void:
 				car.current_blocker = null
 				car.blocked_time = 0.0
 				car.update_presentation()
+				car.reset_physics_interpolation()
 				car._update_blocker_layer()
 				# Removed from lot_cars by omitting from surviving_cars
 			else:
@@ -1381,6 +1386,7 @@ func _spawn_car_at(lane: Lane, initial_distance: float, scene: PackedScene = nul
 	car.setup(lane.id, lane.z, lane.direction, lane.start_x, lane.length, spd, chosen_type)
 	car.lane_distance = initial_distance
 	car.update_presentation()
+	car.reset_physics_interpolation()
 	if lane.id == 0 and car.can_take_errands():
 		if (
 			initial_distance < DECISION_D

@@ -219,13 +219,13 @@ func _update_prompt() -> void:
 	if not _hud:
 		return
 	if _rider != null:
-		_hud.set_action_prompt(self, true, "Space for Action")
+		_hud.set_action_prompt(self, true, "space to exit")
 	elif _pusher != null:
-		_hud.set_action_prompt(self, true, "Space to jump in")
+		_hud.set_action_prompt(self, true, "p to stop pushing\nspace to jump in")
 	elif _nearby_mats != null:
 		if is_mats_behind(_nearby_mats):
-			_hud.set_action_prompt(self, true, "p to push")
+			_hud.set_action_prompt(self, true, "p to push\nspace to jump in")
 		else:
-			_hud.set_action_prompt(self, true, "Space for Action")
+			_hud.set_action_prompt(self, true, "space to jump in")
 	else:
 		_hud.set_action_prompt(self, false)

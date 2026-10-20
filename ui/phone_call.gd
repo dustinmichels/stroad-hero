@@ -14,6 +14,8 @@ signal call_dismissed
 @onready var speaker_label: Label = %SpeakerLabel
 @onready var dialogue_label: Label = %DialogueLabel
 @onready var ok_prompt_label: Label = %OkPromptLabel
+@onready var portrait_texture: TextureRect = %PortraitTexture
+@onready var portrait_container: PanelContainer = %PortraitContainer
 
 var objective_manager: ObjectiveManager = null
 var current_errand: MatsErrand = null
@@ -199,6 +201,19 @@ func show_in_call(errand: MatsErrand = null) -> void:
 	else:
 		text = "Mats, could you pick something up for me?"
 	_start_typewriter(text)
+	if portrait_container:
+		var p_size: Vector2 = (
+			portrait_container.size if portrait_container.size.x > 0 else Vector2(104, 104)
+		)
+		portrait_container.pivot_offset = p_size * 0.5
+		portrait_container.scale = Vector2(0.88, 0.88)
+		var pop_tween := create_tween()
+		(
+			pop_tween
+			. tween_property(portrait_container, "scale", Vector2.ONE, 0.22)
+			. set_trans(Tween.TRANS_BACK)
+			. set_ease(Tween.EASE_OUT)
+		)
 
 
 func answer() -> void:

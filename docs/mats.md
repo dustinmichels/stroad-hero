@@ -25,7 +25,7 @@ Mats is the player character in Stroad Hero—a stylized low-poly kid (approxima
 
 ## 2. Errand Loop (Objectives from Mom)
 
-Mats's primary objective loop involves running errands for Mom across the stroad:
+Mats's primary objective loop involves running errands for Mom across the stroad (for the full technical specification and state machine architecture, see [`docs/objectives.md`](objectives.md)):
 
 1. **Incoming Call**:
    - Mom calls Mats on his phone after a short initial delay or following the completion of a previous errand.
@@ -66,3 +66,5 @@ Mats's primary objective loop involves running errands for Mom across the stroad
 - `ui/objective_arrow.gd`: Screen-edge HUD pointer tracking off-screen target coordinates.
 - `ui/objective_toast.gd`: Screen toast banner and checkmark on objective completion.
 - `player/mats.gd`: Player kinematic controller, animation loops, and shopping cart riding logic.
+
+For detailed state machine logic, selection algorithms, procedural dialogue assembly, and test suites, see [`docs/objectives.md`](objectives.md).

@@ -437,7 +437,11 @@ const engine = new Engine(GODOT_CONFIG);
 		}
 	} else {
 		let downloadComplete = false;
+		const urlParams = new URLSearchParams(window.location.search);
+		const urlArgs = urlParams.getAll('arg');
+		const startArgs = urlArgs.length > 0 ? urlArgs : (GODOT_CONFIG.args || []);
 		engine.startGame({
+			'args': startArgs,
 			'onProgress': function (current, total) {
 				if (current > 0 && total > 0) {
 					const pct = Math.floor((current / total) * 100);

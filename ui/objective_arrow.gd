@@ -2,8 +2,10 @@ class_name ObjectiveArrow
 extends Control
 
 @export var edge_margin: float = 60.0
-@export var arrow_color: Color = Color(0.2, 0.85, 0.35, 1.0)
-@export var outline_color: Color = Color(0.05, 0.18, 0.08, 0.9)
+@export var arrow_color: Color = Color(0.2, 0.85, 0.35, 0.65)
+@export var outline_color: Color = Color(0.05, 0.18, 0.08, 0.65)
+@export var arrow_scale: float = 2.0
+@export var outline_width: float = 3.0
 
 var objective_manager: ObjectiveManager = null
 var camera: Camera3D = null
@@ -53,7 +55,7 @@ func _setup_distance_label() -> void:
 	var font := load("res://fonts/Overpass-SemiBold.ttf") as Font
 	if font:
 		distance_label.add_theme_font_override("font", font)
-	distance_label.add_theme_font_size_override("font_size", 14)
+	distance_label.add_theme_font_size_override("font_size", 16)
 	distance_label.add_theme_color_override("font_color", Color(0.95, 1.0, 0.95, 1.0))
 	distance_label.add_theme_color_override("font_outline_color", Color(0.05, 0.18, 0.08, 1.0))
 	distance_label.add_theme_constant_override("outline_size", 3)
@@ -248,7 +250,8 @@ func update_arrow() -> void:
 		distance_label.text = "%d m" % distance_meters
 		distance_label.reset_size()
 		var inward := -dir
-		var label_pos := clamped_pos + inward * 36.0 - distance_label.size * 0.5
+		var label_offset := 24.0 + 12.0 * arrow_scale
+		var label_pos := clamped_pos + inward * label_offset - distance_label.size * 0.5
 		label_pos.x = clampf(label_pos.x, 10.0, vp_rect.size.x - distance_label.size.x - 10.0)
 		label_pos.y = clampf(label_pos.y, 10.0, vp_rect.size.y - distance_label.size.y - 10.0)
 		distance_label.position = label_pos
@@ -268,20 +271,19 @@ func _draw() -> void:
 	if not is_arrow_visible:
 		return
 
-	var pts := PackedVector2Array(
-		[
-			Vector2(16.0, 0.0),
-			Vector2(-12.0, -11.0),
-			Vector2(-6.0, 0.0),
-			Vector2(-12.0, 11.0),
-		]
-	)
+	var base_pts := [
+		Vector2(16.0, 0.0),
+		Vector2(-12.0, -11.0),
+		Vector2(-6.0, 0.0),
+		Vector2(-12.0, 11.0),
+	]
 	var cos_r := cos(arrow_rotation)
 	var sin_r := sin(arrow_rotation)
 	var transformed_pts := PackedVector2Array()
-	for p in pts:
-		var rx := p.x * cos_r - p.y * sin_r
-		var ry := p.x * sin_r + p.y * cos_r
+	for p in base_pts:
+		var sp: Vector2 = p * arrow_scale
+		var rx := sp.x * cos_r - sp.y * sin_r
+		var ry := sp.x * sin_r + sp.y * cos_r
 		transformed_pts.append(arrow_screen_pos + Vector2(rx, ry))
 
 	draw_colored_polygon(transformed_pts, arrow_color)
@@ -294,4 +296,4 @@ func _draw() -> void:
 			transformed_pts[0],
 		]
 	)
-	draw_polyline(outline_pts, outline_color, 2.0, true)
+	draw_polyline(outline_pts, outline_color, outline_width, true)

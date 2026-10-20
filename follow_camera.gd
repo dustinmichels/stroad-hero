@@ -25,12 +25,15 @@ var _is_swinging := false
 
 
 func _ready() -> void:
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	if not InputMap.has_action("camera_reset"):
 		InputMap.add_action("camera_reset")
 		var event := InputEventKey.new()
 		event.physical_keycode = KEY_R
 		InputMap.action_add_event("camera_reset", event)
 
+	if not target:
+		return
 	var offset := global_position - target.global_position
 	_distance = offset.length()
 	var horizontal_dist := Vector2(offset.x, offset.z).length()
@@ -39,16 +42,19 @@ func _ready() -> void:
 	_pitch_framing_offset = rotation.x - (-scene_pitch)
 	_default_pitch = clampf(scene_pitch - PITCH_STEP, MIN_PITCH, MAX_PITCH)
 	snap_to_target()
-	if target:
-		target.died.connect(_on_target_died)
-		target.respawned.connect(_on_target_respawned)
+	target.died.connect(_on_target_died)
+	target.respawned.connect(_on_target_respawned)
 
 
 func _process(delta: float) -> void:
+	if not target:
+		return
 	var target_position := target.get_global_transform_interpolated().origin
-	var is_target_dead: bool = target.is_dead if target != null else false
+	var is_target_dead: bool = target.is_dead
 	if not is_target_dead:
-		var camera_left_pressed := Input.is_action_just_pressed("camera_left")
+		var camera_left_pressed := (
+			Input.is_action_just_pressed("camera_left") and not _is_phone_call_showing()
+		)
 		var yaw_step := int(camera_left_pressed) - int(Input.is_action_just_pressed("camera_right"))
 		var pitch_step := (
 			int(Input.is_action_just_pressed("camera_forward"))
@@ -93,6 +99,8 @@ func _process(delta: float) -> void:
 
 
 func reset_view() -> void:
+	if not target:
+		return
 	var visual := target.get_node_or_null("Visual") as Node3D
 	var target_facing := visual.global_rotation.y if visual else _default_yaw
 	_target_yaw = _camera_yaw + angle_difference(_camera_yaw, target_facing)
@@ -101,12 +109,18 @@ func reset_view() -> void:
 
 
 func snap_to_target() -> void:
+	if not target:
+		return
 	_camera_yaw = _default_yaw
 	_target_yaw = _default_yaw
 	_camera_pitch = _default_pitch
 	_target_pitch = _default_pitch
 	_is_swinging = false
-	var target_position := target.global_position
+	var target_position := (
+		target.get_global_transform_interpolated().origin
+		if target.is_inside_tree()
+		else target.global_position
+	)
 	var cos_pitch := cos(_camera_pitch)
 	var sin_pitch := sin(_camera_pitch)
 	global_position = (

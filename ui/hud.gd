@@ -28,6 +28,7 @@ var _default_margin_pos := Vector2(20.0, 20.0)
 var _fade_tween: Tween
 var _spd_tween: Tween
 var _spd_placeholder: Control = null
+var _camera: Camera3D = null
 
 
 func _ready() -> void:
@@ -40,6 +41,11 @@ func _ready() -> void:
 	_update_display()
 	add_to_group("hud")
 	_resolve_objective_manager.call_deferred()
+
+
+func _process(_delta: float) -> void:
+	if action_label and action_label.visible:
+		_update_action_label_position()
 
 
 func _exit_tree() -> void:
@@ -161,6 +167,7 @@ func increment_obj() -> void:
 func fade_to_black(duration: float = 0.4) -> void:
 	if action_label:
 		action_label.visible = false
+		action_label.modulate.a = 1.0
 	_action_prompt_sources.clear()
 	if not fade_overlay:
 		return
@@ -198,7 +205,7 @@ func _reset_spd_panel() -> void:
 		desc_label.modulate = Color(0.85, 0.65, 0.65, 0.9)
 
 
-func emphasize_death_spd(hold_duration: float = 1.2) -> void:
+func emphasize_death_spd(hold_duration: float = 1.5) -> void:
 	if not panel_container or not spd_label:
 		spd_count += 1
 		_update_display()
@@ -239,9 +246,23 @@ func emphasize_death_spd(hold_duration: float = 1.2) -> void:
 	var target_center_pos := (vp_size - panel_size) * 0.5
 	var target_scale := Vector2(2.5, 2.5)
 
-	var move_in_time := 0.35
-	var count_punch_time := maxf(hold_duration * 0.6, 0.12)
-	var shrink_time := 0.35
+	var move_in_time: float
+	var pause_before: float
+	var count_punch_time: float
+	var pause_after: float
+	var shrink_time: float
+	if hold_duration <= 0.1:
+		move_in_time = 0.35
+		pause_before = 0.0
+		count_punch_time = 0.12
+		pause_after = 0.0
+		shrink_time = 0.35
+	else:
+		move_in_time = 0.45
+		pause_before = 0.08
+		count_punch_time = 0.28
+		pause_after = 0.18
+		shrink_time = 0.45
 
 	_spd_tween = create_tween()
 
@@ -265,14 +286,22 @@ func emphasize_death_spd(hold_duration: float = 1.2) -> void:
 		)
 
 	# 2. Count up
+	var punch_scale := target_scale * 1.15
+	var half_punch := count_punch_time * 0.5
+	if pause_before > 0.0:
+		_spd_tween.tween_interval(pause_before)
 	_spd_tween.tween_callback(
 		func():
 			spd_count += 1
 			_update_display()
-			_animate_increment(spd_label, Color(1.0, 0.2, 0.2, 1.0))
+			_animate_increment(
+				spd_label,
+				Color(1.0, 0.2, 0.2, 1.0),
+				half_punch,
+				half_punch,
+				count_punch_time + pause_after
+			)
 	)
-	var punch_scale := target_scale * 1.15
-	var half_punch := count_punch_time * 0.5
 	(
 		_spd_tween
 		. tween_property(panel_container, "scale", punch_scale, half_punch)
@@ -285,6 +314,8 @@ func emphasize_death_spd(hold_duration: float = 1.2) -> void:
 		. set_trans(Tween.TRANS_QUAD)
 		. set_ease(Tween.EASE_IN)
 	)
+	if pause_after > 0.0:
+		_spd_tween.tween_interval(pause_after)
 
 	# 3. Shrink back into its spot
 	(
@@ -351,18 +382,85 @@ func set_action_prompt(source: Node, active: bool, text: String = "") -> void:
 		var prompt_text := ""
 		for src in _action_prompt_sources:
 			var t: String = _action_prompt_sources[src]
-			if not t.is_empty() and t != "Space for Action":
+			if not t.is_empty():
 				prompt_text = t
 				break
 		if prompt_text.is_empty():
-			for src in _action_prompt_sources:
-				var t: String = _action_prompt_sources[src]
-				if not t.is_empty():
-					prompt_text = t
-					break
-		if prompt_text.is_empty():
-			prompt_text = "Space for Action"
+			prompt_text = "space to jump in"
 		action_label.text = prompt_text
+		_update_action_label_position()
+
+
+func _get_active_camera() -> Camera3D:
+	if _camera and is_instance_valid(_camera) and _camera.is_inside_tree():
+		return _camera
+	var vp := get_viewport()
+	if vp:
+		var vp_cam := vp.get_camera_3d()
+		if vp_cam:
+			_camera = vp_cam
+			return _camera
+	if is_inside_tree() and get_tree().root:
+		var cam_node := get_tree().root.find_child("Camera3D", true, false) as Camera3D
+		if cam_node:
+			_camera = cam_node
+			return cam_node
+	return null
+
+
+func _update_action_label_position() -> void:
+	if not action_label or not action_label.visible:
+		return
+	var active_source: Node = null
+	var stale_sources: Array = []
+	for src in _action_prompt_sources:
+		if is_instance_valid(src):
+			if active_source == null:
+				active_source = src
+		else:
+			stale_sources.append(src)
+	for src in stale_sources:
+		_action_prompt_sources.erase(src)
+
+	if _action_prompt_sources.is_empty():
+		action_label.visible = false
+		return
+
+	var target_pos: Vector3
+	if active_source is Node3D:
+		target_pos = (active_source as Node3D).global_position
+		var mats := get_tree().get_first_node_in_group("player") as Node3D
+		if mats and is_instance_valid(mats) and not mats.is_dead:
+			var dist := target_pos.distance_to(mats.global_position)
+			if dist < 3.0:
+				target_pos = (target_pos + mats.global_position) * 0.5
+		target_pos.y += 1.25
+	else:
+		var mats := get_tree().get_first_node_in_group("player") as Node3D
+		if mats and is_instance_valid(mats):
+			target_pos = mats.global_position + Vector3(0.0, 1.4, 0.0)
+		else:
+			return
+
+	var cam := _get_active_camera()
+	if not cam:
+		return
+	if cam.is_position_behind(target_pos):
+		action_label.modulate.a = 0.0
+		return
+	action_label.modulate.a = 1.0
+
+	var screen_pos := cam.unproject_position(target_pos)
+	action_label.reset_size()
+	var label_size := action_label.get_combined_minimum_size()
+	var target_x := screen_pos.x - label_size.x * 0.5
+	var target_y := screen_pos.y - label_size.y - 12.0
+
+	var vp_rect := get_viewport().get_visible_rect()
+	target_x = clampf(target_x, 10.0, maxf(10.0, vp_rect.size.x - label_size.x - 10.0))
+	target_y = clampf(target_y, 10.0, maxf(10.0, vp_rect.size.y - label_size.y - 10.0))
+
+	action_label.position = Vector2(target_x, target_y)
 
 
 func _resolve_objective_manager() -> void:
@@ -478,7 +576,11 @@ func _update_display() -> void:
 
 
 func _animate_increment(
-	target_label: Label = null, flash_color: Color = Color(1.0, 0.2, 0.2, 1.0)
+	target_label: Label = null,
+	flash_color: Color = Color(1.0, 0.2, 0.2, 1.0),
+	pop_in_time: float = 0.08,
+	pop_out_time: float = 0.15,
+	color_fade_time: float = 0.25
 ) -> void:
 	var lbl: Label = target_label if target_label else spd_label
 	if not lbl:
@@ -488,14 +590,14 @@ func _animate_increment(
 	lbl.modulate = flash_color
 	(
 		tween
-		. tween_property(lbl, "scale", Vector2(1.35, 1.35), 0.08)
+		. tween_property(lbl, "scale", Vector2(1.35, 1.35), pop_in_time)
 		. set_trans(Tween.TRANS_QUAD)
 		. set_ease(Tween.EASE_OUT)
 	)
 	(
 		tween
-		. tween_property(lbl, "scale", Vector2(1.0, 1.0), 0.15)
+		. tween_property(lbl, "scale", Vector2(1.0, 1.0), pop_out_time)
 		. set_trans(Tween.TRANS_QUAD)
 		. set_ease(Tween.EASE_IN)
 	)
-	tween.parallel().tween_property(lbl, "modulate", Color.WHITE, 0.25)
+	tween.parallel().tween_property(lbl, "modulate", Color.WHITE, color_fade_time)

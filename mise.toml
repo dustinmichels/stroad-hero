@@ -19,6 +19,10 @@ run = 'python3 scripts/render_mats_preview.py "$@"'
 description = "Export the Web preset to build/web (from a /tmp copy, so the open editor's .godot/ is untouched)"
 run = '''
 set -eu
+if [ ! -f "templates/web_release.zip" ]; then
+    echo "Custom web template templates/web_release.zip not found; building..."
+    bash scripts/build_custom_template.sh templates/web_release.zip
+fi
 work=/tmp/stroad-hero-export
 rsync -a --delete --exclude .git --exclude build ./ "$work/"
 if ! grep -q "addons/mesh_baker/plugin.cfg" "$work/project.godot"; then
@@ -33,3 +37,7 @@ description = "Build the Web export and serve locally at http://localhost:8080"
 depends = ["export-web"]
 raw = true
 run = "python3 scripts/serve_web.py 8080 --directory build/web"
+
+[tasks.smoke-web]
+description = "Run headless browser smoke check on exported web build"
+run = 'node scripts/smoke_check_web.js "${@:-build/web}"'

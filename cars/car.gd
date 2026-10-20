@@ -233,11 +233,13 @@ func _setup_wheels() -> void:
 				var spoke := MeshInstance3D.new()
 				spoke.mesh = _spoke_mesh
 				spoke.name = "Spoke"
+				spoke.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 				child.add_child(spoke)
 
 				var hub := MeshInstance3D.new()
 				hub.mesh = _hub_mesh
 				hub.name = "Hub"
+				hub.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 				child.add_child(hub)
 
 
@@ -269,6 +271,12 @@ func setup(
 	_apply_visual_type()
 	update_presentation()
 	_update_blocker_layer()
+	reset_physics_interpolation()
+
+
+func teleport(target_transform: Transform3D) -> void:
+	global_transform = target_transform
+	reset_physics_interpolation()
 
 
 func follow_path(curve: Curve3D, from_end := false) -> void:
@@ -279,6 +287,7 @@ func follow_path(curve: Curve3D, from_end := false) -> void:
 	else:
 		path_distance = 0.0
 	update_presentation()
+	reset_physics_interpolation()
 
 
 func get_active_model() -> Node3D:
@@ -381,6 +390,7 @@ func _create_signal_mesh(
 	sig.mesh = _signal_mesh
 	sig.position = base_pos + Vector3(sign_x * 0.02, 0.0, sign_z * 0.16)
 	sig.material_override = _signal_mat_off
+	sig.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	sig.visible = false
 	parent.add_child(sig)
 	return sig
@@ -633,7 +643,9 @@ func update_presentation() -> void:
 			_update_wheels()
 		return
 	if state == State.PARKED and spot != null:
-		global_transform = spot.transform
+		if global_transform != spot.transform:
+			global_transform = spot.transform
+			reset_physics_interpolation()
 		return
 	var current_x := start_x + (direction * lane_distance)
 	var z_pos := current_lateral_z if is_changing_lanes else lane_z
@@ -683,6 +695,8 @@ func _check_player_overlap() -> void:
 
 func _check_hit(body: Node3D) -> void:
 	if not is_moving():
+		return
+	if global_position.distance_to(body.global_position) > 4.5:
 		return
 	if body.is_in_group("player") or body.has_method("die"):
 		body.die()

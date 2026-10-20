@@ -55,6 +55,30 @@ jobs:
           chmod +x $HOME/.godot-bin/godot || true
           echo "$HOME/.godot-bin" >> $GITHUB_PATH
 
+      - name: Cache Custom Web Template
+        id: cache-custom-template
+        uses: actions/cache@v4
+        with:
+          path: templates/web_release.zip
+          key: godot-custom-template-4.7.2-stable-${{ hashFiles('web.gdbuild', 'scripts/build_custom_template.sh') }}
+
+      - name: Setup Python for SCons
+        if: steps.cache-custom-template.outputs.cache-hit != 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Setup Emscripten
+        if: steps.cache-custom-template.outputs.cache-hit != 'true'
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 4.0.10
+
+      - name: Build Custom Web Template
+        if: steps.cache-custom-template.outputs.cache-hit != 'true'
+        run: |
+          pip install scons
+          bash scripts/build_custom_template.sh templates/web_release.zip
       - name: Verify Godot
         run: godot --version
       - name: Build Web
@@ -70,6 +94,9 @@ jobs:
           godot --headless --import
           godot --headless --verbose --export-release "Web" build/web/index.html
 
+
+      - name: Smoke Check Web Export
+        run: node scripts/smoke_check_web.js build/web
       - name: Upload Artifact
         uses: actions/upload-pages-artifact@v3
         with:

@@ -6,7 +6,7 @@ Godot 4.7 project (GDScript). The user usually has the Godot editor open while y
 
 - Binary: `/Applications/Godot.app/Contents/MacOS/Godot` (not on PATH).
 - Prefer `--headless`
-- Check a script: `<godot> --headless --path . --check-only -s res://<file>.gd`
+- Check a script: `<godot> --headless --path . -d --ignore-error-breaks --check-only -s res://<file>.gd`
 - Smoke-run the main scene: `<godot> --headless --path . --quit`
 
 ## Editing files
@@ -19,3 +19,4 @@ Godot 4.7 project (GDScript). The user usually has the Godot editor open while y
 
 - Run `mise run fmt` periodically
 - Run tests: `mise run test` (all tests in parallel, ~45s), `mise run test --fast` (unit tests, < 3s), or `mise run test -- <flag>`
+- Check for gdscript warnings and errors and clear them before completing a task (`<godot> --headless --path . -d --ignore-error-breaks --check-only -s res://<file>.gd`)

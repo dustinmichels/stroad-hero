@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=3]
+[gd_scene load_steps=19 format=3]
 
 [ext_resource type="Script" path="res://ui/start_screen.gd" id="1_script"]
 [ext_resource type="FontFile" path="res://fonts/ArchivoBlack-Regular.ttf" id="2_title_font"]
@@ -36,24 +36,6 @@ corner_radius_top_left = 14
 corner_radius_top_right = 14
 corner_radius_bottom_right = 14
 corner_radius_bottom_left = 14
-[sub_resource type="StyleBoxFlat" id="StyleHeroBadge"]
-content_margin_left = 20.0
-content_margin_top = 4.0
-content_margin_right = 20.0
-content_margin_bottom = 6.0
-bg_color = Color(0.92, 0.24, 0.16, 1)
-border_width_left = 3
-border_width_top = 3
-border_width_right = 3
-border_width_bottom = 3
-border_color = Color(1, 0.88, 0.24, 1)
-corner_radius_top_left = 10
-corner_radius_top_right = 10
-corner_radius_bottom_right = 10
-corner_radius_bottom_left = 10
-shadow_color = Color(0, 0, 0, 0.5)
-shadow_size = 8
-shadow_offset = Vector2(0, 3)
 [sub_resource type="StyleBoxFlat" id="StyleKey"]
 content_margin_left = 10.0
 content_margin_top = 4.0
@@ -329,7 +311,7 @@ alignment = 1
 
 [node name="LogoRow" type="HBoxContainer" parent="RootControl/Pane/Margin/Content/HeaderBox"]
 layout_mode = 2
-theme_override_constants/separation = 16
+theme_override_constants/separation = 20
 alignment = 1
 
 [node name="TitleStroad" type="Label" parent="RootControl/Pane/Margin/Content/HeaderBox/LogoRow"]
@@ -345,54 +327,31 @@ theme_override_font_sizes/font_size = 76
 text = "STROAD"
 horizontal_alignment = 1
 
-[node name="HeroBadge" type="PanelContainer" parent="RootControl/Pane/Margin/Content/HeaderBox/LogoRow"]
+[node name="TitleHero" type="Label" parent="RootControl/Pane/Margin/Content/HeaderBox/LogoRow"]
 layout_mode = 2
-theme_override_styles/panel = SubResource("StyleHeroBadge")
-
-[node name="TitleHero" type="Label" parent="RootControl/Pane/Margin/Content/HeaderBox/LogoRow/HeroBadge"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_outline_color = Color(0.12, 0.04, 0.04, 1)
-theme_override_constants/outline_size = 10
+theme_override_colors/font_color = Color(1, 0.84, 0.16, 1)
+theme_override_colors/font_outline_color = Color(0.08, 0.05, 0.01, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.75)
+theme_override_constants/outline_size = 16
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 6
 theme_override_fonts/font = ExtResource("2_title_font")
-theme_override_font_sizes/font_size = 60
+theme_override_font_sizes/font_size = 76
 text = "HERO"
 horizontal_alignment = 1
 
-[node name="StroadDividers" type="HBoxContainer" parent="RootControl/Pane/Margin/Content/HeaderBox"]
+[node name="StroadDividers" type="VBoxContainer" parent="RootControl/Pane/Margin/Content/HeaderBox"]
 layout_mode = 2
-theme_override_constants/separation = 12
-alignment = 1
+theme_override_constants/separation = 4
 
-[node name="DividerLeft" type="VBoxContainer" parent="RootControl/Pane/Margin/Content/HeaderBox/StroadDividers"]
+[node name="Stripe1" type="ColorRect" parent="RootControl/Pane/Margin/Content/HeaderBox/StroadDividers"]
+custom_minimum_size = Vector2(0, 4)
 layout_mode = 2
-theme_override_constants/separation = 3
-
-[node name="StripeL1" type="ColorRect" parent="RootControl/Pane/Margin/Content/HeaderBox/StroadDividers/DividerLeft"]
-custom_minimum_size = Vector2(240, 4)
 color = Color(0.95, 0.74, 0.14, 1)
 
-[node name="StripeL2" type="ColorRect" parent="RootControl/Pane/Margin/Content/HeaderBox/StroadDividers/DividerLeft"]
-custom_minimum_size = Vector2(240, 4)
-color = Color(0.95, 0.74, 0.14, 1)
-
-[node name="RoadMarker" type="Label" parent="RootControl/Pane/Margin/Content/HeaderBox/StroadDividers"]
+[node name="Stripe2" type="ColorRect" parent="RootControl/Pane/Margin/Content/HeaderBox/StroadDividers"]
+custom_minimum_size = Vector2(0, 4)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.95, 0.74, 0.14, 1)
-theme_override_fonts/font = ExtResource("3_heading")
-theme_override_font_sizes/font_size = 16
-text = "◆"
-
-[node name="DividerRight" type="VBoxContainer" parent="RootControl/Pane/Margin/Content/HeaderBox/StroadDividers"]
-layout_mode = 2
-theme_override_constants/separation = 3
-
-[node name="StripeR1" type="ColorRect" parent="RootControl/Pane/Margin/Content/HeaderBox/StroadDividers/DividerRight"]
-custom_minimum_size = Vector2(240, 4)
-color = Color(0.95, 0.74, 0.14, 1)
-
-[node name="StripeR2" type="ColorRect" parent="RootControl/Pane/Margin/Content/HeaderBox/StroadDividers/DividerRight"]
-custom_minimum_size = Vector2(240, 4)
 color = Color(0.95, 0.74, 0.14, 1)
 [node name="MainPage" type="VBoxContainer" parent="RootControl/Pane/Margin/Content"]
 unique_name_in_owner = true
@@ -404,7 +363,7 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.92, 0.95, 0.98, 1)
 theme_override_fonts/font = ExtResource("4_body")
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 26
 text = "Hi, Mats. Welcome to America. You're trying to get around by foot, eh? Good luck...."
 horizontal_alignment = 1
 
@@ -665,15 +624,19 @@ theme_override_styles/pressed = SubResource("StyleSeeMorePressed")
 theme_override_styles/focus = SubResource("StyleSeeMoreFocus")
 text = "[see more controls]"
 
-[node name="QuoteLabel" type="Label" parent="RootControl/Pane/Margin/Content/MainPage"]
+[node name="QuoteMargin" type="MarginContainer" parent="RootControl/Pane/Margin/Content/MainPage"]
+layout_mode = 2
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="QuoteLabel" type="Label" parent="RootControl/Pane/Margin/Content/MainPage/QuoteMargin"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.96, 0.82, 0.38, 0.95)
 theme_override_fonts/font = ExtResource("5_semibold")
-theme_override_font_sizes/font_size = 23
+theme_override_font_sizes/font_size = 28
 text = "\"The stroad to hell is paved....\""
 horizontal_alignment = 1
-
 [node name="ActionSection" type="VBoxContainer" parent="RootControl/Pane/Margin/Content/MainPage"]
 layout_mode = 2
 theme_override_constants/separation = 12

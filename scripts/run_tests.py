@@ -41,9 +41,11 @@ SCENARIO_TESTS = [
     "--test-smell-store",
     "--test-smell-gas",
     "--test-right-turn-following",
+    "--test-perf",
+    "--test-perf-walk",
 ]
 
-DEFAULT_TIMEOUT = 60
+DEFAULT_TIMEOUT = 120
 
 
 def discover_test_flags() -> list[str]:
