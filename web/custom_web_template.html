@@ -221,6 +221,100 @@ body {
 	text-align: center;
 }
 
+#crash-modal {
+	display: none;
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100vh;
+	background: rgba(15, 15, 18, 0.88);
+	backdrop-filter: blur(6px);
+	-webkit-backdrop-filter: blur(6px);
+	z-index: 99999;
+	align-items: center;
+	justify-content: center;
+	padding: 1.5rem;
+	box-sizing: border-box;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.crash-box {
+	background: #1e1e24;
+	border: 1px solid #e63946;
+	border-radius: 8px;
+	max-width: 640px;
+	width: 100%;
+	padding: 1.5rem 1.8rem;
+	color: #f1faee;
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+}
+
+.crash-title {
+	font-size: 1.25rem;
+	font-weight: 700;
+	color: #ff6b6b;
+	margin: 0 0 0.8rem 0;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.crash-desc {
+	font-size: 0.95rem;
+	line-height: 1.45;
+	margin: 0 0 1rem 0;
+	color: #e0e0e0;
+}
+
+.crash-details {
+	background: #121216;
+	border: 1px solid #33333d;
+	border-radius: 6px;
+	padding: 0.8rem;
+	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+	font-size: 0.8rem;
+	line-height: 1.4;
+	color: #cfd2d6;
+	white-space: pre-wrap;
+	word-break: break-word;
+	max-height: 200px;
+	overflow-y: auto;
+	margin-bottom: 1.2rem;
+	user-select: text;
+}
+
+.crash-actions {
+	display: flex;
+	gap: 0.8rem;
+	justify-content: flex-end;
+}
+
+.crash-btn {
+	background: #33333e;
+	border: 1px solid #555566;
+	color: #fff;
+	border-radius: 4px;
+	padding: 0.5rem 1rem;
+	font-size: 0.85rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background 0.15s ease;
+}
+
+.crash-btn:hover {
+	background: #444455;
+}
+
+.crash-btn-primary {
+	background: #e63946;
+	border-color: #ff6b6b;
+}
+
+.crash-btn-primary:hover {
+	background: #d62839;
+}
+
 #status-splash {
 	display: none;
 }
@@ -235,6 +329,18 @@ body {
 		<noscript>
 			Your browser does not support JavaScript.
 		</noscript>
+		<div id="crash-modal" role="alertdialog" aria-modal="true" aria-labelledby="crash-title-text">
+			<div class="crash-box">
+				<div class="crash-title" id="crash-title-text">Game Crashed</div>
+				<div class="crash-desc" id="crash-desc-text"></div>
+				<pre class="crash-details" id="crash-details-text"></pre>
+				<div class="crash-actions">
+					<button class="crash-btn" id="crash-copy-btn" type="button">Copy Diagnostics</button>
+					<button class="crash-btn crash-btn-primary" id="crash-reload-btn" type="button" onclick="window.location.reload()">Reload Page</button>
+				</div>
+			</div>
+		</div>
+
 
 		<div id="status">
 			<img id="status-splash" class="$GODOT_SPLASH_CLASSES" src="$GODOT_SPLASH" alt="">
@@ -305,13 +411,151 @@ const GODOT_THREADS_ENABLED = $GODOT_THREADS_ENABLED;
 const engine = new Engine(GODOT_CONFIG);
 
 (function () {
+	const canvas = document.getElementById('canvas');
 	const statusOverlay = document.getElementById('status');
 	const statusProgress = document.getElementById('status-progress');
 	const statusNotice = document.getElementById('status-notice');
 	const loadingText = document.getElementById('loading-text');
+	const crashModal = document.getElementById('crash-modal');
+	const crashTitleText = document.getElementById('crash-title-text');
+	const crashDescText = document.getElementById('crash-desc-text');
+	const crashDetailsText = document.getElementById('crash-details-text');
+	const crashCopyBtn = document.getElementById('crash-copy-btn');
 
 	let initializing = true;
 	let isReady = false;
+	let hasCrashed = false;
+
+	function getWebGLDiagnostics() {
+		const diag = {
+			renderer: 'Unavailable',
+			vendor: 'Unavailable',
+			webglVersion: 'None'
+		};
+		try {
+			const testCanvas = document.createElement('canvas');
+			const gl = testCanvas.getContext('webgl2') || testCanvas.getContext('webgl') || testCanvas.getContext('experimental-webgl');
+			if (gl) {
+				diag.webglVersion = (gl instanceof WebGL2RenderingContext) ? 'WebGL 2.0' : 'WebGL 1.0';
+				const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+				if (dbg) {
+					diag.vendor = gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL) || 'Unknown';
+					diag.renderer = gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) || 'Unknown';
+				} else {
+					diag.vendor = gl.getParameter(gl.VENDOR) || 'Unknown';
+					diag.renderer = gl.getParameter(gl.RENDERER) || 'Unknown';
+				}
+			}
+		} catch (e) {
+			diag.renderer = 'Error querying WebGL: ' + e.message;
+		}
+		return diag;
+	}
+
+	function showCrashReport(category, err, explanation) {
+		if (hasCrashed) return;
+		hasCrashed = true;
+		initializing = false;
+
+		if (progressInterval) {
+			clearInterval(progressInterval);
+			progressInterval = null;
+		}
+
+		const canvasWidth = canvas ? (canvas.width + 'x' + canvas.height + ' (CSS: ' + canvas.clientWidth + 'x' + canvas.clientHeight + ', DPR: ' + (window.devicePixelRatio || 1) + ')') : 'None';
+		const webglInfo = getWebGLDiagnostics();
+		const userAgent = navigator.userAgent;
+		const platform = navigator.platform || (navigator.userAgentData && navigator.userAgentData.platform) || 'Unknown';
+		const memory = (performance && performance.memory) ? (Math.round(performance.memory.usedJSHeapSize / (1024 * 1024)) + 'MB / ' + Math.round(performance.memory.jsHeapSizeLimit / (1024 * 1024)) + 'MB') : 'Unavailable';
+
+		let errorMsg = 'Unknown error';
+		let errorStack = '';
+		if (err instanceof Error) {
+			errorMsg = err.name + ': ' + err.message;
+			errorStack = err.stack ? ('\n\nStack:\n' + err.stack) : '';
+		} else if (typeof err === 'string') {
+			errorMsg = err;
+		} else if (err && typeof err === 'object') {
+			try {
+				errorMsg = JSON.stringify(err);
+			} catch (_) {
+				errorMsg = String(err);
+			}
+		}
+
+		const reportLines = [
+			`Category: ${category}`,
+			`Error: ${errorMsg}`,
+			`Phase: ${isReady ? 'Gameplay (Post-Startup)' : (initializing ? 'Engine Startup' : 'Runtime')}`,
+			`Platform: ${platform}`,
+			`Browser: ${userAgent}`,
+			`Canvas: ${canvasWidth}`,
+			`WebGL Version: ${webglInfo.webglVersion}`,
+			`WebGL Vendor: ${webglInfo.vendor}`,
+			`WebGL Renderer: ${webglInfo.renderer}`,
+			`JS Heap: ${memory}`,
+			`Time Since Start: ${Math.round(performance.now() - startupStartTime)}ms`,
+			errorStack
+		].filter(Boolean).join('\n');
+
+		console.error(`[CrashReport] [${category}]`, reportLines);
+
+		if (crashModal) {
+			crashTitleText.textContent = category;
+			crashDescText.textContent = explanation || 'An unexpected issue occurred while running the game.';
+			crashDetailsText.textContent = reportLines;
+			crashModal.style.display = 'flex';
+
+			if (crashCopyBtn) {
+				crashCopyBtn.onclick = function () {
+					if (navigator.clipboard && navigator.clipboard.writeText) {
+						navigator.clipboard.writeText(reportLines).then(() => {
+							crashCopyBtn.textContent = 'Copied!';
+							setTimeout(() => { crashCopyBtn.textContent = 'Copy Diagnostics'; }, 2000);
+						}).catch(() => {
+							crashCopyBtn.textContent = 'Copy Failed';
+						});
+					}
+				};
+			}
+		} else {
+			setStatusNotice(category + '\n' + errorMsg);
+		}
+	}
+
+	// 1. WebGL Context Loss Handler (prevent automatic restart)
+	if (canvas) {
+		canvas.addEventListener('webglcontextlost', function (event) {
+			// Calling preventDefault() tells the browser not to attempt an automatic context restore
+			// which is unsafe and unsupported by Godot 4 Web exports.
+			event.preventDefault();
+			showCrashReport(
+				'WebGL Context Lost',
+				'The graphics context was lost (GPU device reset, memory pressure, or driver crash).',
+				'The browser lost its connection to the graphics hardware. To prevent undefined state, automatic restart is disabled. Please reload the page.'
+			);
+		}, false);
+	}
+
+	// 2. Window error and unhandled rejection handlers
+	window.addEventListener('error', function (event) {
+		const isWasm = (event.filename && event.filename.endsWith('.wasm')) || (event.message && /wasm|abort|unreachable|out of memory/i.test(event.message));
+		const category = isWasm ? 'WebAssembly Exception' : (initializing ? 'Startup Failure' : 'JavaScript Exception');
+		showCrashReport(
+			category,
+			event.error || (event.message + ' at ' + event.filename + ':' + event.lineno + ':' + event.colno),
+			isWasm ? 'A low-level WebAssembly engine exception occurred.' : (initializing ? 'The game failed to complete initialization.' : 'An uncaught runtime script exception occurred.')
+		);
+	});
+
+	window.addEventListener('unhandledrejection', function (event) {
+		const category = initializing ? 'Startup Failure (Promise Rejection)' : 'Unhandled Promise Rejection';
+		showCrashReport(
+			category,
+			event.reason || 'Unhandled Promise rejection',
+			'An asynchronous operation failed without an error handler.'
+		);
+	});
 
 	function setStatusNotice(text) {
 		while (statusNotice.lastChild) {
@@ -326,15 +570,12 @@ const engine = new Engine(GODOT_CONFIG);
 	}
 
 	function displayFailureNotice(err) {
-		console.error(err);
-		if (err instanceof Error) {
-			setStatusNotice(err.message);
-		} else if (typeof err === 'string') {
-			setStatusNotice(err);
-		} else {
-			setStatusNotice('An unknown error occurred.');
-		}
-		initializing = false;
+		console.error('[StartupFailure]', err);
+		showCrashReport(
+			'Startup Failure',
+			err,
+			'Godot engine failed to start. Check your browser capabilities or WebGL settings.'
+		);
 	}
 
 	const startupStartTime = performance.now();
@@ -366,6 +607,7 @@ const engine = new Engine(GODOT_CONFIG);
 	}
 
 	function finishStartup() {
+		initializing = false;
 		if (progressInterval) {
 			clearInterval(progressInterval);
 			progressInterval = null;
@@ -378,7 +620,6 @@ const engine = new Engine(GODOT_CONFIG);
 				statusOverlay.remove();
 			}
 		}, 400);
-		const canvas = document.getElementById('canvas');
 		if (canvas) {
 			canvas.focus();
 		}
@@ -439,7 +680,19 @@ const engine = new Engine(GODOT_CONFIG);
 		let downloadComplete = false;
 		const urlParams = new URLSearchParams(window.location.search);
 		const urlArgs = urlParams.getAll('arg');
-		const startArgs = urlArgs.length > 0 ? urlArgs : (GODOT_CONFIG.args || []);
+		if (urlParams.has('quality')) {
+			const q = urlParams.get('quality').toLowerCase();
+			if (q === 'low' || q === '0.5') {
+				urlArgs.push('--scaling-3d-scale=0.5');
+			} else if (q === 'medium' || q === '0.75') {
+				urlArgs.push('--scaling-3d-scale=0.75');
+			} else if (q === 'high' || q === '1' || q === '1.0' || q === 'native') {
+				urlArgs.push('--scaling-3d-scale=1.0');
+			}
+		} else if (urlParams.has('scale')) {
+			urlArgs.push(`--scaling-3d-scale=${urlParams.get('scale')}`);
+		}
+		const startArgs = (GODOT_CONFIG.args || []).concat(urlArgs);
 		engine.startGame({
 			'args': startArgs,
 			'onProgress': function (current, total) {

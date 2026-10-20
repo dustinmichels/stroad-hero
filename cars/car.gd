@@ -52,15 +52,26 @@ func can_use_drive_thru() -> bool:
 
 # Authoritative simulation state (per TRAFFIC_SIMULATION.md)
 var lane_id: int = 0
-var motion := Motion.LANE
-var sweep_rev: int = 0
-
+var motion := Motion.LANE:
+	set(value):
+		if motion != value:
+			motion = value
+			sweep_rev += 1
+var _last_transform: Transform3D = Transform3D()
+var sweep_rev: int = 0:
+	get:
+		var current_xf := global_transform if is_inside_tree() else transform
+		if current_xf != _last_transform:
+			_last_transform = current_xf
+			sweep_rev += 1
+		return sweep_rev
 var state := State.CRUISING:
 	set(value):
 		if state != value:
 			state = value
 			sweep_rev += 1
 			_update_headlamps()
+
 
 func get_state_name() -> String:
 	match state:
@@ -102,7 +113,11 @@ var speed: float = 14.0:
 		if speed != value:
 			speed = value
 			sweep_rev += 1
-var desired_speed: float = 14.0
+var desired_speed: float = 14.0:
+	set(value):
+		if desired_speed != value:
+			desired_speed = value
+			sweep_rev += 1
 var car_length: float = 4.5:
 	set(value):
 		if car_length != value:
@@ -207,9 +222,12 @@ func _ready() -> void:
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_TRANSFORM_CHANGED:
-		sweep_rev += 1
-		if is_inside_tree():
-			var _dummy := global_transform
+		var current_xf := global_transform if is_inside_tree() else transform
+		if current_xf != _last_transform:
+			_last_transform = current_xf
+			sweep_rev += 1
+
+
 func _physics_process(delta: float) -> void:
 	_update_blocker_layer()
 	_update_signals(delta)
@@ -670,7 +688,6 @@ func advance_simulation(delta: float) -> void:
 
 	lane_distance += speed * delta
 	update_presentation()
-	_check_player_overlap()
 	_update_blocker_layer()
 
 
@@ -681,7 +698,6 @@ func advance_path(delta: float) -> bool:
 	if length <= 0.0:
 		path_distance = 0.0
 		update_presentation()
-		_check_player_overlap()
 		_update_blocker_layer()
 		return true
 
@@ -700,7 +716,6 @@ func advance_path(delta: float) -> bool:
 			arrived = true
 	path_distance = clampf(path_distance, 0.0, length)
 	update_presentation()
-	_check_player_overlap()
 	_update_blocker_layer()
 	return arrived
 
@@ -731,7 +746,6 @@ func update_presentation() -> void:
 		global_position = Vector3(current_x, 0.05, z_pos)
 	else:
 		position = Vector3(current_x, 0.05, z_pos)
-		sweep_rev += 1
 
 	if is_changing_lanes:
 		var t := clampf(lane_change_progress, 0.0, 1.0)
@@ -765,11 +779,6 @@ func is_moving() -> bool:
 
 func _on_body_entered(body: Node3D) -> void:
 	_check_hit(body)
-
-
-func _check_player_overlap() -> void:
-	for body in get_overlapping_bodies():
-		_check_hit(body)
 
 
 func _check_hit(body: Node3D) -> void:

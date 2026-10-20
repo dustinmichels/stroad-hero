@@ -502,11 +502,8 @@ func _ready() -> void:
 		assert(b == car_b, "car_b at 6.0m center distance must be detected as blocker")
 
 		# Test 2: lateral too large (2.5 > 2.2m)
-		print("DEBUG: car_b before pos set: rev=", car_b.sweep_rev, " pos=", car_b.global_position)
 		car_b.global_position = Vector3(6.0, 0.0, 2.5)
-		print("DEBUG: car_b after pos set: rev=", car_b.sweep_rev, " pos=", car_b.global_position)
 		var b2 = tm.find_blocker(car_a)
-		print("DEBUG: b2=", b2)
 		assert(b2 == null, "car_b with lateral 2.5m must NOT be blocker")
 
 		# Test 3: behind car_a (forward < 0)
@@ -3340,6 +3337,7 @@ func _report_render_benchmark() -> void:
 	print("==================================================")
 	print("RENDER_BENCHMARK: samples=%d" % n)
 	print("  Camera position: %s, rotation: %s" % [cam_pos, cam_rot])
+	print("  Scaling 3D Scale: %.2f" % get_viewport().scaling_3d_scale)
 	print("  F3 HUD: %s" % latest_f3.replace("\n", " | "))
 	print(
 		(
@@ -3364,6 +3362,7 @@ func _report_render_benchmark() -> void:
 		"samples": n,
 		"camera_position": [cam_pos.x, cam_pos.y, cam_pos.z],
 		"camera_rotation": [cam_rot.x, cam_rot.y, cam_rot.z],
+		"scaling_3d_scale": get_viewport().scaling_3d_scale,
 		"draw_calls":
 		{
 			"min": dc_min,
@@ -3418,6 +3417,7 @@ func _run_verify_render_test() -> void:
 		"Props/StripMall",
 		"Props/CrampedInn",
 		"Props/SmellGasStation",
+		"Props/Dorf",
 	]
 	var total_building_meshes := 0
 	var total_building_collisions := 0
@@ -3471,6 +3471,18 @@ func _run_verify_render_test() -> void:
 			% [dorf_meshes.size(), dorf_cols.size()]
 		)
 	)
+
+	# Test Dorf parking lot and parked cars
+	var dorf_lot_mesh = get_node_or_null("Parking/DorfParkingLot")
+	assert(dorf_lot_mesh != null, "Parking/DorfParkingLot must exist")
+	var tm_node = get_node_or_null("TrafficManager") as TrafficManager
+	assert(tm_node != null, "TrafficManager must exist")
+	assert(tm_node.dorf_cars.size() == 15, "Dorf lot must have 15 parked cars")
+	for dc in tm_node.dorf_cars:
+		assert(dc.state == Car.State.PARKED, "Dorf car must be PARKED")
+		assert(is_inf(dc.dwell_left), "Dorf car must never leave (infinite dwell)")
+		assert(dc.speed == 0.0, "Dorf car must not be moving")
+	print("  Dorf parking lot & 15 permanent parked cars verified")
 
 	# --- 2. Vehicles ---
 	print("VERIFY_RENDER [2/7]: Verifying vehicles & body variants...")
@@ -3677,6 +3689,30 @@ func _run_verify_render_test() -> void:
 	_collect_all_multimeshes(self, multimeshes)
 	print("  MultiMeshes verified: %d MultiMeshInstance3D nodes in scene" % multimeshes.size())
 
+	# --- 8. Render Scale & Quality Toggle ---
+	print("VERIFY_RENDER [8/8]: Verifying 3D render scale and HUD quality toggle...")
+	var hud_node: HUD = get_node_or_null("HUD")
+	assert(hud_node != null, "HUD node must exist")
+	var orig_scale: float = get_viewport().scaling_3d_scale
+	hud_node.cycle_render_scale()
+	var stepped_scale: float = get_viewport().scaling_3d_scale
+	assert(
+		not is_equal_approx(stepped_scale, orig_scale),
+		"cycle_render_scale must change viewport scaling_3d_scale"
+	)
+	# Cycle two more times to complete the cycle and return to original scale
+	hud_node.cycle_render_scale()
+	hud_node.cycle_render_scale()
+	assert(
+		is_equal_approx(get_viewport().scaling_3d_scale, orig_scale),
+		(
+			"Cycling 3 times must return to original scaling_3d_scale (%.2f vs %.2f)"
+			% [get_viewport().scaling_3d_scale, orig_scale]
+		)
+	)
+	print(
+		"  Quality toggle verified: cycle_render_scale() cycles presets cleanly and restores scale"
+	)
 	print("==================================================")
 	print(
 		"VERIFY_RENDER: SUCCESS - All buildings, vehicles, paint colors, signals, wheels, signs, and shadows verified cleanly!"

@@ -188,8 +188,12 @@ async function runSmokeCheck(targetUrl, timeoutSec = 30) {
 
             if (text.includes("[Startup] Godot ready")) {
               isGodotReady = true;
-              // Give 1.5 seconds after ready for any lingering asset loads or script errors
-              setTimeout(resolve, 1500);
+              if (!targetUrl.includes("arg=")) {
+                setTimeout(resolve, 1500);
+              }
+            }
+            if (text.includes("BENCHMARK_RESULT:")) {
+              setTimeout(resolve, 500);
             }
           } else if (msg.method === "Runtime.exceptionThrown") {
             const desc =
@@ -250,12 +254,14 @@ async function main() {
   const args = process.argv.slice(2);
   let target = "build/web";
   let timeoutSec = 30;
-
+  let godotArgs = [];
   for (let i = 0; i < args.length; i++) {
     if (args[i] === "--timeout" && args[i + 1]) {
       timeoutSec = parseInt(args[++i], 10);
     } else if (args[i] === "--url" && args[i + 1]) {
       target = args[++i];
+    } else if (args[i] === "--arg" && args[i + 1]) {
+      godotArgs.push(args[++i]);
     } else if (!args[i].startsWith("-")) {
       target = args[i];
     }
@@ -273,6 +279,12 @@ async function main() {
       console.log(`Starting local static server for ${resolvedDir}...`);
       serverInfo = await startStaticServer(resolvedDir);
       testUrl = serverInfo.url;
+    }
+
+    if (godotArgs.length > 0) {
+      const sep = testUrl.includes("?") ? "&" : "?";
+      const params = godotArgs.map((a) => `arg=${encodeURIComponent(a)}`).join("&");
+      testUrl = `${testUrl}${sep}${params}`;
     }
 
     await runSmokeCheck(testUrl, timeoutSec);

@@ -138,6 +138,7 @@ var is_initial_traffic_ready: bool = false
 var lanes: Array[Lane] = []
 var lot: ParkingLot = null
 var lot_cars: Array[Car] = []
+var dorf_cars: Array[Car] = []
 var debug_overlay: Node3D = null
 var taco_hell_drive_thru_path: Curve3D = null
 var booger_king_drive_thru_path: Curve3D = null
@@ -163,6 +164,12 @@ var stats: Dictionary = {
 	"max_merge_wait": 0.0,
 	"watchdog_fires": 0,
 	"leaked": 0,
+	"find_blocker_calls": 0,
+	"find_blocker_usec_total": 0,
+	"find_blocker_usec_max": 0,
+	"candidates_checked": 0,
+	"reach_passed": 0,
+	"conflicts_evaluated": 0,
 }
 const P_ERRAND := 0.3
 const DECISION_D := 18.0
@@ -218,6 +225,7 @@ func _ready() -> void:
 	if _is_test_mode():
 		_pre_populate_traffic()
 		_seed_parked_cars()
+		_seed_dorf_cars()
 		is_initial_traffic_ready = true
 		initial_traffic_ready.emit()
 	else:
@@ -285,6 +293,130 @@ func _seed_parked_car_at(spot: ParkingSpot) -> void:
 	stats["cars_spawned"] += 1
 
 
+func _seed_dorf_cars() -> void:
+	if not dorf_cars.is_empty():
+		return
+	var ramp_basis := (
+		Basis(Vector3.UP, deg_to_rad(-105.0)) * Basis(Vector3.FORWARD, deg_to_rad(-15.0))
+	)
+	var turntable_basis := Basis(Vector3.UP, deg_to_rad(-60.0))
+	var stall_basis := Basis(Vector3.UP, -PI / 2.0)
+
+	var dorf_configs: Array[Dictionary] = [
+		# Featured ramp & showroom vehicles
+		{
+			"type": Car.CarType.PICKUP,
+			"pos": Vector3(108.0, 0.85, -19.0),
+			"basis": ramp_basis,
+			"color": Color(0.82, 0.16, 0.14)
+		},
+		{
+			"type": Car.CarType.SPORTS,
+			"pos": Vector3(105.5, 0.25, -34.0),
+			"basis": turntable_basis,
+			"color": Color(0.98, 0.88, 0.05)
+		},
+		# Front row (z = -15.5) facing stroad (+Z)
+		{
+			"type": Car.CarType.SUV,
+			"pos": Vector3(84.0, 0.05, -15.5),
+			"basis": stall_basis,
+			"color": Color(0.14, 0.38, 0.82)
+		},
+		{
+			"type": Car.CarType.SEDAN,
+			"pos": Vector3(88.0, 0.05, -15.5),
+			"basis": stall_basis,
+			"color": Color(0.92, 0.93, 0.94)
+		},
+		{
+			"type": Car.CarType.JEEP,
+			"pos": Vector3(92.0, 0.05, -15.5),
+			"basis": stall_basis,
+			"color": Color(0.18, 0.38, 0.24)
+		},
+		{
+			"type": Car.CarType.PICKUP,
+			"pos": Vector3(96.0, 0.05, -15.5),
+			"basis": stall_basis,
+			"color": Color(0.20, 0.22, 0.25)
+		},
+		{
+			"type": Car.CarType.HATCHBACK,
+			"pos": Vector3(100.0, 0.05, -15.5),
+			"basis": stall_basis,
+			"color": Color(0.90, 0.36, 0.08)
+		},
+		{
+			"type": Car.CarType.MINIVAN,
+			"pos": Vector3(104.0, 0.05, -15.5),
+			"basis": stall_basis,
+			"color": Color(0.48, 0.08, 0.16)
+		},
+		# Service row (z = -22.5) facing +Z
+		{
+			"type": Car.CarType.SEDAN,
+			"pos": Vector3(82.0, 0.05, -22.5),
+			"basis": stall_basis,
+			"color": Color(0.75, 0.77, 0.80)
+		},
+		{
+			"type": Car.CarType.SUV,
+			"pos": Vector3(86.0, 0.05, -22.5),
+			"basis": stall_basis,
+			"color": Color(0.08, 0.15, 0.32)
+		},
+		{
+			"type": Car.CarType.PICKUP,
+			"pos": Vector3(90.0, 0.05, -22.5),
+			"basis": stall_basis,
+			"color": Color(0.92, 0.93, 0.94)
+		},
+		{
+			"type": Car.CarType.JEEP,
+			"pos": Vector3(94.0, 0.05, -22.5),
+			"basis": stall_basis,
+			"color": Color(0.82, 0.76, 0.65)
+		},
+		# Showroom row (z = -25.5) facing +Z
+		{
+			"type": Car.CarType.SPORTS,
+			"pos": Vector3(102.0, 0.05, -25.5),
+			"basis": stall_basis,
+			"color": Color(0.88, 0.12, 0.12)
+		},
+		{
+			"type": Car.CarType.SEDAN,
+			"pos": Vector3(106.0, 0.05, -25.5),
+			"basis": stall_basis,
+			"color": Color(0.14, 0.38, 0.82)
+		},
+		{
+			"type": Car.CarType.HATCHBACK,
+			"pos": Vector3(110.0, 0.05, -25.5),
+			"basis": stall_basis,
+			"color": Color(0.92, 0.84, 0.22)
+		},
+	]
+
+	for cfg in dorf_configs:
+		var car: PassengerCar = PassengerCarScene.instantiate()
+		car.car_type = cfg["type"]
+		car.speed = 0.0
+		car.desired_speed = 0.0
+		car.state = Car.State.PARKED
+		if cfg.has("color"):
+			car.body_color = cfg["color"]
+		add_child(car)
+		car.global_position = cfg["pos"]
+		if cfg.has("basis"):
+			car.global_transform.basis = cfg["basis"]
+		car.reset_physics_interpolation()
+		car.dwell_left = INF
+		dorf_cars.append(car)
+		stats["cars_spawned"] += 1
+
+
 func _spawn_initial_traffic_staged() -> void:
 	const BATCH_SIZE: int = 4
 	var count := 0
@@ -319,16 +451,18 @@ func _spawn_initial_traffic_staged() -> void:
 			if not is_inside_tree():
 				return
 
+	_seed_dorf_cars()
+
 	is_initial_traffic_ready = true
 	initial_traffic_ready.emit()
 
 
 func _is_test_mode() -> bool:
 	for arg in OS.get_cmdline_user_args():
-		if arg.begins_with("--test-"):
+		if arg.begins_with("--test-") or arg.begins_with("--bench-"):
 			return true
 	for arg in OS.get_cmdline_args():
-		if arg.begins_with("--test-"):
+		if arg.begins_with("--test-") or arg.begins_with("--bench-"):
 			return true
 	return false
 
@@ -683,6 +817,17 @@ func _is_ignoring(car: Car, other: Car) -> bool:
 
 
 func find_blocker(car: Car) -> Car:
+	var t0 := Time.get_ticks_usec()
+	var result := _find_blocker_impl(car)
+	var elapsed := Time.get_ticks_usec() - t0
+	stats["find_blocker_calls"] += 1
+	stats["find_blocker_usec_total"] += elapsed
+	if elapsed > stats["find_blocker_usec_max"]:
+		stats["find_blocker_usec_max"] = elapsed
+	return result
+
+
+func _find_blocker_impl(car: Car) -> Car:
 	if car == null or not is_instance_valid(car):
 		return null
 
@@ -701,17 +846,32 @@ func find_blocker(car: Car) -> Car:
 
 	var mine := _car_sweep(car)
 	var my_reach: float = mine["reach"]
+	var my_pos := car.global_position
 	var closest_blocker: Car = null
 	var min_dist: float = INF
-
 	for other in candidates:
+		stats["candidates_checked"] += 1
 		if _is_ignoring(car, other):
+			continue
+		# Fast spatial partition / rejection: lookahead cannot exceed MAX_LOOKAHEAD + car_length
+		# Avoids calling _car_sweep(other) for cars far across the map (e.g. opposite lots/drive-throughs)
+		var other_pos := other.global_position
+		# Cars on opposite sides of the stroad (|z| > 5.0) can never conflict in lots/drive-throughs
+		if (my_pos.z * other_pos.z < 0.0) and (absf(my_pos.z) > 4.0 or absf(other_pos.z) > 4.0):
+			continue
+		var other_look := _lookahead(other)
+		var other_max_reach := other_look + SWEEP_INTENT_EXTRA + other.car_length
+		if other.state == Car.State.REVERSING_OUT and other.path != null:
+			other_max_reach = maxf(other_max_reach, other.path_distance + other.car_length)
+		if my_pos.distance_to(other_pos) > (my_reach + other_max_reach):
 			continue
 		var theirs := _car_sweep(other)
 		var reach: float = my_reach + theirs["reach"]
-		if car.global_position.distance_to(other.global_position) > reach:
+		if my_pos.distance_to(other_pos) > reach:
 			continue
+		stats["reach_passed"] += 1
 		var dist := _conflict_distance(car, mine, other, theirs)
+		stats["conflicts_evaluated"] += 1
 		if dist < min_dist:
 			min_dist = dist
 			closest_blocker = other

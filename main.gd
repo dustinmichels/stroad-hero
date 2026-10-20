@@ -249,6 +249,9 @@ func _ready() -> void:
 		if arg.begins_with("--physics-ticks="):
 			Engine.physics_ticks_per_second = int(arg.substr(16))
 			print("Overriding physics_ticks_per_second = %d" % Engine.physics_ticks_per_second)
+		if arg.begins_with("--scaling-3d-scale="):
+			get_viewport().scaling_3d_scale = float(arg.substr(19))
+			print("Overriding scaling_3d_scale = %f" % get_viewport().scaling_3d_scale)
 	if (
 		(OS.is_debug_build() and ProjectSettings.get_setting("debug/bake_preview", false))
 		or "--bake" in _user_args

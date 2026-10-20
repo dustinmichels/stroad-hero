@@ -149,6 +149,35 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event.keycode == KEY_N:
 			GameState.cycle_time_of_day()
 			get_viewport().set_input_as_handled()
+		elif (
+			event.keycode == KEY_F2
+			or event.physical_keycode == KEY_F2
+			or event.keycode == KEY_G
+			or event.physical_keycode == KEY_G
+		):
+			cycle_render_scale()
+			get_viewport().set_input_as_handled()
+
+
+func cycle_render_scale() -> void:
+	var vp := get_viewport()
+	if not vp:
+		return
+	var current: float = vp.scaling_3d_scale
+	var next_scale: float = 0.75
+	var label: String = "Balanced (0.75x)"
+	if is_equal_approx(current, 0.75):
+		next_scale = 0.50
+		label = "Performance (0.50x)"
+	elif is_equal_approx(current, 0.50):
+		next_scale = 1.00
+		label = "Native (1.00x)"
+	else:
+		next_scale = 0.75
+		label = "Balanced (0.75x)"
+	vp.scaling_3d_scale = next_scale
+	show_toast("3D Scale: %s" % label, 1.8)
+	print("Quality toggle: 3D scale set to %0.2f (%s)" % [next_scale, label])
 
 
 func increment_spd() -> void:

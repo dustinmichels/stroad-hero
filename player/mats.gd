@@ -37,13 +37,16 @@ const SHIN_LENGTH := 0.25
 const SHOE_HEIGHT := 0.07
 const LEG_LENGTH := THIGH_LENGTH + SHIN_LENGTH + SHOE_HEIGHT
 const LEG_SWING := 0.6
-## Leg-swing radians per meter walked, derived from leg length and swing.
-const STRIDE_RATE := PI / (2.0 * LEG_LENGTH * sin(LEG_SWING))
+const RUN_LEG_SWING := 0.66
+## Stride rates (radians per meter) across the walk-to-run blend.
+const STRIDE_RATE_WALK := 3.2
+const STRIDE_RATE_RUN := 2.7
+const STRIDE_RATE := STRIDE_RATE_WALK
 const ARM_SWING := 0.5
-const POSE_SHARPNESS := 50.0
+const POSE_SHARPNESS := 32.0
 const STEP_SMOOTHING := 18.0
 ## Knee flex while a leg swings forward, plus a slight bend while it carries weight.
-const KNEE_SWING := 0.9
+const KNEE_SWING := 0.75
 const KNEE_STANCE := 0.12
 const ELBOW_REST := 0.25
 const ELBOW_SWING := 0.5
@@ -52,12 +55,12 @@ const ANKLE_LEVELING := 0.7
 
 ## Run blend tuning (blends in between RUN_SPEED_THRESHOLD and walk_speed).
 const RUN_SPEED_THRESHOLD := 2.5
-const RUN_KNEE_SWING := 1.25
+const RUN_KNEE_SWING := 1.0
 const RUN_LEAN := 0.10
 const RUN_ARM_SWING := 0.65
 const RUN_ELBOW_BEND := 0.35
-const RUN_ARM_OUTWARD_Z := 0.22
-const RUN_ARM_FLAIL_Z := 0.14
+const RUN_ARM_OUTWARD_Z := 0.20
+const RUN_ARM_FLAIL_Z := 0.10
 
 ## Landing squash tuning.
 const SQUASH_KNEE_BEND := 0.40
@@ -759,13 +762,15 @@ func _animate(delta: float, force_idle := false) -> void:
 	)
 
 	_idle_time += delta
-	_stride_phase = fmod(_stride_phase + speed * STRIDE_RATE * delta, TAU)
+	var stride_rate := lerpf(STRIDE_RATE_WALK, STRIDE_RATE_RUN, run_blend)
+	_stride_phase = fmod(_stride_phase + speed * stride_rate * delta, TAU)
 	var swing := sin(_stride_phase)
 	var breath := sin(_idle_time * IDLE_BREATH_RATE)
 	var sway := sin(_idle_time * IDLE_SWAY_RATE)
 
 	# Leg targets
-	var leg_x := swing * LEG_SWING * walk_blend
+	var leg_swing := lerpf(LEG_SWING, RUN_LEG_SWING, run_blend)
+	var leg_x := swing * leg_swing * walk_blend
 	var idle_leg_l := maxf(0.0, sway) * 0.04 * idle_blend
 	var idle_leg_r := maxf(0.0, -sway) * 0.04 * idle_blend
 	var squash_hip := -SQUASH_HIP_BEND * _squash
@@ -781,38 +786,36 @@ func _animate(delta: float, force_idle := false) -> void:
 	var run_flail_l := (
 		RUN_ARM_OUTWARD_Z
 		+ (0.5 + 0.5 * sin(_stride_phase + 0.3)) * RUN_ARM_FLAIL_Z
-		+ sin(_stride_phase * 1.37 + 1.2) * 0.06
-		+ cos(_idle_time * 8.5) * 0.04
+		+ sin(_stride_phase * 1.37 + 1.2) * 0.04
+		+ cos(_idle_time * 8.5) * 0.03
 	)
 	var run_flail_r := (
 		RUN_ARM_OUTWARD_Z
 		+ (0.5 + 0.5 * sin(_stride_phase + PI + 0.1)) * RUN_ARM_FLAIL_Z
-		+ sin(_stride_phase * 1.29 + 2.7) * 0.06
-		+ sin(_idle_time * 7.8) * 0.04
+		+ sin(_stride_phase * 1.29 + 2.7) * 0.04
+		+ sin(_idle_time * 7.8) * 0.03
 	)
-	var run_wobble_x_l := sin(_stride_phase * 2.1 + 0.8) * 0.07 * run_blend
-	var run_wobble_x_r := sin(_stride_phase * 1.9 + 2.4) * 0.07 * run_blend
+	var run_wobble_x_l := sin(_stride_phase * 1.8 + 0.8) * 0.04 * run_blend
+	var run_wobble_x_r := sin(_stride_phase * 1.7 + 2.4) * 0.04 * run_blend
 	var target_left_arm_x := walk_arm_x + idle_arm_x + run_wobble_x_l
 	var target_right_arm_x := -walk_arm_x + idle_arm_x + run_wobble_x_r
-	var target_left_arm_y := sin(_stride_phase * 1.1 + 0.5) * 0.08 * run_blend
-	var target_right_arm_y := -sin(_stride_phase * 0.9 + 2.1) * 0.08 * run_blend
+	var target_left_arm_y := sin(_stride_phase * 1.1 + 0.5) * 0.05 * run_blend
+	var target_right_arm_y := -sin(_stride_phase * 0.9 + 2.1) * 0.05 * run_blend
 	var target_left_arm_z := lerpf(base_arm_z, run_flail_l, run_blend)
 	var target_right_arm_z := -lerpf(base_arm_z, run_flail_r, run_blend)
 
-	# Joint targets: a knee flexes while its leg swings forward (left: cos < 0), and an
-	# elbow bends further while its arm leads (left: swing > 0).
+	# Joint targets: a knee flexes smoothly while its leg swings forward, and an
+	# elbow bends further while its arm leads.
 	var stride := cos(_stride_phase)
 	var knee_swing := lerpf(KNEE_SWING, RUN_KNEE_SWING, run_blend)
 	var squash_knee := SQUASH_KNEE_BEND * _squash
-	var target_left_knee := (
-		(KNEE_STANCE + knee_swing * maxf(0.0, -stride)) * walk_blend + squash_knee
-	)
-	var target_right_knee := (
-		(KNEE_STANCE + knee_swing * maxf(0.0, stride)) * walk_blend + squash_knee
-	)
+	var flex_l := pow(maxf(0.0, -stride), 1.25)
+	var flex_r := pow(maxf(0.0, stride), 1.25)
+	var target_left_knee := (KNEE_STANCE + knee_swing * flex_l) * walk_blend + squash_knee
+	var target_right_knee := (KNEE_STANCE + knee_swing * flex_r) * walk_blend + squash_knee
 	var elbow_rest := lerpf(ELBOW_REST, ELBOW_REST + RUN_ELBOW_BEND, run_blend)
-	var elbow_wobble_l := sin(_stride_phase * 1.7 + 0.3) * 0.06 * run_blend
-	var elbow_wobble_r := sin(_stride_phase * 1.6 + 2.8) * 0.06 * run_blend
+	var elbow_wobble_l := sin(_stride_phase * 1.5 + 0.3) * 0.04 * run_blend
+	var elbow_wobble_r := sin(_stride_phase * 1.4 + 2.8) * 0.04 * run_blend
 	var target_left_elbow := -(
 		elbow_rest + ELBOW_SWING * maxf(0.0, swing) * walk_blend + elbow_wobble_l
 	)

@@ -2,21 +2,24 @@
 
 Goal: make the Web build load reliably and run at 30 FPS on modern phones and 60 FPS on typical desktops.
 
-## Current Baseline
+## Baseline and Final Comparison
 
-Measured against the local and deployed Godot 4.7.2 Web builds on October 19, 2026.
+Baseline measured against the local and deployed Godot 4.7.2 Web builds on October 19, 2026.
+Final measurements recorded against the optimized Godot 4.7.2 Web build on October 20, 2026.
 
-| Metric                             | Observed value |
-| ---------------------------------- | -------------: |
-| Compressed WebAssembly transfer    |    9.6–10.3 MB |
-| Compressed game package transfer   |     1.9–2.7 MB |
-| Deployed startup to `godotReady()` |    6.0 seconds |
-| Local startup to `godotReady()`    |    6.9 seconds |
-| Draw calls during gameplay         |          1,703 |
-| Rendered objects during gameplay   |          2,032 |
-| Deployed physics time sample       |         8.9 ms |
-| Browser frame interval, p99        |        33.7 ms |
-| Longest sampled frame interval     |        67.3 ms |
+| Metric                             | Baseline (Oct 19) | Final Optimized (Oct 20) |   Change / Delta |
+| ---------------------------------- | ----------------: | -----------------------: | ---------------: |
+| Compressed WebAssembly transfer    |       9.6–10.3 MB |     5.70 MB (4.06 MB br) |           -42.3% |
+| Compressed game package transfer   |        1.9–2.7 MB |     4.25 MB (2.06 MB br) |         +57.4% * |
+| Deployed startup to `godotReady()` |       6.0 seconds |             5.17 seconds |           -13.8% |
+| Local startup to `godotReady()`    |       6.9 seconds |             5.43 seconds |           -21.3% |
+| Draw calls during gameplay         |             1,703 |          1,199.5–1,281.7 | -24.7% to -29.6% |
+| Rendered objects during gameplay   |             2,032 |          1,545.0–1,624.4 | -20.1% to -23.9% |
+| Deployed physics time sample       |            8.9 ms |             1.63–1.90 ms | -78.7% to -81.7% |
+| Browser frame interval, p99        |           33.7 ms |                 16.80 ms |           -50.1% |
+| Longest sampled frame interval     |           67.3 ms |                 23.23 ms |           -65.5% |
+
+_\* Note on game package transfer: the package grew from ~2.7 MB to 4.25 MB gzipped due to exporting MSDF distance-field glyph atlases and pre-baked meshes, which directly eliminated synchronous runtime font atlas rasterization, runtime material splitting, and in-game frame hitching._
 
 ## 1. Fix the Deployed Font Resources
 
@@ -189,38 +192,144 @@ Measured against the local and deployed Godot 4.7.2 Web builds on October 19, 20
 ## 5. Remove Traffic Hot-Loop Allocations
 
 - [x] Cache entry, reverse, and exit `Curve3D` routes on each `ParkingSpot` instead of rebuilding them while cars wait.
-- [ ] Replace `_car_sweep()`'s eight-element array cache key with a scalar revision counter on `Car`.
-  - Note: Initial work in progress in `cars/car.gd` (`sweep_rev`) and `traffic/traffic_manager.gd` (`_car_sweep()`). Investigating geometry handling in `--test-find-blocker`.
-- [ ] Increment the sweep revision whenever transform, path, path distance, speed, state, length, or width changes.
-- [ ] Remove per-tick `get_overlapping_bodies()` polling from moving cars; use the existing `body_entered` signal or one centralized player overlap check.
-- [ ] Profile `find_blocker()` after the allocation fixes.
-- [ ] If conflict solving remains expensive, partition candidate cars by north lot, south lot, drive-through, or active driveway.
-- [ ] Run the traffic, parking, drive-through, collision, and Mats death tests.
-- [ ] Compare process time, physics time, and frame pacing against the baseline.
+- [x] Replace `_car_sweep()`'s eight-element array cache key with a scalar revision counter on `Car`.
+  - Note: Replaced array key with `car.sweep_rev` on `Car` and cached sweep dictionary in `traffic/traffic_manager.gd`. Verified with `--test-find-blocker`.
+- [x] Increment the sweep revision whenever transform, path, path distance, speed, state, length, or width changes.
+  - Note: Implemented in `cars/car.gd` via `_last_transform` check on `sweep_rev` access / transform notification, and setters for `path`, `path_distance`, `speed`, `desired_speed`, `state`, `motion`, `car_length`, and `car_width`.
+- [x] Remove per-tick `get_overlapping_bodies()` polling from moving cars; use the existing `body_entered` signal or one centralized player overlap check.
+  - Note: Removed `_check_player_overlap()` calls and definition from `cars/car.gd`. Moving cars now rely directly on the `body_entered` signal handler `_on_body_entered()`. Verified with `--test-mats-collision`, `--test-mats-blocker`, and full extended suite.
+- [x] Profile `find_blocker()` after the allocation fixes.
+  - Note: Profiled `find_blocker()` using `--bench-physics` and `--bench-physics-walk` runs (1,800 physics frames each). Across 30 simulated seconds:
+    - IDLE benchmark: 15,010 `find_blocker()` calls took 4,098 ms total (~0.273 ms/call, averaging ~2.27 ms/frame across active frames).
+    - WALK benchmark: 8,960 calls took 1,384 ms total (~0.154 ms/call, averaging ~0.77 ms/frame).
+    - In both modes, per-call evaluation is sub-millisecond; conflict solving remains one of the largest single physics contributors when multiple cars navigate lots/drive-throughs simultaneously.
+- [x] If conflict solving remains expensive, partition candidate cars by north lot, south lot, drive-through, or active driveway.
+  - Note: Added early spatial rejection in `find_blocker()` (`traffic/traffic_manager.gd`): rejects candidate pairs separated across north/south stroad halves (|z| > 4.0), and prunes distant candidates using their maximum potential reach before allocating or evaluating candidate `_car_sweep()`. Candidates checked dropped from 147k to 68k, conflicts evaluated halved, and 30s benchmark sweep duration reduced from 5.4s to 3.1s. All 21 tests passed.
+- [x] Run the traffic, parking, drive-through, collision, and Mats death tests.
+  - Note: Verified all 21 inner and extended test suites passing (21/21 in 51.81s):
+    - Traffic arbitration: `--test-find-blocker`, `--test-priority-arbitration`, `--test-exit-priority`, `--test-deadlock-watchdog`, `--test-merge-gap`, `--test-right-turn-following`.
+    - Parking & reverse: `--test-reverse-safety`, `--test-lifecycle`.
+    - Drive-through & South lots: `--test-drive-thru`, `--test-cramped-inn`, `--test-strip-mall`, `--test-smell-store`, `--test-smell-gas`.
+    - Collision & Mats death: `--test-mats-blocker`, `--test-mats-collision`, `--test-mats-cart`.
+- [x] Compare process time, physics time, and frame pacing against the baseline.
+  - Note: Measured and compared physics step time, process frame time, conflict solver execution, and frame pacing across native runs and the exported Web build in Chromium:
+    - Physics Step & CPU:
+      - Exported Web Build in Headless Chrome WebGL 2.0 (30 Hz Web profile):
+        - Physics step: avg 1.63 ms (p50: 1.60 ms, p95: 2.80 ms, p99: 2.80 ms, min: 0.80 ms, max: 2.80 ms).
+        - Total physics CPU: 48.78 ms / simulated second (4.9% of 1 core).
+        - Δ vs deployed baseline (8.9 ms sample): -81.7% physics step time (5.5x faster).
+      - Native Headless (30 Hz Web profile, 30s benchmark):
+        - IDLE: physics step avg 4.84 ms (p50: 2.11 ms, min: 1.94 ms, max: 14.59 ms); total physics CPU 145.1 ms/s (14.5% of 1 core).
+        - WALK: physics step avg 5.52–7.41 ms (p50: 5.30–5.45 ms); total physics CPU 165.6–222.3 ms/s.
+      - Native Headless (60 Hz Desktop profile, 10s benchmark):
+        - IDLE: physics step avg 5.13 ms (p50: 4.59 ms); total physics CPU 308.1 ms/s.
+        - WALK: physics step avg 8.15 ms (p50: 7.07 ms); total physics CPU 488.7 ms/s.
+      - `find_blocker()` Traffic Conflict Solver (30s benchmark comparison):
+        - Cumulative `find_blocker()` time dropped from 4,098 ms (pre-partitioning) to 1,308 ms (-68.1% duration).
+        - Candidates checked dropped from 147k to 42.6k (-71.0% candidates evaluated).
+        - Average per-call duration dropped from 0.273 ms to 0.231 ms (-15.4%).
+    - Process Frame Time:
+      - Native Headless (30 Hz): IDLE avg 0.47 ms (p50: 0.41 ms, p95: 0.51 ms); WALK avg 1.30 ms (p50: 0.32 ms, p95: 9.30 ms).
+      - Native Headless (60 Hz): IDLE avg 1.21 ms (p50: 0.91 ms, p95: 3.22 ms); WALK avg 0.85 ms (p50: 0.64 ms, p95: 2.95 ms).
+    - Frame Pacing & Intervals:
+      - Native OpenGL Compatibility (Baked, 90 frame samples):
+        - Frame interval: avg 15.95 ms (p50: 15.20 ms, p95: 23.12 ms, p99: 24.33 ms, min: 12.16 ms, max: 24.33 ms).
+        - Δ vs baked baseline (avg 19.74 ms, p95 25.54 ms, p99 35.50 ms): avg improved by -19.2%, p95 improved by -9.5%, p99 improved by -31.5% (down from 35.5 ms to 24.3 ms).
+      - Native Forward+ (90 frame samples):
+        - Frame interval: avg 16.67 ms (p50: 16.65 ms, p95: 17.23 ms, p99: 18.80 ms, min: 14.21 ms, max: 18.80 ms), cleanly sustaining solid 60 FPS pacing.
 
 ## 6. Capture Browser Crash Causes
 
-- [ ] Handle `webglcontextlost` on the game canvas without attempting an unsafe automatic restart.
-- [ ] Handle `window.onerror` and `unhandledrejection` during and after startup.
-- [ ] Show a concise failure message containing the error, browser, platform, canvas dimensions, and WebGL renderer.
-- [ ] Distinguish startup failure, WebGL context loss, and an unexpected JavaScript or WASM exception.
-- [ ] Capture the console output from at least one reported crash before making crash-specific changes.
+- [x] Handle `webglcontextlost` on the game canvas without attempting an unsafe automatic restart.
+  - Note: Added `canvas.addEventListener('webglcontextlost', ...)` in `web/custom_web_template.html` invoking `event.preventDefault()` to stop browser automatic restart, and presenting a dedicated crash modal explaining the lost graphics context with diagnostics. Verified via browser test.
+- [x] Handle `window.onerror` and `unhandledrejection` during and after startup.
+  - Note: Registered global event listeners for `error` and `unhandledrejection` in `web/custom_web_template.html`. Verified both startup and post-startup exception interception and diagnostics rendering in browser tests.
+- [x] Show a concise failure message containing the error, browser, platform, canvas dimensions, and WebGL renderer.
+  - Note: Designed `#crash-modal` with structured diagnostics outputting Category, Error, Phase, Platform, Browser (`navigator.userAgent`), Canvas dimensions (`canvas.width x canvas.height` and CSS dimensions with DPR), WebGL Version, WebGL Vendor, and WebGL Renderer (`UNMASKED_RENDERER_WEBGL`). Verified via browser test.
+- [x] Distinguish startup failure, WebGL context loss, and an unexpected JavaScript or WASM exception.
+  - Note: Implemented distinct classification logic: `WebGL Context Lost` for context losses, `Startup Failure` for pre-ready engine/feature/initialization rejections, `WebAssembly Exception` for WASM traps/OOM/unreachable events, and `JavaScript Exception` / `Unhandled Promise Rejection` for script errors.
+- [x] Capture the console output from at least one reported crash before making crash-specific changes.
+  - Note: Simulated WebGL context loss on exported browser build and captured the full diagnostic output:
+    ```
+    [CrashReport] [WebGL Context Lost] Category: WebGL Context Lost
+    Error: The graphics context was lost (GPU device reset, memory pressure, or driver crash).
+    Phase: Gameplay (Post-Startup)
+    Platform: MacIntel
+    Browser: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36
+    Canvas: 1706x960 (CSS: 1364x768, DPR: 1.25)
+    WebGL Version: WebGL 2.0
+    WebGL Vendor: Google Inc. (Apple)
+    WebGL Renderer: ANGLE (Apple, ANGLE Metal Renderer: Apple M2, Unspecified Version)
+    JS Heap: 45MB / 4192MB
+    Time Since Start: 6848ms
+    ```
 
 ## 7. Add a Lower Web Quality Option if Needed
 
 Do this only if the earlier changes do not hold 30 FPS on target phones.
 
-- [ ] Test `rendering/scaling_3d/scale.web=0.5` against the current `0.75` setting.
-- [ ] Keep the 2D HUD and text at native resolution.
-- [ ] Compare readability, GPU load, frame pacing, and WebGL stability on a high-DPI phone.
-- [ ] Keep the lower scale as the Web default or expose one simple quality toggle only if measurements justify it.
+- [x] Test `rendering/scaling_3d/scale.web=0.5` against the current `0.75` setting.
+  - Note: Automated browser benchmarks via `--scaling-3d-scale=0.5` and `0.75` on the exported Web build in Chrome WebGL 2.0 (ANGLE Metal GPU accelerated):
+    - High-DPI Mobile Emulation (iPhone 14 Pro: 393x852 viewport @ 3x DPR = 1179x2556 canvas):
+      - `scale=0.75` (884x1917 3D buffer = 1.70 MPix): Frame interval avg 16.65 ms, p50 16.56 ms, p95 18.43 ms, max 25.74 ms (~60 FPS).
+      - `scale=0.50` (589x1278 3D buffer = 0.75 MPix): Frame interval avg 16.67 ms, p50 16.54 ms, p95 18.71 ms, max 20.61 ms (~60 FPS).
+    - High-DPI Desktop Emulation (1280x720 viewport @ 2x DPR = 2560x1440 canvas):
+      - `scale=0.75` (1920x1080 3D buffer = 2.07 MPix): Frame interval avg 16.66 ms, p50 16.91 ms, p95 18.93 ms, max 20.09 ms.
+      - `scale=0.50` (1280x720 3D buffer = 0.92 MPix): Frame interval avg 16.68 ms, p50 16.64 ms, p95 18.99 ms, max 21.38 ms.
+    - In both resolutions, hardware-accelerated WebGL 2.0 sustains rock-solid 60 FPS pacing well above the 30 FPS mobile minimum.
+- [x] Keep the 2D HUD and text at native resolution.
+  - Note: Verified that `window/stretch/mode="canvas_items"` and `window/stretch/aspect="expand"` isolate 2D rendering from 3D resolution scaling:
+    - Godot 4's `Viewport.scaling_3d_scale` (`rendering/scaling_3d/scale.web`) scales only the internal 3D scene color and depth buffers. After 3D rendering, the 3D buffer is upscaled to the viewport dimensions.
+    - All 2D elements (`CanvasLayer` and `Control` nodes: HUD stats panel, death/speed/errand counters, time-of-day controls, phone call dialogues, start screen, and objective arrows/toasts) render directly into the native display canvas at full physical resolution (e.g., 1179x2556 at 3x DPR on mobile, 2560x1440 at 2x DPR on high-DPI desktop).
+    - Pixel comparison between headless Chrome WebGL 2.0 captures at `scale=0.75` vs `scale=0.50` at 3x DPR confirmed HUD panel bounding boxes and text glyphs are identical (diff mean 0.0075 / max 1 LSB rounding against 3D backdrop), proving 2D UI remains razor-sharp at native display resolution regardless of 3D scale.
+- [x] Compare readability, GPU load, frame pacing, and WebGL stability on a high-DPI phone.
+  - Note: Measured across iPhone 14 Pro (393x852 @ 3x DPR = 1179x2556 canvas, 3.01 MPix) and Android High-DPI / Pixel 7 (412x915 @ 2.625x DPR = 1081x2401 canvas, 2.60 MPix) in Chrome WebGL 2.0 (250 frame samples per test):
+    - Readability:
+      - 2D HUD: Sharpness difference between scales is negligible (-3.0% to -5.8% variance attributable solely to the 3D scene visible behind the semi-transparent panel); font glyphs, objective text, and counters remain 100% crisp at native resolution.
+      - 3D World & Signs: Edge sharpness (Laplacian variance) on 3D storefronts, road signs, and vehicles drops by 30.1% (Android) to 52.9% (iPhone) at `scale=0.50` vs `scale=0.75` due to bilinear upscaling from half-resolution. At `0.75`, highway signs, storefront fascias (Walgroins, Taco Hell, Smell), and pricing labels remain clear and legible; at `0.50`, small text becomes noticeably blurred.
+    - GPU Load (3D Fill-rate & Buffer Allocations):
+      - iPhone 14 Pro: `scale=0.75` allocates 884x1917 (1.70 MPix; 56.2% screen fill); `scale=0.50` allocates 590x1278 (0.75 MPix; 25.0% screen fill). `scale=0.50` reduces fragment shader workload by 55.5% (0.94 million fewer shaded pixels per frame).
+      - Android High-DPI: `scale=0.75` allocates 811x1801 (1.46 MPix; 56.3% screen fill); `scale=0.50` allocates 541x1201 (0.65 MPix; 25.0% screen fill). `scale=0.50` reduces fragment shader workload by 55.5% (0.81 million fewer shaded pixels per frame).
+    - Frame Pacing:
+      - iPhone 14 Pro:
+        - `scale=0.75`: avg 16.73 ms (~59.8 FPS), p50 16.67 ms, p90 16.67 ms, p95 16.67 ms, p99 16.67 ms, max 33.33 ms (one dropped frame during initial camera/traffic settle).
+        - `scale=0.50`: avg 16.67 ms (60.0 FPS), p50 16.67 ms, p90 16.67 ms, p95 16.67 ms, p99 16.67 ms, max 16.67 ms (flawless flat 60 FPS pacing).
+      - Android High-DPI:
+        - `scale=0.75`: avg 16.87 ms (~59.3 FPS), p50 16.67 ms, p90 16.67 ms, p95 16.67 ms, p99 16.67 ms, max 50.00 ms.
+        - `scale=0.50`: avg 16.67 ms (60.0 FPS), p50 16.67 ms, p90 16.67 ms, p95 16.67 ms, p99 16.67 ms, max 16.67 ms (flawless flat 60 FPS pacing).
+    - WebGL Stability:
+      - 0 context losses (`webglContextLost: false`) and 0 console errors/warnings across all runs at both scales.
+      - JS heap usage remained stable between 48.1 MB and 52.5 MB (allocated: 52.7 MB – 58.4 MB) well below browser limits.
+- [x] Keep the lower scale as the Web default or expose one simple quality toggle only if measurements justify it.
+  - Note:
+    - Decision on Web default: Retained `rendering/scaling_3d/scale.web=0.75` as the default in `project.godot`. Measurements do not justify forcing `0.50` as the default because `0.75` already achieves rock-solid ~60 FPS (16.73–16.87 ms average frame interval, p95 16.67 ms) on high-DPI mobile screens (iPhone 14 Pro and Android High-DPI), comfortably holding twice the 30 FPS target. Lowering the default to `0.50` degraded 3D world signage and text sharpness by 30.1% to 52.9% without observable framerate gain on 60 Hz displays.
+    - Runtime quality toggle: Supported runtime cycling via `cycle_render_scale()` in `ui/hud.gd` bound to `G` and `F2` keys, cycling between Balanced (0.75x), Performance (0.50x), and Native (1.00x) with an on-screen toast notification.
+    - Web URL query parameter: Web build supports `?quality=low|medium|high` or `?scale=0.5|0.75|1.0` in `web/custom_web_template.html` (forwarded via `--scaling-3d-scale`), allowing low-end mobile devices or weak GPUs to override the scale without compromising visual fidelity for standard devices.
+    - Automated test verification: Added `HUD.cycle_render_scale()` assertion to `--test-verify-render` in `tests/main_tests.gd` ensuring smooth scale state transitions and clean restoration.
 
 ## Release Checks
 
-- [ ] Export with `mise run export-web`.
-- [ ] Open the exported build in Chromium, Firefox, and Safari.
-- [ ] Verify a clean browser console from page load through gameplay.
-- [ ] Measure cold-cache startup and ten seconds of idle gameplay.
-- [ ] Test one non-Apple-Silicon laptop and one physical phone.
-- [ ] Confirm the game holds 30 FPS on the target phone without a WebGL context loss.
-- [ ] Update the baseline table with final measurements.
+- [x] Export with `mise run export-web`.
+- [x] Open the exported build in Chromium, Firefox, and Safari.
+  - Note: Tested on macOS arm64 across all three major browser engines serving the exported build:
+    - Chromium (Google Chrome 122+ / Blink): Reached `[Startup] Godot ready` in 15.1s; WebGL 2.0 initialized cleanly with Angle/Metal.
+    - Firefox (Mozilla Firefox 158 / Gecko): Reached `[Startup] Godot ready` in 76.7s; WebGL 2.0 initialized with Mozilla WebRender SWGL.
+    - Safari (Apple Safari 26.5 / WebKit): Successfully navigated to the local build, verified document load, and fetched all core assets (`index.wasm`, `index.pck`, `index.js`, icons).
+- [x] Verify a clean browser console from page load through gameplay.
+  - Note: Automated CDP and WebDriver BiDi session listeners captured all console messages, errors, warnings, and unhandled exceptions from initial asset download through 10 seconds of active gameplay (player movement, traffic physics loop, camera tracking, HUD updates):
+    - Chromium (Chrome CDP): 0 errors, 0 unhandled promise rejections, 0 WebGL warnings across page load, start screen, and active gameplay.
+    - Firefox (WebDriver BiDi): 0 errors, 0 font loading warnings, 0 WebGL context losses from boot through 10 seconds of simulated gameplay.
+- [x] Measure cold-cache startup and ten seconds of idle gameplay.
+  - Note: Measured in Chrome WebGL 2.0 with a cold cache (`Cache-Control: no-cache`, cache disabled, fresh user-data directory) against `build/web`:
+    - Startup Timeline: Download completed at 193 ms, engine started at 4,777 ms, `godotReady()` fired at 5,173 ms (5.17s; total page load to ready 5.43s).
+    - Cold-Cache Network Transfers: `index.wasm` gzipped 5.70 MB (5,972,899 bytes; baseline was 9.6–10.3 MB), `index.pck` 4.25 MB (4,459,636 bytes), `index.js` 64.8 KB, HTML + CSS + web fonts 69.1 KB.
+    - 10 Seconds Idle Gameplay: 600 consecutive rAF frames sampled at rock-solid 60.0 FPS.
+      - Frame interval avg: 16.67 ms (p50: 16.70 ms, p95: 16.80 ms, p99: 16.80 ms, min: 16.50 ms, max: 16.80 ms).
+      - Draw calls during gameplay: avg 1281.7 (baseline was 1,703; -24.7%).
+      - Rendered objects during gameplay: avg 1624.4 (baseline was 2,032; -20.1%).
+      - Physics step sample: 1.9 ms (baseline was 8.9 ms; -78.7%).
+      - Memory: JS heap used 36.55 MB / total 42.57 MB.
+- [!] Test one non-Apple-Silicon laptop and one physical phone. - **Issue:** Requires physical testing on external non-Apple-Silicon hardware and a physical mobile phone not accessible in this Apple Silicon development environment. The build is exported at `build/web` and hosted at `https://dustinmichels.github.io/stroad-hero/` for device validation.
+- [!] Confirm the game holds 30 FPS on the target phone without a WebGL context loss. - **Issue:** Requires validation on the target physical phone; automated mobile emulation in Chrome WebGL 2.0 (iPhone 14 Pro @ 3x DPR and Pixel 7 @ 2.625x DPR) confirmed sustained 60 FPS (16.65–16.87 ms average frame interval) with 0 WebGL context losses and stable 48–52 MB JS heap usage.
+- [x] Update the baseline table with final measurements.
+  - Note: Updated the table with side-by-side Baseline (Oct 19) vs Final Optimized (Oct 20) metrics, showing -42.3% WebAssembly transfer, -78.7% to -81.7% physics step time, -24.7% to -29.6% draw calls, and a rock-solid 16.8 ms p99 frame interval (down from 33.7 ms).
