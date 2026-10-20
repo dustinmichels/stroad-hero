@@ -27,6 +27,15 @@ extends StaticBody3D
 	set(value):
 		show_banner = value
 		_update_billboard()
+@export var portrait_texture: Texture2D = preload("res://props/lawyer_portrait.png"):
+	set(value):
+		portrait_texture = value
+		_update_billboard()
+
+@export var show_portrait: bool = true:
+	set(value):
+		show_portrait = value
+		_update_billboard()
 
 @export var custom_texture: Texture2D = null:
 	set(value):
@@ -111,11 +120,20 @@ extends StaticBody3D
 		back_show_banner = value
 		_update_billboard()
 
+@export var back_portrait_texture: Texture2D = null:
+	set(value):
+		back_portrait_texture = value
+		_update_billboard()
+
+@export var back_show_portrait: bool = true:
+	set(value):
+		back_show_portrait = value
+		_update_billboard()
+
 @export var back_custom_texture: Texture2D = null:
 	set(value):
 		back_custom_texture = value
 		_update_billboard()
-
 @export var back_background_color: Color = Color(0.08, 0.14, 0.34, 1.0):
 	set(value):
 		back_background_color = value
@@ -172,6 +190,14 @@ func set_back_content(
 	_update_billboard()
 
 
+func set_portrait(p_texture: Texture2D, p_back_texture: Texture2D = null) -> void:
+	portrait_texture = p_texture
+	if p_back_texture != null:
+		back_matches_front = false
+		back_portrait_texture = p_back_texture
+	_update_billboard()
+
+
 func set_custom_texture(p_texture: Texture2D, p_back_texture: Texture2D = null) -> void:
 	custom_texture = p_texture
 	if p_back_texture != null:
@@ -202,6 +228,8 @@ func _update_billboard() -> void:
 	_update_side(
 		"FrontSide",
 		custom_texture,
+		portrait_texture,
+		show_portrait,
 		background_color,
 		show_banner,
 		banner_color,
@@ -214,7 +242,6 @@ func _update_billboard() -> void:
 		disclaimer_text,
 		disclaimer_color
 	)
-
 	var back_side: Node3D = get_node_or_null("BackSide")
 	var back_cover: MeshInstance3D = get_node_or_null("Structure/BackCover")
 
@@ -225,6 +252,8 @@ func _update_billboard() -> void:
 
 	if two_sided and back_side:
 		var tex: Texture2D = custom_texture if back_matches_front else back_custom_texture
+		var port: Texture2D = portrait_texture if back_matches_front else back_portrait_texture
+		var s_port: bool = show_portrait if back_matches_front else back_show_portrait
 		var bg_col: Color = background_color if back_matches_front else back_background_color
 		var sb: bool = show_banner if back_matches_front else back_show_banner
 		var b_col: Color = banner_color if back_matches_front else back_banner_color
@@ -236,10 +265,11 @@ func _update_billboard() -> void:
 		var cnt_col: Color = contact_color if back_matches_front else back_contact_color
 		var disc_txt: String = disclaimer_text if back_matches_front else back_disclaimer_text
 		var disc_col: Color = disclaimer_color if back_matches_front else back_disclaimer_color
-
 		_update_side(
 			"BackSide",
 			tex,
+			port,
+			s_port,
 			bg_col,
 			sb,
 			b_col,
@@ -252,13 +282,14 @@ func _update_billboard() -> void:
 			disc_txt,
 			disc_col
 		)
-
 	_update_lights()
 
 
 func _update_side(
 	side_node_name: String,
 	p_texture: Texture2D,
+	p_portrait: Texture2D,
+	p_show_portrait: bool,
 	p_bg_color: Color,
 	p_show_banner: bool,
 	p_banner_color: Color,
@@ -288,11 +319,36 @@ func _update_side(
 		board_mesh.material_override = board_mat
 
 	# Banner
-	var banner_mesh: MeshInstance3D = side_node.get_node_or_null("Banner")
 	var has_texture: bool = p_texture != null
 	var hide_text: bool = has_texture and hide_text_when_texture_set
+	var active_portrait: bool = p_portrait != null and p_show_portrait and not hide_text
+
+	# Portrait Mesh & Frame
+	var portrait_mesh: MeshInstance3D = side_node.get_node_or_null("Portrait")
+	var portrait_frame: MeshInstance3D = side_node.get_node_or_null("PortraitFrame")
+	if portrait_mesh:
+		portrait_mesh.visible = active_portrait
+		portrait_mesh.position = Vector3(2.35, 7.8, 0.035)
+		if active_portrait:
+			var pmat := StandardMaterial3D.new()
+			pmat.roughness = 0.5
+			pmat.cull_mode = BaseMaterial3D.CULL_DISABLED
+			pmat.albedo_texture = p_portrait
+			pmat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+			portrait_mesh.material_override = pmat
+	if portrait_frame:
+		portrait_frame.visible = active_portrait
+		portrait_frame.position = Vector3(2.35, 7.8, 0.021)
+	# Adjust content horizontal layout depending on whether portrait is displayed
+	var content_x: float = -1.55 if active_portrait else 0.0
+	var banner_scale_x: float = (4.4 / 5.6) if active_portrait else 1.0
+
+	# Banner
+	var banner_mesh: MeshInstance3D = side_node.get_node_or_null("Banner")
 	if banner_mesh:
 		banner_mesh.visible = p_show_banner and not hide_text
+		banner_mesh.position.x = content_x
+		banner_mesh.scale.x = banner_scale_x
 		if banner_mesh.visible:
 			var bmat := StandardMaterial3D.new()
 			bmat.roughness = 0.4
@@ -308,21 +364,31 @@ func _update_side(
 	if hl:
 		hl.text = p_headline_text
 		hl.modulate = p_headline_color
+		hl.position.x = content_x
+		hl.font_size = 40 if active_portrait else 54
+		hl.pixel_size = 0.0065 if active_portrait else 0.007
 
 	var tag: Label3D = side_node.get_node_or_null("Labels/Tagline")
 	if tag:
 		tag.text = p_tagline_text
 		tag.modulate = p_tagline_color
+		tag.position.x = content_x
 
 	var cnt: Label3D = side_node.get_node_or_null("Labels/Contact")
 	if cnt:
 		cnt.text = p_contact_text
 		cnt.modulate = p_contact_color
+		cnt.position.x = content_x
+		cnt.font_size = 66 if active_portrait else 72
+		cnt.pixel_size = 0.0065 if active_portrait else 0.007
 
 	var disc: Label3D = side_node.get_node_or_null("Labels/Disclaimer")
 	if disc:
 		disc.text = p_disclaimer_text
 		disc.modulate = p_disclaimer_color
+		disc.position.x = content_x
+		disc.font_size = 24 if active_portrait else 26
+		disc.pixel_size = 0.0058 if active_portrait else 0.0065
 
 
 func _update_lights() -> void:

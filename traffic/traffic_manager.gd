@@ -85,7 +85,7 @@ class Lane:
 		max_speed = p_max_spd
 		spawn_interval_min = p_int_min
 		spawn_interval_max = p_int_max
-		spawn_timer = randf_range(0.5, 2.0)
+		spawn_timer = randf_range(0.2, 1.0)
 
 	func distance_at(x: float) -> float:
 		return (x - start_x) * direction
@@ -174,12 +174,12 @@ var stats: Dictionary = {
 const P_ERRAND := 0.3
 const DECISION_D := 18.0
 const TURN_D := 53.0
-const V_TURN := 5.0
-const A_COMFORT := 3.0
-const MIN_SPAWN_HEADWAY := 18.0  # meters needed before spawning another car in lane
-const SAFE_FOLLOWING_GAP := 8.0  # meters
+const V_TURN := 6.5
+const A_COMFORT := 4.0
+const MIN_SPAWN_HEADWAY := 14.0  # meters needed before spawning another car in lane
+const SAFE_FOLLOWING_GAP := 6.0  # meters
 const BRAKE_ACCELERATION := 25.0
-const MOTOR_ACCELERATION := 15.0
+const MOTOR_ACCELERATION := 18.0
 const V_LOT := 4.5
 const V_PARK := 1.5
 const T_MERGE_GAP := 3.0
@@ -234,29 +234,27 @@ func _ready() -> void:
 
 func _setup_lanes() -> void:
 	# 6 lanes matching the stroad markings; lanes run past each road end (road spans x = ±90)
-	# Lane 0: Westbound outer
-	lanes.append(Lane.new(0, -9.375, -1.0, 70.0, 165.0, 11.0, 14.0, 3.5, 7.0))
-	# Lane 1: Westbound middle
-	lanes.append(Lane.new(1, -5.625, -1.0, 70.0, 165.0, 13.0, 16.0, 3.0, 6.0))
-	# Lane 2: Westbound inner (faster)
-	lanes.append(Lane.new(2, -1.875, -1.0, 70.0, 165.0, 15.0, 19.0, 2.5, 5.0))
-	# Lane 3: Eastbound outer
-	lanes.append(Lane.new(3, 9.375, 1.0, -95.0, 190.0, 11.0, 14.0, 3.5, 7.0))
-	# Lane 4: Eastbound middle
-	lanes.append(Lane.new(4, 5.625, 1.0, -95.0, 190.0, 13.0, 16.0, 3.0, 6.0))
-	# Lane 5: Eastbound inner (faster)
-	lanes.append(Lane.new(5, 1.875, 1.0, -95.0, 190.0, 15.0, 19.0, 2.5, 5.0))
+	# Lane 0: Westbound outer (driveway turns & merges)
+	lanes.append(Lane.new(0, -9.375, -1.0, 70.0, 165.0, 16.0, 21.0, 3.2, 6.0))
+	# Lane 1: Westbound middle (fast through-traffic)
+	lanes.append(Lane.new(1, -5.625, -1.0, 70.0, 165.0, 21.0, 27.0, 1.4, 2.6))
+	# Lane 2: Westbound inner (express speedway)
+	lanes.append(Lane.new(2, -1.875, -1.0, 70.0, 165.0, 25.0, 32.0, 1.0, 2.0))
+	# Lane 3: Eastbound outer (driveway turns & merges)
+	lanes.append(Lane.new(3, 9.375, 1.0, -95.0, 190.0, 16.0, 21.0, 3.2, 6.0))
+	# Lane 4: Eastbound middle (fast through-traffic)
+	lanes.append(Lane.new(4, 5.625, 1.0, -95.0, 190.0, 21.0, 27.0, 1.4, 2.6))
+	# Lane 5: Eastbound inner (express speedway)
+	lanes.append(Lane.new(5, 1.875, 1.0, -95.0, 190.0, 25.0, 32.0, 1.0, 2.0))
 
 
 func _pre_populate_traffic() -> void:
-	# Seed 1-2 cars per lane at start
+	# Seed 3-4 cars per lane across the full road length
 	for lane in lanes:
-		var dist1 := randf_range(43.0, 60.0)
-		_spawn_car_at(lane, dist1)
-		if randf() > 0.3:
-			var dist2 := dist1 + randf_range(20.0, 35.0)
-			if dist2 < lane.length - 10.0:
-				_spawn_car_at(lane, dist2)
+		var d := randf_range(16.0, 28.0)
+		while d < lane.length - 15.0:
+			_spawn_car_at(lane, d)
+			d += randf_range(28.0, 42.0)
 
 
 func _pick_seeded_spots() -> Array[ParkingSpot]:
@@ -426,24 +424,16 @@ func _spawn_initial_traffic_staged() -> void:
 	var count := 0
 
 	for lane in lanes:
-		var dist1 := randf_range(43.0, 60.0)
-		_spawn_car_at(lane, dist1)
-		count += 1
-		if count >= BATCH_SIZE:
-			count = 0
-			await get_tree().process_frame
-			if not is_inside_tree():
-				return
-		if randf() > 0.3:
-			var dist2 := dist1 + randf_range(20.0, 35.0)
-			if dist2 < lane.length - 10.0:
-				_spawn_car_at(lane, dist2)
-				count += 1
-				if count >= BATCH_SIZE:
-					count = 0
-					await get_tree().process_frame
-					if not is_inside_tree():
-						return
+		var d := randf_range(16.0, 28.0)
+		while d < lane.length - 15.0:
+			_spawn_car_at(lane, d)
+			count += 1
+			if count >= BATCH_SIZE:
+				count = 0
+				await get_tree().process_frame
+				if not is_inside_tree():
+					return
+			d += randf_range(28.0, 42.0)
 
 	var chosen_spots := _pick_seeded_spots()
 	for spot in chosen_spots:
@@ -789,7 +779,7 @@ func _update_lot_cars(delta: float) -> void:
 					car.start_x = 70.0
 					car.lane_length = 140.0
 					car.lane_distance = (70.0 - car.global_position.x)
-					car.desired_speed = 12.0
+					car.desired_speed = 20.0
 				car.errand = null
 				car.state = Car.State.CRUISING
 				car.path = null
@@ -1306,11 +1296,12 @@ func can_spawn_drive_thru(dest: StringName) -> bool:
 			if car.path_distance < 12.0:
 				return false
 	var start := target_path.get_point_position(0)
-	for lane in lanes:
-		for car in lane.cars:
+	var check_lane_id := 3 if dest == &"booger_king" else 0
+	if check_lane_id < lanes.size() and lanes[check_lane_id] != null:
+		for car in lanes[check_lane_id].cars:
 			if not is_instance_valid(car):
 				continue
-			var safe_dist := car.car_length * 0.5 + maxf(6.0, car.speed * 1.0)
+			var safe_dist := car.car_length * 0.5 + maxf(6.0, car.speed * 0.8)
 			if car.global_position.distance_to(start) < safe_dist:
 				return false
 	return true
@@ -1536,7 +1527,7 @@ func _spawn_car_at(lane: Lane, initial_distance: float, scene: PackedScene = nul
 	if chosen_type == Car.CarType.BUS or chosen_type == Car.CarType.SHIPPING_TRUCK:
 		spd *= 0.9
 	elif chosen_type == Car.CarType.SPORTS:
-		spd = maxf(randf_range(20.0, 24.0), lane.max_speed * randf_range(1.25, 1.45))
+		spd = maxf(randf_range(28.0, 34.0), lane.max_speed * randf_range(1.25, 1.45))
 	add_child(car)
 	car.setup(lane.id, lane.z, lane.direction, lane.start_x, lane.length, spd, chosen_type)
 	car.lane_distance = initial_distance
@@ -1686,7 +1677,7 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 		var brake_accel: float = BRAKE_ACCELERATION
 		var lead_car: Car = null
 		var lead_gap: float = 999.0
-		var safe_gap: float = maxf(SAFE_FOLLOWING_GAP, 4.0 + car.speed * 1.2)
+		var safe_gap: float = maxf(SAFE_FOLLOWING_GAP, 3.5 + car.speed * 0.75)
 		if i > 0:
 			lead_car = valid_cars[i - 1]
 			lead_gap = (
@@ -1738,7 +1729,7 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 			var approach_target: float = sqrt(V_TURN * V_TURN + 2.0 * A_COMFORT * approach_dist)
 			target_speed = minf(target_speed, approach_target)
 
-		var motor_accel := 22.0 if car.car_type == Car.CarType.SPORTS else MOTOR_ACCELERATION
+		var motor_accel := 26.0 if car.car_type == Car.CarType.SPORTS else MOTOR_ACCELERATION
 		var accel: float = brake_accel if car.speed > target_speed else motor_accel
 		car.speed = move_toward(car.speed, target_speed, accel * delta)
 		car.advance_simulation(delta)

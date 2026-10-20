@@ -4,6 +4,7 @@
 [ext_resource type="FontFile" path="res://fonts/ArchivoBlack-Regular.ttf" id="2_archivo"]
 [ext_resource type="FontFile" path="res://fonts/Lobster-Regular.ttf" id="3_lobster"]
 [ext_resource type="FontFile" path="res://fonts/Overpass-Bold.ttf" id="4_overpass"]
+[ext_resource type="Texture2D" path="res://props/lawyer_portrait.png" id="5_lawyer"]
 
 [sub_resource type="CylinderShape3D" id="Shape_Pole"]
 height = 6.5
@@ -97,6 +98,20 @@ size = Vector3(8.06, 3.36, 0.04)
 [sub_resource type="BoxMesh" id="Mesh_BoardFace"]
 material = SubResource("Mat_NavyBoard")
 size = Vector3(8.06, 3.36, 0.04)
+
+[sub_resource type="StandardMaterial3D" id="Mat_Portrait"]
+albedo_texture = ExtResource("5_lawyer")
+roughness = 0.5
+cull_mode = 2
+texture_filter = 2
+
+[sub_resource type="BoxMesh" id="Mesh_PortraitFrame"]
+material = SubResource("Mat_DarkFrame")
+size = Vector3(2.78, 2.78, 0.01)
+
+[sub_resource type="QuadMesh" id="Mesh_Portrait"]
+material = SubResource("Mat_Portrait")
+size = Vector2(2.7, 2.7)
 
 [sub_resource type="BoxMesh" id="Mesh_Banner"]
 material = SubResource("Mat_BannerRed")
@@ -324,6 +339,16 @@ visibility_range_end = 120.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.18, 0.025)
 mesh = SubResource("Mesh_Banner")
 
+[node name="PortraitFrame" type="MeshInstance3D" parent="FrontSide"]
+visibility_range_end = 120.0
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.35, 7.8, 0.021)
+mesh = SubResource("Mesh_PortraitFrame")
+
+[node name="Portrait" type="MeshInstance3D" parent="FrontSide"]
+material_override = SubResource("Mat_Portrait")
+visibility_range_end = 120.0
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.35, 7.8, 0.035)
+mesh = SubResource("Mesh_Portrait")
 [node name="Labels" type="Node3D" parent="FrontSide"]
 
 [node name="Headline" type="Label3D" parent="FrontSide/Labels"]
@@ -540,6 +565,16 @@ visibility_range_end = 120.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.18, 0.025)
 mesh = SubResource("Mesh_Banner")
 
+[node name="PortraitFrame" type="MeshInstance3D" parent="BackSide"]
+visibility_range_end = 120.0
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.35, 7.8, 0.021)
+mesh = SubResource("Mesh_PortraitFrame")
+
+[node name="Portrait" type="MeshInstance3D" parent="BackSide"]
+material_override = SubResource("Mat_Portrait")
+visibility_range_end = 120.0
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.35, 7.8, 0.035)
+mesh = SubResource("Mesh_Portrait")
 [node name="Labels" type="Node3D" parent="BackSide"]
 
 [node name="Headline" type="Label3D" parent="BackSide/Labels"]

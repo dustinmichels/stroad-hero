@@ -107,13 +107,13 @@ var path_distance: float = 0.0:
 			path_distance = value
 			sweep_rev += 1
 var lane_distance: float = 0.0
-var lane_speed: float = 14.0
-var speed: float = 14.0:
+var lane_speed: float = 20.0
+var speed: float = 20.0:
 	set(value):
 		if speed != value:
 			speed = value
 			sweep_rev += 1
-var desired_speed: float = 14.0:
+var desired_speed: float = 20.0:
 	set(value):
 		if desired_speed != value:
 			desired_speed = value
@@ -784,7 +784,7 @@ func _on_body_entered(body: Node3D) -> void:
 func _check_hit(body: Node3D) -> void:
 	if not is_moving():
 		return
-	if global_position.distance_to(body.global_position) > 4.5:
+	if global_position.distance_to(body.global_position) > maxf(4.5, car_length * 0.5 + 1.5):
 		return
 	if body.is_in_group("player") or body.has_method("die"):
 		body.die()

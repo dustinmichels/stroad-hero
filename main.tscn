@@ -183,6 +183,10 @@ albedo_color = Color(0.92, 0.92, 0.94, 1)
 material = SubResource("Mat_WhiteMarking")
 size = Vector3(2.8, 0.12, 0.18)
 
+[sub_resource type="BoxMesh" id="Mesh_WhiteLine"]
+material = SubResource("Mat_WhiteMarking")
+size = Vector3(250, 0.12, 0.18)
+
 [sub_resource type="ShaderMaterial" id="Mat_ParkingAsphalt"]
 render_priority = 0
 shader = ExtResource("20_pavement_shader")
@@ -232,91 +236,115 @@ size = Vector3(44, 0.1, 21.3)
 
 [sub_resource type="BoxMesh" id="Mesh_GrassGapSouthWest"]
 material = SubResource("Mat_Grass")
-size = Vector3(54, 0.1, 1.75)
+size = Vector3(54, 0.1, 1.15)
 
 [sub_resource type="BoxShape3D" id="Shape_GrassGapSouthWest"]
-size = Vector3(54, 0.1, 1.75)
+size = Vector3(54, 0.1, 1.15)
 
-[sub_resource type="BoxMesh" id="Mesh_CurbSouthWest"]
-material = SubResource("Mat_Concrete")
-size = Vector3(54, 0.15, 0.18)
+[sub_resource type="BoxMesh" id="Mesh_ShoulderSouthWest"]
+material = SubResource("Mat_Asphalt")
+size = Vector3(54, 0.1, 0.6)
+
+[sub_resource type="BoxShape3D" id="Shape_ShoulderSouthWest"]
+size = Vector3(54, 0.1, 0.6)
 
 [sub_resource type="BoxMesh" id="Mesh_GrassGapSouthMidWest"]
 material = SubResource("Mat_Grass")
-size = Vector3(28.5, 0.1, 1.75)
+size = Vector3(28.5, 0.1, 1.15)
 
 [sub_resource type="BoxShape3D" id="Shape_GrassGapSouthMidWest"]
-size = Vector3(28.5, 0.1, 1.75)
+size = Vector3(28.5, 0.1, 1.15)
 
-[sub_resource type="BoxMesh" id="Mesh_CurbSouthMidWest"]
-material = SubResource("Mat_Concrete")
-size = Vector3(28.5, 0.15, 0.18)
+[sub_resource type="BoxMesh" id="Mesh_ShoulderSouthMidWest"]
+material = SubResource("Mat_Asphalt")
+size = Vector3(28.5, 0.1, 0.6)
+
+[sub_resource type="BoxShape3D" id="Shape_ShoulderSouthMidWest"]
+size = Vector3(28.5, 0.1, 0.6)
 
 [sub_resource type="BoxMesh" id="Mesh_GrassGapSouthMidEast"]
 material = SubResource("Mat_Grass")
-size = Vector3(33.5, 0.1, 1.75)
+size = Vector3(33.5, 0.1, 1.15)
 
 [sub_resource type="BoxShape3D" id="Shape_GrassGapSouthMidEast"]
-size = Vector3(33.5, 0.1, 1.75)
+size = Vector3(33.5, 0.1, 1.15)
 
-[sub_resource type="BoxMesh" id="Mesh_CurbSouthMidEast"]
-material = SubResource("Mat_Concrete")
-size = Vector3(33.5, 0.15, 0.18)
+[sub_resource type="BoxMesh" id="Mesh_ShoulderSouthMidEast"]
+material = SubResource("Mat_Asphalt")
+size = Vector3(33.5, 0.1, 0.6)
+
+[sub_resource type="BoxShape3D" id="Shape_ShoulderSouthMidEast"]
+size = Vector3(33.5, 0.1, 0.6)
 
 [sub_resource type="BoxMesh" id="Mesh_GrassGapSouthEast"]
 material = SubResource("Mat_Grass")
-size = Vector3(106, 0.1, 1.75)
+size = Vector3(106, 0.1, 1.15)
 
 [sub_resource type="BoxShape3D" id="Shape_GrassGapSouthEast"]
-size = Vector3(106, 0.1, 1.75)
+size = Vector3(106, 0.1, 1.15)
 
-[sub_resource type="BoxMesh" id="Mesh_CurbSouthEast"]
-material = SubResource("Mat_Concrete")
-size = Vector3(106, 0.15, 0.18)
+[sub_resource type="BoxMesh" id="Mesh_ShoulderSouthEast"]
+material = SubResource("Mat_Asphalt")
+size = Vector3(106, 0.1, 0.6)
+
+[sub_resource type="BoxShape3D" id="Shape_ShoulderSouthEast"]
+size = Vector3(106, 0.1, 0.6)
 
 [sub_resource type="BoxMesh" id="Mesh_GrassGapNorthFarWest"]
 material = SubResource("Mat_Grass")
-size = Vector3(34.5, 0.1, 1.75)
+size = Vector3(34.5, 0.1, 1.15)
 
 [sub_resource type="BoxShape3D" id="Shape_GrassGapNorthFarWest"]
-size = Vector3(34.5, 0.1, 1.75)
+size = Vector3(34.5, 0.1, 1.15)
 
-[sub_resource type="BoxMesh" id="Mesh_CurbNorthFarWest"]
-material = SubResource("Mat_Concrete")
-size = Vector3(34.5, 0.15, 0.18)
+[sub_resource type="BoxMesh" id="Mesh_ShoulderNorthFarWest"]
+material = SubResource("Mat_Asphalt")
+size = Vector3(34.5, 0.1, 0.6)
+
+[sub_resource type="BoxShape3D" id="Shape_ShoulderNorthFarWest"]
+size = Vector3(34.5, 0.1, 0.6)
 
 [sub_resource type="BoxMesh" id="Mesh_GrassGapNorthSmellMid"]
 material = SubResource("Mat_Grass")
-size = Vector3(4, 0.1, 1.75)
+size = Vector3(4, 0.1, 1.15)
 
 [sub_resource type="BoxShape3D" id="Shape_GrassGapNorthSmellMid"]
-size = Vector3(4, 0.1, 1.75)
+size = Vector3(4, 0.1, 1.15)
 
-[sub_resource type="BoxMesh" id="Mesh_CurbNorthSmellMid"]
-material = SubResource("Mat_Concrete")
-size = Vector3(4, 0.15, 0.18)
+[sub_resource type="BoxMesh" id="Mesh_ShoulderNorthSmellMid"]
+material = SubResource("Mat_Asphalt")
+size = Vector3(4, 0.1, 0.6)
+
+[sub_resource type="BoxShape3D" id="Shape_ShoulderNorthSmellMid"]
+size = Vector3(4, 0.1, 0.6)
 
 [sub_resource type="BoxMesh" id="Mesh_GrassGapNorthWest"]
 material = SubResource("Mat_Grass")
-size = Vector3(50.5, 0.1, 1.75)
+size = Vector3(50.5, 0.1, 1.15)
 
 [sub_resource type="BoxShape3D" id="Shape_GrassGapNorthWest"]
-size = Vector3(50.5, 0.1, 1.75)
+size = Vector3(50.5, 0.1, 1.15)
 
-[sub_resource type="BoxMesh" id="Mesh_CurbNorthWest"]
-material = SubResource("Mat_Concrete")
-size = Vector3(50.5, 0.15, 0.18)
+[sub_resource type="BoxMesh" id="Mesh_ShoulderNorthWest"]
+material = SubResource("Mat_Asphalt")
+size = Vector3(50.5, 0.1, 0.6)
+
+[sub_resource type="BoxShape3D" id="Shape_ShoulderNorthWest"]
+size = Vector3(50.5, 0.1, 0.6)
 
 [sub_resource type="BoxMesh" id="Mesh_GrassGapNorthEast"]
 material = SubResource("Mat_Grass")
-size = Vector3(133, 0.1, 1.75)
+size = Vector3(133, 0.1, 1.15)
 
 [sub_resource type="BoxShape3D" id="Shape_GrassGapNorthEast"]
-size = Vector3(133, 0.1, 1.75)
+size = Vector3(133, 0.1, 1.15)
 
-[sub_resource type="BoxMesh" id="Mesh_CurbNorthEast"]
-material = SubResource("Mat_Concrete")
-size = Vector3(133, 0.15, 0.18)
+[sub_resource type="BoxMesh" id="Mesh_ShoulderNorthEast"]
+material = SubResource("Mat_Asphalt")
+size = Vector3(133, 0.1, 0.6)
+
+[sub_resource type="BoxShape3D" id="Shape_ShoulderNorthEast"]
+size = Vector3(133, 0.1, 0.6)
 
 [node name="Main" type="Node3D" unique_id=997726887]
 script = ExtResource("3_main")
@@ -504,7 +532,7 @@ mesh = SubResource("Mesh_DrivewayApron")
 shape = SubResource("Shape_DrivewayApron")
 
 [node name="GrassGapSouthWest" type="MeshInstance3D" parent="Road"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -73, 0.05, 12.125)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -73, 0.05, 12.425)
 mesh = SubResource("Mesh_GrassGapSouthWest")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="Road/GrassGapSouthWest"]
@@ -512,12 +540,17 @@ mesh = SubResource("Mesh_GrassGapSouthWest")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Road/GrassGapSouthWest/StaticBody3D"]
 shape = SubResource("Shape_GrassGapSouthWest")
 
-[node name="CurbSouthWest" type="MeshInstance3D" parent="Road"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -73, 0.075, 11.25)
-mesh = SubResource("Mesh_CurbSouthWest")
+[node name="ShoulderSouthWest" type="MeshInstance3D" parent="Road"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -73, 0.05, 11.55)
+mesh = SubResource("Mesh_ShoulderSouthWest")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/ShoulderSouthWest"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/ShoulderSouthWest/StaticBody3D"]
+shape = SubResource("Shape_ShoulderSouthWest")
 
 [node name="GrassGapSouthMidWest" type="MeshInstance3D" parent="Road"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23.75, 0.05, 12.125)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23.75, 0.05, 12.425)
 mesh = SubResource("Mesh_GrassGapSouthMidWest")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="Road/GrassGapSouthMidWest"]
@@ -525,12 +558,17 @@ mesh = SubResource("Mesh_GrassGapSouthMidWest")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Road/GrassGapSouthMidWest/StaticBody3D"]
 shape = SubResource("Shape_GrassGapSouthMidWest")
 
-[node name="CurbSouthMidWest" type="MeshInstance3D" parent="Road"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23.75, 0.075, 11.25)
-mesh = SubResource("Mesh_CurbSouthMidWest")
+[node name="ShoulderSouthMidWest" type="MeshInstance3D" parent="Road"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23.75, 0.05, 11.55)
+mesh = SubResource("Mesh_ShoulderSouthMidWest")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/ShoulderSouthMidWest"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/ShoulderSouthMidWest/StaticBody3D"]
+shape = SubResource("Shape_ShoulderSouthMidWest")
 
 [node name="GrassGapSouthMidEast" type="MeshInstance3D" parent="Road"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.25, 0.05, 12.125)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.25, 0.05, 12.425)
 mesh = SubResource("Mesh_GrassGapSouthMidEast")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="Road/GrassGapSouthMidEast"]
@@ -538,12 +576,17 @@ mesh = SubResource("Mesh_GrassGapSouthMidEast")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Road/GrassGapSouthMidEast/StaticBody3D"]
 shape = SubResource("Shape_GrassGapSouthMidEast")
 
-[node name="CurbSouthMidEast" type="MeshInstance3D" parent="Road"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.25, 0.075, 11.25)
-mesh = SubResource("Mesh_CurbSouthMidEast")
+[node name="ShoulderSouthMidEast" type="MeshInstance3D" parent="Road"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.25, 0.05, 11.55)
+mesh = SubResource("Mesh_ShoulderSouthMidEast")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/ShoulderSouthMidEast"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/ShoulderSouthMidEast/StaticBody3D"]
+shape = SubResource("Shape_ShoulderSouthMidEast")
 
 [node name="GrassGapSouthEast" type="MeshInstance3D" parent="Road"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 97, 0.05, 12.125)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 97, 0.05, 12.425)
 mesh = SubResource("Mesh_GrassGapSouthEast")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="Road/GrassGapSouthEast"]
@@ -551,12 +594,17 @@ mesh = SubResource("Mesh_GrassGapSouthEast")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Road/GrassGapSouthEast/StaticBody3D"]
 shape = SubResource("Shape_GrassGapSouthEast")
 
-[node name="CurbSouthEast" type="MeshInstance3D" parent="Road"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 97, 0.075, 11.25)
-mesh = SubResource("Mesh_CurbSouthEast")
+[node name="ShoulderSouthEast" type="MeshInstance3D" parent="Road"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 97, 0.05, 11.55)
+mesh = SubResource("Mesh_ShoulderSouthEast")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/ShoulderSouthEast"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/ShoulderSouthEast/StaticBody3D"]
+shape = SubResource("Shape_ShoulderSouthEast")
 
 [node name="GrassGapNorthFarWest" type="MeshInstance3D" parent="Road"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -82.75, 0.05, -12.125)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -82.75, 0.05, -12.425)
 mesh = SubResource("Mesh_GrassGapNorthFarWest")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="Road/GrassGapNorthFarWest"]
@@ -564,12 +612,17 @@ mesh = SubResource("Mesh_GrassGapNorthFarWest")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Road/GrassGapNorthFarWest/StaticBody3D"]
 shape = SubResource("Shape_GrassGapNorthFarWest")
 
-[node name="CurbNorthFarWest" type="MeshInstance3D" parent="Road"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -82.75, 0.075, -11.25)
-mesh = SubResource("Mesh_CurbNorthFarWest")
+[node name="ShoulderNorthFarWest" type="MeshInstance3D" parent="Road"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -82.75, 0.05, -11.55)
+mesh = SubResource("Mesh_ShoulderNorthFarWest")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/ShoulderNorthFarWest"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/ShoulderNorthFarWest/StaticBody3D"]
+shape = SubResource("Shape_ShoulderNorthFarWest")
 
 [node name="GrassGapNorthSmellMid" type="MeshInstance3D" parent="Road"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -54.5, 0.05, -12.125)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -54.5, 0.05, -12.425)
 mesh = SubResource("Mesh_GrassGapNorthSmellMid")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="Road/GrassGapNorthSmellMid"]
@@ -577,12 +630,17 @@ mesh = SubResource("Mesh_GrassGapNorthSmellMid")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Road/GrassGapNorthSmellMid/StaticBody3D"]
 shape = SubResource("Shape_GrassGapNorthSmellMid")
 
-[node name="CurbNorthSmellMid" type="MeshInstance3D" parent="Road"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -54.5, 0.075, -11.25)
-mesh = SubResource("Mesh_CurbNorthSmellMid")
+[node name="ShoulderNorthSmellMid" type="MeshInstance3D" parent="Road"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -54.5, 0.05, -11.55)
+mesh = SubResource("Mesh_ShoulderNorthSmellMid")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/ShoulderNorthSmellMid"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/ShoulderNorthSmellMid/StaticBody3D"]
+shape = SubResource("Shape_ShoulderNorthSmellMid")
 
 [node name="GrassGapNorthWest" type="MeshInstance3D" parent="Road"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.25, 0.05, -12.125)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.25, 0.05, -12.425)
 mesh = SubResource("Mesh_GrassGapNorthWest")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="Road/GrassGapNorthWest"]
@@ -590,12 +648,17 @@ mesh = SubResource("Mesh_GrassGapNorthWest")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Road/GrassGapNorthWest/StaticBody3D"]
 shape = SubResource("Shape_GrassGapNorthWest")
 
-[node name="CurbNorthWest" type="MeshInstance3D" parent="Road"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.25, 0.075, -11.25)
-mesh = SubResource("Mesh_CurbNorthWest")
+[node name="ShoulderNorthWest" type="MeshInstance3D" parent="Road"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.25, 0.05, -11.55)
+mesh = SubResource("Mesh_ShoulderNorthWest")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/ShoulderNorthWest"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/ShoulderNorthWest/StaticBody3D"]
+shape = SubResource("Shape_ShoulderNorthWest")
 
 [node name="GrassGapNorthEast" type="MeshInstance3D" parent="Road"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 83.5, 0.05, -12.125)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 83.5, 0.05, -12.425)
 mesh = SubResource("Mesh_GrassGapNorthEast")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="Road/GrassGapNorthEast"]
@@ -603,9 +666,14 @@ mesh = SubResource("Mesh_GrassGapNorthEast")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Road/GrassGapNorthEast/StaticBody3D"]
 shape = SubResource("Shape_GrassGapNorthEast")
 
-[node name="CurbNorthEast" type="MeshInstance3D" parent="Road"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 83.5, 0.075, -11.25)
-mesh = SubResource("Mesh_CurbNorthEast")
+[node name="ShoulderNorthEast" type="MeshInstance3D" parent="Road"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 83.5, 0.05, -11.55)
+mesh = SubResource("Mesh_ShoulderNorthEast")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Road/ShoulderNorthEast"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Road/ShoulderNorthEast/StaticBody3D"]
+shape = SubResource("Shape_ShoulderNorthEast")
 
 [node name="Markings" type="Node3D" parent="Road" unique_id=1276183779]
 
@@ -616,6 +684,14 @@ mesh = SubResource("Mesh_YellowLine")
 [node name="CenterLine2" type="MeshInstance3D" parent="Road/Markings" unique_id=252363749]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25, 0.06, -0.16)
 mesh = SubResource("Mesh_YellowLine")
+
+[node name="EdgeLineSouth" type="MeshInstance3D" parent="Road/Markings"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25, 0.06, 11.25)
+mesh = SubResource("Mesh_WhiteLine")
+
+[node name="EdgeLineNorth" type="MeshInstance3D" parent="Road/Markings"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25, 0.06, -11.25)
+mesh = SubResource("Mesh_WhiteLine")
 
 [node name="LaneDashEast_-88" type="MeshInstance3D" parent="Road/Markings" unique_id=1923154321]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -88, 0.06, -3.75)
@@ -1334,7 +1410,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -55, 0, -29.7)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 100, 0, -40)
 
 [node name="Billboard" parent="Props" instance=ExtResource("27_billboard")]
-transform = Transform3D(0.984808, 0, -0.173648, 0, 1, 0, 0.173648, 0, 0.984808, 62, 0, -20)
+transform = Transform3D(0.939693, 0, -0.34202, 0, 1, 0, 0.34202, 0, 0.939693, 62, 0, -20)
 
 [node name="FireHydrant" parent="Props" unique_id=1723070049 instance=ExtResource("15_hydrant")]
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 4, 0.245, 12.1)
