@@ -35,7 +35,7 @@ roughness = 0.65
 [sub_resource type="StandardMaterial3D" id="Mat_Headlight"]
 albedo_color = Color(1.0, 0.98, 0.85, 1)
 roughness = 0.2
-emission_enabled = true
+emission_enabled = false
 emission = Color(1.0, 0.98, 0.85, 1)
 emission_energy_multiplier = 2.0
 
@@ -299,10 +299,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.68, 1.27, 0)
 mesh = SubResource("Mesh_Grille")
 
 [node name="HeadlightL" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.66, 1.32, 0.76)
 mesh = SubResource("Mesh_Headlight")
 
 [node name="HeadlightR" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.66, 1.32, -0.76)
 mesh = SubResource("Mesh_Headlight")
 
@@ -515,10 +517,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.815, 2.45, -1.18)
 mesh = SubResource("Mesh_RearDoorFrame")
 
 [node name="TaillightL" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.83, 1.5, 1.0)
 mesh = SubResource("Mesh_Taillight")
 
 [node name="TaillightR" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.83, 1.5, -1.0)
 mesh = SubResource("Mesh_Taillight")
 
@@ -535,6 +539,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.6, 0.85, -0.7)
 mesh = SubResource("Mesh_RearBumperStrut")
 
 [node name="LicensePlate" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.77, 0.6, 0)
 mesh = SubResource("Mesh_LicensePlate")
 
@@ -555,26 +560,32 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3, 0.25, -0.75)
 mesh = SubResource("Mesh_LandingFoot")
 
 [node name="SideMarker0L" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.0, 1.42, 1.25)
 mesh = SubResource("Mesh_SideMarker")
 
 [node name="SideMarker0R" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.0, 1.42, -1.25)
 mesh = SubResource("Mesh_SideMarker")
 
 [node name="SideMarker1L" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 1.42, 1.25)
 mesh = SubResource("Mesh_SideMarker")
 
 [node name="SideMarker1R" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 1.42, -1.25)
 mesh = SubResource("Mesh_SideMarker")
 
 [node name="SideMarker2L" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.3, 1.42, 1.25)
 mesh = SubResource("Mesh_SideMarker")
 
 [node name="SideMarker2R" type="MeshInstance3D" parent="Visuals/ShippingTruck"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.3, 1.42, -1.25)
 mesh = SubResource("Mesh_SideMarker")
 
@@ -583,6 +594,7 @@ transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 5.65, 0.5, 1.0)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="Rim" type="MeshInstance3D" parent="Visuals/ShippingTruck/Wheel_SteerL"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 mesh = SubResource("Mesh_WheelRim")
 
@@ -591,6 +603,7 @@ transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 5.65, 0.5, -1.0)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="Rim" type="MeshInstance3D" parent="Visuals/ShippingTruck/Wheel_SteerR"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 mesh = SubResource("Mesh_WheelRim")
 
@@ -599,6 +612,7 @@ transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 2.2, 0.5, 1.0)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="Rim" type="MeshInstance3D" parent="Visuals/ShippingTruck/Wheel_Drive1L"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 mesh = SubResource("Mesh_WheelRim")
 
@@ -607,6 +621,7 @@ transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 2.2, 0.5, -1.0)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="Rim" type="MeshInstance3D" parent="Visuals/ShippingTruck/Wheel_Drive1R"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 mesh = SubResource("Mesh_WheelRim")
 
@@ -615,6 +630,7 @@ transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1.05, 0.5, 1.0)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="Rim" type="MeshInstance3D" parent="Visuals/ShippingTruck/Wheel_Drive2L"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 mesh = SubResource("Mesh_WheelRim")
 
@@ -623,6 +639,7 @@ transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1.05, 0.5, -1.0)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="Rim" type="MeshInstance3D" parent="Visuals/ShippingTruck/Wheel_Drive2R"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 mesh = SubResource("Mesh_WheelRim")
 
@@ -631,6 +648,7 @@ transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -4.9, 0.5, 1.0)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="Rim" type="MeshInstance3D" parent="Visuals/ShippingTruck/Wheel_Trailer1L"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 mesh = SubResource("Mesh_WheelRim")
 
@@ -639,6 +657,7 @@ transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -4.9, 0.5, -1.0)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="Rim" type="MeshInstance3D" parent="Visuals/ShippingTruck/Wheel_Trailer1R"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 mesh = SubResource("Mesh_WheelRim")
 
@@ -647,6 +666,7 @@ transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -5.95, 0.5, 1.0)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="Rim" type="MeshInstance3D" parent="Visuals/ShippingTruck/Wheel_Trailer2L"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 mesh = SubResource("Mesh_WheelRim")
 
@@ -655,5 +675,6 @@ transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -5.95, 0.5, -1.0)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="Rim" type="MeshInstance3D" parent="Visuals/ShippingTruck/Wheel_Trailer2R"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 mesh = SubResource("Mesh_WheelRim")

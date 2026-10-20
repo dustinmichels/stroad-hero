@@ -53,7 +53,11 @@ func can_use_drive_thru() -> bool:
 # Authoritative simulation state (per TRAFFIC_SIMULATION.md)
 var lane_id: int = 0
 var motion := Motion.LANE
-var state := State.CRUISING
+var state := State.CRUISING:
+	set(value):
+		if state != value:
+			state = value
+			_update_headlamps()
 
 
 func get_state_name() -> String:
@@ -133,7 +137,11 @@ var _active_left_signals: Array[MeshInstance3D] = []
 
 var headlamp: SpotLight3D = null
 var _headlamps_initialized: bool = false
+var _headlight_meshes: Array[MeshInstance3D] = []
+var _headlamps_on: int = -1
 
+static var _headlight_mat_on: StandardMaterial3D = null
+static var _headlight_mat_off: StandardMaterial3D = null
 static var _signal_mesh: BoxMesh
 static var _signal_mat_on: StandardMaterial3D
 static var _signal_mat_off: StandardMaterial3D
@@ -234,12 +242,14 @@ func _setup_wheels() -> void:
 				spoke.mesh = _spoke_mesh
 				spoke.name = "Spoke"
 				spoke.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+				spoke.visibility_range_end = 35.0
 				child.add_child(spoke)
 
 				var hub := MeshInstance3D.new()
 				hub.mesh = _hub_mesh
 				hub.name = "Hub"
 				hub.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+				hub.visibility_range_end = 35.0
 				child.add_child(hub)
 
 
@@ -391,9 +401,29 @@ func _create_signal_mesh(
 	sig.position = base_pos + Vector3(sign_x * 0.02, 0.0, sign_z * 0.16)
 	sig.material_override = _signal_mat_off
 	sig.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	sig.visibility_range_end = 50.0
 	sig.visible = false
 	parent.add_child(sig)
 	return sig
+
+
+func _init_headlight_resources() -> void:
+	if _headlight_mat_off != null:
+		return
+
+	_headlight_mat_off = StandardMaterial3D.new()
+	_headlight_mat_off.resource_name = "CarHeadlightOff"
+	_headlight_mat_off.albedo_color = Color(1.0, 0.98, 0.85, 1.0)
+	_headlight_mat_off.roughness = 0.2
+	_headlight_mat_off.emission_enabled = false
+
+	_headlight_mat_on = StandardMaterial3D.new()
+	_headlight_mat_on.resource_name = "CarHeadlightOn"
+	_headlight_mat_on.albedo_color = Color(1.0, 0.98, 0.85, 1.0)
+	_headlight_mat_on.roughness = 0.2
+	_headlight_mat_on.emission_enabled = true
+	_headlight_mat_on.emission = Color(1.0, 0.98, 0.85, 1.0)
+	_headlight_mat_on.emission_energy_multiplier = 2.5
 
 
 func _setup_headlamps() -> void:
@@ -401,23 +431,34 @@ func _setup_headlamps() -> void:
 		_update_headlamps()
 		return
 	_headlamps_initialized = true
+	_init_headlight_resources()
+	_headlight_meshes.clear()
+	_headlamps_on = -1
 
 	var visuals := get_node_or_null("Visuals")
 	if not visuals:
 		return
 	for car_model in visuals.get_children():
-		var hl_l: Node3D = car_model.get_node_or_null("HeadlightL")
-		var hl_r: Node3D = car_model.get_node_or_null("HeadlightR")
+		var hl_l := car_model.get_node_or_null("HeadlightL") as MeshInstance3D
+		var hl_r := car_model.get_node_or_null("HeadlightR") as MeshInstance3D
 
 		if hl_l:
+			_headlight_meshes.append(hl_l)
 			var front_x: float = hl_l.position.x
 			var height_y: float = hl_l.position.y
 			if hl_r:
+				_headlight_meshes.append(hl_r)
 				front_x = maxf(hl_l.position.x, hl_r.position.x)
 				height_y = (hl_l.position.y + hl_r.position.y) * 0.5
 			headlamp = _create_headlamp(car_model, "HeadlampLight", Vector3(front_x, height_y, 0.0))
+			var fl_l := car_model.get_node_or_null("FogLightL") as MeshInstance3D
+			var fl_r := car_model.get_node_or_null("FogLightR") as MeshInstance3D
+			if fl_l:
+				_headlight_meshes.append(fl_l)
+			if fl_r:
+				_headlight_meshes.append(fl_r)
 			break
-	_update_headlamps()
+	_update_headlamps(true)
 
 
 func _create_headlamp(parent: Node, node_name: String, base_pos: Vector3) -> SpotLight3D:
@@ -443,9 +484,18 @@ func _should_headlamp_be_on() -> bool:
 	return GameState.are_lights_on() and state != State.PARKED
 
 
-func _update_headlamps() -> void:
+func _update_headlamps(force: bool = false) -> void:
+	var on := _should_headlamp_be_on()
+	var on_int := 1 if on else 0
+	if not force and _headlamps_on == on_int:
+		return
+	_headlamps_on = on_int
 	if headlamp:
-		headlamp.visible = _should_headlamp_be_on()
+		headlamp.visible = on
+	var mat := _headlight_mat_on if on else _headlight_mat_off
+	for mesh in _headlight_meshes:
+		if is_instance_valid(mesh):
+			mesh.material_override = mat
 
 
 func _on_time_of_day_changed(_mode: GameState.TimeOfDay) -> void:

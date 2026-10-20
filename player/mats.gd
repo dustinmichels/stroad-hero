@@ -56,6 +56,8 @@ const RUN_KNEE_SWING := 1.25
 const RUN_LEAN := 0.10
 const RUN_ARM_SWING := 0.65
 const RUN_ELBOW_BEND := 0.35
+const RUN_ARM_OUTWARD_Z := 0.22
+const RUN_ARM_FLAIL_Z := 0.14
 
 ## Landing squash tuning.
 const SQUASH_KNEE_BEND := 0.40
@@ -447,6 +449,12 @@ func enter_cart(cart: Node3D, seat: Marker3D) -> void:
 		)
 		(
 			_mount_tween
+			. tween_property(joint, "rotation:y", 0.0, 0.32)
+			. set_trans(Tween.TRANS_QUAD)
+			. set_ease(Tween.EASE_IN_OUT)
+		)
+		(
+			_mount_tween
 			. tween_property(joint, "rotation:z", 0.0, 0.32)
 			. set_trans(Tween.TRANS_QUAD)
 			. set_ease(Tween.EASE_IN_OUT)
@@ -532,7 +540,9 @@ func _sit_in_cart() -> void:
 		KNEEL_SHOULDER_ROTATION,
 		KNEEL_ELBOW_ROTATION
 	)
+	_left_arm.rotation.y = 0.0
 	_left_arm.rotation.z = 0.0
+	_right_arm.rotation.y = 0.0
 	_right_arm.rotation.z = 0.0
 	if _head:
 		_head.rotation = Vector3.ZERO
@@ -646,7 +656,9 @@ func respawn() -> void:
 	_visual.scale = Vector3.ONE
 	_visual.visible = true
 	_set_limb_pose(0.0, 0.0, 0.0, 0.0, 0.0)
+	_left_arm.rotation.y = 0.0
 	_left_arm.rotation.z = 0.0
+	_right_arm.rotation.y = 0.0
 	_right_arm.rotation.z = 0.0
 	if _head:
 		_head.rotation = Vector3.ZERO
@@ -764,11 +776,28 @@ func _animate(delta: float, force_idle := false) -> void:
 	var arm_swing := lerpf(ARM_SWING, RUN_ARM_SWING, run_blend)
 	var walk_arm_x := -swing * arm_swing * walk_blend
 	var idle_arm_x := (0.02 + cos(_idle_time * IDLE_BREATH_RATE) * IDLE_ARM_BREATH_X) * idle_blend
-	var idle_arm_z := (IDLE_ARM_REST_Z + breath * IDLE_ARM_BREATH_Z) * idle_blend
-	var target_left_arm_x := walk_arm_x + idle_arm_x
-	var target_right_arm_x := -walk_arm_x + idle_arm_x
-	var target_left_arm_z := idle_arm_z
-	var target_right_arm_z := -idle_arm_z
+	var base_arm_z := IDLE_ARM_REST_Z + breath * IDLE_ARM_BREATH_Z * idle_blend
+	# Multi-harmonic, asynchronous flail and subtle wobble for an organic, less rigid run
+	var run_flail_l := (
+		RUN_ARM_OUTWARD_Z
+		+ (0.5 + 0.5 * sin(_stride_phase + 0.3)) * RUN_ARM_FLAIL_Z
+		+ sin(_stride_phase * 1.37 + 1.2) * 0.06
+		+ cos(_idle_time * 8.5) * 0.04
+	)
+	var run_flail_r := (
+		RUN_ARM_OUTWARD_Z
+		+ (0.5 + 0.5 * sin(_stride_phase + PI + 0.1)) * RUN_ARM_FLAIL_Z
+		+ sin(_stride_phase * 1.29 + 2.7) * 0.06
+		+ sin(_idle_time * 7.8) * 0.04
+	)
+	var run_wobble_x_l := sin(_stride_phase * 2.1 + 0.8) * 0.07 * run_blend
+	var run_wobble_x_r := sin(_stride_phase * 1.9 + 2.4) * 0.07 * run_blend
+	var target_left_arm_x := walk_arm_x + idle_arm_x + run_wobble_x_l
+	var target_right_arm_x := -walk_arm_x + idle_arm_x + run_wobble_x_r
+	var target_left_arm_y := sin(_stride_phase * 1.1 + 0.5) * 0.08 * run_blend
+	var target_right_arm_y := -sin(_stride_phase * 0.9 + 2.1) * 0.08 * run_blend
+	var target_left_arm_z := lerpf(base_arm_z, run_flail_l, run_blend)
+	var target_right_arm_z := -lerpf(base_arm_z, run_flail_r, run_blend)
 
 	# Joint targets: a knee flexes while its leg swings forward (left: cos < 0), and an
 	# elbow bends further while its arm leads (left: swing > 0).
@@ -782,8 +811,14 @@ func _animate(delta: float, force_idle := false) -> void:
 		(KNEE_STANCE + knee_swing * maxf(0.0, stride)) * walk_blend + squash_knee
 	)
 	var elbow_rest := lerpf(ELBOW_REST, ELBOW_REST + RUN_ELBOW_BEND, run_blend)
-	var target_left_elbow := -(elbow_rest + ELBOW_SWING * maxf(0.0, swing) * walk_blend)
-	var target_right_elbow := -(elbow_rest + ELBOW_SWING * maxf(0.0, -swing) * walk_blend)
+	var elbow_wobble_l := sin(_stride_phase * 1.7 + 0.3) * 0.06 * run_blend
+	var elbow_wobble_r := sin(_stride_phase * 1.6 + 2.8) * 0.06 * run_blend
+	var target_left_elbow := -(
+		elbow_rest + ELBOW_SWING * maxf(0.0, swing) * walk_blend + elbow_wobble_l
+	)
+	var target_right_elbow := -(
+		elbow_rest + ELBOW_SWING * maxf(0.0, -swing) * walk_blend + elbow_wobble_r
+	)
 	var target_lean_x := RUN_LEAN * run_blend
 	if not on_floor:
 		# Mid-hop: legs split with knees tucked, arms flung out.
@@ -793,6 +828,8 @@ func _animate(delta: float, force_idle := false) -> void:
 		target_right_knee = 0.4
 		target_left_arm_x = 0.0
 		target_right_arm_x = 0.0
+		target_left_arm_y = 0.0
+		target_right_arm_y = 0.0
 		target_left_arm_z = 0.7
 		target_right_arm_z = -0.7
 		target_left_elbow = -0.3
@@ -801,6 +838,8 @@ func _animate(delta: float, force_idle := false) -> void:
 	elif is_pushing_cart:
 		target_left_arm_x = -0.75
 		target_right_arm_x = -0.75
+		target_left_arm_y = 0.0
+		target_right_arm_y = 0.0
 		target_left_arm_z = 0.06
 		target_right_arm_z = -0.06
 		target_left_elbow = -0.25
@@ -832,7 +871,7 @@ func _animate(delta: float, force_idle := false) -> void:
 	_phone_head_pose = _phone_head_pose.lerp(target_phone_head, phone_trans_weight)
 
 	var final_right_arm_x := lerpf(target_right_arm_x, _phone_arm_pose.x, _phone_blend)
-	var final_right_arm_y := lerpf(0.0, _phone_arm_pose.y, _phone_blend)
+	var final_right_arm_y := lerpf(target_right_arm_y, _phone_arm_pose.y, _phone_blend)
 	var final_right_arm_z := lerpf(target_right_arm_z, _phone_arm_pose.z, _phone_blend)
 
 	var final_right_elbow_x := lerpf(target_right_elbow, _phone_elbow_pose.x, _phone_blend)
@@ -842,6 +881,7 @@ func _animate(delta: float, force_idle := false) -> void:
 	_left_leg.rotation.x = lerpf(_left_leg.rotation.x, target_left_leg_x, weight)
 	_right_leg.rotation.x = lerpf(_right_leg.rotation.x, target_right_leg_x, weight)
 	_left_arm.rotation.x = lerpf(_left_arm.rotation.x, target_left_arm_x, weight)
+	_left_arm.rotation.y = lerpf(_left_arm.rotation.y, target_left_arm_y, weight)
 	_right_arm.rotation.x = lerpf(_right_arm.rotation.x, final_right_arm_x, weight)
 	_right_arm.rotation.y = lerpf(_right_arm.rotation.y, final_right_arm_y, weight)
 	_left_arm.rotation.z = lerpf(_left_arm.rotation.z, target_left_arm_z, weight)

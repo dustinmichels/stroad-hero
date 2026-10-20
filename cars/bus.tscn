@@ -17,7 +17,7 @@ roughness = 0.9
 [sub_resource type="StandardMaterial3D" id="Mat_Headlight"]
 albedo_color = Color(1.0, 0.98, 0.85, 1)
 roughness = 0.2
-emission_enabled = true
+emission_enabled = false
 emission = Color(1.0, 0.98, 0.85, 1)
 emission_energy_multiplier = 2.0
 
@@ -168,6 +168,7 @@ mesh = SubResource("Mesh_BusWindshield")
 
 
 [node name="RouteSign" type="MeshInstance3D" parent="Visuals/Bus"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.42, 2.48, 0)
 mesh = SubResource("Mesh_BusSign")
 
@@ -203,31 +204,37 @@ mesh = SubResource("Mesh_BusRoofAc")
 
 
 [node name="HeadlightL" type="MeshInstance3D" parent="Visuals/Bus"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.42, 0.75, 0.85)
 mesh = SubResource("Mesh_BusHeadlight")
 
 
 [node name="HeadlightR" type="MeshInstance3D" parent="Visuals/Bus"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.42, 0.75, -0.85)
 mesh = SubResource("Mesh_BusHeadlight")
 
 
 [node name="TaillightL" type="MeshInstance3D" parent="Visuals/Bus"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.42, 0.85, 0.95)
 mesh = SubResource("Mesh_BusTaillight")
 
 
 [node name="TaillightR" type="MeshInstance3D" parent="Visuals/Bus"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.42, 0.85, -0.95)
 mesh = SubResource("Mesh_BusTaillight")
 
 
 [node name="MarkerLightL" type="MeshInstance3D" parent="Visuals/Bus"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.42, 2.68, 0.95)
 mesh = SubResource("Mesh_BusMarkerLight")
 
 
 [node name="MarkerLightR" type="MeshInstance3D" parent="Visuals/Bus"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.42, 2.68, -0.95)
 mesh = SubResource("Mesh_BusMarkerLight")
 

@@ -12,7 +12,7 @@ roughness = 0.32
 [sub_resource type="StandardMaterial3D" id="Mat_Headlight"]
 albedo_color = Color(1, 0.98, 0.85, 1)
 roughness = 0.2
-emission_enabled = true
+emission_enabled = false
 emission = Color(1, 0.98, 0.85, 1)
 emission_energy_multiplier = 2.0
 
@@ -342,6 +342,7 @@ transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 1.965, 0.95, 0.53)
 mesh = SubResource("Mesh_JeepHeadlightBezel")
 
 [node name="HeadlightL" type="MeshInstance3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 1.975, 0.95, 0.53)
 mesh = SubResource("Mesh_JeepHeadlight")
 
@@ -350,6 +351,7 @@ transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 1.965, 0.95, -0.53)
 mesh = SubResource("Mesh_JeepHeadlightBezel")
 
 [node name="HeadlightR" type="MeshInstance3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 1.975, 0.95, -0.53)
 mesh = SubResource("Mesh_JeepHeadlight")
 
@@ -362,10 +364,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.92, 0.5, 0)
 mesh = SubResource("Mesh_JeepSkidPlate")
 
 [node name="FogLightL" type="MeshInstance3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 2.125, 0.62, 0.62)
 mesh = SubResource("Mesh_JeepFogLight")
 
 [node name="FogLightR" type="MeshInstance3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 2.125, 0.62, -0.62)
 mesh = SubResource("Mesh_JeepFogLight")
 
@@ -378,6 +382,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.14, 0.58, -0.4)
 mesh = SubResource("Mesh_JeepTowHook")
 
 [node name="LicensePlateFront" type="MeshInstance3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.125, 0.62, 0)
 mesh = SubResource("Mesh_LicensePlate")
 
@@ -542,10 +547,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.82, 1.47, 0)
 mesh = SubResource("Mesh_JeepTailgateGlass")
 
 [node name="TaillightL" type="MeshInstance3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.88, 0.92, 0.68)
 mesh = SubResource("Mesh_JeepTaillight")
 
 [node name="TaillightR" type="MeshInstance3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.88, 0.92, -0.68)
 mesh = SubResource("Mesh_JeepTaillight")
 
@@ -554,6 +561,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.92, 0.6, 0)
 mesh = SubResource("Mesh_JeepBumperR")
 
 [node name="LicensePlate" type="MeshInstance3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0.6, 0)
 mesh = SubResource("Mesh_LicensePlate")
 
@@ -566,6 +574,8 @@ transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, -2.06, 1, 0)
 mesh = SubResource("Mesh_JeepSpareTire")
 
 [node name="SpareRim" type="MeshInstance3D" parent="."]
+cast_shadow = 0
+visibility_range_end = 35.0
 transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, -2.06, 1, 0)
 mesh = SubResource("Mesh_JeepSpareRim")
 
@@ -574,6 +584,8 @@ transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1.28, 0.4, 0.82)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="Rim" type="MeshInstance3D" parent="WheelFL"]
+cast_shadow = 0
+visibility_range_end = 35.0
 mesh = SubResource("Mesh_JeepRim")
 
 [node name="WheelFR" type="MeshInstance3D" parent="."]
@@ -581,6 +593,8 @@ transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1.28, 0.4, -0.82)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="Rim" type="MeshInstance3D" parent="WheelFR"]
+cast_shadow = 0
+visibility_range_end = 35.0
 mesh = SubResource("Mesh_JeepRim")
 
 [node name="WheelRL" type="MeshInstance3D" parent="."]
@@ -588,6 +602,8 @@ transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -1.28, 0.4, 0.82)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="Rim" type="MeshInstance3D" parent="WheelRL"]
+cast_shadow = 0
+visibility_range_end = 35.0
 mesh = SubResource("Mesh_JeepRim")
 
 [node name="WheelRR" type="MeshInstance3D" parent="."]
@@ -595,4 +611,6 @@ transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -1.28, 0.4, -0.82)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="Rim" type="MeshInstance3D" parent="WheelRR"]
+cast_shadow = 0
+visibility_range_end = 35.0
 mesh = SubResource("Mesh_JeepRim")

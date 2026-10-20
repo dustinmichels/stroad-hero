@@ -17,24 +17,29 @@ mesh = ExtResource("1_body")
 mesh = ExtResource("2_win")
 
 [node name="Trim" type="MeshInstance3D" parent="."]
+cast_shadow = 0
 mesh = ExtResource("3_trim")
 
 [node name="BedLiner" type="MeshInstance3D" parent="."]
 mesh = ExtResource("4_liner")
 
 [node name="HeadlightL" type="MeshInstance3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.18, 0.88, 0.74)
 mesh = ExtResource("5_hl")
 
 [node name="HeadlightR" type="MeshInstance3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.18, 0.88, -0.74)
 mesh = ExtResource("5_hl")
 
 [node name="TaillightL" type="MeshInstance3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.44, 1.12, 0.93)
 mesh = ExtResource("6_tl")
 
 [node name="TaillightR" type="MeshInstance3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.44, 1.12, -0.93)
 mesh = ExtResource("6_tl")
 

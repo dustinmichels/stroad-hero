@@ -35,9 +35,9 @@ static var BODY_SCENES: Dictionary:
 
 static func get_body_scene(type: CarType) -> PackedScene:
 	if not _body_scenes.has(type):
-		var path: String = BODY_SCENE_PATHS.get(type, "")
-		if path != "":
-			_body_scenes[type] = load(path)
+		var scene_path: String = BODY_SCENE_PATHS.get(type, "")
+		if scene_path != "":
+			_body_scenes[type] = load(scene_path)
 	return _body_scenes.get(type)
 
 
@@ -187,7 +187,8 @@ func _apply_visual_type() -> void:
 		_signals_initialized = false
 		_headlamps_initialized = false
 		headlamp = null
-
+		_headlight_meshes.clear()
+		_headlamps_on = -1
 	wheel_radius = WHEEL_RADII.get(car_type, DEFAULT_WHEEL_RADIUS)
 	super._apply_visual_type()
 	_apply_paint_material()

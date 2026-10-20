@@ -97,6 +97,7 @@ func _build() -> void:
 	label.modulate = Color(0.9, 1.0, 0.9, 1.0)
 	label.no_depth_test = false
 	label.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	label.visibility_range_end = 75.0
 	add_child(label)
 
 

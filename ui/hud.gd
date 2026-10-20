@@ -13,7 +13,6 @@ extends CanvasLayer
 @onready var objective_line: Control = %ObjectiveLine
 @onready var current_objective_label: Label = %CurrentObjectiveLabel
 
-const ObjectiveToast = preload("res://ui/objective_toast.gd")
 @onready var objective_arrow: ObjectiveArrow = %ObjectiveArrow
 @onready var objective_toast: ObjectiveToast = %ObjectiveToast
 var objective_manager: ObjectiveManager = null

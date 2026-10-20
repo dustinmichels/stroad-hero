@@ -2,7 +2,6 @@ class_name ObjectiveToast
 extends PanelContainer
 
 const FONT_PATH := "res://fonts/Overpass-SemiBold.ttf"
-const ObjectiveCheckmark = preload("res://ui/objective_checkmark.gd")
 
 @export var duration: float = 2.0
 

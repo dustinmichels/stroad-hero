@@ -126,6 +126,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.29, 0.435)
 mesh = SubResource("Mesh_Box8")
 
 [node name="IceText" type="Label3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.03, 0.44)
 pixel_size = 0.00484
 modulate = Color(1, 1, 1, 1)
@@ -136,6 +137,7 @@ font_size = 128
 outline_size = 10
 
 [node name="HeaderText" type="Label3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, 0.425)
 pixel_size = 0.00266
 modulate = Color(1, 1, 1, 1)
@@ -145,6 +147,7 @@ font_size = 64
 outline_size = 0
 
 [node name="PriceText" type="Label3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.43, 0.5, 0.44)
 pixel_size = 0.00187
 modulate = Color(1, 1, 1, 1)
@@ -154,6 +157,7 @@ font_size = 48
 outline_size = 0
 
 [node name="ColdText" type="Label3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.43, 0.5, 0.44)
 pixel_size = 0.00187
 modulate = Color(0.82, 0.92, 1, 1)
@@ -163,6 +167,7 @@ font_size = 48
 outline_size = 0
 
 [node name="Flake0" type="Label3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.6, 1.42, 0.435)
 pixel_size = 0.00344
 modulate = Color(0.82, 0.92, 1, 1)
@@ -172,6 +177,7 @@ font_size = 64
 outline_size = 0
 
 [node name="Flake1" type="Label3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.6, 1.36, 0.435)
 pixel_size = 0.00281
 modulate = Color(0.82, 0.92, 1, 1)
@@ -181,6 +187,7 @@ font_size = 64
 outline_size = 0
 
 [node name="Flake2" type="Label3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 0.68, 0.435)
 pixel_size = 0.00187
 modulate = Color(0.82, 0.92, 1, 1)
@@ -190,6 +197,7 @@ font_size = 64
 outline_size = 0
 
 [node name="Flake3" type="Label3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.62, 0.72, 0.435)
 pixel_size = 0.00187
 modulate = Color(0.82, 0.92, 1, 1)

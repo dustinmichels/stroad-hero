@@ -188,6 +188,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.1, 7.2)
 mesh = SubResource("Mesh_DoorCanopy")
 
 [node name="LogoW" type="Label3D" parent="Building"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.9, 6.62)
 pixel_size = 0.02
 modulate = Color(0.82, 0.08, 0.1, 1)
@@ -198,6 +199,7 @@ font_size = 128
 outline_size = 6
 
 [node name="StoreName" type="Label3D" parent="Building"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.25, 5.2, 6.1)
 pixel_size = 0.019
 modulate = Color(0.82, 0.08, 0.1, 1)
@@ -208,6 +210,7 @@ font_size = 96
 outline_size = 6
 
 [node name="PharmacyName" type="Label3D" parent="Building"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.25, 5.2, 6.1)
 pixel_size = 0.016
 modulate = Color(0.82, 0.08, 0.1, 1)
@@ -265,18 +268,22 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 3, 0)
 mesh = SubResource("Mesh_PylonPole")
 
 [node name="SignBoardOuter" type="MeshInstance3D" parent="RoadsideSign"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.2, 0)
 mesh = SubResource("Mesh_PylonSignRed")
 
 [node name="SignBoardInnerFront" type="MeshInstance3D" parent="RoadsideSign"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.2, 0.12)
 mesh = SubResource("Mesh_PylonSignInner")
 
 [node name="SignBoardInnerBack" type="MeshInstance3D" parent="RoadsideSign"]
+cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 7.2, -0.12)
 mesh = SubResource("Mesh_PylonSignInner")
 
 [node name="PylonNameFront" type="Label3D" parent="RoadsideSign"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.45, 0.26)
 pixel_size = 0.0095
 modulate = Color(0.82, 0.08, 0.1, 1)
@@ -287,6 +294,7 @@ font_size = 96
 outline_size = 4
 
 [node name="PylonNameBack" type="Label3D" parent="RoadsideSign"]
+cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 7.45, -0.26)
 pixel_size = 0.0095
 modulate = Color(0.82, 0.08, 0.1, 1)
@@ -297,6 +305,7 @@ font_size = 96
 outline_size = 4
 
 [node name="PylonSubFront" type="Label3D" parent="RoadsideSign"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.65, 0.26)
 pixel_size = 0.01
 modulate = Color(0.82, 0.08, 0.1, 1)
@@ -306,6 +315,7 @@ font_size = 28
 outline_size = 2
 
 [node name="PylonSubBack" type="Label3D" parent="RoadsideSign"]
+cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 6.65, -0.26)
 pixel_size = 0.01
 modulate = Color(0.82, 0.08, 0.1, 1)

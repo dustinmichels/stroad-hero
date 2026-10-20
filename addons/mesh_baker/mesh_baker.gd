@@ -473,9 +473,12 @@ static func bake_car_body(root: Node3D, scene_root: Node = null) -> Node3D:
 			wheels_to_bake.append(child)
 			continue
 
+		if child_name in [&"HeadlightL", &"HeadlightR"]:
+			child.owner = actual_owner
+			continue
+
 		if child_name in LIGHT_MARKER_NAMES:
 			light_markers_data.append({"name": child_name, "transform": child.transform})
-
 		if child is MeshInstance3D and child.mesh:
 			var xform := get_relative_transform(child, root)
 			var is_painted := child_name in PassengerCar.PAINTED_NODE_NAMES
@@ -642,9 +645,12 @@ static func bake_vehicle_model(model: Node3D, scene_root: Node = null) -> Node3D
 			wheels_to_bake.append(child)
 			continue
 
+		if child_name in [&"HeadlightL", &"HeadlightR"]:
+			child.owner = actual_owner
+			continue
+
 		if child_name in LIGHT_MARKER_NAMES:
 			light_markers_data.append({"name": child_name, "transform": child.transform})
-
 		if child is Label3D:
 			child.owner = actual_owner
 			continue

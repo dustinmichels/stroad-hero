@@ -10,10 +10,10 @@
 [sub_resource type="ShaderMaterial" id="Mat_SiteAsphalt"]
 render_priority = 0
 shader = ExtResource("6_pavement")
-shader_parameter/asphalt_base = Color(0.2, 0.21, 0.24, 1)
-shader_parameter/asphalt_worn = Color(0.27, 0.28, 0.31, 1)
-shader_parameter/aggregate_color = Color(0.37, 0.38, 0.41, 1)
-shader_parameter/roughness_base = 0.88
+shader_parameter/asphalt_base = Color(0.17, 0.18, 0.21, 1)
+shader_parameter/asphalt_worn = Color(0.25, 0.26, 0.29, 1)
+shader_parameter/aggregate_color = Color(0.35, 0.36, 0.39, 1)
+shader_parameter/roughness_base = 0.85
 
 [sub_resource type="StandardMaterial3D" id="Mat_SiteStripe"]
 albedo_color = Color(0.94, 0.94, 0.92, 1)
@@ -62,10 +62,10 @@ size = Vector3(28, 0.1, 16)
 
 [sub_resource type="BoxMesh" id="Mesh_Driveway"]
 material = SubResource("Mat_SiteAsphalt")
-size = Vector3(8, 0.1, 7)
+size = Vector3(8, 0.1, 3.3)
 [sub_resource type="BoxMesh" id="Mesh_DriveThruSide"]
 material = SubResource("Mat_SiteAsphalt")
-size = Vector3(5.5, 0.1, 19)
+size = Vector3(5.5, 0.1, 12.25)
 
 [sub_resource type="BoxMesh" id="Mesh_DriveThruBack"]
 material = SubResource("Mat_SiteAsphalt")
@@ -241,35 +241,40 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.45)
 mesh = SubResource("Mesh_ArrowStem")
 
 [node name="Driveway" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, -25.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, -23.65)
 mesh = SubResource("Mesh_Driveway")
 
 [node name="ParkingStripes" type="Node3D" parent="."]
 
 [node name="Stripe_m12" type="MeshInstance3D" parent="ParkingStripes"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0.06, -19.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="Stripe_m8" type="MeshInstance3D" parent="ParkingStripes"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0.06, -19.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="Stripe_m4" type="MeshInstance3D" parent="ParkingStripes"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.06, -19.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="Stripe_5" type="MeshInstance3D" parent="ParkingStripes"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0.06, -19.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="Stripe_9" type="MeshInstance3D" parent="ParkingStripes"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0.06, -19.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="DriveThru" type="Node3D" parent="."]
 
 [node name="PickupLane" type="MeshInstance3D" parent="DriveThru"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.25, 0.05, 1.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.25, 0.05, 0.125)
 mesh = SubResource("Mesh_DriveThruSide")
 
 [node name="RearLane" type="MeshInstance3D" parent="DriveThru"]
@@ -277,7 +282,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 9)
 mesh = SubResource("Mesh_DriveThruBack")
 
 [node name="ReturnLane" type="MeshInstance3D" parent="DriveThru"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.25, 0.05, 1.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.25, 0.05, 0.125)
 mesh = SubResource("Mesh_DriveThruSide")
 
 [node name="PickupLaneInnerLine" type="MeshInstance3D" parent="DriveThru"]
@@ -295,6 +300,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.25, 0.11, 0.05)
 mesh = SubResource("Mesh_StopBar")
 
 [node name="StopBarWindowLabel" type="Label3D" parent="DriveThru/Striping"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 12.25, 0.135, 0.5)
 pixel_size = 0.009
 font = ExtResource("5_font_archivo")
@@ -309,6 +315,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.25, 0.11, 1.55)
 mesh = SubResource("Mesh_OrderBar")
 
 [node name="StopBarOrderLabel" type="Label3D" parent="DriveThru/Striping"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 12.25, 0.135, 2.0)
 pixel_size = 0.009
 font = ExtResource("5_font_archivo")
@@ -373,6 +380,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.45)
 mesh = SubResource("Mesh_ArrowStem")
 
 [node name="PavementDriveThru" type="Label3D" parent="DriveThru/Striping"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 12.25, 0.135, 8.0)
 pixel_size = 0.012
 font = ExtResource("5_font_archivo")
@@ -412,6 +420,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.15, 2.78, 0)
 mesh = SubResource("Mesh_MenuHood")
 
 [node name="LightBar" type="MeshInstance3D" parent="DriveThru/MenuBoard"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3, 2.7, 0)
 mesh = SubResource("Mesh_MenuLight")
 
@@ -420,6 +429,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.15, 2.52, 0)
 mesh = SubResource("Mesh_MenuHeaderBar")
 
 [node name="HeaderLabel" type="Label3D" parent="DriveThru/MenuBoard"]
+cast_shadow = 0
 transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -0.18, 2.52, 0)
 pixel_size = 0.007
 font = ExtResource("4_font")
@@ -434,6 +444,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.14, 1.85, -0.57)
 mesh = SubResource("Mesh_MenuPanelWhite")
 
 [node name="LeftLabel" type="Label3D" parent="DriveThru/MenuBoard"]
+cast_shadow = 0
 transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -0.16, 1.85, -0.57)
 pixel_size = 0.0055
 font = ExtResource("5_font_archivo")
@@ -453,6 +464,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.14, 1.85, 0.57)
 mesh = SubResource("Mesh_MenuPanelWhite")
 
 [node name="RightLabel" type="Label3D" parent="DriveThru/MenuBoard"]
+cast_shadow = 0
 transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -0.16, 1.85, 0.57)
 pixel_size = 0.0055
 font = ExtResource("5_font_archivo")
@@ -472,10 +484,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.14, 1.18, 0)
 mesh = SubResource("Mesh_MenuLcdFrame")
 
 [node name="LcdScreen" type="MeshInstance3D" parent="DriveThru/MenuBoard"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.16, 1.18, 0)
 mesh = SubResource("Mesh_MenuLcdFace")
 
 [node name="LcdLabel" type="Label3D" parent="DriveThru/MenuBoard"]
+cast_shadow = 0
 transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -0.18, 1.18, 0)
 pixel_size = 0.005
 font = ExtResource("5_font_archivo")
@@ -509,6 +523,7 @@ transform = Transform3D(0.965926, 0, 0.258819, 0, 1, 0, -0.258819, 0, 0.965926, 
 mesh = SubResource("Mesh_SpeakerHousing")
 
 [node name="SpeakerFace" type="MeshInstance3D" parent="DriveThru/OrderingSpeaker/Housing"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.15, 0, 0)
 mesh = SubResource("Mesh_SpeakerFace")
 
@@ -529,6 +544,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.16, -0.07, 0)
 mesh = SubResource("Mesh_SpeakerGrilleSlat")
 
 [node name="StatusLed" type="MeshInstance3D" parent="DriveThru/OrderingSpeaker/Housing"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.16, -0.12, 0.12)
 mesh = SubResource("Mesh_SpeakerLed")
 
@@ -537,6 +553,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.15, 0.23, 0)
 mesh = SubResource("Mesh_SpeakerMarquee")
 
 [node name="MarqueeLabel" type="Label3D" parent="DriveThru/OrderingSpeaker/Housing"]
+cast_shadow = 0
 transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -0.17, 0.23, 0)
 pixel_size = 0.006
 font = ExtResource("4_font")
@@ -547,6 +564,7 @@ modulate = Color(0.92, 0.1, 0.1, 1)
 outline_modulate = Color(0.98, 0.85, 0.1, 1)
 
 [node name="SpeakerIconLabel" type="Label3D" parent="DriveThru/OrderingSpeaker/Housing"]
+cast_shadow = 0
 transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -0.17, -0.12, -0.04)
 pixel_size = 0.005
 font = ExtResource("5_font_archivo")

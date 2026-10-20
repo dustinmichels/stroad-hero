@@ -2,6 +2,12 @@
 
 ## Oct 19, 2026
 
+### Changed
+
+- **Sedan appearance**: Lowered the cabin profile, reshaped the front and rear lamps, and added five-spoke wheel detail, grille blades, door seams, and beltline trim in `cars/bodies/sedan.blend`. Mirror housings now follow the body paint palette. Driving behavior and wheel radius are unchanged.
+- **Daytime car headlights**: Car headlights now remain off during the day across all vehicle types (SpotLight3D disabled, mesh emission disabled). Headlights dynamically activate during evening and night for moving vehicles, turn off when parked, and update on time-of-day transitions (`cars/car.gd`, `cars/passenger_car.gd`, car scenes, `addons/mesh_baker/mesh_baker.gd`).
+- **Lean test workflow**: Moved the Godot test harness out of `main.gd` into an inherited test scene, made `mise run test` a small inner suite, added `--extended` for long gameplay simulations, and moved non-asserting performance measurements to `mise run bench`. Removed duplicate merge and animation-implementation tests, trimmed brittle visual assertions, and made the runner stop failed Godot processes immediately.
+
 ### Added
 
 - **Expanded parody objective system**: Added JSON-driven objective catalog (`objectives/mats_objectives.json`) and procedural dialogue generator for Mom's errand calls across 4 parody stores (Walgroins, Booger King, Taco Hell, Smell) and 13 items. Features Dutch terms of endearment, variable excuses, and randomized requests alternating between proper and generic store names.
@@ -21,6 +27,7 @@
 
 ### Changed
 
+- **Sedan model**: Replaced the primitive Godot-built sedan with a curvier four-door Blender model featuring rounded bodywork, a raked glasshouse, mirrors and handles, detailed wheels, grille and diffuser trim, and shaped lamp assemblies. `cars/bodies/sedan.blend` is now the source of truth, instantiated by `cars/bodies/sedan.tscn`.
 - **Mats model**: Replaced the primitive-built Mats with a Blender-modeled low-poly kid (about 1.40 m, a big head at roughly 4.7 heads tall) with round cheeks, large eyes with highlights, a button nose, blush, a small smile, side-swept hair, a curved-brim ball cap, a fitted jacket with collar, zipper, and hem, chunky velcro sneakers, and an oversized backpack with straps, sternum strap, and grab handle. Knees, elbows, and ankles now bend: knees flex through the swing phase, elbows bend more on the forward arm swing, ankles keep the shoes near level, and knees tuck mid-hop. The faster stride rate suits his shorter legs. He kneels facing forward in shopping carts. The collision capsule is now 1.5 m tall, and the character editor preview re-aims at his middle. The source is `art/mats/build_mats.py` (generator) and `art/mats/mats.blend`; `mise run mats` exports it to native meshes in `player/mats_meshes/` without an editor import. Backpack and shoe tinting are unchanged; the shoe paths moved under `Knee/Shoe` (`player/mats.tscn`, `player/mats.gd`, `player/character_editor.gd`, `mise.toml`).
 - **Strip mall roof**: Replaced the flat red awning, which hid the store signs, with a steep standing-seam red mansard that has closed ends, a white fascia, and a soffit, matching `samples/strip-mall/mall2.png`. The store signs are mounted upright in front of the slope. Window posters now sit in front of the glass. Sign text was resized to fit its panels: the Freedom Tattoo and Star Nails titles, the handicap plates, the RESERVED stall paint, and the dumpster warning sticker (`buildings/strip_mall.tscn`, `props/dumpster.tscn`).
 - **South-side lots**: Cramped Inn routing now comes from a shared `ParkingLot.SOUTH_LOTS` config instead of `cramped_inn_*` route functions. Lane 3 merges pick the merge path for the nearest wait point (`TrafficManager.lane3_merge_path`) instead of checking `x > 0`. Spot requests no longer poach stalls behind another driveway. `can_spawn_drive_thru` now also requires the turn-in point to be clear of lane traffic.

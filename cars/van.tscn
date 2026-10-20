@@ -56,7 +56,7 @@ emission_energy_multiplier = 0.4
 [sub_resource type="StandardMaterial3D" id="Mat_HeadlightHalo"]
 albedo_color = Color(1.0, 0.98, 0.9, 1)
 roughness = 0.2
-emission_enabled = true
+emission_enabled = false
 emission = Color(1.0, 0.98, 0.9, 1)
 emission_energy_multiplier = 3.0
 
@@ -217,10 +217,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.61, 0.44, 0)
 mesh = SubResource("Mesh_VanLowerIntake")
 
 [node name="MarkerLightL" type="MeshInstance3D" parent="Visuals/Van"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.35, 0.58, 1.03)
 mesh = SubResource("Mesh_VanMarkerLight")
 
 [node name="MarkerLightR" type="MeshInstance3D" parent="Visuals/Van"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.35, 0.58, -1.03)
 mesh = SubResource("Mesh_VanMarkerLight")
 
@@ -237,22 +239,28 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.48, 0.94, 0)
 mesh = SubResource("Mesh_VanFrontBlackPanel")
 
 [node name="HeadlightL" type="MeshInstance3D" parent="Visuals/Van"]
+cast_shadow = 0
 transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 2.5, 0.94, 0.68)
 mesh = SubResource("Mesh_HeadlightHalo")
 
 [node name="LensL" type="MeshInstance3D" parent="Visuals/Van/HeadlightL"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.005, 0)
 mesh = SubResource("Mesh_HeadlightLens")
 
 [node name="HeadlightR" type="MeshInstance3D" parent="Visuals/Van"]
+cast_shadow = 0
 transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 2.5, 0.94, -0.68)
 mesh = SubResource("Mesh_HeadlightHalo")
 
 [node name="LensR" type="MeshInstance3D" parent="Visuals/Van/HeadlightR"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.005, 0)
 mesh = SubResource("Mesh_HeadlightLens")
 
 [node name="FrontCrimeText" type="Label3D" parent="Visuals/Van"]
+cast_shadow = 0
+visibility_range_end = 35.0
 transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 2.52, 0.96, 0)
 pixel_size = 0.003
 font = ExtResource("2_font_fredoka")
@@ -301,14 +309,17 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.53, 1.5, 0)
 mesh = SubResource("Mesh_VanRearDoorSeam")
 
 [node name="TaillightL" type="MeshInstance3D" parent="Visuals/Van"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.52, 1.45, 0.8)
 mesh = SubResource("Mesh_VanTaillight")
 
 [node name="TaillightR" type="MeshInstance3D" parent="Visuals/Van"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.52, 1.45, -0.8)
 mesh = SubResource("Mesh_VanTaillight")
 
 [node name="LicensePlate" type="MeshInstance3D" parent="Visuals/Van"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.55, 0.65, 0)
 mesh = SubResource("Mesh_LicensePlate")
 
@@ -336,6 +347,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.12, 0)
 mesh = ExtResource("11_smile")
 
 [node name="CrimeLabel" type="Label3D" parent="Visuals/Van/LogoSideL"]
+cast_shadow = 0
+visibility_range_end = 45.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.80, 1.98, 0)
 pixel_size = 0.0075
 font = ExtResource("2_font_fredoka")
@@ -353,6 +366,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, -0.12, 1.025)
 mesh = ExtResource("11_smile")
 
 [node name="CrimeLabel" type="Label3D" parent="Visuals/Van/LogoSideR"]
+cast_shadow = 0
+visibility_range_end = 45.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.80, 1.98, 1.025)
 pixel_size = 0.0075
 font = ExtResource("2_font_fredoka")

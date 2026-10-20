@@ -197,6 +197,7 @@ position = Vector3(2.5, 0, 0.083)
 mesh = SubResource("Mesh_LargeBorderVertical")
 
 [node name="Route" type="Label3D" parent="LeftSign"]
+cast_shadow = 0
 position = Vector3(-1.65, 0.68, 0.095)
 pixel_size = 0.006
 modulate = Color(0.96, 0.98, 0.95, 1)
@@ -205,6 +206,7 @@ font_size = 32
 outline_size = 5
 
 [node name="Direction" type="Label3D" parent="LeftSign"]
+cast_shadow = 0
 position = Vector3(0.45, 0.68, 0.095)
 pixel_size = 0.006
 modulate = Color(0.96, 0.98, 0.95, 1)
@@ -213,6 +215,7 @@ font_size = 28
 outline_size = 4
 
 [node name="Destination" type="Label3D" parent="LeftSign"]
+cast_shadow = 0
 position = Vector3(0, 0.02, 0.095)
 pixel_size = 0.0075
 modulate = Color(0.96, 0.98, 0.95, 1)
@@ -221,6 +224,7 @@ font_size = 32
 outline_size = 5
 
 [node name="Arrow" type="Label3D" parent="LeftSign"]
+cast_shadow = 0
 position = Vector3(0, -0.65, 0.095)
 pixel_size = 0.012
 modulate = Color(0.96, 0.98, 0.95, 1)
@@ -251,6 +255,7 @@ position = Vector3(2.5, 0, 0.083)
 mesh = SubResource("Mesh_LargeBorderVertical")
 
 [node name="Route" type="Label3D" parent="CenterSign"]
+cast_shadow = 0
 position = Vector3(0, 0.72, 0.095)
 pixel_size = 0.006
 modulate = Color(0.96, 0.98, 0.95, 1)
@@ -259,6 +264,7 @@ font_size = 30
 outline_size = 4
 
 [node name="Destination" type="Label3D" parent="CenterSign"]
+cast_shadow = 0
 position = Vector3(0, 0.08, 0.095)
 pixel_size = 0.008
 modulate = Color(0.96, 0.98, 0.95, 1)
@@ -267,6 +273,7 @@ font_size = 30
 outline_size = 5
 
 [node name="LeftArrow" type="Label3D" parent="CenterSign"]
+cast_shadow = 0
 position = Vector3(-1.55, -0.7, 0.095)
 pixel_size = 0.011
 modulate = Color(0.96, 0.98, 0.95, 1)
@@ -275,6 +282,7 @@ font_size = 46
 outline_size = 4
 
 [node name="RightArrow" type="Label3D" parent="CenterSign"]
+cast_shadow = 0
 position = Vector3(1.55, -0.7, 0.095)
 pixel_size = 0.011
 modulate = Color(0.96, 0.98, 0.95, 1)
@@ -305,6 +313,7 @@ position = Vector3(1.475, 0, 0.083)
 mesh = SubResource("Mesh_SmallBorderVertical")
 
 [node name="Route" type="Label3D" parent="RightSign"]
+cast_shadow = 0
 position = Vector3(-0.6, 0.7, 0.095)
 pixel_size = 0.0055
 modulate = Color(0.96, 0.98, 0.95, 1)
@@ -313,6 +322,7 @@ font_size = 28
 outline_size = 4
 
 [node name="Direction" type="Label3D" parent="RightSign"]
+cast_shadow = 0
 position = Vector3(0.55, 0.7, 0.095)
 pixel_size = 0.0055
 modulate = Color(0.96, 0.98, 0.95, 1)
@@ -321,6 +331,7 @@ font_size = 28
 outline_size = 4
 
 [node name="Destination" type="Label3D" parent="RightSign"]
+cast_shadow = 0
 position = Vector3(0, 0.05, 0.095)
 pixel_size = 0.0075
 modulate = Color(0.96, 0.98, 0.95, 1)
@@ -329,6 +340,7 @@ font_size = 30
 outline_size = 5
 
 [node name="Arrow" type="Label3D" parent="RightSign"]
+cast_shadow = 0
 position = Vector3(0, -0.65, 0.095)
 pixel_size = 0.011
 modulate = Color(0.96, 0.98, 0.95, 1)

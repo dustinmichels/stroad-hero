@@ -7,8 +7,12 @@ description = "Format GDScript (gdformat) and Markdown (oxfmt) files"
 run = ['uvx --from "gdtoolkit==4.*" gdformat .', 'oxfmt "**/*.md"']
 
 [tasks.test]
-description = "Run Godot headless test suite or specific tests"
+description = "Run the lean Godot test suite, extended tests, or specific flags"
 run = 'python3 scripts/run_tests.py "$@"'
+
+[tasks.bench]
+description = "Run manual Godot physics benchmarks"
+run = 'python3 scripts/run_tests.py --bench "$@"'
 
 [tasks.mats-preview]
 description = "Render Mats character preview views (front, side, back, walk, kneel) to /tmp"

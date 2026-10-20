@@ -58,6 +58,7 @@ radial_segments = 48
 [node name="DorfLogo" type="Node3D"]
 
 [node name="OuterChromeRim" type="MeshInstance3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(2.15, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0)
 mesh = SubResource("Mesh_DorfChromeRim")
 
@@ -66,6 +67,7 @@ transform = Transform3D(2.11, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0.01)
 mesh = SubResource("Mesh_DorfDarkBlueLip")
 
 [node name="ChromePinstripeRing" type="MeshInstance3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(2.03, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0.02)
 mesh = SubResource("Mesh_DorfPinstripeRing")
 
@@ -74,6 +76,7 @@ transform = Transform3D(1.97, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0.03)
 mesh = SubResource("Mesh_DorfBlueFace")
 
 [node name="Text" type="Label3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(1.05, 0.07, 0, -0.07, 1.05, 0, 0, 0, 1.05, -0.02, -0.05, 0.1)
 pixel_size = 0.013
 modulate = Color(1, 1, 1, 1)

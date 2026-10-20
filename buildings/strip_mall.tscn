@@ -48,10 +48,10 @@ roughness = 0.88
 [sub_resource type="ShaderMaterial" id="Mat_Asphalt"]
 render_priority = 0
 shader = ExtResource("7_pavement")
-shader_parameter/asphalt_base = Color(0.20, 0.21, 0.24, 1)
-shader_parameter/asphalt_worn = Color(0.27, 0.28, 0.31, 1)
-shader_parameter/aggregate_color = Color(0.37, 0.38, 0.41, 1)
-shader_parameter/roughness_base = 0.88
+shader_parameter/asphalt_base = Color(0.17, 0.18, 0.21, 1)
+shader_parameter/asphalt_worn = Color(0.25, 0.26, 0.29, 1)
+shader_parameter/aggregate_color = Color(0.35, 0.36, 0.39, 1)
+shader_parameter/roughness_base = 0.85
 
 [sub_resource type="StandardMaterial3D" id="Mat_StripeWhite"]
 albedo_color = Color(0.94, 0.94, 0.92, 1)
@@ -244,19 +244,18 @@ material = SubResource("Mat_DarkAluminum")
 size = Vector3(1.0, 2.1, 0.1)
 
 [sub_resource type="BoxShape3D" id="Shape_ParkingMain"]
-size = Vector3(36.0, 0.1, 18.4)
+size = Vector3(36.0, 0.1, 17.7)
 
 [sub_resource type="BoxMesh" id="Mesh_ParkingMain"]
 material = SubResource("Mat_Asphalt")
-size = Vector3(36.0, 0.1, 18.4)
+size = Vector3(36.0, 0.1, 17.7)
 
 [sub_resource type="BoxShape3D" id="Shape_ParkingSide"]
-size = Vector3(2.0, 0.1, 15.2)
+size = Vector3(2.0, 0.1, 12.6)
 
 [sub_resource type="BoxMesh" id="Mesh_ParkingSide"]
 material = SubResource("Mat_Asphalt")
-size = Vector3(2.0, 0.1, 15.2)
-
+size = Vector3(2.0, 0.1, 12.6)
 [sub_resource type="BoxShape3D" id="Shape_ParkingRear"]
 size = Vector3(36.0, 0.1, 6.0)
 
@@ -481,11 +480,13 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4, 1.7, 0.02)
 mesh = SubResource("Mesh_StoreGlassLarge")
 
 [node name="PosterL" type="MeshInstance3D" parent="Storefronts/Store_USAVape"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.4, 1.15, -0.075)
 mesh = SubResource("Mesh_PosterPanel")
 surface_material_override/0 = SubResource("Mat_PosterVape")
 
 [node name="PosterLabelL" type="Label3D" parent="Storefronts/Store_USAVape"]
+cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -2.4, 1.15, -0.09)
 pixel_size = 0.007
 text = "DISPOSABLES
@@ -494,6 +495,7 @@ font = ExtResource("1_font_archivo")
 outline_size = 0
 
 [node name="NeonOpen" type="Label3D" parent="Storefronts/Store_USAVape"]
+cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 2.4, 2.1, -0.07)
 pixel_size = 0.009
 text = "OPEN"
@@ -533,6 +535,7 @@ mesh = SubResource("Mesh_SignFace")
 surface_material_override/0 = SubResource("Mat_SignUSAVape")
 
 [node name="LabelTitle" type="Label3D" parent="Storefronts/Store_USAVape/Sign"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0.16)
 pixel_size = 0.0135
 text = "USA VAPE"
@@ -540,6 +543,7 @@ font = ExtResource("1_font_archivo")
 outline_size = 0
 
 [node name="LabelSub" type="Label3D" parent="Storefronts/Store_USAVape/Sign"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.28, 0.16)
 pixel_size = 0.0055
 text = "E-CIGS • KRATOM • HOOKAH"
@@ -563,11 +567,13 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4, 1.7, 0.02)
 mesh = SubResource("Mesh_StoreGlassLarge")
 
 [node name="PosterL" type="MeshInstance3D" parent="Storefronts/Store_FreedomTattoo"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.4, 1.15, -0.075)
 mesh = SubResource("Mesh_PosterPanel")
 surface_material_override/0 = SubResource("Mat_PosterTattoo")
 
 [node name="PosterLabelL" type="Label3D" parent="Storefronts/Store_FreedomTattoo"]
+cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -2.4, 1.15, -0.09)
 pixel_size = 0.007
 text = "WALK-INS
@@ -576,6 +582,7 @@ font = ExtResource("1_font_archivo")
 outline_size = 0
 
 [node name="NeonOpen" type="Label3D" parent="Storefronts/Store_FreedomTattoo"]
+cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 2.4, 2.1, -0.07)
 pixel_size = 0.009
 text = "OPEN"
@@ -615,6 +622,7 @@ mesh = SubResource("Mesh_SignFace")
 surface_material_override/0 = SubResource("Mat_SignFreedomTattoo")
 
 [node name="LabelTitle" type="Label3D" parent="Storefronts/Store_FreedomTattoo/Sign"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0.16)
 pixel_size = 0.009
 text = "FREEDOM TATTOO"
@@ -622,6 +630,7 @@ font = ExtResource("1_font_archivo")
 outline_size = 0
 
 [node name="LabelSub" type="Label3D" parent="Storefronts/Store_FreedomTattoo/Sign"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.28, 0.16)
 pixel_size = 0.0055
 text = "BODY PIERCING & INK"
@@ -645,11 +654,13 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4, 1.7, 0.02)
 mesh = SubResource("Mesh_StoreGlassLarge")
 
 [node name="PosterL" type="MeshInstance3D" parent="Storefronts/Store_Abominos"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.4, 1.15, -0.075)
 mesh = SubResource("Mesh_PosterPanel")
 surface_material_override/0 = SubResource("Mat_PosterPizza")
 
 [node name="PosterLabelL" type="Label3D" parent="Storefronts/Store_Abominos"]
+cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -2.4, 1.15, -0.09)
 pixel_size = 0.007
 text = "HOT PIZZA
@@ -658,6 +669,7 @@ font = ExtResource("1_font_archivo")
 outline_size = 0
 
 [node name="NeonOpen" type="Label3D" parent="Storefronts/Store_Abominos"]
+cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 2.4, 2.1, -0.07)
 pixel_size = 0.009
 text = "OPEN"
@@ -704,11 +716,13 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4, 1.7, 0.02)
 mesh = SubResource("Mesh_StoreGlassLarge")
 
 [node name="PosterL" type="MeshInstance3D" parent="Storefronts/Store_StarNails"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.4, 1.15, -0.075)
 mesh = SubResource("Mesh_PosterPanel")
 surface_material_override/0 = SubResource("Mat_PosterNails")
 
 [node name="PosterLabelL" type="Label3D" parent="Storefronts/Store_StarNails"]
+cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -2.4, 1.15, -0.09)
 pixel_size = 0.007
 text = "PEDICURE
@@ -717,6 +731,7 @@ font = ExtResource("1_font_archivo")
 outline_size = 0
 
 [node name="NeonOpen" type="Label3D" parent="Storefronts/Store_StarNails"]
+cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 2.4, 2.1, -0.07)
 pixel_size = 0.009
 text = "OPEN"
@@ -756,6 +771,7 @@ mesh = SubResource("Mesh_SignFace")
 surface_material_override/0 = SubResource("Mat_SignNails")
 
 [node name="LabelTitle" type="Label3D" parent="Storefronts/Store_StarNails/Sign"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0.16)
 pixel_size = 0.009
 text = "STAR NAILS & SPA"
@@ -764,6 +780,7 @@ modulate = Color(0.92, 0.12, 0.45, 1)
 outline_size = 0
 
 [node name="LabelSub" type="Label3D" parent="Storefronts/Store_StarNails/Sign"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.28, 0.16)
 pixel_size = 0.0055
 text = "MANICURE • PEDICURE • WAXING"
@@ -774,7 +791,7 @@ outline_size = 0
 [node name="ParkingLot" type="Node3D" parent="."]
 
 [node name="AsphaltFront" type="MeshInstance3D" parent="ParkingLot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, -16.8)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, -16.45)
 mesh = SubResource("Mesh_ParkingMain")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="ParkingLot/AsphaltFront"]
@@ -783,7 +800,7 @@ mesh = SubResource("Mesh_ParkingMain")
 shape = SubResource("Shape_ParkingMain")
 
 [node name="AsphaltSideW" type="MeshInstance3D" parent="ParkingLot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.0, 0.05, 0.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.0, 0.05, -1.3)
 mesh = SubResource("Mesh_ParkingSide")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="ParkingLot/AsphaltSideW"]
@@ -792,7 +809,7 @@ mesh = SubResource("Mesh_ParkingSide")
 shape = SubResource("Shape_ParkingSide")
 
 [node name="AsphaltSideE" type="MeshInstance3D" parent="ParkingLot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.0, 0.05, 0.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.0, 0.05, -1.3)
 mesh = SubResource("Mesh_ParkingSide")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="ParkingLot/AsphaltSideE"]
@@ -812,38 +829,47 @@ shape = SubResource("Shape_ParkingRear")
 [node name="Stripes" type="Node3D" parent="ParkingLot"]
 
 [node name="Stripe_m16" type="MeshInstance3D" parent="ParkingLot/Stripes"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 0.11, -10)
 mesh = SubResource("Mesh_Stripe")
 
 [node name="Stripe_m12" type="MeshInstance3D" parent="ParkingLot/Stripes"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0.11, -10)
 mesh = SubResource("Mesh_Stripe")
 
 [node name="Stripe_m8" type="MeshInstance3D" parent="ParkingLot/Stripes"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0.11, -10)
 mesh = SubResource("Mesh_Stripe")
 
 [node name="Stripe_m4" type="MeshInstance3D" parent="ParkingLot/Stripes"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.11, -10)
 mesh = SubResource("Mesh_Stripe")
 
 [node name="Stripe_0" type="MeshInstance3D" parent="ParkingLot/Stripes"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.11, -10)
 mesh = SubResource("Mesh_Stripe")
 
 [node name="Stripe_4" type="MeshInstance3D" parent="ParkingLot/Stripes"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.11, -10)
 mesh = SubResource("Mesh_Stripe")
 
 [node name="Stripe_8" type="MeshInstance3D" parent="ParkingLot/Stripes"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.11, -10)
 mesh = SubResource("Mesh_Stripe")
 
 [node name="Stripe_12" type="MeshInstance3D" parent="ParkingLot/Stripes"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0.11, -10)
 mesh = SubResource("Mesh_Stripe")
 
 [node name="Stripe_16" type="MeshInstance3D" parent="ParkingLot/Stripes"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0.11, -10)
 mesh = SubResource("Mesh_Stripe")
 
@@ -1007,6 +1033,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.5, 0)
 mesh = SubResource("Mesh_PylonHeader")
 
 [node name="HeaderLabelF" type="Label3D" parent="RoadsideSign/PlazaHeader"]
+cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -0.2)
 pixel_size = 0.009
 text = "COLONIAL PLAZA"
@@ -1014,6 +1041,7 @@ font = ExtResource("1_font_archivo")
 outline_size = 0
 
 [node name="HeaderLabelB" type="Label3D" parent="RoadsideSign/PlazaHeader"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.2)
 pixel_size = 0.009
 text = "COLONIAL PLAZA"
@@ -1026,6 +1054,7 @@ mesh = SubResource("Mesh_PylonTenant")
 surface_material_override/0 = SubResource("Mat_SignUSAVape")
 
 [node name="LabelF" type="Label3D" parent="RoadsideSign/Panel_Abominos"]
+cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -0.21)
 pixel_size = 0.0085
 text = "abominos pizza"
@@ -1033,6 +1062,7 @@ font = ExtResource("2_font_fredoka")
 outline_size = 0
 
 [node name="LabelB" type="Label3D" parent="RoadsideSign/Panel_Abominos"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.21)
 pixel_size = 0.0085
 text = "abominos pizza"
@@ -1044,6 +1074,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.25, 0)
 mesh = SubResource("Mesh_PylonTenant")
 
 [node name="LabelF" type="Label3D" parent="RoadsideSign/Panel_USAVape"]
+cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -0.21)
 pixel_size = 0.008
 text = "USA VAPE"
@@ -1052,6 +1083,7 @@ modulate = Color(0.12, 0.3, 0.75, 1)
 outline_size = 0
 
 [node name="LabelB" type="Label3D" parent="RoadsideSign/Panel_USAVape"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.21)
 pixel_size = 0.008
 text = "USA VAPE"
@@ -1065,6 +1097,7 @@ mesh = SubResource("Mesh_PylonTenant")
 surface_material_override/0 = SubResource("Mat_SignFreedomTattoo")
 
 [node name="LabelF" type="Label3D" parent="RoadsideSign/Panel_FreedomTattoo"]
+cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -0.21)
 pixel_size = 0.0075
 text = "FREEDOM TATTOO"
@@ -1073,6 +1106,7 @@ modulate = Color(0.96, 0.78, 0.18, 1)
 outline_size = 0
 
 [node name="LabelB" type="Label3D" parent="RoadsideSign/Panel_FreedomTattoo"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.21)
 pixel_size = 0.0075
 text = "FREEDOM TATTOO"
@@ -1086,6 +1120,7 @@ mesh = SubResource("Mesh_PylonTenant")
 surface_material_override/0 = SubResource("Mat_SignNails")
 
 [node name="LabelF" type="Label3D" parent="RoadsideSign/Panel_StarNails"]
+cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -0.21)
 pixel_size = 0.0075
 text = "STAR NAILS & SPA"
@@ -1094,6 +1129,7 @@ modulate = Color(0.92, 0.12, 0.45, 1)
 outline_size = 0
 
 [node name="LabelB" type="Label3D" parent="RoadsideSign/Panel_StarNails"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.21)
 pixel_size = 0.0075
 text = "STAR NAILS & SPA"

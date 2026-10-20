@@ -22,7 +22,7 @@ roughness = 0.9
 [sub_resource type="StandardMaterial3D" id="Mat_Headlight"]
 albedo_color = Color(1.0, 0.98, 0.85, 1)
 roughness = 0.2
-emission_enabled = true
+emission_enabled = false
 emission = Color(1.0, 0.98, 0.85, 1)
 emission_energy_multiplier = 2.0
 
@@ -161,11 +161,13 @@ mesh = SubResource("Mesh_TruckGrille")
 
 
 [node name="HeadlightL" type="MeshInstance3D" parent="Visuals/Truck"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.48, 0.76, 0.7)
 mesh = SubResource("Mesh_TruckHeadlight")
 
 
 [node name="HeadlightR" type="MeshInstance3D" parent="Visuals/Truck"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.48, 0.76, -0.7)
 mesh = SubResource("Mesh_TruckHeadlight")
 
@@ -216,16 +218,19 @@ mesh = SubResource("Mesh_TruckBumperR")
 
 
 [node name="LicensePlate" type="MeshInstance3D" parent="Visuals/Truck"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.44, 0.45, 0)
 mesh = SubResource("Mesh_LicensePlate")
 
 
 [node name="TaillightL" type="MeshInstance3D" parent="Visuals/Truck"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.42, 0.7, 0.7)
 mesh = SubResource("Mesh_TruckTaillight")
 
 
 [node name="TaillightR" type="MeshInstance3D" parent="Visuals/Truck"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.42, 0.7, -0.7)
 mesh = SubResource("Mesh_TruckTaillight")
 
