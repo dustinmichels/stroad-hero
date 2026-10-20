@@ -161,6 +161,11 @@ func _on_mats_died(_pos: Vector3) -> void:
 
 func _on_mats_respawned() -> void:
 	_is_mats_dead = false
+	if mats:
+		if current_state == State.RINGING:
+			mats.set_phone_state(Mats.PhoneMode.RINGING)
+		elif current_state == State.IN_CALL:
+			mats.set_phone_state(Mats.PhoneMode.TALKING)
 
 
 func _process(delta: float) -> void:
@@ -350,7 +355,8 @@ func refresh_errand_dialogue(errand: MatsErrand, use_generic: bool = false) -> v
 		errand.proper_store_name,
 		errand.generic_store_name,
 		dialogue_parts,
-		use_generic
+		use_generic,
+		errand.location_id
 	)
 	errand.call_line = res["call_line"]
 	errand.used_location_name = res["used_location_name"]
@@ -442,22 +448,202 @@ static func load_objectives_data(
 	return DEFAULT_OBJECTIVES_DATA
 
 
+static func is_dinner_excuse(excuse_text: String) -> bool:
+	var lower := excuse_text.to_lower()
+	return (
+		lower.contains("cook")
+		or lower.contains("dinner")
+		or lower.contains("casserole")
+		or lower.contains("pots and pans")
+		or lower.contains("takeout")
+		or lower.contains("fast food")
+	)
+
+
+static func is_dinner_item(item_name: String) -> bool:
+	var lower := item_name.to_lower()
+	return (
+		lower
+		in [
+			"hamburgers",
+			"hamburger",
+			"burger",
+			"burgers",
+			"tacos",
+			"taco",
+			"burritos",
+			"burrito",
+			"quesadillas",
+			"quesadilla",
+			"pizza",
+			"dinner",
+		]
+	)
+
+
+static func is_dinner_location(loc_name: String) -> bool:
+	var lower := loc_name.to_lower()
+	return (
+		lower in ["booger_king", "taco_hell"]
+		or lower.contains("booger")
+		or lower.contains("burger")
+		or lower.contains("taco")
+	)
+
+
+static func determine_category(
+	location_id: String = "", store_name: String = "", item_name: String = ""
+) -> String:
+	var loc_lower := location_id.to_lower()
+	var store_lower := store_name.to_lower()
+	var item_lower := item_name.to_lower()
+
+	if (
+		is_dinner_location(loc_lower)
+		or is_dinner_location(store_lower)
+		or is_dinner_item(item_lower)
+	):
+		return "dinner"
+
+	if (
+		loc_lower in ["walgroins"]
+		or store_lower.contains("walgroins")
+		or store_lower.contains("pharmacy")
+		or item_lower in ["cough syrup", "band-aids", "band aids", "toothpaste", "batteries"]
+	):
+		return "pharmacy"
+
+	if (
+		loc_lower in ["smell"]
+		or store_lower.contains("smell")
+		or store_lower.contains("convenience")
+		or item_lower in ["milk", "cereal", "chewing gum", "beef jerky"]
+	):
+		return "convenience"
+
+	return "general"
+
+
+static func is_dinner_errand(
+	item_name: String = "", store_name: String = "", location_id: StringName = &""
+) -> bool:
+	return determine_category(String(location_id), store_name, item_name) == "dinner"
+
+
+static func get_excuses_for_errand(
+	dialogue_parts: Dictionary,
+	item_name: String,
+	proper_name: String = "",
+	location_id: StringName = &""
+) -> Array[String]:
+	var category := determine_category(String(location_id), proper_name, item_name)
+	var is_dinner := category == "dinner"
+	var item_id := String(item_to_id(item_name))
+	var item_key_alt := item_name.to_lower().replace(" ", "_").replace("-", "_")
+
+	var list: Array[String] = []
+
+	var raw_item_excuses = dialogue_parts.get("item_excuses", null)
+	if raw_item_excuses is Dictionary:
+		var found = raw_item_excuses.get(
+			item_id, raw_item_excuses.get(item_key_alt, raw_item_excuses.get(item_name, []))
+		)
+		if found is Array:
+			for e in found:
+				list.append(str(e))
+
+	var raw_excuses = dialogue_parts.get("excuses", null)
+	if raw_excuses is Dictionary:
+		var gen = raw_excuses.get("general", [])
+		if gen is Array:
+			for e in gen:
+				list.append(str(e))
+		if not category.is_empty() and raw_excuses.has(category):
+			var cat = raw_excuses.get(category, [])
+			if cat is Array:
+				for e in cat:
+					list.append(str(e))
+	elif raw_excuses is Array:
+		for e in raw_excuses:
+			var exc_str := str(e)
+			if not is_dinner and is_dinner_excuse(exc_str):
+				continue
+			list.append(exc_str)
+
+	return list
+
+
+static func pick_excuse(
+	dialogue_parts: Dictionary,
+	item_name: String,
+	proper_name: String = "",
+	location_id: StringName = &""
+) -> String:
+	var category := determine_category(String(location_id), proper_name, item_name)
+	var is_dinner := category == "dinner"
+	var item_id := String(item_to_id(item_name))
+	var item_key_alt := item_name.to_lower().replace(" ", "_").replace("-", "_")
+
+	var item_excuse_list: Array = []
+	var raw_item_excuses = dialogue_parts.get("item_excuses", null)
+	if raw_item_excuses is Dictionary:
+		var found = raw_item_excuses.get(
+			item_id, raw_item_excuses.get(item_key_alt, raw_item_excuses.get(item_name, []))
+		)
+		if found is Array:
+			item_excuse_list = found
+
+	var pool: Array[String] = []
+	var raw_excuses = dialogue_parts.get("excuses", null)
+	if raw_excuses is Dictionary:
+		var gen = raw_excuses.get("general", [])
+		if gen is Array:
+			for e in gen:
+				pool.append(str(e))
+		if not category.is_empty() and raw_excuses.has(category):
+			var cat = raw_excuses.get(category, [])
+			if cat is Array:
+				for e in cat:
+					pool.append(str(e))
+	elif raw_excuses is Array:
+		for e in raw_excuses:
+			var exc_str := str(e)
+			if not is_dinner and is_dinner_excuse(exc_str):
+				continue
+			pool.append(exc_str)
+
+	# 45% chance to favor item-specific excuse when available
+	if not item_excuse_list.is_empty() and (pool.is_empty() or randf() < 0.45):
+		return str(item_excuse_list[randi() % item_excuse_list.size()])
+
+	if not pool.is_empty():
+		return pool[randi() % pool.size()]
+
+	if not item_excuse_list.is_empty():
+		return str(item_excuse_list[randi() % item_excuse_list.size()])
+
+	return ""
+
+
 static func generate_dialogue(
 	item_name: String,
 	proper_name: String,
 	generic_name: String,
 	dialogue_parts: Dictionary,
-	use_generic: bool = false
+	use_generic: bool = false,
+	location_id: StringName = &""
 ) -> Dictionary:
 	var openings: Array = dialogue_parts.get("openings", [])
-	var excuses: Array = dialogue_parts.get("excuses", [])
 	var requests: Array = dialogue_parts.get("requests", [])
 
 	var opening: String = openings[randi() % openings.size()] if not openings.is_empty() else ""
-	var excuse: String = excuses[randi() % excuses.size()] if not excuses.is_empty() else ""
 	var chosen_location: String = (
 		generic_name if use_generic and not generic_name.is_empty() else proper_name
 	)
+
+	var excuse: String = pick_excuse(dialogue_parts, item_name, proper_name, location_id)
+	if not excuse.is_empty():
+		excuse = excuse.replace("{item}", item_name).replace("{location}", chosen_location)
 
 	var request_template: String = (
 		requests[randi() % requests.size()]
@@ -498,6 +684,7 @@ static func build_errands_from_data(data: Dictionary) -> Array[MatsErrand]:
 		var loc_id := StringName(loc_id_str)
 		var proper_name: String = loc.get("proper_name", "")
 		var generic_name: String = loc.get("generic_name", "")
+		var loc_category: String = loc.get("category", "")
 		var target_path := NodePath(loc.get("target_path", ""))
 		var items: Array = loc.get("items", [])
 
@@ -505,6 +692,9 @@ static func build_errands_from_data(data: Dictionary) -> Array[MatsErrand]:
 			var item_str := str(item_raw)
 			var errand_id := item_to_id(item_str)
 			var success := "Got the %s!" % item_str
+			var category: String = loc_category
+			if category.is_empty():
+				category = determine_category(loc_id_str, proper_name, item_str)
 
 			var call_line := ""
 			var used_loc := proper_name
@@ -513,7 +703,7 @@ static func build_errands_from_data(data: Dictionary) -> Array[MatsErrand]:
 				used_loc = proper_name
 			else:
 				var res := generate_dialogue(
-					item_str, proper_name, generic_name, dialogue_parts, false
+					item_str, proper_name, generic_name, dialogue_parts, false, loc_id
 				)
 				call_line = res["call_line"]
 				used_loc = res["used_location_name"]
@@ -528,7 +718,8 @@ static func build_errands_from_data(data: Dictionary) -> Array[MatsErrand]:
 				loc_id,
 				proper_name,
 				generic_name,
-				used_loc
+				used_loc,
+				category
 			)
 			list.append(errand)
 
@@ -541,20 +732,128 @@ const DEFAULT_OBJECTIVES_DATA: Dictionary = {
 		"openings":
 		[
 			"Hi Mats, are you having fun out there?",
-			"Mats schat...",
-			"Mats, m’n jongen...",
+			"Mats schat [[i]darling[/i]]...",
+			"Mats, m’n jongen [[i]my boy[/i]]...",
+			"Mats lieverd [[i]sweetheart[/i]]...",
+			"Lieve Mats [[i]Dear Mats[/i]]...",
+			"Hoi [[i]Hi[/i]] Mats, sweetie...",
+			"Mats, are you in the middle of something?",
+			"Mats, darling...",
 		],
 		"excuses":
-		[
-			"I don't feel like cooking dinner tonight.",
-			"I just remembered another thing!",
-			"Could you grab one more item for your mother?",
-		],
+		{
+			"general":
+			[
+				"I just remembered another thing!",
+				"Could you grab one more item for your mother?",
+				"Since you're already out there anyway...",
+				"I completely forgot to put this on my shopping list earlier!",
+				"Before you head home, do me a quick favor.",
+				"You know how forgetful your mother gets...",
+				"One quick extra errand won't hurt, right?",
+			],
+			"dinner":
+			[
+				"I don't feel like cooking dinner tonight.",
+				"Nobody feels like washing pots and pans tonight.",
+				"The stove is acting up again, so dinner is on you!",
+				"I burned the casserole, so let's call it a fast food night.",
+				"Your father and I are craving some takeout tonight.",
+				"The kitchen is officially closed for the evening.",
+				"Let's treat ourselves to takeout instead of cooking.",
+			],
+			"pharmacy":
+			[
+				"The medicine cabinet is looking terribly bare.",
+				"I forgot to restock our supplies this week.",
+				"The bathroom cabinet is down to the bare essentials.",
+				"I was checking the medicine drawer and noticed we're out.",
+			],
+			"convenience":
+			[
+				"The pantry is looking pretty empty.",
+				"We're running low on the essentials at home.",
+				"I was checking the cupboards and noticed we're out.",
+				"The kitchen supplies are looking a little sad today.",
+			],
+		},
+		"item_excuses":
+		{
+			"cough_syrup":
+			[
+				"Your father has had that terrible tickle in his throat all morning.",
+				"I can hear your father coughing all the way in the den.",
+			],
+			"band_aids":
+			[
+				"I nicked my finger opening that stubborn cardboard box.",
+				"The first aid kit in the bathroom is completely empty!",
+			],
+			"batteries":
+			[
+				"The TV remote just died right before my favorite show.",
+				"The smoke detector started doing that awful little beep!",
+			],
+			"toothpaste":
+			[
+				"We're squeezing the absolute last drop out of the tube.",
+				"Someone rolled the toothpaste tube completely flat.",
+			],
+			"potato_chips":
+			[
+				"We need something salty to munch on for movie night.",
+				"I'm having a serious snack craving right now.",
+			],
+			"hamburgers":
+			[
+				"Booger King sounds so much easier than making dinner.",
+				"A couple of juicy burgers would really hit the spot tonight.",
+			],
+			"tacos":
+			[
+				"We're doing taco night and nobody wanted to cook!",
+				"Taco Hell sounds so much better than whatever is in the freezer.",
+			],
+			"burritos":
+			[
+				"A giant burrito sounds so much better than whatever is in the freezer.",
+				"Your father is practically begging for burritos tonight.",
+			],
+			"quesadillas":
+			[
+				"We're in a cheesy Mexican food mood tonight.",
+				"A warm quesadilla sounds heavenly right about now.",
+			],
+			"milk":
+			[
+				"We don't even have enough milk for tomorrow's morning coffee.",
+				"The milk carton in the fridge is completely dry.",
+			],
+			"cereal":
+			[
+				"The breakfast cupboards are looking completely tragic.",
+				"Someone finished the cereal and left the empty box in the pantry!",
+			],
+			"chewing_gum":
+			[
+				"My purse is completely out of mints and gum.",
+				"I need some gum to chew while I finish these chores.",
+			],
+			"beef_jerky":
+			[
+				"Your father asked if you could grab his favorite road snack.",
+				"We need some road snacks for the weekend.",
+			],
+		},
 		"requests":
 		[
 			"Could you pick up some {item} at {location}?",
 			"Can you stop by {location} and get some {item}?",
 			"While you're out, swing by {location} for some {item}.",
+			"Could you pop into {location} and grab some {item}?",
+			"Be a dear and pick up some {item} from {location}.",
+			"Would you mind grabbing some {item} at {location}?",
+			"Run into {location} and grab some {item} for me?",
 		],
 	},
 	"locations":
@@ -563,6 +862,7 @@ const DEFAULT_OBJECTIVES_DATA: Dictionary = {
 			"id": "walgroins",
 			"proper_name": "Walgroins",
 			"generic_name": "the pharmacy",
+			"category": "pharmacy",
 			"items":
 			[
 				"cough syrup",
@@ -576,6 +876,7 @@ const DEFAULT_OBJECTIVES_DATA: Dictionary = {
 			"id": "booger_king",
 			"proper_name": "Booger King",
 			"generic_name": "the burger joint",
+			"category": "dinner",
 			"items":
 			[
 				"hamburgers",
@@ -585,6 +886,7 @@ const DEFAULT_OBJECTIVES_DATA: Dictionary = {
 			"id": "taco_hell",
 			"proper_name": "Taco Hell",
 			"generic_name": "the taco stand",
+			"category": "dinner",
 			"items":
 			[
 				"tacos",
@@ -596,6 +898,7 @@ const DEFAULT_OBJECTIVES_DATA: Dictionary = {
 			"id": "smell",
 			"proper_name": "Smell",
 			"generic_name": "the convenience store",
+			"category": "convenience",
 			"items":
 			[
 				"milk",
@@ -615,7 +918,12 @@ static func create_errand_from_dict(data: Dictionary) -> MatsErrand:
 		data.get("store_name", ""),
 		data.get("target_path", NodePath()),
 		data.get("call_line", ""),
-		data.get("success_line", "")
+		data.get("success_line", ""),
+		data.get("location_id", &""),
+		data.get("proper_store_name", ""),
+		data.get("generic_store_name", ""),
+		data.get("used_location_name", ""),
+		data.get("category", "")
 	)
 
 

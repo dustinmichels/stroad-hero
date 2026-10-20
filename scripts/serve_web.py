@@ -6,6 +6,7 @@ testing accurately reflects web load times and transfer sizes.
 """
 
 import argparse
+import errno
 import gzip
 import io
 import mimetypes
@@ -164,6 +165,17 @@ def main() -> None:
         default="127.0.0.1",
         help="Address to bind to (default: 127.0.0.1)",
     )
+    parser.add_argument(
+        "--strict-port",
+        action="store_true",
+        help="Do not attempt subsequent ports if the specified port is already in use",
+    )
+    parser.add_argument(
+        "--max-port-attempts",
+        type=int,
+        default=10,
+        help="Maximum consecutive ports to try if busy (default: 10)",
+    )
     args = parser.parse_args()
 
     os.makedirs(args.directory, exist_ok=True)
@@ -172,8 +184,23 @@ def main() -> None:
         def __init__(self, *handler_args, **kwargs):
             super().__init__(*handler_args, directory=args.directory, **kwargs)
 
-    server = ThreadingHTTPServer((args.bind, args.port), CustomHandler)
-    url = f"http://{args.bind}:{args.port}"
+    max_attempts = 1 if args.strict_port else max(1, args.max_port_attempts)
+    server = None
+    actual_port = args.port
+
+    for attempt in range(max_attempts):
+        candidate_port = 0 if args.port == 0 else args.port + attempt
+        try:
+            server = ThreadingHTTPServer((args.bind, candidate_port), CustomHandler)
+            actual_port = server.server_address[1]
+            break
+        except OSError as e:
+            if e.errno == errno.EADDRINUSE and attempt + 1 < max_attempts:
+                print(f"Port {candidate_port} is already in use; trying {candidate_port + 1}...")
+                continue
+            raise
+
+    url = f"http://{args.bind}:{actual_port}"
     print(f"Serving '{args.directory}' at {url} (gzip compression & caching enabled)...")
     try:
         server.serve_forever()

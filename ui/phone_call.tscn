@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://ui/phone_call.gd" id="1_script"]
 [ext_resource type="Script" path="res://ui/phone_icon.gd" id="2_icon_script"]
@@ -35,6 +35,10 @@ corner_radius_top_right = 6
 corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
 
+
+[sub_resource type="FontVariation" id="FontVariation_italic"]
+base_font = ExtResource("4_font_regular")
+variation_transform = Transform2D(1, 0, 0.2, 1, 0, 0)
 [node name="PhoneCall" type="Control"]
 layout_mode = 3
 anchors_preset = 15
@@ -145,13 +149,17 @@ theme_override_fonts/font = ExtResource("3_font_bold")
 theme_override_font_sizes/font_size = 20
 text = "Mom"
 
-[node name="DialogueLabel" type="Label" parent="InCallPanel/HBoxContainer/VBoxContainer"]
+[node name="DialogueLabel" type="RichTextLabel" parent="InCallPanel/HBoxContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_colors/font_color = Color(0.95, 0.97, 1, 1)
-theme_override_fonts/font = ExtResource("4_font_regular")
-theme_override_font_sizes/font_size = 18
+theme_override_colors/default_color = Color(0.95, 0.97, 1, 1)
+theme_override_fonts/normal_font = ExtResource("4_font_regular")
+theme_override_fonts/italic_font = SubResource("FontVariation_italic")
+theme_override_font_sizes/normal_font_size = 18
+theme_override_font_sizes/italic_font_size = 18
+bbcode_enabled = true
+scroll_active = false
 autowrap_mode = 2
 
 [node name="OkPromptLabel" type="Label" parent="InCallPanel/HBoxContainer/VBoxContainer"]

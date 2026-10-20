@@ -31,6 +31,7 @@ const UNSELECTED_MODULATE := Color(0.7, 0.72, 0.74, 1.0)
 
 @export var player_path: NodePath
 @export var player_node: Mats = null
+@export var target_rig: MatsRig = null
 @export var row_style: StyleBox
 @export var row_selected_style: StyleBox
 
@@ -38,7 +39,8 @@ const UNSELECTED_MODULATE := Color(0.7, 0.72, 0.74, 1.0)
 @onready var _viewport: SubViewport = %PreviewViewport
 @onready var _player: Mats = player_node if player_node else get_node_or_null(player_path)
 
-var _preview: Mats = null
+var _rig: MatsRig = null
+var _preview: MatsRig = null
 var _was_paused := false
 var _selected_row := 0
 var _headwear_index := 0
@@ -52,6 +54,10 @@ func _ready() -> void:
 	add_to_group("character_editor")
 	if _player == null and is_inside_tree():
 		_player = get_tree().get_first_node_in_group("player") as Mats
+	if target_rig:
+		_rig = target_rig
+	elif _player:
+		_rig = _player.visual
 	_camera.look_at(Vector3(0.0, 0.72, 0.0))
 	%HeadPrevious.pressed.connect(_on_headwear_step.bind(-1))
 	%HeadNext.pressed.connect(_on_headwear_step.bind(1))
@@ -67,6 +73,12 @@ func _ready() -> void:
 
 func set_player(p: Mats) -> void:
 	_player = p
+	if p:
+		_rig = p.visual
+
+
+func set_target_rig(r: MatsRig) -> void:
+	_rig = r
 
 
 func _process(delta: float) -> void:
@@ -129,7 +141,12 @@ func _exit_tree() -> void:
 
 
 func _sync_from_player() -> void:
-	if _player:
+	if _rig:
+		_headwear_index = _rig.headwear
+		_jacket_index = _closest_color(_rig.jacket_color, JACKET_COLORS)
+		_backpack_index = _closest_color(_rig.backpack_color, BACKPACK_COLORS)
+		_shoe_index = _closest_color(_rig.shoe_color, SHOE_COLORS)
+	elif _player:
 		_headwear_index = _player.headwear
 		_jacket_index = _closest_color(_player.jacket_color, JACKET_COLORS)
 		_backpack_index = _closest_color(_player.backpack_color, BACKPACK_COLORS)
@@ -180,8 +197,10 @@ func _on_shoe_step(direction: int) -> void:
 func _set_headwear(value: int) -> void:
 	_headwear_index = value
 	if _preview:
-		_preview.set_headwear(value)
-	if _player:
+		_preview.headwear = value
+	if _rig:
+		_rig.headwear = value
+	elif _player:
 		_player.set_headwear(value)
 	_refresh_selection()
 
@@ -190,8 +209,10 @@ func _set_jacket_color(index: int) -> void:
 	_jacket_index = index
 	var color: Color = JACKET_COLORS[index]
 	if _preview:
-		_preview.set_jacket_color(color)
-	if _player:
+		_preview.jacket_color = color
+	if _rig:
+		_rig.jacket_color = color
+	elif _player:
 		_player.set_jacket_color(color)
 	_refresh_selection()
 
@@ -200,8 +221,10 @@ func _set_backpack_color(index: int) -> void:
 	_backpack_index = index
 	var color: Color = BACKPACK_COLORS[index]
 	if _preview:
-		_preview.set_backpack_color(color)
-	if _player:
+		_preview.backpack_color = color
+	if _rig:
+		_rig.backpack_color = color
+	elif _player:
 		_player.set_backpack_color(color)
 	_refresh_selection()
 
@@ -210,8 +233,10 @@ func _set_shoe_color(index: int) -> void:
 	_shoe_index = index
 	var color: Color = SHOE_COLORS[index]
 	if _preview:
-		_preview.set_shoe_color(color)
-	if _player:
+		_preview.shoe_color = color
+	if _rig:
+		_rig.shoe_color = color
+	elif _player:
 		_player.set_shoe_color(color)
 	_refresh_selection()
 
@@ -254,13 +279,12 @@ func _style_row(row: PanelContainer, selected: bool) -> void:
 func _ensure_preview_instantiated() -> void:
 	if _preview != null and is_instance_valid(_preview):
 		return
-	if %PreviewViewport.has_node("PreviewMats"):
-		_preview = %PreviewViewport.get_node("PreviewMats") as Mats
+	if %PreviewViewport.has_node("PreviewMatsRig"):
+		_preview = %PreviewViewport.get_node("PreviewMatsRig") as MatsRig
 		return
-	var mats_scene: PackedScene = load("res://player/mats.tscn")
-	if mats_scene:
-		var instance: Mats = mats_scene.instantiate() as Mats
-		instance.name = "PreviewMats"
-		instance.preview_mode = true
+	var rig_scene: PackedScene = load("res://player/mats_rig.tscn")
+	if rig_scene:
+		var instance: MatsRig = rig_scene.instantiate() as MatsRig
+		instance.name = "PreviewMatsRig"
 		%PreviewViewport.add_child(instance)
 		_preview = instance

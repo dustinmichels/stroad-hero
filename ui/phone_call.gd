@@ -12,7 +12,7 @@ signal call_dismissed
 @onready var prompt_label: Label = %PromptLabel
 @onready var phone_icon: Control = %PhoneIcon
 @onready var speaker_label: Label = %SpeakerLabel
-@onready var dialogue_label: Label = %DialogueLabel
+@onready var dialogue_label: RichTextLabel = %DialogueLabel
 @onready var ok_prompt_label: Label = %OkPromptLabel
 @onready var portrait_texture: TextureRect = %PortraitTexture
 @onready var portrait_container: PanelContainer = %PortraitContainer
@@ -290,7 +290,8 @@ func _start_typewriter(line: String) -> void:
 	dialogue_label.visible_ratio = 0.0
 	if _typewriter_tween and _typewriter_tween.is_valid():
 		_typewriter_tween.kill()
-	var duration := clampf(float(line.length()) * 0.025, 0.8, 2.5)
+	var char_count := dialogue_label.get_parsed_text().length()
+	var duration := clampf(float(char_count) * 0.025, 0.8, 2.5)
 	_typewriter_tween = create_tween()
 	_typewriter_tween.tween_property(dialogue_label, "visible_ratio", 1.0, duration).set_trans(
 		Tween.TRANS_LINEAR

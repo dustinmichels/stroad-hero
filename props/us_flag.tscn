@@ -1,4 +1,4 @@
-[gd_scene load_steps=27 format=3]
+[gd_scene load_steps=36 format=3]
 
 [ext_resource type="Script" path="res://props/us_flag.gd" id="1_script"]
 [ext_resource type="Shader" path="res://shaders/us_flag.gdshader" id="2_shader"]
@@ -245,6 +245,65 @@ subdivide_width = 24
 subdivide_depth = 12
 orientation = 2
 
+[sub_resource type="ShaderMaterial" id="Mat_Flag_Colossal"]
+render_priority = 0
+shader = ExtResource("2_shader")
+shader_parameter/wave_amplitude = 0.45
+shader_parameter/wave_frequency = 2.0
+shader_parameter/wave_speed = 2.6
+shader_parameter/flag_width = 9.5
+shader_parameter/flag_height = 5.0
+shader_parameter/time_offset = 0.0
+shader_parameter/red_color = Color(0.698, 0.133, 0.204, 1)
+shader_parameter/white_color = Color(0.97, 0.97, 0.98, 1)
+shader_parameter/blue_color = Color(0.08, 0.14, 0.36, 1)
+
+[sub_resource type="CylinderMesh" id="Mesh_Footing_Colossal"]
+material = SubResource("Mat_Concrete")
+top_radius = 1.05
+bottom_radius = 1.2
+height = 0.65
+
+[sub_resource type="CylinderMesh" id="Mesh_BasePlate_Colossal"]
+material = SubResource("Mat_BasePlate")
+top_radius = 0.65
+bottom_radius = 0.72
+height = 0.22
+
+[sub_resource type="CylinderMesh" id="Mesh_Pole_Colossal"]
+material = SubResource("Mat_Pole")
+top_radius = 0.15
+bottom_radius = 0.32
+height = 24.0
+
+[sub_resource type="CylinderMesh" id="Mesh_Truck_Colossal"]
+material = SubResource("Mat_Pole")
+top_radius = 0.22
+bottom_radius = 0.22
+height = 0.2
+
+[sub_resource type="SphereMesh" id="Mesh_Ball_Colossal"]
+material = SubResource("Mat_Gold")
+radius = 0.42
+height = 0.84
+
+[sub_resource type="BoxMesh" id="Mesh_Cleat_Colossal"]
+material = SubResource("Mat_Pole")
+size = Vector3(0.1, 0.1, 0.44)
+
+[sub_resource type="CylinderMesh" id="Mesh_Rope_Colossal"]
+material = SubResource("Mat_Halyard")
+top_radius = 0.018
+bottom_radius = 0.018
+height = 22.0
+
+[sub_resource type="PlaneMesh" id="Mesh_Flag_Colossal"]
+material = SubResource("Mat_Flag_Colossal")
+size = Vector2(9.5, 5.0)
+subdivide_width = 48
+subdivide_depth = 24
+orientation = 2
+
 [node name="USFlag" type="StaticBody3D"]
 script = ExtResource("1_script")
 
@@ -391,5 +450,45 @@ mesh = SubResource("Mesh_Ball_Mounted")
 
 [node name="Flag" type="MeshInstance3D" parent="Visuals/Mounted"]
 visibility_range_end = 75.0
-transform = Transform3D(1, 0, 0, 0, 0.7431448, 0.6691306, 0, -0.6691306, 0.7431448, 0.575, 1.45, 0)
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 0, 1.45, 0.575)
 mesh = SubResource("Mesh_Flag_Mounted")
+
+[node name="Colossal" type="Node3D" parent="Visuals"]
+visible = false
+
+[node name="Footing" type="MeshInstance3D" parent="Visuals/Colossal"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.325, 0)
+mesh = SubResource("Mesh_Footing_Colossal")
+
+[node name="BasePlate" type="MeshInstance3D" parent="Visuals/Colossal"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.76, 0)
+mesh = SubResource("Mesh_BasePlate_Colossal")
+
+[node name="Pole" type="MeshInstance3D" parent="Visuals/Colossal"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 12.87, 0)
+mesh = SubResource("Mesh_Pole_Colossal")
+
+[node name="Truck" type="MeshInstance3D" parent="Visuals/Colossal"]
+visibility_range_end = 60.0
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 24.97, 0)
+mesh = SubResource("Mesh_Truck_Colossal")
+
+[node name="Ball" type="MeshInstance3D" parent="Visuals/Colossal"]
+visibility_range_end = 60.0
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 25.49, 0)
+mesh = SubResource("Mesh_Ball_Colossal")
+
+[node name="Cleat" type="MeshInstance3D" parent="Visuals/Colossal"]
+visibility_range_end = 60.0
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.28, 1.8, 0)
+mesh = SubResource("Mesh_Cleat_Colossal")
+
+[node name="Rope" type="MeshInstance3D" parent="Visuals/Colossal"]
+visibility_range_end = 70.0
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.24, 13.87, 0)
+mesh = SubResource("Mesh_Rope_Colossal")
+
+[node name="Flag" type="MeshInstance3D" parent="Visuals/Colossal"]
+visibility_range_end = 120.0
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.75, 22.2, 0)
+mesh = SubResource("Mesh_Flag_Colossal")

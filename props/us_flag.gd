@@ -7,6 +7,7 @@ enum FlagSize {
 	LARGE,
 	GIANT,
 	MOUNTED,
+	COLOSSAL,
 }
 
 const SIZE_CONFIG := {
@@ -41,6 +42,14 @@ const SIZE_CONFIG := {
 		"flag_y": 1.45,
 		"rope_offset": 0.0,
 		"rope_y": 0.0,
+	},
+	FlagSize.COLOSSAL:
+	{
+		"node_name": "Colossal",
+		"flag_half_width": 4.75,
+		"flag_y": 22.2,
+		"rope_offset": 0.24,
+		"rope_y": 13.87,
 	},
 }
 
@@ -102,9 +111,11 @@ func _apply_flag_size() -> void:
 			active_node = visuals.get_node_or_null("Large")
 		FlagSize.GIANT:
 			active_node = visuals.get_node_or_null("Giant")
-
 		FlagSize.MOUNTED:
 			active_node = visuals.get_node_or_null("Mounted")
+		FlagSize.COLOSSAL:
+			active_node = visuals.get_node_or_null("Colossal")
+
 	if active_node:
 		active_node.visible = true
 
@@ -129,32 +140,48 @@ func _update_wind_orientation(delta: float, snap: bool = false) -> void:
 	if flag_size == FlagSize.MOUNTED:
 		if flag_mesh:
 			var mount_wind_dir: Vector3 = GameState.wind_direction
-			mount_wind_dir.y = 0.0
-			if mount_wind_dir.is_zero_approx():
-				mount_wind_dir = Vector3.RIGHT
-			mount_wind_dir = mount_wind_dir.normalized()
-
 			var mount_wind_spd: float = GameState.wind_speed
-			var wind_lean := clampf(mount_wind_spd * 0.05, 0.0, 0.08)
-			wind_lean *= 0.8 + sin(_time * 1.2 + _phase_offset) * 0.2
-			var world_hang := (Vector3.DOWN + mount_wind_dir * wind_lean).normalized()
 
-			# Keep the cloth face stable while gravity controls its long axis.
-			var world_normal := active_node.global_basis.z.normalized()
-			world_normal = (world_normal - world_hang * world_normal.dot(world_hang)).normalized()
-			var world_across := world_normal.cross(world_hang).normalized()
-			var local_basis := (
-				active_node.global_basis.inverse() * Basis(world_hang, world_across, world_normal)
+			# Find the direction perpendicular to the pole staff that points most downward under gravity.
+			var pole_world: Vector3 = active_node.global_basis.y.normalized()
+			var g_world: Vector3 = Vector3.DOWN
+			var g_perp_world: Vector3 = g_world - pole_world * g_world.dot(pole_world)
+			var base_angle: float = -PI * 0.5
+			if g_perp_world.length_squared() > 0.001:
+				var local_hang: Vector3 = (
+					(active_node.global_basis.inverse() * g_perp_world.normalized()).normalized()
+				)
+				base_angle = atan2(-local_hang.z, local_hang.x)
+
+			# Wind causes the hanging flag to sway gently around the staff axis
+			var mount_local_wind: Vector3 = active_node.global_basis.inverse() * mount_wind_dir
+			var wind_sway: float = clampf(
+				mount_local_wind.x * 0.15 * clampf(mount_wind_spd / 5.0, 0.0, 1.5), -0.3, 0.3
 			)
+			var turbulence: float = sin(_time * 1.6 + _phase_offset) * 0.02
 
+			var mount_target_angle: float = base_angle + wind_sway + turbulence
+			if snap or not _initialized_angle:
+				_current_angle = mount_target_angle
+				_initialized_angle = true
+			else:
+				_current_angle = lerp_angle(
+					_current_angle, mount_target_angle, clampf(delta * response_speed, 0.0, 1.0)
+				)
+
+			var mount_rot_basis := Basis(Vector3.UP, _current_angle)
 			var half_w: float = config["flag_half_width"]
 			var fy: float = config["flag_y"]
-			var mount_point := Vector3(0.0, fy, 0.0)
-			flag_mesh.transform = Transform3D(local_basis, mount_point + local_basis.x * half_w)
+			flag_mesh.transform = Transform3D(
+				mount_rot_basis, mount_rot_basis * Vector3(half_w, fy, 0.0)
+			)
 
 			var mat := flag_mesh.get_active_material(0) as ShaderMaterial
 			if mat:
-				mat.set_shader_parameter("wind_strength", clampf(mount_wind_spd * 0.25, 0.2, 0.6))
+				mat.set_shader_parameter(
+					"wind_direction", Vector2(mount_wind_dir.x, mount_wind_dir.z)
+				)
+				mat.set_shader_parameter("wind_strength", clampf(mount_wind_spd * 0.25, 0.15, 0.6))
 		return
 
 	# Query global wind direction from GameState
@@ -236,6 +263,10 @@ func _update_collision() -> void:
 			radius = 0.38
 			height = 16.5
 			pos_y = 8.25
+		FlagSize.COLOSSAL:
+			radius = 0.50
+			height = 24.0
+			pos_y = 12.0
 
 	var shape := CylinderShape3D.new()
 	shape.radius = radius

@@ -3,6 +3,12 @@
 [ext_resource type="FontFile" path="res://fonts/Lobster-Regular.ttf" id="1_lobster"]
 [ext_resource type="FontFile" path="res://fonts/ArchivoBlack-Regular.ttf" id="2_archivo"]
 [ext_resource type="PackedScene" path="res://buildings/dorf_logo.tscn" id="3_logo"]
+[ext_resource type="PackedScene" path="res://cars/bodies/pickup.tscn" id="4_pickup"]
+[ext_resource type="PackedScene" path="res://cars/bodies/suv.tscn" id="5_suv"]
+[ext_resource type="PackedScene" path="res://cars/bodies/sedan.tscn" id="6_sedan"]
+[ext_resource type="PackedScene" path="res://cars/bodies/minivan.tscn" id="7_minivan"]
+[ext_resource type="PackedScene" path="res://cars/bodies/hatchback.tscn" id="8_hatchback"]
+[ext_resource type="PackedScene" path="res://cars/bodies/f150.tscn" id="9_f150"]
 
 [sub_resource type="BoxShape3D" id="Shape_Showroom"]
 size = Vector3(20, 7, 16)
@@ -353,7 +359,75 @@ size = Vector3(2.4, 0.2, 5)
 material = SubResource("Mat_DarkTrim")
 size = Vector3(0.15, 1, 0.15)
 
-[node name="Dorf" type="Node3D"]
+[sub_resource type="BoxShape3D" id="Shape_CarSedan"]
+size = Vector3(4, 1.4, 1.9)
+
+[sub_resource type="BoxShape3D" id="Shape_CarSUV"]
+size = Vector3(4.5, 1.7, 2)
+
+[sub_resource type="BoxShape3D" id="Shape_CarPickup"]
+size = Vector3(5, 1.8, 2.1)
+
+[sub_resource type="BoxShape3D" id="Shape_CarF150"]
+size = Vector3(5.3, 1.85, 2.2)
+
+[sub_resource type="BoxShape3D" id="Shape_CarMinivan"]
+size = Vector3(4.8, 1.9, 2)
+
+[sub_resource type="BoxShape3D" id="Shape_CarHatchback"]
+size = Vector3(3.7, 1.5, 1.8)
+
+[sub_resource type="StandardMaterial3D" id="Mat_CarPaintRed"]
+albedo_color = Color(0.82, 0.16, 0.14, 1)
+roughness = 0.32
+metallic = 0.15
+
+[sub_resource type="StandardMaterial3D" id="Mat_CarPaintYellow"]
+albedo_color = Color(0.98, 0.88, 0.05, 1)
+roughness = 0.32
+metallic = 0.15
+
+[sub_resource type="StandardMaterial3D" id="Mat_CarPaintBlue"]
+albedo_color = Color(0.14, 0.38, 0.82, 1)
+roughness = 0.32
+metallic = 0.15
+
+[sub_resource type="StandardMaterial3D" id="Mat_CarPaintSilver"]
+albedo_color = Color(0.92, 0.93, 0.94, 1)
+roughness = 0.25
+metallic = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Mat_CarPaintGreen"]
+albedo_color = Color(0.18, 0.38, 0.24, 1)
+roughness = 0.32
+metallic = 0.15
+
+[sub_resource type="StandardMaterial3D" id="Mat_CarPaintDarkGray"]
+albedo_color = Color(0.2, 0.22, 0.25, 1)
+roughness = 0.35
+metallic = 0.15
+
+[sub_resource type="StandardMaterial3D" id="Mat_CarPaintOrange"]
+albedo_color = Color(0.9, 0.36, 0.08, 1)
+roughness = 0.32
+metallic = 0.15
+
+[sub_resource type="StandardMaterial3D" id="Mat_CarPaintBurgundy"]
+albedo_color = Color(0.48, 0.08, 0.16, 1)
+roughness = 0.35
+metallic = 0.15
+
+[sub_resource type="StandardMaterial3D" id="Mat_CarPaintNavy"]
+albedo_color = Color(0.08, 0.15, 0.32, 1)
+roughness = 0.32
+metallic = 0.15
+
+[sub_resource type="StandardMaterial3D" id="Mat_CarPaintSand"]
+albedo_color = Color(0.82, 0.76, 0.65, 1)
+roughness = 0.35
+metallic = 0.15
+
+[node name="Dorf" type="Node3D" groups=["dorf"]]
 
 [node name="Building" type="StaticBody3D" parent="."]
 
@@ -1071,3 +1145,189 @@ text = "BUILT DORF TOUGH"
 font = ExtResource("2_archivo")
 font_size = 28
 outline_size = 6
+
+[node name="ParkedCars" type="Node3D" parent="."]
+
+[node name="RampCar" type="StaticBody3D" parent="ParkedCars"]
+transform = Transform3D(-0.25, 0.258819, 0.933013, 0.066987, 0.965926, -0.25, -0.965926, 0, -0.258819, 8, 0.85, 17)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ParkedCars/RampCar"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("Shape_CarPickup")
+
+[node name="Model" parent="ParkedCars/RampCar" instance=ExtResource("4_pickup")]
+
+[node name="Body" parent="ParkedCars/RampCar/Model"]
+material_override = SubResource("Mat_CarPaintRed")
+
+[node name="TurntableCar" type="StaticBody3D" parent="ParkedCars"]
+transform = Transform3D(0.5, 0, 0.866025, 0, 1, 0, -0.866025, 0, 0.5, 5.5, 0.25, 2)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ParkedCars/TurntableCar"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
+shape = SubResource("Shape_CarSUV")
+
+[node name="Model" parent="ParkedCars/TurntableCar" instance=ExtResource("5_suv")]
+
+[node name="Body" parent="ParkedCars/TurntableCar/Model"]
+material_override = SubResource("Mat_CarPaintYellow")
+
+[node name="Hood" parent="ParkedCars/TurntableCar/Model"]
+material_override = SubResource("Mat_CarPaintYellow")
+
+[node name="FrontBumper" parent="ParkedCars/TurntableCar/Model"]
+material_override = SubResource("Mat_CarPaintYellow")
+
+[node name="Roof" parent="ParkedCars/TurntableCar/Model"]
+material_override = SubResource("Mat_CarPaintYellow")
+
+[node name="FrontCar_0" type="StaticBody3D" parent="ParkedCars"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -16, 0.05, 20.5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ParkedCars/FrontCar_0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
+shape = SubResource("Shape_CarSUV")
+
+[node name="Model" parent="ParkedCars/FrontCar_0" instance=ExtResource("5_suv")]
+
+[node name="FrontCar_1" type="StaticBody3D" parent="ParkedCars"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -12, 0.05, 20.5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ParkedCars/FrontCar_1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+shape = SubResource("Shape_CarSedan")
+
+[node name="Model" parent="ParkedCars/FrontCar_1" instance=ExtResource("6_sedan")]
+
+[node name="Body" parent="ParkedCars/FrontCar_1/Model"]
+material_override = SubResource("Mat_CarPaintSilver")
+
+[node name="FrontCar_2" type="StaticBody3D" parent="ParkedCars"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -8, 0.05, 20.5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ParkedCars/FrontCar_2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("Shape_CarPickup")
+
+[node name="Model" parent="ParkedCars/FrontCar_2" instance=ExtResource("4_pickup")]
+
+[node name="FrontCar_3" type="StaticBody3D" parent="ParkedCars"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -4, 0.05, 20.5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ParkedCars/FrontCar_3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("Shape_CarF150")
+
+[node name="Model" parent="ParkedCars/FrontCar_3" instance=ExtResource("9_f150")]
+
+[node name="FrontCar_4" type="StaticBody3D" parent="ParkedCars"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0, 0.05, 20.5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ParkedCars/FrontCar_4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
+shape = SubResource("Shape_CarHatchback")
+
+[node name="Model" parent="ParkedCars/FrontCar_4" instance=ExtResource("8_hatchback")]
+
+[node name="FrontCar_5" type="StaticBody3D" parent="ParkedCars"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 4, 0.05, 20.5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ParkedCars/FrontCar_5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, 0)
+shape = SubResource("Shape_CarMinivan")
+
+[node name="Model" parent="ParkedCars/FrontCar_5" instance=ExtResource("7_minivan")]
+
+[node name="ServiceCar_0" type="StaticBody3D" parent="ParkedCars"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -18, 0.05, 13.5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ParkedCars/ServiceCar_0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+shape = SubResource("Shape_CarSedan")
+
+[node name="Model" parent="ParkedCars/ServiceCar_0" instance=ExtResource("6_sedan")]
+
+[node name="ServiceCar_1" type="StaticBody3D" parent="ParkedCars"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -14, 0.05, 13.5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ParkedCars/ServiceCar_1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
+shape = SubResource("Shape_CarSUV")
+
+[node name="Model" parent="ParkedCars/ServiceCar_1" instance=ExtResource("5_suv")]
+
+[node name="Body" parent="ParkedCars/ServiceCar_1/Model"]
+material_override = SubResource("Mat_CarPaintNavy")
+
+[node name="Hood" parent="ParkedCars/ServiceCar_1/Model"]
+material_override = SubResource("Mat_CarPaintNavy")
+
+[node name="FrontBumper" parent="ParkedCars/ServiceCar_1/Model"]
+material_override = SubResource("Mat_CarPaintNavy")
+
+[node name="Roof" parent="ParkedCars/ServiceCar_1/Model"]
+material_override = SubResource("Mat_CarPaintNavy")
+
+[node name="ServiceCar_2" type="StaticBody3D" parent="ParkedCars"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -10, 0.05, 13.5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ParkedCars/ServiceCar_2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("Shape_CarPickup")
+
+[node name="Model" parent="ParkedCars/ServiceCar_2" instance=ExtResource("4_pickup")]
+
+[node name="Body" parent="ParkedCars/ServiceCar_2/Model"]
+material_override = SubResource("Mat_CarPaintSilver")
+
+[node name="ServiceCar_3" type="StaticBody3D" parent="ParkedCars"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -6, 0.05, 13.5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ParkedCars/ServiceCar_3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, 0)
+shape = SubResource("Shape_CarMinivan")
+
+[node name="Model" parent="ParkedCars/ServiceCar_3" instance=ExtResource("7_minivan")]
+
+[node name="Body" parent="ParkedCars/ServiceCar_3/Model"]
+material_override = SubResource("Mat_CarPaintSand")
+
+[node name="ShowroomCar_0" type="StaticBody3D" parent="ParkedCars"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 2, 0.05, 10.5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ParkedCars/ShowroomCar_0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
+shape = SubResource("Shape_CarSUV")
+
+[node name="Model" parent="ParkedCars/ShowroomCar_0" instance=ExtResource("5_suv")]
+
+[node name="Body" parent="ParkedCars/ShowroomCar_0/Model"]
+material_override = SubResource("Mat_CarPaintRed")
+
+[node name="Hood" parent="ParkedCars/ShowroomCar_0/Model"]
+material_override = SubResource("Mat_CarPaintRed")
+
+[node name="FrontBumper" parent="ParkedCars/ShowroomCar_0/Model"]
+material_override = SubResource("Mat_CarPaintRed")
+
+[node name="Roof" parent="ParkedCars/ShowroomCar_0/Model"]
+material_override = SubResource("Mat_CarPaintRed")
+
+[node name="ShowroomCar_1" type="StaticBody3D" parent="ParkedCars"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 6, 0.05, 10.5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ParkedCars/ShowroomCar_1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+shape = SubResource("Shape_CarSedan")
+
+[node name="Model" parent="ParkedCars/ShowroomCar_1" instance=ExtResource("6_sedan")]
+
+[node name="ShowroomCar_2" type="StaticBody3D" parent="ParkedCars"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 10, 0.05, 10.5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ParkedCars/ShowroomCar_2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
+shape = SubResource("Shape_CarHatchback")
+
+[node name="Model" parent="ParkedCars/ShowroomCar_2" instance=ExtResource("8_hatchback")]
+

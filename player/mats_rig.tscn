@@ -1,0 +1,109 @@
+[gd_scene format=3]
+
+[ext_resource type="ArrayMesh" path="res://player/mats_meshes/mats_torso.res" id="1_torso"]
+[ext_resource type="ArrayMesh" path="res://player/mats_meshes/mats_backpack.res" id="2_backpack"]
+[ext_resource type="ArrayMesh" path="res://player/mats_meshes/mats_thigh.res" id="3_thigh"]
+[ext_resource type="ArrayMesh" path="res://player/mats_meshes/mats_shin.res" id="4_shin"]
+[ext_resource type="ArrayMesh" path="res://player/mats_meshes/mats_shoe_sole.res" id="5_shoe_sole"]
+[ext_resource type="ArrayMesh" path="res://player/mats_meshes/mats_shoe_upper.res" id="6_shoe_upper"]
+[ext_resource type="ArrayMesh" path="res://player/mats_meshes/mats_upper_arm.res" id="7_upper_arm"]
+[ext_resource type="ArrayMesh" path="res://player/mats_meshes/mats_forearm_left.res" id="8_forearm_left"]
+[ext_resource type="ArrayMesh" path="res://player/mats_meshes/mats_forearm_right.res" id="9_forearm_right"]
+[ext_resource type="ArrayMesh" path="res://player/mats_meshes/mats_face.res" id="10_face"]
+[ext_resource type="ArrayMesh" path="res://player/mats_meshes/mats_hair.res" id="11_hair"]
+[ext_resource type="ArrayMesh" path="res://player/mats_meshes/mats_cap.res" id="12_cap"]
+[ext_resource type="ArrayMesh" path="res://player/mats_meshes/mats_beanie.res" id="13_beanie"]
+[ext_resource type="Script" path="res://player/mats_rig.gd" id="14_rig"]
+
+[node name="MatsRig" type="Node3D"]
+script = ExtResource("14_rig")
+
+[node name="Torso" type="MeshInstance3D" parent="."]
+mesh = ExtResource("1_torso")
+
+[node name="Backpack" type="MeshInstance3D" parent="."]
+mesh = ExtResource("2_backpack")
+
+[node name="LeftLegPivot" type="Node3D" parent="."]
+position = Vector3(0.072, 0.6, 0)
+
+[node name="Thigh" type="MeshInstance3D" parent="LeftLegPivot"]
+mesh = ExtResource("3_thigh")
+
+[node name="Knee" type="Node3D" parent="LeftLegPivot"]
+position = Vector3(0, -0.28, 0)
+
+[node name="Shin" type="MeshInstance3D" parent="LeftLegPivot/Knee"]
+mesh = ExtResource("4_shin")
+
+[node name="Shoe" type="Node3D" parent="LeftLegPivot/Knee"]
+position = Vector3(0, -0.25, 0)
+
+[node name="Sole" type="MeshInstance3D" parent="LeftLegPivot/Knee/Shoe"]
+mesh = ExtResource("5_shoe_sole")
+
+[node name="Upper" type="MeshInstance3D" parent="LeftLegPivot/Knee/Shoe"]
+mesh = ExtResource("6_shoe_upper")
+
+[node name="RightLegPivot" type="Node3D" parent="."]
+position = Vector3(-0.072, 0.6, 0)
+
+[node name="Thigh" type="MeshInstance3D" parent="RightLegPivot"]
+mesh = ExtResource("3_thigh")
+
+[node name="Knee" type="Node3D" parent="RightLegPivot"]
+position = Vector3(0, -0.28, 0)
+
+[node name="Shin" type="MeshInstance3D" parent="RightLegPivot/Knee"]
+mesh = ExtResource("4_shin")
+
+[node name="Shoe" type="Node3D" parent="RightLegPivot/Knee"]
+position = Vector3(0, -0.25, 0)
+
+[node name="Sole" type="MeshInstance3D" parent="RightLegPivot/Knee/Shoe"]
+mesh = ExtResource("5_shoe_sole")
+
+[node name="Upper" type="MeshInstance3D" parent="RightLegPivot/Knee/Shoe"]
+mesh = ExtResource("6_shoe_upper")
+
+[node name="LeftArmPivot" type="Node3D" parent="."]
+position = Vector3(0.155, 0.975, 0)
+
+[node name="UpperArm" type="MeshInstance3D" parent="LeftArmPivot"]
+mesh = ExtResource("7_upper_arm")
+
+[node name="Elbow" type="Node3D" parent="LeftArmPivot"]
+position = Vector3(0, -0.19, 0)
+
+[node name="Forearm" type="MeshInstance3D" parent="LeftArmPivot/Elbow"]
+mesh = ExtResource("8_forearm_left")
+
+[node name="RightArmPivot" type="Node3D" parent="."]
+position = Vector3(-0.155, 0.975, 0)
+
+[node name="UpperArm" type="MeshInstance3D" parent="RightArmPivot"]
+mesh = ExtResource("7_upper_arm")
+
+[node name="Elbow" type="Node3D" parent="RightArmPivot"]
+position = Vector3(0, -0.19, 0)
+
+[node name="Forearm" type="MeshInstance3D" parent="RightArmPivot/Elbow"]
+mesh = ExtResource("9_forearm_right")
+
+[node name="Head" type="Node3D" parent="."]
+position = Vector3(0, 1.08, 0)
+
+[node name="Face" type="MeshInstance3D" parent="Head"]
+mesh = ExtResource("10_face")
+
+[node name="Hair" type="MeshInstance3D" parent="Head"]
+mesh = ExtResource("11_hair")
+
+[node name="Hat" type="Node3D" parent="Head"]
+
+[node name="Cap" type="MeshInstance3D" parent="Head/Hat"]
+mesh = ExtResource("12_cap")
+
+[node name="Beanie" type="MeshInstance3D" parent="Head/Hat"]
+visible = false
+mesh = ExtResource("13_beanie")

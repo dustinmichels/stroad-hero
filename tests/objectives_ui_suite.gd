@@ -566,6 +566,139 @@ func _run_test_objective_manager() -> void:
 		"Must use generic name when use_generic is true"
 	)
 
+	# 3d. Contextual dialogue and excuse scoping tests
+	assert(
+		ObjectiveManager.is_dinner_errand("tacos", "Taco Hell", &"taco_hell"),
+		"Tacos at Taco Hell must be a dinner errand"
+	)
+	assert(
+		ObjectiveManager.is_dinner_errand("hamburgers", "Booger King", &"booger_king"),
+		"Hamburgers at Booger King must be a dinner errand"
+	)
+	assert(
+		not ObjectiveManager.is_dinner_errand("cough syrup", "Walgroins", &"walgroins"),
+		"Cough syrup at Walgroins must not be a dinner errand"
+	)
+	assert(
+		not ObjectiveManager.is_dinner_errand("batteries", "Walgroins", &"walgroins"),
+		"Batteries at Walgroins must not be a dinner errand"
+	)
+	assert(
+		not ObjectiveManager.is_dinner_errand("milk", "Smell", &"smell"),
+		"Milk at Smell must not be a dinner errand"
+	)
+
+	# Verify non-dinner errands never receive cooking/dinner excuses
+	var non_dinner_items = [
+		{"item": "cough syrup", "store": "Walgroins", "loc_id": &"walgroins"},
+		{"item": "band-aids", "store": "Walgroins", "loc_id": &"walgroins"},
+		{"item": "toothpaste", "store": "Walgroins", "loc_id": &"walgroins"},
+		{"item": "batteries", "store": "Walgroins", "loc_id": &"walgroins"},
+		{"item": "potato chips", "store": "Walgroins", "loc_id": &"walgroins"},
+		{"item": "milk", "store": "Smell", "loc_id": &"smell"},
+		{"item": "cereal", "store": "Smell", "loc_id": &"smell"},
+		{"item": "chewing gum", "store": "Smell", "loc_id": &"smell"},
+		{"item": "beef jerky", "store": "Smell", "loc_id": &"smell"},
+	]
+	var d_parts: Dictionary = obj_mgr.objectives_data.get("dialogue_parts", {})
+	for entry in non_dinner_items:
+		var cand_excuses = ObjectiveManager.get_excuses_for_errand(
+			d_parts, entry["item"], entry["store"], entry["loc_id"]
+		)
+		for exc in cand_excuses:
+			assert(
+				not ObjectiveManager.is_dinner_excuse(exc),
+				"Non-dinner errand '%s' must not have dinner excuse: '%s'" % [entry["item"], exc]
+			)
+		# Sample multiple generated lines to ensure randomized selections never leak cooking excuses
+		for _iter in range(25):
+			var res = ObjectiveManager.generate_dialogue(
+				entry["item"], entry["store"], entry["store"], d_parts, false, entry["loc_id"]
+			)
+			assert(
+				not ObjectiveManager.is_dinner_excuse(res["excuse"]),
+				"Generated excuse for '%s' must not be a dinner excuse" % entry["item"]
+			)
+			assert(
+				not res["call_line"].to_lower().contains("cooking dinner"),
+				"Call line for '%s' must not contain 'cooking dinner'" % entry["item"]
+			)
+
+	# Verify dinner errands include cooking excuses
+	var bk_excuses = ObjectiveManager.get_excuses_for_errand(
+		d_parts, "hamburgers", "Booger King", &"booger_king"
+	)
+	assert(
+		bk_excuses.has("I don't feel like cooking dinner tonight."),
+		"Booger King excuses must include 'I don't feel like cooking dinner tonight.'"
+	)
+
+	# Verify legacy flat-array excuses compatibility and filtering
+	var legacy_parts = {
+		"openings": ["Mats schat..."],
+		"excuses":
+		[
+			"I don't feel like cooking dinner tonight.",
+			"I just remembered another thing!",
+		],
+		"requests": ["Could you pick up some {item} at {location}?"],
+	}
+	var leg_pharma = ObjectiveManager.get_excuses_for_errand(
+		legacy_parts, "cough syrup", "Walgroins", &"walgroins"
+	)
+	assert(
+		leg_pharma == ["I just remembered another thing!"],
+		"Legacy flat excuses must filter out dinner excuse for pharmacy items"
+	)
+	var leg_dinner = ObjectiveManager.get_excuses_for_errand(
+		legacy_parts, "hamburgers", "Booger King", &"booger_king"
+	)
+	assert(
+		leg_dinner.size() == 2, "Legacy flat excuses must preserve dinner excuses for dinner items"
+	)
+
+	# Verify Dutch openings include italicized English translations in brackets
+	var openings: Array = d_parts.get("openings", [])
+	var dutch_checks = {
+		"schat": "darling",
+		"jongen": "my boy",
+		"lieverd": "sweetheart",
+		"Lieve Mats": "Dear Mats",
+		"Hoi": "Hi",
+	}
+	for dutch_word in dutch_checks:
+		var found := false
+		var trans: String = dutch_checks[dutch_word]
+		for op in openings:
+			var op_str := str(op)
+			if op_str.contains(dutch_word):
+				found = true
+				var has_italic := (
+					op_str.contains("[[i]%s[/i]]" % trans) or op_str.contains("[i][%s][/i]" % trans)
+				)
+				assert(
+					has_italic,
+					(
+						"Dutch opening with '%s' must include italicized translation in brackets: '%s'"
+						% [dutch_word, op_str]
+					)
+				)
+		assert(found, "Expected Dutch word '%s' in openings catalog" % dutch_word)
+
+	# Verify PhoneCall DialogueLabel supports BBCode italics
+	var phone_call_scene = load("res://ui/phone_call.tscn")
+	assert(phone_call_scene != null, "phone_call.tscn must load")
+	var phone_call_inst = phone_call_scene.instantiate()
+	var dl = phone_call_inst.get_node("%DialogueLabel") as RichTextLabel
+	assert(dl != null, "DialogueLabel must be a RichTextLabel")
+	assert(dl.bbcode_enabled, "DialogueLabel must have bbcode_enabled = true")
+	dl.text = "Mats schat [[i]darling[/i]]..."
+	assert(
+		dl.get_parsed_text() == "Mats schat [darling]...",
+		"BBCode parsed text must strip tags and display bracketed translation"
+	)
+	phone_call_inst.queue_free()
+
 	# 7. Destination Anchor Resolution Test
 	# Verify that registered destination anchors match exact site locations
 	print("OBJECTIVE_MANAGER_TEST: Verifying destination anchors and coordinate registration...")
@@ -678,6 +811,95 @@ func _run_test_objectives() -> void:
 			% [next_target_pos.z, main.mats.global_position.z]
 		)
 	)
+
+	# 4. Verify phone visibility hides cleanly on death and restores on respawn
+	assert(main.mats.is_phone_ringing, "Mats must be in ringing phone mode")
+	assert(
+		main.mats.phone != null and main.mats.phone.visible, "Phone must be visible while ringing"
+	)
+
+	# Fast-forward death delays for testing
+	main.mats.blood_linger_delay = 0.01
+	main.mats.fade_duration = 0.01
+	main.mats.spd_emphasis_duration = 0.01
+	main.mats.respawn_delay = 0.01
+
+	main.mats.die()
+	assert(main.mats.is_dead, "Mats must be dead")
+	assert(
+		not main.mats.is_on_phone and not main.mats.is_phone_ringing,
+		"Phone mode must clear on death"
+	)
+	assert(
+		main.mats.phone != null and not main.mats.phone.visible,
+		"Phone mesh must hide cleanly on death"
+	)
+	assert(not main.mats.get_node("Visual").visible, "Visual rig must hide on death")
+
+	# Wait for respawn
+	await main.mats.respawned
+	assert(main.mats.get_node("Visual").visible, "Visual rig must be visible after respawn")
+	assert(main.mats.is_phone_ringing, "Ringing phone state must restore on respawn")
+	assert(
+		main.mats.phone != null and main.mats.phone.visible,
+		"Phone visibility must restore on respawn"
+	)
+	assert(
+		absf(main.mats.global_position.z - (-13.85)) < 0.15,
+		(
+			"Mats must respawn on the north side of the road when dying at north destination (got z=%.2f)"
+			% main.mats.global_position.z
+		)
+	)
+	assert(
+		absf(main.mats.global_position.x - target_pos.x) < 0.5,
+		(
+			"Mats must respawn at the x coordinate of death (expected x=%.2f, got %.2f)"
+			% [target_pos.x, main.mats.global_position.x]
+		)
+	)
+
+	# Verify get_respawn_position calculation across north/south sides and clamping
+	var south_pos := main.mats.get_respawn_position(Vector3(30.0, 0.0, 5.0))
+	assert(
+		absf(south_pos.z - 13.85) < 0.01 and absf(south_pos.x - 30.0) < 0.01,
+		"Positive z must respawn on south roadside"
+	)
+	var north_pos := main.mats.get_respawn_position(Vector3(-10.0, 0.0, -8.0))
+	assert(
+		absf(north_pos.z - (-13.85)) < 0.01 and absf(north_pos.x - (-10.0)) < 0.01,
+		"Negative z must respawn on north roadside"
+	)
+	var clamped_west := main.mats.get_respawn_position(Vector3(-120.0, 0.0, 5.0))
+	assert(
+		absf(clamped_west.x - Mats.MIN_RESPAWN_X) < 0.01,
+		"Extreme west x must clamp to MIN_RESPAWN_X"
+	)
+	var clamped_east := main.mats.get_respawn_position(Vector3(160.0, 0.0, -5.0))
+	assert(
+		absf(clamped_east.x - Mats.MAX_RESPAWN_X) < 0.01,
+		"Extreme east x must clamp to MAX_RESPAWN_X"
+	)
+
+	# Wait until Mats is completely out of death sequence
+	while main.mats.is_dead:
+		await main.get_tree().process_frame
+
+	# Answer and dismiss to ensure phone lowers and hides cleanly
+	if phone_call and phone_call.is_ringing:
+		phone_call.answer()
+		assert(main.mats.is_on_phone, "Mats must be on phone after answering")
+		assert(main.mats.phone.visible, "Phone must remain visible while talking")
+		phone_call.dismiss()
+	else:
+		obj_mgr.answer_call()
+		obj_mgr.dismiss_call()
+
+	# Simulate animation frames for phone lowering blend
+	for _i in range(15):
+		main.mats._visual.update_phone_pose(0.1)
+	assert(main.mats.phone_blend == 0.0, "Phone blend must return to 0 after call dismissal")
+	assert(not main.mats.phone.visible, "Phone mesh must hide cleanly after lowering")
 
 	print("OBJECTIVES_TEST: SUCCESS - --test-objectives passed cleanly!")
 	main.get_tree().quit(0)

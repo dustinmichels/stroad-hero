@@ -2,18 +2,108 @@
   "dialogue_parts": {
     "openings": [
       "Hi Mats, are you having fun out there?",
-      "Mats schat...",
-      "Mats, m’n jongen..."
+      "Mats schat [[i]darling[/i]]...",
+      "Mats, m’n jongen [[i]my boy[/i]]...",
+      "Mats lieverd [[i]sweetheart[/i]]...",
+      "Lieve Mats [[i]Dear Mats[/i]]...",
+      "Hoi [[i]Hi[/i]] Mats, sweetie...",
+      "Mats, are you in the middle of something?",
+      "Mats, darling..."
     ],
-    "excuses": [
-      "I don't feel like cooking dinner tonight.",
-      "I just remembered another thing!",
-      "Could you grab one more item for your mother?"
-    ],
+    "excuses": {
+      "general": [
+        "I just remembered another thing!",
+        "Could you grab one more item for your mother?",
+        "Since you're already out there anyway...",
+        "I completely forgot to put this on my shopping list earlier!",
+        "Before you head home, do me a quick favor.",
+        "You know how forgetful your mother gets...",
+        "One quick extra errand won't hurt, right?"
+      ],
+      "dinner": [
+        "I don't feel like cooking dinner tonight.",
+        "Nobody feels like washing pots and pans tonight.",
+        "The stove is acting up again, so dinner is on you!",
+        "I burned the casserole, so let's call it a fast food night.",
+        "Your father and I are craving some takeout tonight.",
+        "The kitchen is officially closed for the evening.",
+        "Let's treat ourselves to takeout instead of cooking."
+      ],
+      "pharmacy": [
+        "The medicine cabinet is looking terribly bare.",
+        "I forgot to restock our supplies this week.",
+        "The bathroom cabinet is down to the bare essentials.",
+        "I was checking the medicine drawer and noticed we're out."
+      ],
+      "convenience": [
+        "The pantry is looking pretty empty.",
+        "We're running low on the essentials at home.",
+        "I was checking the cupboards and noticed we're out.",
+        "The kitchen supplies are looking a little sad today."
+      ]
+    },
+    "item_excuses": {
+      "cough_syrup": [
+        "Your father has had that terrible tickle in his throat all morning.",
+        "I can hear your father coughing all the way in the den."
+      ],
+      "band_aids": [
+        "I nicked my finger opening that stubborn cardboard box.",
+        "The first aid kit in the bathroom is completely empty!"
+      ],
+      "batteries": [
+        "The TV remote just died right before my favorite show.",
+        "The smoke detector started doing that awful little beep!"
+      ],
+      "toothpaste": [
+        "We're squeezing the absolute last drop out of the tube.",
+        "Someone rolled the toothpaste tube completely flat."
+      ],
+      "potato_chips": [
+        "We need something salty to munch on for movie night.",
+        "I'm having a serious snack craving right now."
+      ],
+      "hamburgers": [
+        "Booger King sounds so much easier than making dinner.",
+        "A couple of juicy burgers would really hit the spot tonight."
+      ],
+      "tacos": [
+        "We're doing taco night and nobody wanted to cook!",
+        "Taco Hell sounds so much better than whatever is in the freezer."
+      ],
+      "burritos": [
+        "A giant burrito sounds so much better than whatever is in the freezer.",
+        "Your father is practically begging for burritos tonight."
+      ],
+      "quesadillas": [
+        "We're in a cheesy Mexican food mood tonight.",
+        "A warm quesadilla sounds heavenly right about now."
+      ],
+      "milk": [
+        "We don't even have enough milk for tomorrow's morning coffee.",
+        "The milk carton in the fridge is completely dry."
+      ],
+      "cereal": [
+        "The breakfast cupboards are looking completely tragic.",
+        "Someone finished the cereal and left the empty box in the pantry!"
+      ],
+      "chewing_gum": [
+        "My purse is completely out of mints and gum.",
+        "I need some gum to chew while I finish these chores."
+      ],
+      "beef_jerky": [
+        "Your father asked if you could grab his favorite road snack.",
+        "We need some road snacks for the weekend."
+      ]
+    },
     "requests": [
       "Could you pick up some {item} at {location}?",
       "Can you stop by {location} and get some {item}?",
-      "While you're out, swing by {location} for some {item}."
+      "While you're out, swing by {location} for some {item}.",
+      "Could you pop into {location} and grab some {item}?",
+      "Be a dear and pick up some {item} from {location}.",
+      "Would you mind grabbing some {item} at {location}?",
+      "Run into {location} and grab some {item} for me?"
     ]
   },
   "locations": [
@@ -21,6 +111,7 @@
       "id": "walgroins",
       "proper_name": "Walgroins",
       "generic_name": "the pharmacy",
+      "category": "pharmacy",
       "items": [
         "cough syrup",
         "band-aids",
@@ -33,6 +124,7 @@
       "id": "booger_king",
       "proper_name": "Booger King",
       "generic_name": "the burger joint",
+      "category": "dinner",
       "items": [
         "hamburgers"
       ]
@@ -41,6 +133,7 @@
       "id": "taco_hell",
       "proper_name": "Taco Hell",
       "generic_name": "the taco stand",
+      "category": "dinner",
       "items": [
         "tacos",
         "burritos",
@@ -51,6 +144,7 @@
       "id": "smell",
       "proper_name": "Smell",
       "generic_name": "the convenience store",
+      "category": "convenience",
       "items": [
         "milk",
         "cereal",

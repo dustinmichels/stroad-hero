@@ -159,9 +159,14 @@ flowchart TD
 4. **Procedural Dialogue Assembly**:
    - The first errand (`cough_syrup`) has a fixed intro: _"Hello Mats darling, while you're out exploring, could you please pick up some cough syrup from Walgroins?"_
    - Subsequent calls procedurally stitch together:
-     - **Opening**: Dutch terms of endearment and greetings (_"Mats schat..."_, _"Mats, m’n jongen..."_, _"Hi Mats, are you having fun out there?"_).
-     - **Excuse**: Plausible mom reasons (_"I don't feel like cooking dinner tonight."_, _"I just remembered another thing!"_, _"Could you grab one more item for your mother?"_).
-     - **Request**: Template replacing `{item}` and `{location}` (_"Could you pick up some {item} at {location}?"_, _"Can you stop by {location} and get some {item}?"_).
+     - **Opening**: Expanded Dutch terms of endearment and greetings with italicized English translations in brackets (_"Mats schat [*darling*]..."_, _"Mats, m’n jongen [*my boy*]..."_, _"Mats lieverd [*sweetheart*]..."_, _"Lieve Mats [*Dear Mats*]..."_, _"Hoi [*Hi*] Mats, sweetie..."_, _"Hi Mats, are you having fun out there?"_). Rendered via BBCode in `DialogueLabel` (`RichTextLabel`) using slanted Overpass regular font variations.
+     - **Excuse**: Contextually scoped mom motivations categorized by store and item:
+       - **General**: Applies to any errand (_"I just remembered another thing!"_, _"Could you grab one more item for your mother?"_, _"Since you're already out there anyway..."_).
+       - **Dinner / Fast Food**: Scoped strictly to dinner errands like Booger King or Taco Hell (_"I don't feel like cooking dinner tonight."_, _"Nobody feels like washing pots and pans tonight."_, _"The stove is acting up again, so dinner is on you!"_).
+       - **Pharmacy**: Scoped to Walgroins items (_"The medicine cabinet is looking terribly bare."_, _"I forgot to restock our supplies this week."_).
+       - **Convenience**: Scoped to Smell items (_"The pantry is looking pretty empty."_, _"We're running low on the essentials at home."_).
+       - **Item-Specific**: Hyper-specific lines for individual items (e.g. coughing father for cough syrup, dead TV remote for batteries, empty first aid kit for band-aids, empty morning coffee milk for milk).
+     - **Request**: Template replacing `{item}` and `{location}` (_"Could you pick up some {item} at {location}?"_, _"Can you stop by {location} and get some {item}?"_, _"Could you pop into {location} and grab some {item}?"_).
    - **Generic Name Chance (`generic_name_chance = 0.5`)**: Alternates with 50% probability between the proper parody name (e.g. _Booger King_) and the generic description (e.g. _the burger joint_).
 
 ---
@@ -225,8 +230,9 @@ Constructed programmatically in `objectives/objective_marker.gd`:
      - `ObjectiveManager._is_mats_dead` flag is set to `true`, pausing distance arrival checks so a ragdolling corpse cannot trigger completion.
      - The active errand remains preserved.
    - When Mats respawns (`respawned` signal):
+     - Rather than resetting to the game start position, Mats respawns on the nearest side of the road to where he died ($z = \pm 13.85$) at the longitudinal death $X$-coordinate.
      - `ObjectiveManager._is_mats_dead` resets to `false`.
-     - 3D marker and HUD arrow resume guiding Mats to the destination.
+     - 3D marker and HUD arrow resume guiding Mats to the destination from the new roadside position.
 
 ---
 

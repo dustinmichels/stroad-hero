@@ -138,7 +138,6 @@ var is_initial_traffic_ready: bool = false
 var lanes: Array[Lane] = []
 var lot: ParkingLot = null
 var lot_cars: Array[Car] = []
-var dorf_cars: Array[Car] = []
 var debug_overlay: Node3D = null
 var taco_hell_drive_thru_path: Curve3D = null
 var booger_king_drive_thru_path: Curve3D = null
@@ -213,7 +212,6 @@ func set_random_seed(seed_val: int) -> void:
 func populate_immediately() -> void:
 	_pre_populate_traffic()
 	_seed_parked_cars()
-	_seed_dorf_cars()
 	is_initial_traffic_ready = true
 	initial_traffic_ready.emit()
 
@@ -325,147 +323,6 @@ static func is_car_allowed_in_dorf_lot(car: Car) -> bool:
 	return ParkingLot.is_car_allowed_in_dorf_lot(car)
 
 
-func _seed_dorf_cars() -> void:
-	if not dorf_cars.is_empty():
-		return
-	var ramp_basis := (
-		Basis(Vector3.UP, deg_to_rad(-105.0)) * Basis(Vector3.FORWARD, deg_to_rad(-15.0))
-	)
-	var turntable_basis := Basis(Vector3.UP, deg_to_rad(-60.0))
-	var stall_basis := Basis(Vector3.UP, -PI / 2.0)
-
-	var dorf_configs: Array[Dictionary] = [
-		# Featured ramp & showroom vehicles
-		{
-			"type": Car.CarType.PICKUP,
-			"pos": Vector3(108.0, 0.85, -19.0),
-			"basis": ramp_basis,
-			"color": Color(0.82, 0.16, 0.14)
-		},
-		{
-			"type": Car.CarType.SUV,
-			"pos": Vector3(105.5, 0.25, -34.0),
-			"basis": turntable_basis,
-			"color": Color(0.98, 0.88, 0.05)
-		},
-		# Front row (z = -15.5) facing stroad (+Z)
-		{
-			"type": Car.CarType.SUV,
-			"pos": Vector3(84.0, 0.05, -15.5),
-			"basis": stall_basis,
-			"color": Color(0.14, 0.38, 0.82)
-		},
-		{
-			"type": Car.CarType.SEDAN,
-			"pos": Vector3(88.0, 0.05, -15.5),
-			"basis": stall_basis,
-			"color": Color(0.92, 0.93, 0.94)
-		},
-		{
-			"type": Car.CarType.PICKUP,
-			"pos": Vector3(92.0, 0.05, -15.5),
-			"basis": stall_basis,
-			"color": Color(0.18, 0.38, 0.24)
-		},
-		{
-			"type": Car.CarType.PICKUP,
-			"pos": Vector3(96.0, 0.05, -15.5),
-			"basis": stall_basis,
-			"color": Color(0.20, 0.22, 0.25)
-		},
-		{
-			"type": Car.CarType.HATCHBACK,
-			"pos": Vector3(100.0, 0.05, -15.5),
-			"basis": stall_basis,
-			"color": Color(0.90, 0.36, 0.08)
-		},
-		{
-			"type": Car.CarType.MINIVAN,
-			"pos": Vector3(104.0, 0.05, -15.5),
-			"basis": stall_basis,
-			"color": Color(0.48, 0.08, 0.16)
-		},
-		# Service row (z = -22.5) facing +Z
-		{
-			"type": Car.CarType.SEDAN,
-			"pos": Vector3(82.0, 0.05, -22.5),
-			"basis": stall_basis,
-			"color": Color(0.75, 0.77, 0.80)
-		},
-		{
-			"type": Car.CarType.SUV,
-			"pos": Vector3(86.0, 0.05, -22.5),
-			"basis": stall_basis,
-			"color": Color(0.08, 0.15, 0.32)
-		},
-		{
-			"type": Car.CarType.PICKUP,
-			"pos": Vector3(90.0, 0.05, -22.5),
-			"basis": stall_basis,
-			"color": Color(0.92, 0.93, 0.94)
-		},
-		{
-			"type": Car.CarType.MINIVAN,
-			"pos": Vector3(94.0, 0.05, -22.5),
-			"basis": stall_basis,
-			"color": Color(0.82, 0.76, 0.65)
-		},
-		# Showroom row (z = -25.5) facing +Z
-		{
-			"type": Car.CarType.SUV,
-			"pos": Vector3(102.0, 0.05, -25.5),
-			"basis": stall_basis,
-			"color": Color(0.88, 0.12, 0.12)
-		},
-		{
-			"type": Car.CarType.SEDAN,
-			"pos": Vector3(106.0, 0.05, -25.5),
-			"basis": stall_basis,
-			"color": Color(0.14, 0.38, 0.82)
-		},
-		{
-			"type": Car.CarType.HATCHBACK,
-			"pos": Vector3(110.0, 0.05, -25.5),
-			"basis": stall_basis,
-			"color": Color(0.92, 0.84, 0.22)
-		},
-	]
-
-	for cfg in dorf_configs:
-		var cfg_type: Car.CarType = cfg["type"]
-		assert(
-			is_car_type_allowed_in_dorf_lot(cfg_type),
-			(
-				"Dorf parking lot rule violation: car type %s is not allowed"
-				% Car.CarType.keys()[cfg_type]
-			)
-		)
-		if not is_car_type_allowed_in_dorf_lot(cfg_type):
-			push_error(
-				(
-					"Dorf parking lot rule violation: car type %s is not allowed"
-					% Car.CarType.keys()[cfg_type]
-				)
-			)
-			continue
-		var car: PassengerCar = PassengerCarScene.instantiate()
-		car.car_type = cfg_type
-		car.speed = 0.0
-		car.desired_speed = 0.0
-		car.state = Car.State.PARKED
-		if cfg.has("color"):
-			car.body_color = cfg["color"]
-		car.set_gritty(false)
-		add_child(car)
-		car.global_position = cfg["pos"]
-		if cfg.has("basis"):
-			car.global_transform.basis = cfg["basis"]
-		car.reset_physics_interpolation()
-		car.dwell_left = INF
-		dorf_cars.append(car)
-		stats["cars_spawned"] += 1
-
-
 func _spawn_initial_traffic_staged() -> void:
 	const BATCH_SIZE: int = 4
 	var count := 0
@@ -491,8 +348,6 @@ func _spawn_initial_traffic_staged() -> void:
 			await get_tree().process_frame
 			if not is_inside_tree():
 				return
-
-	_seed_dorf_cars()
 
 	is_initial_traffic_ready = true
 	initial_traffic_ready.emit()
@@ -1178,6 +1033,8 @@ func _can_merge(car: Car) -> bool:
 		# Cars turning into the lot/drive-thru leave before the merge point
 		if other.state == Car.State.TO_SPOT or other.state == Car.State.DRIVE_THRU:
 			continue
+		if other.state == Car.State.APPROACHING and _turn_d(target_lane_id, other) <= merge_dist:
+			continue
 		var d: float = other.lane_distance
 		if other.motion == Car.Motion.PATH:
 			d = target_lane.distance_at(other.global_position.x)
@@ -1206,7 +1063,7 @@ func can_spawn_drive_thru(dest: StringName) -> bool:
 		for car in lanes[check_lane_id].cars:
 			if not is_instance_valid(car):
 				continue
-			var safe_dist := car.car_length * 0.5 + maxf(6.0, car.speed * 0.8)
+			var safe_dist := car.car_length + maxf(10.0, car.speed * 1.5)
 			if car.global_position.distance_to(start) < safe_dist:
 				return false
 	return true
@@ -1507,7 +1364,7 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 	# Clean up despawned / invalid cars and PATH cars that no longer overlap
 	var valid_cars: Array[Car] = []
 	for car in lane.cars:
-		if not is_instance_valid(car):
+		if not is_instance_valid(car) or car.state == Car.State.PARKED:
 			continue
 		if car.motion == Car.Motion.PATH:
 			# Exiting cars yield off-road; retaining them here deadlocks the merge.
@@ -1519,6 +1376,8 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 			else:
 				car.lane_speed = maxf(0.0, car.speed * car.get_heading().dot(lane.forward()))
 		else:
+			if car.lane_id != lane.id:
+				continue
 			car.lane_speed = car.speed
 		valid_cars.append(car)
 
@@ -1653,6 +1512,7 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 				var t := clampf(remaining / 8.0, 0.0, 1.0)
 				car.scale = Vector3(t, t, t)
 			surviving_cars.append(car)
+	lane.cars = surviving_cars
 
 
 ## Lane distance at which a Lane 3 car commits to a lot errand (35 m before its turn).

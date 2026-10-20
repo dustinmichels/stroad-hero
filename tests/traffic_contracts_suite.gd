@@ -97,6 +97,35 @@ func _run_test_exit_priority() -> void:
 		for car in lane.cars:
 			car.queue_free()
 		lane.cars.clear()
+		# Regression test: Approaching car turning in before merge point must not block driveway exit merge
+		var waiting_car: Car = tm.PassengerCarScene.instantiate()
+		tm.add_child(waiting_car)
+		waiting_car.state = Car.State.WAITING_TO_MERGE
+		waiting_car.merge_target_lane = lane_id
+		waiting_car.global_position = Vector3(merge_x, 0.0, -13.375 if lane_id == 0 else 13.375)
+		var approaching_car: Car = tm._spawn_car_at(
+			lane, lane.distance_at(merge_x) - 15.0, tm.PassengerCarScene
+		)
+		approaching_car.state = Car.State.APPROACHING
+		approaching_car.errand = Errand.new(&"taco_hell" if lane_id == 0 else &"booger_king", 10.0)
+		assert(
+			tm._can_merge(waiting_car),
+			"Approaching car turning in before merge point must not block driveway exit"
+		)
+		approaching_car.queue_free()
+		waiting_car.queue_free()
+
+		# Regression test: Parked cars must not be retained in lane.cars
+		var parked: Car = tm.PassengerCarScene.instantiate()
+		tm.add_child(parked)
+		parked.state = Car.State.PARKED
+		lane.cars.append(parked)
+		tm._update_lane_traffic(lane, 1.0 / 60.0)
+		assert(not lane.cars.has(parked), "Parked car must not remain in lane.cars")
+		parked.queue_free()
+		for car in lane.cars:
+			car.queue_free()
+		lane.cars.clear()
 	print("EXIT_PRIORITY: SUCCESS - both exits yield without stopping main-road traffic")
 	main.get_tree().quit(0)
 
@@ -732,10 +761,10 @@ func _run_test_car_exhaust() -> void:
 	assert(taxi.exhaust_particles != null, "Taxi should have exhaust particles")
 	assert(taxi.exhaust_particles.emitting == true, "Taxi should emit smog when cruising")
 
-	# 5. Default exhaust test: all cars get exhaust automatically by default
+	# 5. Distribution test: some of the cars get exhaust automatically
 	var sample_cars: Array[Car] = []
 	var exhaust_count := 0
-	for i in range(10):
+	for i in range(30):
 		var c: Car = pcar_scene.instantiate()
 		main.add_child(c)
 		sample_cars.append(c)
@@ -745,10 +774,10 @@ func _run_test_car_exhaust() -> void:
 		if c.has_exhaust:
 			exhaust_count += 1
 	assert(
-		exhaust_count == 10,
-		"All cars should have exhaust enabled by default (got %d / 10)" % exhaust_count
+		exhaust_count > 0 and exhaust_count < 30,
+		"Only some cars should have exhaust enabled by default (got %d / 30)" % exhaust_count
 	)
-	print("  Default exhaust verified: %d of 10 cars enabled exhaust" % exhaust_count)
+	print("  Exhaust distribution verified: %d of 30 cars rolled exhaust" % exhaust_count)
 
 	# Cleanup
 	car_clean.queue_free()

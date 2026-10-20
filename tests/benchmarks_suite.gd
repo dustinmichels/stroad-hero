@@ -471,6 +471,9 @@ func _run_verify_render_test() -> void:
 	_collect_typed_nodes(dorf_inst, dorf_meshes, dorf_cols)
 	assert(dorf_meshes.size() > 0, "Dorf must have meshes")
 	assert(dorf_cols.size() > 0, "Dorf must have collision shapes")
+	assert(dorf_inst.has_node("ParkedCars"), "Dorf must contain ParkedCars node")
+	var dorf_parked_cars: Array = dorf_inst.get_node("ParkedCars").get_children()
+	assert(dorf_parked_cars.size() == 15, "Dorf scene must have 15 parked cars")
 	dorf_inst.free()
 	print(
 		(
@@ -482,9 +485,10 @@ func _run_verify_render_test() -> void:
 	# Test Dorf parking lot and parked cars
 	var dorf_lot_mesh = main.get_node_or_null("Parking/DorfParkingLot")
 	assert(dorf_lot_mesh != null, "Parking/DorfParkingLot must exist")
-	var tm_node = main.get_node_or_null("TrafficManager") as TrafficManager
-	assert(tm_node != null, "TrafficManager must exist")
-	assert(tm_node.dorf_cars.size() == 15, "Dorf lot must have 15 parked cars")
+	var dorf_parked_cars_node = main.get_node_or_null("Props/Dorf/ParkedCars")
+	assert(dorf_parked_cars_node != null, "Props/Dorf/ParkedCars must exist")
+	var dorf_cars: Array = dorf_parked_cars_node.get_children()
+	assert(dorf_cars.size() == 15, "Dorf lot must have 15 parked cars in scene")
 	assert(
 		not ParkingLot.is_car_type_allowed_in_dorf_lot(Car.CarType.JEEP),
 		"Jeep must not be allowed in Dorf lot"
@@ -509,29 +513,48 @@ func _run_verify_render_test() -> void:
 		ParkingLot.is_car_type_allowed_in_dorf_lot(Car.CarType.PICKUP),
 		"Pickup must be allowed in Dorf lot"
 	)
-	for dc in tm_node.dorf_cars:
-		assert(dc.state == Car.State.PARKED, "Dorf car must be PARKED")
-		assert(is_inf(dc.dwell_left), "Dorf car must never leave (infinite dwell)")
-		assert(dc.speed == 0.0, "Dorf car must not be moving")
-		assert(
-			TrafficManager.is_car_allowed_in_dorf_lot(dc),
-			(
-				"Dorf lot car must be allowed by Dorf lot rule (type: %s)"
-				% Car.CarType.keys()[dc.car_type]
-			)
-		)
-		assert(
-			(
-				dc.car_type != Car.CarType.JEEP
-				and dc.car_type != Car.CarType.SPORTS
-				and dc.car_type != Car.CarType.TAXI
-			),
-			(
-				"Dorf lot must not have Jeeps, sports cars, or taxis (found %s)"
-				% Car.CarType.keys()[dc.car_type]
-			)
-		)
-	print("  Dorf parking lot & 15 permanent parked cars verified (no Jeeps, sports cars, taxis)")
+	for car_node in dorf_cars:
+		assert(car_node is StaticBody3D, "Dorf car %s must be a StaticBody3D" % car_node.name)
+		var col: CollisionShape3D = car_node.get_node_or_null("CollisionShape3D")
+		assert(col != null, "Dorf car %s must have CollisionShape3D" % car_node.name)
+		assert(car_node.has_node("Model"), "Dorf car %s must have a Model" % car_node.name)
+		var car_meshes: Array[MeshInstance3D] = []
+		var car_cols: Array[CollisionShape3D] = []
+		_collect_typed_nodes(car_node, car_meshes, car_cols)
+		assert(car_meshes.size() > 0, "Dorf car %s must contain mesh instances" % car_node.name)
+	print(
+		"  Dorf parking lot & 15 permanent scene-authored cars verified (StaticBody3D models with collision)"
+	)
+
+	# Test Flag_Dorf and flags in main scene
+	var flags_parent := main.get_node_or_null("Props/Flags")
+	assert(flags_parent != null, "Props/Flags must exist")
+	var dorf_flag := main.get_node_or_null("Props/Flags/Flag_Dorf") as USFlag
+	assert(dorf_flag != null, "Flag_Dorf must exist in Props/Flags")
+	assert(
+		dorf_flag.flag_size == USFlag.FlagSize.COLOSSAL,
+		"Flag_Dorf must have COLOSSAL flag_size (4)"
+	)
+	var dorf_flag_col := dorf_flag.get_node_or_null("CollisionShape3D") as CollisionShape3D
+	assert(
+		dorf_flag_col != null and dorf_flag_col.shape is CylinderShape3D,
+		"Flag_Dorf collision shape must be CylinderShape3D"
+	)
+	var colossal_shape := dorf_flag_col.shape as CylinderShape3D
+	assert(colossal_shape.height >= 24.0, "Colossal flagpole height must be at least 24m")
+	var colossal_visual := dorf_flag.get_node_or_null("Visuals/Colossal") as Node3D
+	assert(colossal_visual != null, "Flag_Dorf must have Colossal visuals")
+	var colossal_flag_mesh := colossal_visual.get_node_or_null("Flag") as MeshInstance3D
+	assert(
+		colossal_flag_mesh != null and colossal_flag_mesh.mesh is PlaneMesh,
+		"Colossal flag mesh must be PlaneMesh"
+	)
+	var colossal_flag_plane := colossal_flag_mesh.mesh as PlaneMesh
+	assert(
+		colossal_flag_plane.size.x >= 9.0 and colossal_flag_plane.size.y >= 4.5,
+		"Colossal flag plane size must be at least 9m x 4.5m"
+	)
+	print("  Dorf colossal American flag verified (24m pole, 9.5x5.0m flag)")
 
 	# --- 2. Vehicles ---
 	print("VERIFY_RENDER [2/7]: Verifying vehicles & body variants...")
@@ -566,6 +589,16 @@ func _run_verify_render_test() -> void:
 				is_equal_approx(s.visibility_range_end, 50.0),
 				"Vehicle signals must have visibility_range_end 50.0"
 			)
+		var col_node := test_car.get_node_or_null("CollisionShape3D") as CollisionShape3D
+		assert(
+			col_node != null and col_node.shape is BoxShape3D,
+			"CarType %d must have BoxShape3D collision" % ct
+		)
+		var box_shape := col_node.shape as BoxShape3D
+		assert(
+			box_shape.size.x > 0.0 and box_shape.size.y > 0.0 and box_shape.size.z > 0.0,
+			"CarType %d collision shape must have non-zero size" % ct
+		)
 		if ct == Car.CarType.F150:
 			var body := test_car.get_node_or_null("Visuals/F150/Body") as MeshInstance3D
 			assert(body != null and body.mesh != null, "F150 Body mesh must exist")

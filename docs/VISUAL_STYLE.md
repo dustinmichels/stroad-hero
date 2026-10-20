@@ -72,7 +72,7 @@ This document catalogs the current visual style and 3D assets of **Stroad Hero**
 
 - **`asset_props_showcase.png`** — **Street Furniture Collection**:
   - **Overhead Road Sign:** Galvanized steel truss structure with green highway destination boards (_"688 WEST INDIAN ROCKS BEACH"_, _"TO 19 LARGO CLEARWATER"_, _"688 EAST TAMPA"_).
-  - **US Flag:** 8-meter steel flagpole with gold finial and waving cloth using a custom vertex displacement shader.
+  - **US Flag:** Steel flagpoles with gold ball finials and waving cloth via a custom vertex displacement shader (`shaders/us_flag.gdshader`), ranging from 8-meter standard and 11.5-meter large poles to a 16.5-meter giant pole and a colossal 24-meter (80-foot) American car dealership monument flag with a 9.5m $\times$ 5.0m waving banner at Dorf (`buildings/dorf.tscn`), plus $45^\circ$ angled mounted variants on Cramped Inn canopy posts.
   - **Stylized Tree:** Spherical layered low-poly foliage on a tapered brown trunk.
   - **Street Lamp:** Cobra-head dark steel streetlight with emissive illuminated luminaire.
   - **Fire Hydrant:** Classic red municipal cast-iron hydrant.

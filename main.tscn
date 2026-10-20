@@ -1853,10 +1853,10 @@ transform = Transform3D(-1, 0, 1.22465e-16, 0, 1, 0, -1.22465e-16, 0, -1, 150, 0
 [node name="Trees" type="Node3D" parent="Props" unique_id=1613321626]
 
 [node name="Tree_m22_11" parent="Props/Trees" unique_id=1201302378 instance=ExtResource("9_tree")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21.5, 0, 16.5)
+transform = Transform3D(0.984808, 0, 0.173648, 0, 1, 0, -0.173648, 0, 0.984808, -26.5, 0, 16.5)
 
 [node name="Tree_12_11" parent="Props/Trees" unique_id=1750045373 instance=ExtResource("9_tree")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 16.5)
+transform = Transform3D(0.34202, 0, 0.939693, 0, 1, 0, -0.939693, 0, 0.34202, 15, 0, 16.5)
 tree_type = 4
 
 [node name="Tree_m31_m15" parent="Props/Trees" unique_id=550007051 instance=ExtResource("9_tree")]
@@ -1864,72 +1864,71 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -31, 0, -19)
 tree_type = 1
 
 [node name="Tree_m48_m45" parent="Props/Trees" unique_id=895272427 instance=ExtResource("9_tree")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -48, 0, -49)
+transform = Transform3D(-0.5, 0, 0.866025, 0, 1, 0, -0.866025, 0, -0.5, -48, 0, -49)
 tree_type = 5
 
 [node name="Tree_m58_11" parent="Props/Trees" unique_id=1824435465 instance=ExtResource("9_tree")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -58, 0, 16.5)
+transform = Transform3D(0.642788, 0, 0.766044, 0, 1, 0, -0.766044, 0, 0.642788, -58, 0, 16.5)
 tree_type = 2
 
 [node name="Tree_30_11" parent="Props/Trees" unique_id=1394935530 instance=ExtResource("9_tree")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0, 15.85)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 0, 15.85)
 tree_type = 1
 
 [node name="Tree_52_11" parent="Props/Trees" unique_id=1372107427 instance=ExtResource("9_tree")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 52, 0, 15.85)
+transform = Transform3D(0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, 0.707107, 52, 0, 15.85)
 tree_type = 3
 
 [node name="Tree_m37_m22" parent="Props/Trees" unique_id=1240052543 instance=ExtResource("9_tree")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -37, 0, -26)
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, -37, 0, -25)
 tree_type = 3
 
 [node name="Tree_50_m11" parent="Props/Trees" unique_id=915782881 instance=ExtResource("9_tree")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 56, 0, -16.5)
+transform = Transform3D(0.939693, 0, -0.34202, 0, 1, 0, 0.34202, 0, 0.939693, 55, 0, -17.5)
 tree_type = 2
 
 [node name="Tree_55_m11" parent="Props/Trees" unique_id=1264316546 instance=ExtResource("9_tree")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 68, 0, -16.5)
+transform = Transform3D(0.866025, 0, 0.5, 0, 1, 0, -0.5, 0, 0.866025, 69, 0, -17.5)
 
 [node name="Tree_m70_11" parent="Props/Trees" unique_id=582152712 instance=ExtResource("9_tree")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -70, 0, 16.5)
 tree_type = 1
 
 [node name="Tree_72_11" parent="Props/Trees" unique_id=1685300152 instance=ExtResource("9_tree")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 77, 0, 16.5)
+transform = Transform3D(0.819152, 0, 0.573576, 0, 1, 0, -0.573576, 0, 0.819152, 136, 0, -18.5)
 tree_type = 4
 
 [node name="Tree_m72_m11" parent="Props/Trees" unique_id=1555101640 instance=ExtResource("9_tree")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -72, 0, -16.5)
+transform = Transform3D(0.965926, 0, 0.258819, 0, 1, 0, -0.258819, 0, 0.965926, -72, 0, -16.5)
 tree_type = 2
 
 [node name="Tree_75_m11" parent="Props/Trees" unique_id=1817032470 instance=ExtResource("9_tree")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 100, 0, -52)
+transform = Transform3D(0.5, 0, -0.866025, 0, 1, 0, 0.866025, 0, 0.5, 100, 0, -52)
 tree_type = 5
 
 [node name="Tree_FrontageMedian_82" parent="Props/Trees" unique_id=281065446 instance=ExtResource("9_tree")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 82, 0, 19.5)
+transform = Transform3D(0.906308, 0, 0.422618, 0, 1, 0, -0.422618, 0, 0.906308, 82, 0, 19.5)
 tree_type = 6
 
 [node name="Tree_FrontageMedian_102" parent="Props/Trees" unique_id=83478254 instance=ExtResource("9_tree")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 102, 0, 20)
+transform = Transform3D(0.819152, 0, -0.573576, 0, 1, 0, 0.573576, 0, 0.819152, 93, 0, 19.5)
 tree_type = 5
 
 [node name="Tree_FrontageMedian_122" parent="Props/Trees" unique_id=950900190 instance=ExtResource("9_tree")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 122, 0, 19)
+transform = Transform3D(-0.34202, 0, 0.939693, 0, 1, 0, -0.939693, 0, -0.34202, 122, 0, 19)
 tree_type = 6
 
 [node name="Tree_FrontageMedian_142" parent="Props/Trees" unique_id=239333646 instance=ExtResource("9_tree")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 142, 0, 20.5)
+transform = Transform3D(0.422618, 0, 0.906308, 0, 1, 0, -0.906308, 0, 0.422618, 142, 0, 20.5)
 tree_type = 5
 
 [node name="Tree_FrontageMedian_160" parent="Props/Trees" unique_id=224554866 instance=ExtResource("9_tree")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 160, 0, 19.5)
+transform = Transform3D(0.34202, 0, -0.939693, 0, 1, 0, 0.939693, 0, 0.34202, 160, 0, 19.5)
 tree_type = 6
 
 [node name="Tree_LiveOak_Mall" parent="Props/Trees" unique_id=1791726635 instance=ExtResource("9_tree")]
-transform = Transform3D(0.965926, 0, 0.258819, 0, 1, 0, -0.258819, 0, 0.965926, -14, 0, 16.5)
+transform = Transform3D(0.939693, 0, 0.34202, 0, 1, 0, -0.34202, 0, 0.939693, -84, 0, 19.5)
 tree_type = 6
-
 [node name="Flags" type="Node3D" parent="Props" unique_id=453050892]
 
 [node name="Flag_BoogerKing" parent="Props/Flags" unique_id=871273012 instance=ExtResource("14_flag")]
@@ -1948,9 +1947,9 @@ transform = Transform3D(0.990268, 0, -0.139173, 0, 1, 0, 0.139173, 0, 0.990268, 
 transform = Transform3D(0.997564, 0, 0.069756, 0, 1, 0, -0.069756, 0, 0.997564, -80, 0, 20)
 flag_size = 2
 
-[node name="Flag_EastLarge" parent="Props/Flags" unique_id=1344627042 instance=ExtResource("14_flag")]
+[node name="Flag_Dorf" parent="Props/Flags" unique_id=1344627042 instance=ExtResource("14_flag")]
 transform = Transform3D(0.994522, 0, -0.104528, 0, 1, 0, 0.104528, 0, 0.994522, 111, 0, -19)
-flag_size = 1
+flag_size = 4
 
 [node name="Flag_CrampedInnEast" parent="Props/Flags" unique_id=691767306 instance=ExtResource("14_flag")]
 transform = Transform3D(0.99863, 0, 0.052336, 0, 1, 0, -0.052336, 0, 0.99863, 61, 0, 15.85)

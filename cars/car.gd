@@ -78,7 +78,7 @@ var sweep_rev: int = 0:
 			_last_transform = current_xf
 			sweep_rev += 1
 		return sweep_rev
-var state := State.CRUISING:
+@export var state: State = State.CRUISING:
 	set(value):
 		if state != value:
 			state = value
@@ -754,7 +754,17 @@ static func _init_exhaust_resources() -> void:
 
 
 func _roll_exhaust() -> bool:
-	return true
+	match car_type:
+		CarType.PICKUP, CarType.F150, CarType.TRUCK, CarType.VAN, CarType.SHIPPING_TRUCK:
+			return randf() < 0.50
+		CarType.BUS:
+			return randf() < 0.40
+		CarType.SEDAN, CarType.HATCHBACK, CarType.SUV, CarType.MINIVAN, CarType.JEEP, CarType.TAXI:
+			return randf() < 0.35
+		CarType.SPORTS:
+			return randf() < 0.15
+		_:
+			return randf() < 0.35
 
 
 func _setup_exhaust() -> void:
@@ -1089,6 +1099,16 @@ func _update_dimensions() -> void:
 			car_width = 1.95
 			shape_size = Vector3(4.3, 1.86, 1.95)
 			shape_y = 0.93
+		CarType.F150:
+			car_length = 5.4
+			car_width = 2.2
+			shape_size = Vector3(5.3, 1.85, 2.2)
+			shape_y = 0.9
+		_:
+			car_length = 4.5
+			car_width = 2.0
+			shape_size = Vector3(4.5, 1.6, 2.0)
+			shape_y = 0.8
 	var col = _collision_shape if _collision_shape else get_node_or_null("CollisionShape3D")
 	if col:
 		var box := BoxShape3D.new()

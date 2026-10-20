@@ -11,6 +11,7 @@ extends Resource
 @export var proper_store_name: String = ""
 @export var generic_store_name: String = ""
 @export var used_location_name: String = ""
+@export var category: String = ""
 
 
 func _init(
@@ -23,7 +24,8 @@ func _init(
 	p_location_id: StringName = &"",
 	p_proper_store_name: String = "",
 	p_generic_store_name: String = "",
-	p_used_location_name: String = ""
+	p_used_location_name: String = "",
+	p_category: String = ""
 ) -> void:
 	id = p_id
 	item = p_item
@@ -37,3 +39,4 @@ func _init(
 	used_location_name = (
 		p_used_location_name if not p_used_location_name.is_empty() else p_store_name
 	)
+	category = p_category

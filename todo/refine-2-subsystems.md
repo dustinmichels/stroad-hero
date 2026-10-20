@@ -68,10 +68,10 @@ This document breaks down the subsystem-level extractions for traffic data/geome
 
 **Plan:**
 
-- [ ] Update all internal callsites in `TrafficManager` to use the extracted helper.
-- [ ] Ensure `_sweep_cache` clearing at the start of `_update_lot_cars` continues to properly manage cache lifetime.
-- [ ] Verify any traffic debug visualizers (e.g., debug footprint overlays) reference the new helper.
-- [ ] Run benchmark suite to confirm that cache hit rates and sweep timing have no regressions.
+- [x] Update all internal callsites in `TrafficManager` to use the extracted helper.
+- [x] Ensure `_sweep_cache` clearing at the start of `_update_lot_cars` continues to properly manage cache lifetime.
+- [x] Verify any traffic debug visualizers (e.g., debug footprint overlays) reference the new helper.
+- [x] Run benchmark suite to confirm that cache hit rates and sweep timing have no regressions.
 
 **Acceptance:** All traffic contracts and scenarios pass with zero regressions in benchmark run times.
 
@@ -87,10 +87,10 @@ This document breaks down the subsystem-level extractions for traffic data/geome
 
 **Plan:**
 
-- [ ] Create `player/mats_rig.gd` extending `Node3D` and attach it to `$Visual` in `player/mats.tscn`.
-- [ ] Move pivot and joint node resolution (`$LeftLegPivot`, `$RightLegPivot`, etc.) into `mats_rig.gd`.
-- [ ] Move `_set_limb_pose(hip, knee, ankle, shoulder, elbow)` and base limb rest orientations to `mats_rig.gd`.
-- [ ] Expose clean reset/hide/show methods (`reset_pose()`, `set_visible(bool)`) for death, respawn, and menu presentation.
+- [x] Create `player/mats_rig.gd` extending `Node3D` and attach it to `$Visual` in `player/mats.tscn`.
+- [x] Move pivot and joint node resolution (`$LeftLegPivot`, `$RightLegPivot`, etc.) into `mats_rig.gd`.
+- [x] Move `_set_limb_pose(hip, knee, ankle, shoulder, elbow)` and base limb rest orientations to `mats_rig.gd`.
+- [x] Expose clean reset/hide/show methods (`reset_pose()`, `set_visible(bool)`) for death, respawn, and menu presentation.
 
 **Acceptance:** `mats.gd` no longer holds direct node paths into the joint hierarchy under `$Visual`.
 
@@ -102,10 +102,11 @@ This document breaks down the subsystem-level extractions for traffic data/geome
 
 **Plan:**
 
-- [ ] Move `_animate()` logic and helper kinematics (`_leg_reach`) into `mats_rig.gd`.
-- [ ] Define a clean input contract for the rig: pass delta, planar velocity, grounded state, turning angle/yaw, step cadence, and squash factor from `mats.gd` each frame.
-- [ ] Keep authoritative movement, gravity, jumping, ledge-step assists, and collision detection inside `mats.gd`.
-- [ ] Preserve exact visual feel: lean angles, foot planting ground-drop, breath rates, and squash timing.
+- [x] Move `_animate()` logic and helper kinematics (`_leg_reach`) into `mats_rig.gd`.
+- [x] Define a clean input contract for the rig: pass delta, planar velocity, grounded state, turning angle/yaw, step cadence, and squash factor from `mats.gd` each frame.
+- [x] Keep authoritative movement, gravity, jumping, ledge-step assists, and collision detection inside `mats.gd`.
+- [x] Preserve exact visual feel: lean angles, foot planting ground-drop, breath rates, and squash timing.
+  - **Handoff note:** Procedural kinematics, gait, squash/stretch, idle sway/breath, and leg-reach foot planting now live in `MatsRig.update_locomotion()`. `mats.gd` supplies locomotion state and retains authoritative movement, gravity, collision detection, and ledge-step assist.
 
 **Acceptance:** Mats' walking, running, jumping, and idle animations are visually identical. `mats.gd` supplies locomotion inputs; `mats_rig.gd` evaluates joint transforms.
 
@@ -117,10 +118,14 @@ This document breaks down the subsystem-level extractions for traffic data/geome
 
 **Plan:**
 
-- [ ] Move phone mesh generation (`_build_phone`) and phone node attachment to `mats_rig.gd`.
-- [ ] Move phone pose targets (talking arm/elbow/head rotations, ringing arm/elbow/head rotations) and pose lerping into `mats_rig.gd`.
-- [ ] Maintain gameplay phone state (`PhoneMode`, `answer_phone()`, `end_phone_call()`, `is_on_phone`, `is_phone_ringing`) on `mats.gd`, passing state updates to the rig.
-- [ ] Ensure phone visibility hides cleanly on death and restores on respawn.
+- [x] Move phone mesh generation (`_build_phone`) and phone node attachment to `mats_rig.gd`.
+  - **Handoff note:** Procedural phone mesh construction (`_build_phone`) now runs in `MatsRig._ready()`, attaching the phone to `right_elbow`. Rig exposes `phone` Node3D property.
+- [x] Move phone pose targets (talking arm/elbow/head rotations, ringing arm/elbow/head rotations) and pose lerping into `mats_rig.gd`.
+  - **Handoff note:** Defined phone pose constants and extracted `update_phone_pose(delta)` in `mats_rig.gd` handling smooth pose lerps and blending.
+- [x] Maintain gameplay phone state (`PhoneMode`, `answer_phone()`, `end_phone_call()`, `is_on_phone`, `is_phone_ringing`) on `mats.gd`, passing state updates to the rig.
+  - **Handoff note:** `mats.gd` maintains `phone_mode`, `is_on_phone`, `is_phone_ringing`, `phone_blend`, `answer_phone()`, and `end_phone_call()`, delegating visual transitions and rig state to `MatsRig`.
+- [x] Ensure phone visibility hides cleanly on death and restores on respawn.
+  - **Handoff note:** Phone visibility and pose are cleared cleanly via `MatsRig.hide_phone()` and `reset_pose()` upon player death and respawn. When incoming or active calls persist or restart across respawn, `set_phone_state` restores phone visibility on the rig, blending smoothly into the active pose.
 
 **Acceptance:** Mats answers, holds, and lowers the phone with identical procedural transitions. Phone accessory setup lives entirely within the visual rig.
 
@@ -132,8 +137,8 @@ This document breaks down the subsystem-level extractions for traffic data/geome
 
 **Plan:**
 
-- [ ] Move mesh instance references (`Torso`, `Backpack`, `Face`, `Cap`, etc.) and material duplication/override logic to `mats_rig.gd`.
-- [ ] Expose customization setters (`set_shirt_color`, `set_pants_color`, etc.) directly on `mats_rig.gd`.
+- [x] Move mesh instance references (`Torso`, `Backpack`, `Face`, `Cap`, etc.) and material duplication/override logic to `mats_rig.gd`.
+- [x] Expose customization setters (`set_shirt_color`, `set_pants_color`, etc.) directly on `mats_rig.gd`.
 - [ ] Update `mats.gd` to forward initial configuration to its rig, and update `ui/character_editor.gd` to target the rig directly.
 - [ ] Enable standalone instantiation of `mats_rig` (or `$Visual` scene) for isolated UI previews without physics overhead.
 

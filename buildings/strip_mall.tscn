@@ -486,7 +486,7 @@ mesh = SubResource("Mesh_PosterPanel")
 surface_material_override/0 = SubResource("Mat_PosterVape")
 
 [node name="PosterLabelL" type="Label3D" parent="Storefronts/Store_USAVape"]
-visibility_range_end = 35.0
+visibility_range_end = 100.0
 cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -2.4, 1.15, -0.09)
 pixel_size = 0.007
@@ -574,7 +574,7 @@ mesh = SubResource("Mesh_PosterPanel")
 surface_material_override/0 = SubResource("Mat_PosterTattoo")
 
 [node name="PosterLabelL" type="Label3D" parent="Storefronts/Store_FreedomTattoo"]
-visibility_range_end = 35.0
+visibility_range_end = 100.0
 cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -2.4, 1.15, -0.09)
 pixel_size = 0.007
@@ -662,7 +662,7 @@ mesh = SubResource("Mesh_PosterPanel")
 surface_material_override/0 = SubResource("Mat_PosterPizza")
 
 [node name="PosterLabelL" type="Label3D" parent="Storefronts/Store_Abominos"]
-visibility_range_end = 35.0
+visibility_range_end = 100.0
 cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -2.4, 1.15, -0.09)
 pixel_size = 0.007
@@ -725,7 +725,7 @@ mesh = SubResource("Mesh_PosterPanel")
 surface_material_override/0 = SubResource("Mat_PosterNails")
 
 [node name="PosterLabelL" type="Label3D" parent="Storefronts/Store_StarNails"]
-visibility_range_end = 35.0
+visibility_range_end = 100.0
 cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -2.4, 1.15, -0.09)
 pixel_size = 0.007

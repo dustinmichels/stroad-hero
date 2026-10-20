@@ -53,7 +53,7 @@ const COL_LANE_CONFIGS: Array[Dictionary] = [
 		"dir": 1.0,
 		"car_x": -12.0,
 		"mats_x": 0.0,
-		"car_type": Car.CarType.SEDAN,
+		"car_type": Car.CarType.F150,
 		"speed": 16.0,
 		"mats_vz": 0.0
 	},
@@ -607,10 +607,25 @@ func on_physics_process(_delta: float) -> void:
 							% [expected_spd, hud_node.spd_count if hud_node else -1]
 						)
 					)
+					var expected_side_z := -13.85 if cfg["z"] < 0.0 else 13.85
+					assert(
+						absf(main.mats.global_position.z - expected_side_z) < 0.15,
+						(
+							"Mats must respawn on nearest side of road: expected z=%.2f, got %.2f"
+							% [expected_side_z, main.mats.global_position.z]
+						)
+					)
+					assert(
+						absf(main.mats.global_position.x - cfg["mats_x"]) < 0.5,
+						(
+							"Mats must respawn at death x coordinate: expected x=%.2f, got %.2f"
+							% [cfg["mats_x"], main.mats.global_position.x]
+						)
+					)
 					print(
 						(
-							"  Lane %d hit verified! Mats died and SPD counter incremented to %d"
-							% [_col_test_lane, hud_node.spd_count]
+							"  Lane %d hit verified! Mats died and SPD counter incremented to %d (respawned at side z=%.2f)"
+							% [_col_test_lane, hud_node.spd_count, main.mats.global_position.z]
 						)
 					)
 					if is_instance_valid(_col_test_car):

@@ -1051,6 +1051,8 @@ static func bake_flags(container: Node3D, actual_owner: Node) -> void:
 				active_name = "Giant"
 			3:
 				active_name = "Mounted"
+			4:
+				active_name = "Colossal"
 		var active_node := visuals.get_node_or_null(active_name) as Node3D
 		if active_node == null:
 			continue
