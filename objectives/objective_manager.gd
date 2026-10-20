@@ -322,22 +322,22 @@ func get_target_position(errand: MatsErrand) -> Vector3:
 	if errand != null:
 		match errand.location_id:
 			&"walgroins":
-				return Vector3(-3.0, 1.3, -31.35)
+				return Vector3(-3.0, 1.3, -35.35)
 			&"smell":
-				return Vector3(-52.5, 1.6, -31.3)
+				return Vector3(-52.5, 1.6, -35.3)
 			&"booger_king":
-				return Vector3(-47.3, 1.3, 29.4)
+				return Vector3(-47.3, 1.3, 33.4)
 			&"taco_hell":
-				return Vector3(31.5, 1.3, -27.75)
+				return Vector3(31.5, 1.3, -31.75)
 		match errand.id:
 			&"cough_syrup", &"band_aids", &"potato_chips", &"toothpaste", &"batteries":
-				return Vector3(-3.0, 1.3, -31.35)
+				return Vector3(-3.0, 1.3, -35.35)
 			&"milk", &"cereal", &"chewing_gum", &"beef_jerky":
-				return Vector3(-52.5, 1.6, -31.3)
+				return Vector3(-52.5, 1.6, -35.3)
 			&"hamburgers":
-				return Vector3(-47.3, 1.3, 29.4)
+				return Vector3(-47.3, 1.3, 33.4)
 			&"tacos", &"burritos", &"quesadillas":
-				return Vector3(31.5, 1.3, -27.75)
+				return Vector3(31.5, 1.3, -31.75)
 	return Vector3.ZERO
 
 

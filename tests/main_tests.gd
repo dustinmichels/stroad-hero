@@ -39,7 +39,7 @@ var _render_bench_f3_texts: Array[String] = []
 const COL_LANE_CONFIGS: Array[Dictionary] = [
 	{
 		"lane_id": 0,
-		"z": -5.6,
+		"z": -9.375,
 		"dir": -1.0,
 		"car_x": 12.0,
 		"mats_x": 0.0,
@@ -49,7 +49,7 @@ const COL_LANE_CONFIGS: Array[Dictionary] = [
 	},
 	{
 		"lane_id": 1,
-		"z": -1.9,
+		"z": -5.625,
 		"dir": -1.0,
 		"car_x": 20.0,
 		"mats_x": 0.0,
@@ -58,8 +58,8 @@ const COL_LANE_CONFIGS: Array[Dictionary] = [
 		"mats_vz": 0.0
 	},
 	{
-		"lane_id": 2,
-		"z": 1.9,
+		"lane_id": 5,
+		"z": 1.875,
 		"dir": 1.0,
 		"car_x": -20.0,
 		"mats_x": 0.0,
@@ -69,7 +69,7 @@ const COL_LANE_CONFIGS: Array[Dictionary] = [
 	},
 	{
 		"lane_id": 3,
-		"z": 5.6,
+		"z": 9.375,
 		"dir": 1.0,
 		"car_x": -12.0,
 		"mats_x": 0.0,
@@ -168,11 +168,11 @@ func _ready() -> void:
 		_test_car.desired_speed = 0.0
 		_test_car.state = Car.State.WAITING_TO_MERGE
 		add_child(_test_car)
-		_test_car.global_position = Vector3(9.0, 0.0, -9.6)
+		_test_car.global_position = Vector3(9.0, 0.0, -13.375)
 		_test_car.rotation.y = -PI / 2.0  # facing +Z
 		_test_car.reset_physics_interpolation()
 		_test_car._update_blocker_layer()
-		mats.global_position = Vector3(9.0, 0.5, -13.0)
+		mats.global_position = Vector3(9.0, 0.5, -17.0)
 	if "--test-mats-cart" in _user_args:
 		_cart_test_cart = (
 			get_node_or_null("Props/WalgroinsShoppingCarts/Cart_Abandoned_WestApron")
@@ -202,7 +202,7 @@ func _ready() -> void:
 				lane.cars.clear()
 		_col_test_stage = 0
 		_test_frames = 0
-		mats.global_position = Vector3(16.0, 0.10, 7.1)
+		mats.global_position = Vector3(16.0, 0.10, 12.6)
 		mats.velocity = Vector3(0.0, 0.0, 4.0)
 	if "--test-merge-gap" in _user_args:
 		var traffic_mgr = $TrafficManager
@@ -221,7 +221,7 @@ func _ready() -> void:
 		_test_car.path = null
 		_test_car.lane_id = -1
 		_test_car.state = Car.State.WAITING_TO_MERGE
-		_test_car.global_position = Vector3(9.0, 0.0, -9.6)
+		_test_car.global_position = Vector3(9.0, 0.0, -13.375)
 		_test_car.rotation.y = -PI / 2.0
 		_test_car.reset_physics_interpolation()
 		_test_car.speed = 0.0
@@ -2101,7 +2101,7 @@ func _physics_process(_delta: float) -> void:
 	if "--test-mats-blocker" in _user_args:
 		_test_frames += 1
 		if _mats_stage == 0:
-			# Push Mats south along sidewalk into the car (from z=-13 toward z=-9.6)
+			# Push Mats south along sidewalk into the car (from z=-17 toward z=-13.375)
 			mats.velocity = Vector3(0.0, 0.0, 5.0)
 			if _test_frames > 60:
 				print(
@@ -2114,7 +2114,7 @@ func _physics_process(_delta: float) -> void:
 				)
 				assert(not mats._is_dead, "Mats died on stopped car!")
 				assert(
-					mats.global_position.z < -11.0,
+					mats.global_position.z < -14.5,
 					"Mats walked through stopped car across sidewalk!"
 				)
 				assert(
@@ -2127,7 +2127,7 @@ func _physics_process(_delta: float) -> void:
 				_mats_stage = 1
 				_mats_start_frame = _test_frames
 				# Prepare Stage 2: place Mats on sidewalk apron in front of car in merge path
-				mats.global_position = Vector3(9.0, 0.5, -7.0)
+				mats.global_position = Vector3(9.0, 0.5, -11.0)
 				mats.velocity = Vector3.ZERO
 				# Initiate car merge
 				_test_car.state = Car.State.MERGING
@@ -2332,7 +2332,7 @@ func _physics_process(_delta: float) -> void:
 		var f_120: int = maxi(1, int(round(120.0 * tick_scale)))
 		if _col_test_stage == 0:
 			mats.velocity = Vector3(0.0, 0.0, 4.0)
-			if mats.global_position.z >= 7.3 and mats.global_position.z <= 7.8:
+			if mats.global_position.z >= 12.8 and mats.global_position.z <= 13.3:
 				print(
 					(
 						"  [Curb Step-Up Trace] f=%d y=%.4f z=%.4f on_floor=%s"
@@ -2356,7 +2356,7 @@ func _physics_process(_delta: float) -> void:
 				_test_frames = 0
 		elif _col_test_stage == 1:
 			mats.velocity = Vector3(0.0, 0.0, -4.0)
-			if mats.global_position.z >= 7.3 and mats.global_position.z <= 7.8:
+			if mats.global_position.z >= 12.8 and mats.global_position.z <= 13.3:
 				print(
 					(
 						"  [Curb Step-Down Trace] f=%d y=%.4f z=%.4f on_floor=%s"
@@ -2369,7 +2369,9 @@ func _physics_process(_delta: float) -> void:
 					)
 				)
 			if _test_frames >= f_50:
-				assert(mats.global_position.z < 7.4, "Mats should step off sidewalk back onto road")
+				assert(
+					mats.global_position.z < 12.9, "Mats should step off sidewalk back onto road"
+				)
 				assert(
 					absf(mats.global_position.y - 0.10) < 0.05,
 					"Mats should settle on road (y ~ 0.10), got %f" % mats.global_position.y
@@ -2377,15 +2379,15 @@ func _physics_process(_delta: float) -> void:
 				print("COLLISION_TEST [2/5]: Curb step-down and floor snap verified!")
 				_col_test_stage = 2
 				_test_frames = 0
-				mats.global_position = Vector3(92.0, 0.245, 9.3)
+				mats.global_position = Vector3(136.0, 0.245, 13.5)
 				mats.velocity = Vector3(0.0, 0.0, -4.0)
 		elif _col_test_stage == 2:
 			mats.velocity = Vector3(0.0, 0.0, -4.0)
 			if _test_frames >= f_40:
-				var post_pos := Vector3(92.0, 0.245, 8.2)
+				var post_pos := Vector3(136.0, 0.245, 12.125)
 				var dist := mats.global_position.distance_to(post_pos)
-				assert(dist >= 0.48, "Mats must not penetrate sign post cylinder: dist=%f" % dist)
-				assert(mats.global_position.z > 8.5, "Mats must be stopped by sign post!")
+				assert(dist >= 0.45, "Mats must not penetrate sign post cylinder: dist=%f" % dist)
+				assert(mats.global_position.z > 12.4, "Mats must be stopped by sign post!")
 				print(
 					(
 						"COLLISION_TEST [3/5]: Sign post cylinder collision verified (blocked at dist=%.2f)!"
@@ -2568,7 +2570,7 @@ func _physics_process(_delta: float) -> void:
 					)
 					assert(_test_car.speed == 0.0, "Waiting car speed must remain 0.0")
 					assert(
-						_test_car.global_position.distance_to(Vector3(9.0, 0.0, -9.6)) < 0.05,
+						_test_car.global_position.distance_to(Vector3(9.0, 0.0, -13.375)) < 0.05,
 						"Waiting car must hold position"
 					)
 					assert(
@@ -2972,8 +2974,8 @@ func _physics_process(_delta: float) -> void:
 				if not _ci_saw_rejoin:
 					_ci_saw_rejoin = true
 					assert(
-						absf(_test_car.global_position.z - 5.6) < 0.5,
-						"Car must be in Lane 3 (z=5.6)"
+						absf(_test_car.global_position.z - 9.375) < 0.5,
+						"Car must be in Lane 3 (z=9.375)"
 					)
 					print("%s: SUCCESS - full errand cycle complete!" % tag)
 					get_tree().quit(0)
@@ -3080,8 +3082,8 @@ func _physics_process(_delta: float) -> void:
 				if not _smell_saw_rejoin:
 					_smell_saw_rejoin = true
 					assert(
-						absf(_test_car.global_position.z - (-5.6)) < 0.5,
-						"Car must be in Lane 0 (z=-5.6)"
+						absf(_test_car.global_position.z - (-9.375)) < 0.5,
+						"Car must be in Lane 0 (z=-9.375)"
 					)
 					print("%s: SUCCESS - full errand cycle complete!" % tag)
 					get_tree().quit(0)
@@ -3108,15 +3110,15 @@ func _setup_col_near_miss_test() -> void:
 	_test_frames = 0
 	_col_test_wait = 0
 	var lane_id := 0
-	var lane_z := -5.6
+	var lane_z := -9.375
 	var lane_dir := -1.0
 	var car_x := 12.0
 	# Car width for SEDAN is 1.9m -> half-width is 0.95m.
-	# Lane center is -5.6, so south edge of car is at -5.6 + 0.95 = -4.65.
-	# Place Mats center at -4.65 + 0.27 = -4.38 (clearance 0.27m to car edge).
-	# With radius=0.25m, car passes cleanly without hit (capsule reaches -4.63 > -4.65).
-	# With radius=0.30m, capsule reaches -4.68 < -4.65, so a phantom hit kills Mats.
-	mats.global_position = Vector3(0.0, 0.10, -4.38)
+	# Lane center is -9.375, so south edge of car is at -9.375 + 0.95 = -8.425.
+	# Place Mats center at -8.425 + 0.27 = -8.155 (clearance 0.27m to car edge).
+	# With radius=0.25m, car passes cleanly without hit (capsule reaches -8.405 > -8.425).
+	# With radius=0.30m, capsule reaches -8.455 < -8.425, so a phantom hit kills Mats.
+	mats.global_position = Vector3(0.0, 0.10, -8.155)
 	mats.velocity = Vector3.ZERO
 
 	var car_scene = load("res://cars/passenger_car.tscn")

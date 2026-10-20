@@ -24,24 +24,20 @@ void fragment() {
 	float wz = world_position.z;
 	bool is_top = world_normal.y > 0.6;
 	float abs_z = abs(wz);
-	bool on_stroad = (abs_z >= 7.3 && abs_z <= 10.9);
+	bool on_stroad = (abs_z >= 12.8 && abs_z <= 15.0);
 
 	// Transverse expansion joints every slab_length along X
 	float dist_x = abs(fract(wx / slab_length + 0.5) - 0.5) * slab_length;
 
 	float dist_z;
-	float dist_curb_line;
+	float dist_curb_line = 10.0;
 	bool is_curb_band = false;
 
 	if (on_stroad) {
-		// Curb apron band along street edge (from abs_z = 7.5 to 7.72)
-		is_curb_band = (abs_z < 7.72);
-		dist_curb_line = abs(abs_z - 7.72);
-		// Longitudinal joint down the center of the walking area (between 7.72 and 10.7)
-		dist_z = abs(abs_z - 9.21);
+		// Narrow sidewalk: single slab spans full width, no center split
+		dist_z = 10.0;
 	} else {
 		dist_z = abs(fract(wz / slab_length + 0.5) - 0.5) * slab_length;
-		dist_curb_line = 10.0;
 	}
 
 	float dist_joint = min(dist_x, min(dist_z, dist_curb_line));
@@ -59,7 +55,7 @@ void fragment() {
 		float curb_hash = hash(vec2(floor(wx / slab_length), step(0.0, wz) * 5.0 + 1.0));
 		slab_color = curb_color * mix(0.98, 1.02, curb_hash);
 	} else {
-		vec2 slab_cell = vec2(floor(wx / slab_length), step(9.21, abs_z) + step(0.0, wz) * 2.0);
+		vec2 slab_cell = vec2(floor(wx / slab_length), step(0.0, wz) * 2.0);
 		float slab_hash = hash(slab_cell * 17.17 + vec2(3.1, 9.3));
 		float tone_shift = mix(0.97, 1.03, slab_hash);
 		vec3 tint = mix(vec3(0.99, 1.00, 1.01), vec3(1.01, 1.00, 0.99), slab_hash);
@@ -86,9 +82,9 @@ void fragment() {
 		float x_grad = (fract(wx / slab_length + 0.5) - 0.5);
 		float x_slope = -sign(x_grad) * smoothstep(half_w * 2.0, half_w * 0.5, dist_x);
 		float z_slope = 0.0;
-		if (on_stroad) {
-			float z_grad = (abs_z - 9.21);
-			z_slope = -sign(z_grad) * smoothstep(half_w * 2.0, half_w * 0.5, dist_z) * sign(wz);
+		if (!on_stroad) {
+			float z_grad = (fract(wz / slab_length + 0.5) - 0.5);
+			z_slope = -sign(z_grad) * smoothstep(half_w * 2.0, half_w * 0.5, dist_z);
 		}
 		vec3 n_perturb = vec3(x_slope * 0.35, 0.0, z_slope * 0.35);
 		vec3 view_perturb = (VIEW_MATRIX * vec4(n_perturb, 0.0)).xyz;

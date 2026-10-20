@@ -233,15 +233,19 @@ func _ready() -> void:
 
 
 func _setup_lanes() -> void:
-	# 4 lanes matching the stroad markings; lanes run past each road end (road spans x = ±90)
+	# 6 lanes matching the stroad markings; lanes run past each road end (road spans x = ±90)
 	# Lane 0: Westbound outer
-	lanes.append(Lane.new(0, -5.6, -1.0, 70.0, 165.0, 11.0, 14.0, 3.0, 6.0))
-	# Lane 1: Westbound inner (faster)
-	lanes.append(Lane.new(1, -1.9, -1.0, 70.0, 165.0, 14.0, 18.0, 2.5, 5.0))
-	# Lane 2: Eastbound inner (faster)
-	lanes.append(Lane.new(2, 1.9, 1.0, -95.0, 190.0, 14.0, 18.0, 2.5, 5.0))
+	lanes.append(Lane.new(0, -9.375, -1.0, 70.0, 165.0, 11.0, 14.0, 3.5, 7.0))
+	# Lane 1: Westbound middle
+	lanes.append(Lane.new(1, -5.625, -1.0, 70.0, 165.0, 13.0, 16.0, 3.0, 6.0))
+	# Lane 2: Westbound inner (faster)
+	lanes.append(Lane.new(2, -1.875, -1.0, 70.0, 165.0, 15.0, 19.0, 2.5, 5.0))
 	# Lane 3: Eastbound outer
-	lanes.append(Lane.new(3, 5.6, 1.0, -95.0, 190.0, 11.0, 14.0, 3.0, 6.0))
+	lanes.append(Lane.new(3, 9.375, 1.0, -95.0, 190.0, 11.0, 14.0, 3.5, 7.0))
+	# Lane 4: Eastbound middle
+	lanes.append(Lane.new(4, 5.625, 1.0, -95.0, 190.0, 13.0, 16.0, 3.0, 6.0))
+	# Lane 5: Eastbound inner (faster)
+	lanes.append(Lane.new(5, 1.875, 1.0, -95.0, 190.0, 15.0, 19.0, 2.5, 5.0))
 
 
 func _pre_populate_traffic() -> void:
@@ -511,12 +515,12 @@ func _update_lot_cars(delta: float) -> void:
 			if car.turn_signal != Car.TurnSignal.NONE:
 				if (
 					(car.lane_id == 0 or car.merge_target_lane == 0)
-					and car.global_position.z <= -9.0
+					and car.global_position.z <= -12.5
 				):
 					car.set_turn_signal(Car.TurnSignal.NONE)
 				elif (
 					(car.lane_id == 3 or car.merge_target_lane == 3)
-					and car.global_position.z >= 9.0
+					and car.global_position.z >= 12.5
 				):
 					car.set_turn_signal(Car.TurnSignal.NONE)
 			var yielding := _update_car_yielding(car, delta)
@@ -557,9 +561,9 @@ func _update_lot_cars(delta: float) -> void:
 			surviving_cars.append(car)
 		elif car.state == Car.State.DRIVE_THRU:
 			if car.turn_signal != Car.TurnSignal.NONE:
-				if car.merge_target_lane == 0 and car.global_position.z <= -9.0:
+				if car.merge_target_lane == 0 and car.global_position.z <= -12.5:
 					car.set_turn_signal(Car.TurnSignal.NONE)
-				elif car.merge_target_lane == 3 and car.global_position.z >= 9.0:
+				elif car.merge_target_lane == 3 and car.global_position.z >= 12.5:
 					car.set_turn_signal(Car.TurnSignal.NONE)
 			var yielding := _update_car_yielding(car, delta)
 			var order_dist := TACO_DT_ORDER_DIST if car.merge_target_lane == 0 else BK_DT_ORDER_DIST
@@ -1808,11 +1812,15 @@ func _get_adjacent_lane_id(current_lane_id: int) -> int:
 		0:
 			return 1
 		1:
-			return 0
-		2:
-			return 3
-		3:
 			return 2
+		2:
+			return 1
+		3:
+			return 4
+		4:
+			return 5
+		5:
+			return 4
 	return -1
 
 

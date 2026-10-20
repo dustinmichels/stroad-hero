@@ -16,10 +16,10 @@ const CRACKS := [
 	[Vector2(24.5, 2.8), Vector2(24.9, 2.5), Vector2(25.2, 2.7), Vector2(25.6, 2.3)],
 	[Vector2(45.1, -3.6), Vector2(45.4, -3.2), Vector2(45.8, -3.3), Vector2(46.1, -2.9)],
 	[Vector2(63.0, 5.8), Vector2(63.4, 5.5), Vector2(63.2, 5.1), Vector2(63.7, 4.8)],
-	[Vector2(-18.8, -20.8), Vector2(-18.4, -20.5), Vector2(-18.1, -20.7), Vector2(-17.7, -20.3)],
-	[Vector2(5.1, -17.8), Vector2(5.5, -17.5), Vector2(5.3, -17.1), Vector2(5.8, -16.9)],
-	[Vector2(30.8, 20.1), Vector2(31.2, 20.4), Vector2(31.6, 20.2), Vector2(32.0, 20.6)],
-	[Vector2(51.0, 26.5), Vector2(51.4, 26.2), Vector2(51.8, 26.4), Vector2(52.1, 26.0)],
+	[Vector2(-18.8, -24.8), Vector2(-18.4, -24.5), Vector2(-18.1, -24.7), Vector2(-17.7, -24.3)],
+	[Vector2(5.1, -21.8), Vector2(5.5, -21.5), Vector2(5.3, -21.1), Vector2(5.8, -20.9)],
+	[Vector2(30.8, 24.1), Vector2(31.2, 24.4), Vector2(31.6, 24.2), Vector2(32.0, 24.6)],
+	[Vector2(51.0, 30.5), Vector2(51.4, 30.2), Vector2(51.8, 30.4), Vector2(52.1, 30.0)],
 ]
 
 const TIRE_MARKS := [

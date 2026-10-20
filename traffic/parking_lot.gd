@@ -3,30 +3,30 @@ extends Node3D
 
 const STALL_SPACING := 4.0
 const ROWS := [
-	{"z": -28.5, "x0": -18.0, "count": 9, "nose": -1.0, "serves": &"walgroins"},  # N row, nose -Z
-	{"z": -14.5, "x0": -18.0, "count": 6, "nose": 1.0, "serves": &"walgroins"},  # S row, nose +Z
-	{"z": -14.5, "x0": 28.0, "count": 4, "nose": 1.0, "serves": &"taco_hell"},  # Taco row, nose +Z
-	{"z": 24.0, "x0": 22.0, "count": 3, "nose": 1.0, "serves": &"cramped_inn"},  # CI West row, nose +Z
-	{"z": 24.0, "x0": 54.0, "count": 2, "nose": 1.0, "serves": &"cramped_inn"},  # CI East row, nose +Z
-	{"z": 26.0, "x0": -19.0, "count": 8, "nose": 1.0, "serves": &"strip_mall"},  # Mall row, nose +Z
-	{"z": -27.0, "x0": -50.0, "count": 2, "nose": -1.0, "serves": &"smell_store"},  # Smell store row, nose -Z
-	{"z": -21.2, "x0": -61.75, "count": 2, "spacing": 5.5, "nose": -1.0, "serves": &"smell_gas"},  # Smell gas row, nose -Z
+	{"z": -32.5, "x0": -18.0, "count": 9, "nose": -1.0, "serves": &"walgroins"},  # N row, nose -Z
+	{"z": -18.5, "x0": -18.0, "count": 6, "nose": 1.0, "serves": &"walgroins"},  # S row, nose +Z
+	{"z": -18.5, "x0": 28.0, "count": 4, "nose": 1.0, "serves": &"taco_hell"},  # Taco row, nose +Z
+	{"z": 28.0, "x0": 22.0, "count": 3, "nose": 1.0, "serves": &"cramped_inn"},  # CI West row, nose +Z
+	{"z": 28.0, "x0": 54.0, "count": 2, "nose": 1.0, "serves": &"cramped_inn"},  # CI East row, nose +Z
+	{"z": 30.0, "x0": -19.0, "count": 8, "nose": 1.0, "serves": &"strip_mall"},  # Mall row, nose +Z
+	{"z": -31.0, "x0": -50.0, "count": 2, "nose": -1.0, "serves": &"smell_store"},  # Smell store row, nose -Z
+	{"z": -25.2, "x0": -61.75, "count": 2, "spacing": 5.5, "nose": -1.0, "serves": &"smell_gas"},  # Smell gas row, nose -Z
 ]
 const ENTRANCES: Dictionary[StringName, Vector3] = {
-	&"walgroins": Vector3(-3, 0, -32),
-	&"taco_hell": Vector3(31.5, 0, -27.8),
-	&"cramped_inn": Vector3(45.7, 0, 27.75),
-	&"strip_mall": Vector3(-5, 0, 29.7),
-	&"smell_store": Vector3(-48.0, 0, -30.0),
-	&"smell_gas": Vector3(-59.0, 0, -21.2),
+	&"walgroins": Vector3(-3, 0, -36),
+	&"taco_hell": Vector3(31.5, 0, -31.8),
+	&"cramped_inn": Vector3(45.7, 0, 31.75),
+	&"strip_mall": Vector3(-5, 0, 33.7),
+	&"smell_store": Vector3(-48.0, 0, -34.0),
+	&"smell_gas": Vector3(-59.0, 0, -25.2),
 }
-const TURN_IN_START := Vector3(17.0, 0.0, -5.6)
+const TURN_IN_START := Vector3(17.0, 0.0, -9.375)
 const ENTRY_X := 13.0
 const EXIT_X := 9.0
-const WAIT_POINT := Vector3(9.0, 0.0, -9.6)
-const MERGE_END := Vector3(5.0, 0.0, -5.6)
-const AISLE_Z_WB := -23.0
-const AISLE_Z_EB := -20.0
+const WAIT_POINT := Vector3(9.0, 0.0, -13.375)
+const MERGE_END := Vector3(5.0, 0.0, -9.375)
+const AISLE_Z_WB := -27.0
+const AISLE_Z_EB := -24.0
 const AISLE_WB_Z := AISLE_Z_WB
 const AISLE_EB_Z := AISLE_Z_EB
 const POACH_PENALTY := 1000.0
@@ -34,29 +34,29 @@ const JITTER := 5.0
 const V_LOT := 4.5
 const V_PARK := 1.5
 
-const BK_TURN_IN_START := Vector3(-45.0, 0.0, 5.6)
-const BK_WAIT_POINT := Vector3(-40.5, 0.0, 9.6)
-const BK_MERGE_END := Vector3(-36.5, 0.0, 5.6)
+const BK_TURN_IN_START := Vector3(-45.0, 0.0, 9.375)
+const BK_WAIT_POINT := Vector3(-40.5, 0.0, 13.375)
+const BK_MERGE_END := Vector3(-36.5, 0.0, 9.375)
 const TACO_DT_ORDER_DIST := 38.5
 const TACO_DT_PICKUP_DIST := 75.1
 const BK_DT_ORDER_DIST := 75.5
 const BK_DT_PICKUP_DIST := 77.0
-const CI_TURN_IN_START := Vector3(34.0, 0.0, 5.6)
+const CI_TURN_IN_START := Vector3(34.0, 0.0, 9.375)
 const CI_ENTRY_X := 38.0
 const CI_EXIT_X := 42.0
-const CI_WAIT_POINT := Vector3(42.0, 0.0, 9.6)
-const CI_MERGE_END := Vector3(46.0, 0.0, 5.6)
-const SM_TURN_IN_START := Vector3(-11.0, 0.0, 5.6)
+const CI_WAIT_POINT := Vector3(42.0, 0.0, 13.375)
+const CI_MERGE_END := Vector3(46.0, 0.0, 9.375)
+const SM_TURN_IN_START := Vector3(-11.0, 0.0, 9.375)
 const SM_ENTRY_X := -7.0
 const SM_EXIT_X := -3.0
-const SM_WAIT_POINT := Vector3(-3.0, 0.0, 9.6)
-const SM_MERGE_END := Vector3(1.0, 0.0, 5.6)
-const SMELL_TURN_IN_START := Vector3(-44.0, 0.0, -5.6)
+const SM_WAIT_POINT := Vector3(-3.0, 0.0, 13.375)
+const SM_MERGE_END := Vector3(1.0, 0.0, 9.375)
+const SMELL_TURN_IN_START := Vector3(-44.0, 0.0, -9.375)
 const SMELL_ENTRY_X := -48.0
 const SMELL_EXIT_X := -61.0
-const SMELL_WAIT_POINT := Vector3(-61.0, 0.0, -9.6)
-const SMELL_MERGE_END := Vector3(-65.0, 0.0, -5.6)
-const SMELL_AISLE_Z := -15.0
+const SMELL_WAIT_POINT := Vector3(-61.0, 0.0, -13.375)
+const SMELL_MERGE_END := Vector3(-65.0, 0.0, -9.375)
+const SMELL_AISLE_Z := -19.0
 ## Lots south of the road, entered from and exited to eastbound Lane 3 through a
 ## two-way driveway: enter at entry_x, leave at exit_x. Aisle z values are
 ## Vector2(west of the driveway column, east of it); entry and exit aisles differ so
@@ -69,8 +69,8 @@ const SOUTH_LOTS: Dictionary[StringName, Dictionary] = {
 		"exit_x": CI_EXIT_X,
 		"wait": CI_WAIT_POINT,
 		"merge_end": CI_MERGE_END,
-		"entry_aisle": Vector2(17.5, 16.5),
-		"exit_aisle": Vector2(20.25, 19.5),
+		"entry_aisle": Vector2(21.5, 20.5),
+		"exit_aisle": Vector2(24.25, 23.5),
 	},
 	&"strip_mall":
 	{
@@ -79,8 +79,8 @@ const SOUTH_LOTS: Dictionary[StringName, Dictionary] = {
 		"exit_x": SM_EXIT_X,
 		"wait": SM_WAIT_POINT,
 		"merge_end": SM_MERGE_END,
-		"entry_aisle": Vector2(19.5, 18.5),
-		"exit_aisle": Vector2(22.25, 21.5),
+		"entry_aisle": Vector2(23.5, 22.5),
+		"exit_aisle": Vector2(26.25, 25.5),
 	},
 }
 ## Spots south of the road west of this x belong to the strip mall, east to Cramped Inn.
@@ -249,7 +249,7 @@ static func entry_route(spot, radius := 4.0) -> Curve3D:
 	var pts := PackedVector3Array(
 		[
 			TURN_IN_START,
-			Vector3(ENTRY_X, 0.0, -5.6 - radius),
+			Vector3(ENTRY_X, 0.0, -9.375 - radius),
 			Vector3(ENTRY_X, 0.0, aisle_z),
 			Vector3(sx, 0.0, aisle_z),
 			spot_pos,
@@ -267,7 +267,7 @@ static func south_entry_route(site: StringName, spot, radius := 4.0) -> Curve3D:
 	var pts := PackedVector3Array(
 		[
 			lot_cfg["turn_in"],
-			Vector3(entry_x, 0.0, 5.6 + radius),
+			Vector3(entry_x, 0.0, 9.375 + radius),
 			Vector3(entry_x, 0.0, aisle_z),
 			Vector3(sx, 0.0, aisle_z),
 			spot_pos,
@@ -282,7 +282,7 @@ static func smell_entry_route(spot, radius := 4.0) -> Curve3D:
 	var pts := PackedVector3Array(
 		[
 			SMELL_TURN_IN_START,
-			Vector3(SMELL_ENTRY_X, 0.0, -5.6 - radius),
+			Vector3(SMELL_ENTRY_X, 0.0, -9.375 - radius),
 			Vector3(SMELL_ENTRY_X, 0.0, SMELL_AISLE_Z),
 			Vector3(sx, 0.0, SMELL_AISLE_Z),
 			spot_pos,
@@ -427,7 +427,7 @@ static func smell_merge_route(radius := 4.0) -> Curve3D:
 	var pts := PackedVector3Array(
 		[
 			SMELL_WAIT_POINT,
-			Vector3(SMELL_EXIT_X, 0.0, -5.6),
+			Vector3(SMELL_EXIT_X, 0.0, -9.375),
 			SMELL_MERGE_END,
 		]
 	)
@@ -439,7 +439,7 @@ static func south_merge_route(site: StringName, radius := 4.0) -> Curve3D:
 	var pts := PackedVector3Array(
 		[
 			lot_cfg["wait"],
-			Vector3(lot_cfg["exit_x"], 0.0, 5.6),
+			Vector3(lot_cfg["exit_x"], 0.0, 9.375),
 			lot_cfg["merge_end"],
 		]
 	)
@@ -450,7 +450,7 @@ static func merge_route(radius := 4.0) -> Curve3D:
 	var pts := PackedVector3Array(
 		[
 			WAIT_POINT,
-			Vector3(EXIT_X, 0.0, -5.6),
+			Vector3(EXIT_X, 0.0, -9.375),
 			MERGE_END,
 		]
 	)
@@ -461,11 +461,11 @@ static func taco_hell_drive_thru_route(radius := 4.0) -> Curve3D:
 	var pts := PackedVector3Array(
 		[
 			TURN_IN_START,
-			Vector3(ENTRY_X, 0.0, -5.6 - radius),
+			Vector3(ENTRY_X, 0.0, -9.375 - radius),
 			Vector3(ENTRY_X, 0.0, AISLE_Z_EB),
 			Vector3(23.0, 0.0, AISLE_Z_EB),
-			Vector3(23.0, 0.0, -43.0),
-			Vector3(47.0, 0.0, -43.0),
+			Vector3(23.0, 0.0, -47.0),
+			Vector3(47.0, 0.0, -47.0),
 			Vector3(47.0, 0.0, AISLE_Z_WB),
 			Vector3(EXIT_X, 0.0, AISLE_Z_WB),
 			WAIT_POINT,
@@ -478,13 +478,13 @@ static func booger_king_drive_thru_route(radius := 4.0) -> Curve3D:
 	var pts := PackedVector3Array(
 		[
 			BK_TURN_IN_START,
-			Vector3(-43.5, 0.0, 9.6),
-			Vector3(-43.5, 0.0, 22.0),
-			Vector3(-54.25, 0.0, 22.0),
-			Vector3(-54.25, 0.0, 45.0),
-			Vector3(-29.75, 0.0, 45.0),
-			Vector3(-29.75, 0.0, 22.0),
-			Vector3(-40.5, 0.0, 22.0),
+			Vector3(-43.5, 0.0, 13.375),
+			Vector3(-43.5, 0.0, 26.0),
+			Vector3(-54.25, 0.0, 26.0),
+			Vector3(-54.25, 0.0, 49.0),
+			Vector3(-29.75, 0.0, 49.0),
+			Vector3(-29.75, 0.0, 26.0),
+			Vector3(-40.5, 0.0, 26.0),
 			BK_WAIT_POINT,
 		]
 	)
@@ -495,7 +495,7 @@ static func booger_king_merge_route(radius := 4.0) -> Curve3D:
 	var pts := PackedVector3Array(
 		[
 			BK_WAIT_POINT,
-			Vector3(-40.5, 0.0, 5.6),
+			Vector3(-40.5, 0.0, 9.375),
 			BK_MERGE_END,
 		]
 	)

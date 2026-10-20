@@ -26,7 +26,7 @@ radius = 0.2
 
 [sub_resource type="BoxMesh" id="Mesh_TrussRail"]
 material = SubResource("Mat_GalvanizedSteel")
-size = Vector3(17, 0.16, 0.16)
+size = Vector3(25.0, 0.16, 0.16)
 
 [sub_resource type="BoxMesh" id="Mesh_TrussVertical"]
 material = SubResource("Mat_GalvanizedSteel")
@@ -69,11 +69,11 @@ size = Vector3(0.065, 2.05, 0.025)
 [node name="OverheadRoadSign" type="StaticBody3D"]
 
 [node name="LeftPostCollision" type="CollisionShape3D" parent="."]
-position = Vector3(-8.3, 3.5, 0)
+position = Vector3(-12.125, 3.5, 0)
 shape = SubResource("Shape_Post")
 
 [node name="RightPostCollision" type="CollisionShape3D" parent="."]
-position = Vector3(8.3, 3.5, 0)
+position = Vector3(12.125, 3.5, 0)
 shape = SubResource("Shape_Post")
 
 [node name="LeftPanelCollision" type="CollisionShape3D" parent="."]
@@ -90,12 +90,12 @@ shape = SubResource("Shape_SmallPanel")
 
 [node name="LeftPost" type="MeshInstance3D" parent="."]
 visibility_range_end = 120.0
-position = Vector3(-8.3, 3.5, 0)
+position = Vector3(-12.125, 3.5, 0)
 mesh = SubResource("Mesh_Post")
 
 [node name="RightPost" type="MeshInstance3D" parent="."]
 visibility_range_end = 120.0
-position = Vector3(8.3, 3.5, 0)
+position = Vector3(12.125, 3.5, 0)
 mesh = SubResource("Mesh_Post")
 
 [node name="Truss" type="Node3D" parent="."]
@@ -112,7 +112,7 @@ mesh = SubResource("Mesh_TrussRail")
 
 [node name="Vertical0" type="MeshInstance3D" parent="Truss"]
 visibility_range_end = 120.0
-position = Vector3(-8.3, 6.325, 0)
+position = Vector3(-12.125, 6.325, 0)
 mesh = SubResource("Mesh_TrussVertical")
 
 [node name="Vertical1" type="MeshInstance3D" parent="Truss"]
@@ -152,7 +152,7 @@ mesh = SubResource("Mesh_TrussVertical")
 
 [node name="Vertical8" type="MeshInstance3D" parent="Truss"]
 visibility_range_end = 120.0
-position = Vector3(8.3, 6.325, 0)
+position = Vector3(12.125, 6.325, 0)
 mesh = SubResource("Mesh_TrussVertical")
 
 [node name="Brace0" type="MeshInstance3D" parent="Truss"]
