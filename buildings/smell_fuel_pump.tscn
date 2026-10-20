@@ -136,6 +136,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.04, 0)
 mesh = SubResource("Mesh_Box5")
 
 [node name="BrandFront" type="Label3D" parent="."]
+visibility_range_end = 60.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.84, 0.265)
 pixel_size = 0.00313
@@ -151,6 +152,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2, 1.33, 0.24)
 mesh = SubResource("Mesh_Box6")
 
 [node name="PriceFront" type="Label3D" parent="."]
+visibility_range_end = 35.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2, 1.33, 0.255)
 pixel_size = 0.00208
@@ -178,6 +180,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2, 1.02, 0.245)
 mesh = SubResource("Mesh_Box10")
 
 [node name="GradeTextFront" type="Label3D" parent="."]
+visibility_range_end = 35.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.02, 0.265)
 pixel_size = 0.00187
@@ -193,6 +196,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.66, 0.235)
 mesh = SubResource("Mesh_Box11")
 
 [node name="PlacardTextFront" type="Label3D" parent="."]
+visibility_range_end = 35.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.66, 0.242)
 pixel_size = 0.00219
@@ -203,6 +207,7 @@ font_size = 32
 outline_size = 0
 
 [node name="BrandBack" type="Label3D" parent="."]
+visibility_range_end = 60.0
 cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 1.84, -0.265)
 pixel_size = 0.00313
@@ -218,6 +223,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2, 1.33, -0.24)
 mesh = SubResource("Mesh_Box6")
 
 [node name="PriceBack" type="Label3D" parent="."]
+visibility_range_end = 35.0
 cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0.2, 1.33, -0.255)
 pixel_size = 0.00208
@@ -245,6 +251,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2, 1.02, -0.245)
 mesh = SubResource("Mesh_Box10")
 
 [node name="GradeTextBack" type="Label3D" parent="."]
+visibility_range_end = 35.0
 cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 1.02, -0.265)
 pixel_size = 0.00187
@@ -260,6 +267,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.66, -0.235)
 mesh = SubResource("Mesh_Box11")
 
 [node name="PlacardTextBack" type="Label3D" parent="."]
+visibility_range_end = 35.0
 cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0.66, -0.242)
 pixel_size = 0.00219

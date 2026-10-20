@@ -25,6 +25,7 @@ INNER_TESTS = [
     "--test-mats-blocker",
     "--test-objectives",
     "--test-car-headlights",
+    "--test-verify-render",
 ]
 
 EXTENDED_TESTS = [

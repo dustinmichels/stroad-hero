@@ -18,7 +18,7 @@ run = 'python3 scripts/run_tests.py --bench "$@"'
 description = "Render Mats character preview views (front, side, back, walk, kneel) to /tmp"
 run = 'python3 scripts/render_mats_preview.py "$@"'
 
-
+# ----- WEB -----
 [tasks.export-web]
 description = "Export the Web preset to build/web (from a /tmp copy, so the open editor's .godot/ is untouched)"
 run = '''

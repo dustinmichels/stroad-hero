@@ -215,6 +215,8 @@ static func exit_sign(spot) -> float:
 
 
 static func entry_route(spot, radius := 4.0) -> Curve3D:
+	if spot is ParkingSpot and radius == 4.0 and spot.entry_route != null:
+		return spot.entry_route
 	var site := south_lot(spot)
 	if site != &"":
 		return south_entry_route(site, spot, radius)
@@ -290,6 +292,8 @@ static func smell_entry_route(spot, radius := 4.0) -> Curve3D:
 
 
 static func reverse_route(spot, radius := 4.0) -> Curve3D:
+	if spot is ParkingSpot and radius == 4.0 and spot.reverse_route != null:
+		return spot.reverse_route
 	var site := south_lot(spot)
 	if site != &"":
 		return south_reverse_route(site, spot, radius)
@@ -359,6 +363,8 @@ static func smell_reverse_route(spot, radius := 4.0) -> Curve3D:
 
 
 static func exit_route(spot, radius := 4.0) -> Curve3D:
+	if spot is ParkingSpot and radius == 4.0 and spot.exit_route != null:
+		return spot.exit_route
 	var site := south_lot(spot)
 	if site != &"":
 		return south_exit_route(site, spot, radius)
@@ -527,6 +533,9 @@ func _build_spots() -> void:
 			var serves_arr: Array[StringName] = [serves_name]
 			spot.serves = serves_arr
 			spot.lot = self
+			spot.entry_route = ParkingLot.entry_route(spot)
+			spot.reverse_route = ParkingLot.reverse_route(spot)
+			spot.exit_route = ParkingLot.exit_route(spot)
 			spots.append(spot)
 
 

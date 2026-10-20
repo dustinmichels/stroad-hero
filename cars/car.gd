@@ -53,12 +53,14 @@ func can_use_drive_thru() -> bool:
 # Authoritative simulation state (per TRAFFIC_SIMULATION.md)
 var lane_id: int = 0
 var motion := Motion.LANE
+var sweep_rev: int = 0
+
 var state := State.CRUISING:
 	set(value):
 		if state != value:
 			state = value
+			sweep_rev += 1
 			_update_headlamps()
-
 
 func get_state_name() -> String:
 	match state:
@@ -83,14 +85,34 @@ func get_state_name() -> String:
 	return "UNKNOWN"
 
 
-var path: Curve3D = null
-var path_distance: float = 0.0
+var path: Curve3D = null:
+	set(value):
+		if path != value:
+			path = value
+			sweep_rev += 1
+var path_distance: float = 0.0:
+	set(value):
+		if path_distance != value:
+			path_distance = value
+			sweep_rev += 1
 var lane_distance: float = 0.0
 var lane_speed: float = 14.0
-var speed: float = 14.0
+var speed: float = 14.0:
+	set(value):
+		if speed != value:
+			speed = value
+			sweep_rev += 1
 var desired_speed: float = 14.0
-var car_length: float = 4.5
-var car_width: float = 2.0
+var car_length: float = 4.5:
+	set(value):
+		if car_length != value:
+			car_length = value
+			sweep_rev += 1
+var car_width: float = 2.0:
+	set(value):
+		if car_width != value:
+			car_width = value
+			sweep_rev += 1
 var direction: float = 1.0  # +1.0 for Eastbound (+X), -1.0 for Westbound (-X)
 var lane_z: float = 0.0
 var lane_length: float = 140.0
@@ -166,6 +188,7 @@ var _blocking: bool = false
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
+	set_notify_transform(true)
 	tree_exiting.connect(_on_tree_exiting)
 	if GameState.instance:
 		GameState.instance.time_of_day_changed.connect(_on_time_of_day_changed)
@@ -182,6 +205,11 @@ func _ready() -> void:
 	_apply_visual_type()
 
 
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSFORM_CHANGED:
+		sweep_rev += 1
+		if is_inside_tree():
+			var _dummy := global_transform
 func _physics_process(delta: float) -> void:
 	_update_blocker_layer()
 	_update_signals(delta)
@@ -703,6 +731,7 @@ func update_presentation() -> void:
 		global_position = Vector3(current_x, 0.05, z_pos)
 	else:
 		position = Vector3(current_x, 0.05, z_pos)
+		sweep_rev += 1
 
 	if is_changing_lanes:
 		var t := clampf(lane_change_progress, 0.0, 1.0)

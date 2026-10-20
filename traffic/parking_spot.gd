@@ -13,6 +13,9 @@ var serves: Array[StringName] = []
 var state := State.FREE
 var car: Car = null
 var lot: ParkingLot = null
+var entry_route: Curve3D = null
+var reverse_route: Curve3D = null
+var exit_route: Curve3D = null
 
 var x: float:
 	get:

@@ -94,6 +94,7 @@ transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0.11, 
 mesh = SubResource("Mesh_Pip")
 
 [node name="LabelName" type="Label3D" parent="."]
+visibility_range_end = 75.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.45, 0, 0.16)
 pixel_size = 0.009

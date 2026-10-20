@@ -101,10 +101,12 @@ shape = SubResource("Shape_Tree")
 [node name="Standard" type="Node3D" parent="Visuals"]
 
 [node name="Trunk" type="MeshInstance3D" parent="Visuals/Standard"]
+visibility_range_end = 110.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 mesh = SubResource("Mesh_TrunkStandard")
 
 [node name="Foliage" type="MeshInstance3D" parent="Visuals/Standard"]
+visibility_range_end = 110.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.8, 0)
 mesh = SubResource("Mesh_FoliageStandard")
 
@@ -112,10 +114,12 @@ mesh = SubResource("Mesh_FoliageStandard")
 visible = false
 
 [node name="Trunk" type="MeshInstance3D" parent="Visuals/Tall"]
+visibility_range_end = 110.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3, 0)
 mesh = SubResource("Mesh_TrunkTall")
 
 [node name="Foliage" type="MeshInstance3D" parent="Visuals/Tall"]
+visibility_range_end = 110.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.6, 0)
 mesh = SubResource("Mesh_FoliageTall")
 
@@ -123,10 +127,12 @@ mesh = SubResource("Mesh_FoliageTall")
 visible = false
 
 [node name="Trunk" type="MeshInstance3D" parent="Visuals/Broad"]
+visibility_range_end = 110.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
 mesh = SubResource("Mesh_TrunkBroad")
 
 [node name="Foliage" type="MeshInstance3D" parent="Visuals/Broad"]
+visibility_range_end = 110.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.6, 0)
 mesh = SubResource("Mesh_FoliageBroad")
 
@@ -134,14 +140,17 @@ mesh = SubResource("Mesh_FoliageBroad")
 visible = false
 
 [node name="Trunk" type="MeshInstance3D" parent="Visuals/Clustered"]
+visibility_range_end = 110.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 mesh = SubResource("Mesh_TrunkClustered")
 
 [node name="MainFoliage" type="MeshInstance3D" parent="Visuals/Clustered"]
+visibility_range_end = 110.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.8, -0.2)
 mesh = SubResource("Mesh_FoliageClusteredMain")
 
 [node name="SideFoliage" type="MeshInstance3D" parent="Visuals/Clustered"]
+visibility_range_end = 110.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 2.5, 0.3)
 mesh = SubResource("Mesh_FoliageClusteredSide")
 
@@ -149,9 +158,11 @@ mesh = SubResource("Mesh_FoliageClusteredSide")
 visible = false
 
 [node name="Trunk" type="MeshInstance3D" parent="Visuals/Compact"]
+visibility_range_end = 110.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
 mesh = SubResource("Mesh_TrunkCompact")
 
 [node name="Foliage" type="MeshInstance3D" parent="Visuals/Compact"]
+visibility_range_end = 110.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, 0)
 mesh = SubResource("Mesh_FoliageCompact")

@@ -834,7 +834,10 @@ static func bake_static_scene(root: Node3D, scene_root: Node = null) -> Node3D:
 	var by_mat: Dictionary = {}
 	var mat_order: Array[Material] = []
 	var canonical_materials: Array[Material] = []
+	var max_vis_range: float = 0.0
 	for mi in mesh_instances:
+		if mi.visibility_range_end > max_vis_range:
+			max_vis_range = mi.visibility_range_end
 		var xform := get_relative_transform(mi, root)
 		for s in range(mi.mesh.get_surface_count()):
 			var orig_mat := get_surface_material(mi, s)
@@ -868,13 +871,18 @@ static func bake_static_scene(root: Node3D, scene_root: Node = null) -> Node3D:
 	var merged_mi := MeshInstance3D.new()
 	merged_mi.name = "BakedStaticMesh"
 	merged_mi.mesh = merged_mesh
+	if max_vis_range > 0.0:
+		merged_mi.visibility_range_end = max_vis_range
 	root.add_child(merged_mi)
 	merged_mi.owner = actual_owner
 	return root
 
 
 static func create_multimesh_from_instances(
-	container: Node3D, template_mesh: Mesh, scene_root: Node = null
+	container: Node3D,
+	template_mesh: Mesh,
+	scene_root: Node = null,
+	visibility_range_end: float = 0.0
 ) -> MultiMeshInstance3D:
 	var actual_owner: Node = scene_root if scene_root != null else container
 	var instances: Array[Node3D] = []
@@ -918,6 +926,8 @@ static func create_multimesh_from_instances(
 	var mmi := MultiMeshInstance3D.new()
 	mmi.name = "BakedMultiMesh"
 	mmi.multimesh = mm
+	if visibility_range_end > 0.0:
+		mmi.visibility_range_end = visibility_range_end
 	container.add_child(mmi)
 	mmi.owner = actual_owner
 	return mmi
@@ -970,7 +980,10 @@ static func bake_trees(container: Node3D, actual_owner: Node) -> void:
 			var by_mat: Dictionary = {}
 			var mat_order: Array[Material] = []
 			var canonical_materials: Array[Material] = []
+			var max_trunk_vis_range: float = 0.0
 			for mi in static_meshes:
+				if mi.visibility_range_end > max_trunk_vis_range:
+					max_trunk_vis_range = mi.visibility_range_end
 				var xform := get_relative_transform(mi, active_node)
 				for s in range(mi.mesh.get_surface_count()):
 					var orig_mat := get_surface_material(mi, s)
@@ -995,6 +1008,8 @@ static func bake_trees(container: Node3D, actual_owner: Node) -> void:
 			var merged_mi := MeshInstance3D.new()
 			merged_mi.name = "Trunk"
 			merged_mi.mesh = merged_mesh
+			if max_trunk_vis_range > 0.0:
+				merged_mi.visibility_range_end = max_trunk_vis_range
 			active_node.add_child(merged_mi)
 
 		tree.scene_file_path = ""
@@ -1048,8 +1063,11 @@ static func bake_flags(container: Node3D, actual_owner: Node) -> void:
 		var pole_mat_order: Array[Material] = []
 		var canonical_materials: Array[Material] = []
 		var pole_nodes_to_remove: Array[Node] = []
+		var max_pole_vis_range: float = 0.0
 		for child in active_node.get_children():
 			if child.name in STATIC_POLE_NAMES and child is MeshInstance3D and child.mesh != null:
+				if child.visibility_range_end > max_pole_vis_range:
+					max_pole_vis_range = child.visibility_range_end
 				var xform := get_relative_transform(child, active_node)
 				for s in range(child.mesh.get_surface_count()):
 					var orig_mat := get_surface_material(child, s)
@@ -1080,6 +1098,8 @@ static func bake_flags(container: Node3D, actual_owner: Node) -> void:
 			var pole_mi := MeshInstance3D.new()
 			pole_mi.name = "Pole"
 			pole_mi.mesh = merged_pole_mesh
+			if max_pole_vis_range > 0.0:
+				pole_mi.visibility_range_end = max_pole_vis_range
 			active_node.add_child(pole_mi)
 
 		flag.scene_file_path = ""
@@ -1089,6 +1109,83 @@ static func bake_flags(container: Node3D, actual_owner: Node) -> void:
 			n.owner = actual_owner
 			for c in n.get_children():
 				stack.append(c)
+
+
+static func bake_bollards(container: Node3D, actual_owner: Node) -> void:
+	var bollards_by_site: Dictionary = {}
+	var stack: Array[Node] = [container]
+	while not stack.is_empty():
+		var n: Node = stack.pop_back()
+		if (
+			n.scene_file_path == "res://props/bollard.tscn"
+			or (n.name.begins_with("Bollard") and n is StaticBody3D)
+		):
+			var site := n
+			while site != null and site.get_parent() != container and site != container:
+				site = site.get_parent()
+			if site == null:
+				site = container
+			if not bollards_by_site.has(site):
+				bollards_by_site[site] = []
+			bollards_by_site[site].append(n)
+		for c in n.get_children():
+			stack.append(c)
+
+	if bollards_by_site.is_empty():
+		return
+
+	var bollard_template := load("res://props/bollard.tscn").instantiate() as Node3D
+	if bollard_template == null:
+		return
+	bake_static_scene(bollard_template)
+	var baked_mi := bollard_template.get_node_or_null("BakedStaticMesh") as MeshInstance3D
+	if baked_mi == null or baked_mi.mesh == null:
+		bollard_template.free()
+		return
+	var template_mesh := baked_mi.mesh
+	var template_vis_range := baked_mi.visibility_range_end
+
+	for site: Node3D in bollards_by_site:
+		if site.get_node_or_null("BakedBollardsMultiMesh") != null:
+			continue
+		var bollard_list: Array = bollards_by_site[site]
+		if bollard_list.is_empty():
+			continue
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.mesh = template_mesh
+		mm.instance_count = bollard_list.size()
+
+		for i in range(bollard_list.size()):
+			var bollard := bollard_list[i] as Node3D
+			var xf := get_relative_transform(bollard, site)
+			mm.set_instance_transform(i, xf)
+			var to_remove: Array[Node] = []
+			for c in bollard.get_children():
+				if c is MeshInstance3D:
+					to_remove.append(c)
+			for mi in to_remove:
+				bollard.remove_child(mi)
+				mi.free()
+			bollard.scene_file_path = ""
+			bollard.owner = actual_owner
+			var b_stack: Array[Node] = [bollard]
+			while not b_stack.is_empty():
+				var curr: Node = b_stack.pop_back()
+				curr.owner = actual_owner
+				for c in curr.get_children():
+					b_stack.append(c)
+
+		var mmi := MultiMeshInstance3D.new()
+		mmi.name = "BakedBollardsMultiMesh"
+		mmi.multimesh = mm
+		if template_vis_range > 0.0:
+			mmi.visibility_range_end = template_vis_range
+		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		site.add_child(mmi)
+		mmi.owner = actual_owner
+
+	bollard_template.free()
 
 
 static func bake_main_scene(root: Node3D) -> Node3D:
@@ -1115,7 +1212,9 @@ static func bake_main_scene(root: Node3D) -> Node3D:
 			bake_static_scene(lamp_template)
 			var baked_lamp := lamp_template.get_node_or_null("BakedStaticMesh") as MeshInstance3D
 			if baked_lamp != null and baked_lamp.mesh != null:
-				create_multimesh_from_instances(streetlights, baked_lamp.mesh, root)
+				create_multimesh_from_instances(
+					streetlights, baked_lamp.mesh, root, baked_lamp.visibility_range_end
+				)
 			lamp_template.free()
 
 	var trees := root.get_node_or_null("Props/Trees") as Node3D
@@ -1128,6 +1227,7 @@ static func bake_main_scene(root: Node3D) -> Node3D:
 
 	var props := root.get_node_or_null("Props") as Node3D
 	if props != null:
+		bake_bollards(props, root)
 		for child in props.get_children():
 			if child.name in [&"Streetlights", &"Trees", &"Flags"]:
 				continue

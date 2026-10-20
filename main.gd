@@ -228,8 +228,23 @@ func _apply_time_of_day(mode: GameState.TimeOfDay, immediate: bool = false) -> v
 			_night_tween.tween_property(dl, "rotation", target_sun_rot, 0.5)
 
 
-func _ready() -> void:
+func _init() -> void:
 	_user_args = OS.get_cmdline_user_args()
+	for arg in OS.get_cmdline_args():
+		if not _user_args.has(arg):
+			_user_args.append(arg)
+
+
+func _enter_tree() -> void:
+	for arg in _user_args:
+		if arg.begins_with("--test-") or arg.begins_with("--bench-"):
+			var test_script: Script = load("res://tests/main_tests.gd")
+			if test_script:
+				set_script(test_script)
+				return
+
+
+func _ready() -> void:
 	for arg in _user_args:
 		if arg.begins_with("--physics-ticks="):
 			Engine.physics_ticks_per_second = int(arg.substr(16))

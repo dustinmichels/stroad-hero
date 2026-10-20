@@ -119,21 +119,78 @@ Measured against the local and deployed Godot 4.7.2 Web builds on October 19, 20
     - Render stats with vertex-color collapsed bake (OpenGL3 Compatibility): Draw calls reduced from 2744.0 to avg 1928.9 (p50: 1949, p95: 1983, p99: 1991, min: 1819, max: 1991) — an additional reduction of ~815 draw calls per frame (~1,272 draw calls saved vs baseline); Rendered objects reduced from 3082.3 to avg 2273.0 (p50: 2293, p95: 2327, p99: 2333); Frame interval avg 17.43 ms (p50: 16.70 ms, p95: 23.58 ms, p99: 27.78 ms).
 - [x] Disable shadow casting on labels, signs, lights, logos, vehicle lights, and other small details that do not need shadows.
   - Note: Disabled `cast_shadow` across all 3D labels, signs, logos, vehicle lights, indicators, license plates, stickers, posters, screen elements, and wheel spoke/hub meshes (`cast_shadow = 0` / `SHADOW_CASTING_SETTING_OFF`). Configured on dynamic wheel spokes/hubs and signals in `cars/car.gd`, and added `cast_shadow = 0` to 270 node instances across 29 scene files (`cars/bodies/*.tscn`, `cars/*.tscn`, `buildings/*.tscn`, and `props/*.tscn`).
-- [ ] Add sensible `visibility_range_end` values to small signs, `Label3D` nodes, flags, wheel details, and distant props.
-  - Note: In progress. Added `visibility_range_end` to:
+- [x] Add sensible `visibility_range_end` values to small signs, `Label3D` nodes, flags, wheel details, and distant props.
+  - Note: Configured sensible `visibility_range_end` culling values across dynamic nodes, static props, and baked meshes:
     - Wheel details and indicators: spokes (35.0m), hubs (35.0m), turn signals (50.0m) in `cars/car.gd`; wheel rims (35.0m) and spare rim (35.0m) in `cars/bodies/jeep.tscn`.
-    - Initial `Label3D` nodes: `objectives/objective_marker.gd` store label (75.0m); van crime labels (35.0m / 45.0m) in `cars/van.tscn`.
+    - `Label3D` nodes (133 nodes across 16 scene files): small labels/stickers/lcd/posters (35.0m), pavement/stop bar striping (45.0m), open neon/window signs (50.0m), storefront signs/fascias (60.0m), roadside signs/logos (75.0–80.0m), overhead highway signs (90.0m), objective store label (75.0m), van crime labels (35.0m / 45.0m).
     - Flagpole details: cleat, truck, ball (35.0–45.0m), rope (35.0–55.0m), flag (75.0–100.0m) in `props/us_flag.tscn`.
-    - Props: security bollards (45.0m) in `props/bollard.tscn`; fire hydrant parts (40.0m) in `props/fire_hydrant.tscn`.
-    - Remaining work: configure `visibility_range_end` on `Label3D` nodes across `buildings/*.tscn` and `props/ice_machine.tscn`, wire `visibility_range_end` propagation in `MeshBaker` (`bake_static_scene`, `bake_flags`, `bake_trees`), and add ranges to shopping carts, distant trees, streetlights, and overhead road sign.
-- [ ] Check whether repeated remaining props can use `MultiMeshInstance3D` without losing required behavior.
-- [ ] Verify all buildings, vehicles, paint colors, signals, wheels, signs, and shadows in the exported browser build.
-- [ ] Record draw calls, rendered objects, p95 frame interval, and p99 frame interval after each group of changes.
+    - Props: security bollards (45.0m), fire hydrants (40.0m), shopping carts (45.0m), street lamps (85.0m), trees (110.0m), overhead road signs (120.0m).
+    - `MeshBaker`: Added `visibility_range_end` propagation in `bake_static_scene()`, `create_multimesh_from_instances()`, `bake_trees()`, and `bake_flags()`. Bumped configuration hash to 9.
+- [x] Check whether repeated remaining props can use `MultiMeshInstance3D` without losing required behavior.
+  - Note: Audited all repeated props in the scene:
+    - Streetlights (`props/street_lamp.tscn`, 12 instances): Already converted to `MultiMeshInstance3D` in `MeshBaker.create_multimesh_from_instances()`; preserves `StaticBody3D` collisions and night lighting material swap.
+    - Bollards (`props/bollard.tscn`, 40 instances across 5 commercial sites): Checked and verified viable for `MultiMeshInstance3D`. Implemented `MeshBaker.bake_bollards()` in `addons/mesh_baker/mesh_baker.gd` to group bollards per site/building (Walgroins, Strip Mall, Taco Hell, Booger King, Smell Gas Station) into local `MultiMeshInstance3D` nodes with `visibility_range_end = 45.0` and `cast_shadow = 0`. Removes 200 individual `MeshInstance3D` nodes while keeping `StaticBody3D` and `CollisionShape3D` physics intact. Bumped configuration hash to 10 in `export_plugin.gd`.
+    - Trees (`props/tree.tscn`, 14 instances): Cannot use MultiMesh due to 5 distinct geometry variants and per-tree physics impact animation (`rustle(impact_direction)` in `mats.gd:259` and `tree.gd:43` tweens foliage rotation on collision). Handled via `MeshBaker.bake_trees()`.
+    - Flags (`props/us_flag.tscn`, 7 instances): Cannot use MultiMesh due to 3 distinct size variants and dynamic wind swiveling in `_process()` (each flagpole computes independent phase-offset micro-turbulence and updates per-material shader uniforms `wind_direction` and `wind_strength`). Handled via `MeshBaker.bake_flags()`.
+    - Shopping Carts (`props/shopping_cart.tscn`, 5 instances): Cannot use MultiMesh because carts are interactive `CharacterBody3D` physics bodies supporting player pushing, riding, rolling friction, and dynamic HUD prompts.
+    - Dumpsters (`props/dumpster.tscn`, 6 instances): Cannot use MultiMesh because geometry and materials differ per instance (`dumpster_color`, `lid_open` rotation, and visible `TrashBag`). Handled via `MeshBaker.bake_dumpster()`.
+    - Fuel Pumps (`buildings/smell_fuel_pump.tscn`, 6 instances): Cannot use MultiMesh due to 8 `Label3D` nodes per pump for grade pricing and lettering.
+- [x] Verify all buildings, vehicles, paint colors, signals, wheels, signs, and shadows in the exported browser build.
+  - Note: Automated browser export verification via `--test-verify-render` in `tests/main_tests.gd` (wired into `scripts/run_tests.py` inner suite) and verified in headless Chrome WebGL2 (SwiftShader / ANGLE Metal) on the exported Web build (`build/web`):
+    - Buildings: Verified all 6 sites (Walgroins, Booger King, Taco Hell, Strip Mall, Cramped Inn, Smell Gas Station) with 91 active baked mesh instances, 121 collision shapes, plus Dorf showroom (4 baked meshes, 6 collision shapes). All surfaces have valid materials.
+    - Vehicles: Verified all 8 passenger body types (sedan, SUV, pickup, van, sports, hatchback, minivan, jeep) and 4 commercial vehicle classes (bus, truck, taxi, shipping truck). All models have 4+ active wheels, left/right turn signals with `cast_shadow = 0` and `visibility_range_end = 50.0`.
+    - Paint colors: Verified all 15 palette colors (`PAINT_PALETTE` and `SPORTS_PAINT_PALETTE`) generate valid `StandardMaterial3D` instances; verified 42 vertex-colored collapsed surfaces active with `vertex_color_use_as_albedo = true`.
+    - Signals: Verified vehicle turn signal states (LEFT, RIGHT, NONE) toggle visibility and amber materials; verified daytime headlights off and night headlights on.
+    - Wheels: Verified 4 active wheels per car, spokes/hubs with `cast_shadow = 0` and `visibility_range_end = 35.0`, and wheel rotation responding to motion.
+    - Signs: Verified 211 `Label3D` nodes in scene, 175 configured with `visibility_range_end` culling, all with `cast_shadow = 0`, valid fonts, and non-empty text.
+    - Shadows: Verified `DirectionalLight3D` enabled with shadows; 409 meshes casting shadows, 152 with shadow disabled.
+    - MultiMeshes: Verified 6 `MultiMeshInstance3D` nodes active (streetlights + 5 site bollard groups).
+    - Visual screenshots: Captured headless Chrome WebGL2 screenshots (`/tmp/browser_verify_1_start.png`, `/tmp/browser_verify_2_gameplay.png`, `/tmp/browser_verify_3_rotate.png`) confirming pristine visual fidelity, accurate colors, clean fonts, and correct lighting.
+- [x] Record draw calls, rendered objects, p95 frame interval, and p99 frame interval after each group of changes.
+  - Note: Recorded draw calls, rendered objects, p95, and p99 frame intervals across all intermediate stages and the final combined build at locked camera position `(0.0, 14.38, 22.15)` with pitch `-0.4625 rad` (`-26.5 deg`):
+    - Stage 0 — Baseline unbaked (OpenGL3 Compatibility):
+      - Draw calls: avg 2853.1 (p50: 2840, p95: 2919, p99: 2928, min: 2831, max: 2928)
+      - Rendered objects: avg 3195.6 (p50: 3186, p95: 3259, p99: 3268, min: 3175, max: 3268)
+      - Frame interval: avg 19.32 ms (p50: 18.45 ms, p95: 24.33 ms, p99: 25.62 ms)
+    - Stage 0b — Baseline initial bake (node merging only, prior to material sharing):
+      - Draw calls: avg 3200.8 (p50: 3196, p95: 3270, p99: 3277, min: 3177, max: 3277)
+      - Rendered objects: avg 3541.3 (p50: 3536, p95: 3613, p99: 3616, min: 3519, max: 3616)
+      - Frame interval: avg 19.74 ms (p50: 20.35 ms, p95: 25.54 ms, p99: 35.50 ms)
+    - Stage 1 — Surface Combining & Material Sharing (`MeshBaker` combines surfaces sharing one material):
+      - Draw calls: avg 2744.0 (p50: 2744, p95: 2763, p99: 2766, min: 2724, max: 2766) [Δ vs baked baseline: -456.8 draw calls / -14.3%]
+      - Rendered objects: avg 3082.3 (p50: 3082, p95: 3100, p99: 3102, min: 3062, max: 3102) [Δ vs baked baseline: -459.0 objects / -13.0%]
+      - Frame interval: avg 18.46 ms (p50: 17.25 ms, p95: 24.41 ms, p99: 27.51 ms)
+    - Stage 2 — Color Collapsing via Vertex Color (`materials_can_collapse_by_color` with `ARRAY_COLOR` and `vertex_color_use_as_albedo`):
+      - Draw calls: avg 1928.9 (p50: 1949, p95: 1983, p99: 1991, min: 1819, max: 1991) [Δ vs Stage 1: -815.1 draw calls; cumulative vs baked baseline: -1271.9 draw calls / -39.7%]
+      - Rendered objects: avg 2273.0 (p50: 2293, p95: 2327, p99: 2333, min: 2163, max: 2333) [Δ vs Stage 1: -809.3 objects; cumulative vs baked baseline: -1268.3 objects / -35.8%]
+      - Frame interval: avg 17.43 ms (p50: 16.70 ms, p95: 23.58 ms, p99: 27.78 ms)
+    - Stage 3 — Detail Shadow Disabling & Distance Culling (`cast_shadow = 0` on small details, signs, labels, indicators, logos, wheel details; `visibility_range_end` on 175+ small details, labels, signs, flags, props):
+      - Unbaked (evaluating scene-level shadow & distance culling alone):
+        - Draw calls: avg 2235.2 (p50: 2226, p95: 2360, p99: 2378, min: 2147, max: 2379) [Δ vs unbaked baseline: -617.9 draw calls / -21.7%]
+        - Rendered objects: avg 2575.0 (p50: 2565, p95: 2700, p99: 2714, min: 2487, max: 2719) [Δ vs unbaked baseline: -620.6 objects / -19.4%]
+        - Frame interval: avg 18.15 ms (p50: 16.73 ms, p95: 23.44 ms, p99: 49.59 ms)
+    - Stage 4 — MultiMesh Bollards & Full Cumulative Optimizations Combined:
+      - Native OpenGL Compatibility (Baked, 210 frame samples):
+        - Draw calls: avg 1596.2 (p50: 1579, p95: 1775, p99: 1781, min: 1375, max: 1784)
+          - Total reduction vs baked baseline: -1604.6 draw calls (-50.1%)
+          - Total reduction vs unbaked baseline: -1256.9 draw calls (-44.1%)
+        - Rendered objects: avg 1942.7 (p50: 1930, p95: 2123, p99: 2128, min: 1727, max: 2130)
+          - Total reduction vs baked baseline: -1598.6 objects (-45.1%)
+          - Total reduction vs unbaked baseline: -1252.9 objects (-39.2%)
+        - Frame interval: avg 16.62 ms (p50: 15.75 ms, p95: 21.95 ms, p99: 24.84 ms)
+          - p95 frame time improved from baseline 25.54 ms to 21.95 ms (-14.1%)
+          - p99 frame time improved from baseline 35.50 ms to 24.84 ms (-30.0%)
+      - Exported Web Build in Headless Chrome WebGL 2.0 (120 frame samples):
+        - Draw calls: avg 1199.5 (p50: 1195, p95: 1224, p99: 1227, min: 1180, max: 1231)
+        - Rendered objects: avg 1545.0 (p50: 1541, p95: 1569, p99: 1570, min: 1529, max: 1573)
+        - Frame interval: avg 16.69 ms (p50: 16.78 ms, p95: 18.49 ms, p99: 21.89 ms, min: 11.99 ms, max: 23.23 ms)
+        - Frame pacing in Chrome WebGL2 solidly sustains target 60 FPS pacing with p95 at 18.49 ms and p99 at 21.89 ms.
 
 ## 5. Remove Traffic Hot-Loop Allocations
 
-- [ ] Cache entry, reverse, and exit `Curve3D` routes on each `ParkingSpot` instead of rebuilding them while cars wait.
+- [x] Cache entry, reverse, and exit `Curve3D` routes on each `ParkingSpot` instead of rebuilding them while cars wait.
 - [ ] Replace `_car_sweep()`'s eight-element array cache key with a scalar revision counter on `Car`.
+  - Note: Initial work in progress in `cars/car.gd` (`sweep_rev`) and `traffic/traffic_manager.gd` (`_car_sweep()`). Investigating geometry handling in `--test-find-blocker`.
 - [ ] Increment the sweep revision whenever transform, path, path distance, speed, state, length, or width changes.
 - [ ] Remove per-tick `get_overlapping_bodies()` polling from moving cars; use the existing `body_entered` signal or one centralized player overlap check.
 - [ ] Profile `find_blocker()` after the allocation fixes.

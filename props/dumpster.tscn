@@ -110,6 +110,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0.74)
 mesh = SubResource("Mesh_Sticker")
 
 [node name="WarningLabel" type="Label3D" parent="WarningSticker"]
+visibility_range_end = 35.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.02)
 pixel_size = 0.0018

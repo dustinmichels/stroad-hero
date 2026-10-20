@@ -188,6 +188,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.1, 7.2)
 mesh = SubResource("Mesh_DoorCanopy")
 
 [node name="LogoW" type="Label3D" parent="Building"]
+visibility_range_end = 75.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.9, 6.62)
 pixel_size = 0.02
@@ -199,6 +200,7 @@ font_size = 128
 outline_size = 6
 
 [node name="StoreName" type="Label3D" parent="Building"]
+visibility_range_end = 75.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.25, 5.2, 6.1)
 pixel_size = 0.019
@@ -210,6 +212,7 @@ font_size = 96
 outline_size = 6
 
 [node name="PharmacyName" type="Label3D" parent="Building"]
+visibility_range_end = 60.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.25, 5.2, 6.1)
 pixel_size = 0.016
@@ -283,6 +286,7 @@ transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 7.2, -0.12)
 mesh = SubResource("Mesh_PylonSignInner")
 
 [node name="PylonNameFront" type="Label3D" parent="RoadsideSign"]
+visibility_range_end = 80.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.45, 0.26)
 pixel_size = 0.0095
@@ -294,6 +298,7 @@ font_size = 96
 outline_size = 4
 
 [node name="PylonNameBack" type="Label3D" parent="RoadsideSign"]
+visibility_range_end = 80.0
 cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 7.45, -0.26)
 pixel_size = 0.0095
@@ -305,6 +310,7 @@ font_size = 96
 outline_size = 4
 
 [node name="PylonSubFront" type="Label3D" parent="RoadsideSign"]
+visibility_range_end = 80.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.65, 0.26)
 pixel_size = 0.01
@@ -315,6 +321,7 @@ font_size = 28
 outline_size = 2
 
 [node name="PylonSubBack" type="Label3D" parent="RoadsideSign"]
+visibility_range_end = 80.0
 cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 6.65, -0.26)
 pixel_size = 0.01

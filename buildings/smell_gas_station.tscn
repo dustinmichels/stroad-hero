@@ -670,6 +670,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 3.8, 4.4)
 mesh = SubResource("Mesh_Box17")
 
 [node name="FasciaText24" type="Label3D" parent="Store"]
+visibility_range_end = 60.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.5, 3.8, 4.56)
 pixel_size = 0.00562
@@ -680,6 +681,7 @@ font_size = 64
 outline_size = 0
 
 [node name="FasciaTextMart" type="Label3D" parent="Store"]
+visibility_range_end = 60.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 3.8, 4.56)
 pixel_size = 0.00625
@@ -768,6 +770,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.75, 1.65, 4.35)
 mesh = SubResource("Mesh_Box27")
 
 [node name="PosterText0" type="Label3D" parent="Store"]
+visibility_range_end = 35.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.75, 1.65, 4.365)
 pixel_size = 0.00458
@@ -784,6 +787,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.25, 1.55, 4.35)
 mesh = SubResource("Mesh_Box28")
 
 [node name="PosterText1" type="Label3D" parent="Store"]
+visibility_range_end = 35.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.25, 1.55, 4.365)
 pixel_size = 0.00458
@@ -799,6 +803,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.75, 1.65, 4.35)
 mesh = SubResource("Mesh_Box29")
 
 [node name="PosterText2" type="Label3D" parent="Store"]
+visibility_range_end = 35.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.75, 1.65, 4.365)
 pixel_size = 0.00458
@@ -815,6 +820,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 1.6, 4.35)
 mesh = SubResource("Mesh_Box30")
 
 [node name="PosterText3" type="Label3D" parent="Store"]
+visibility_range_end = 35.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 1.6, 4.365)
 pixel_size = 0.00458
@@ -831,6 +837,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.25, 1.55, 4.35)
 mesh = SubResource("Mesh_Box28")
 
 [node name="PosterText4" type="Label3D" parent="Store"]
+visibility_range_end = 35.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.25, 1.55, 4.365)
 pixel_size = 0.00458
@@ -846,6 +853,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.75, 1.65, 4.35)
 mesh = SubResource("Mesh_Box27")
 
 [node name="PosterText5" type="Label3D" parent="Store"]
+visibility_range_end = 35.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.75, 1.65, 4.365)
 pixel_size = 0.00458
@@ -856,6 +864,7 @@ font_size = 48
 outline_size = 0
 
 [node name="NeonOpen" type="Label3D" parent="Store"]
+visibility_range_end = 50.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.4, 2.55, 4.35)
 pixel_size = 0.005
@@ -949,6 +958,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.15, 0.31)
 mesh = SubResource("Mesh_Box44")
 
 [node name="TextCheckFront" type="Label3D" parent="RoadsideSign"]
+visibility_range_end = 60.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.15, 0.33)
 pixel_size = 0.00344
@@ -963,6 +973,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.6, 0.31)
 mesh = SubResource("Mesh_Box44")
 
 [node name="TextCardFront" type="Label3D" parent="RoadsideSign"]
+visibility_range_end = 60.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.6, 0.33)
 pixel_size = 0.0025
@@ -977,6 +988,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.12, 0.31)
 mesh = SubResource("Mesh_Box45")
 
 [node name="TextGradeFront" type="Label3D" parent="RoadsideSign"]
+visibility_range_end = 35.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.12, 0.33)
 pixel_size = 0.00281
@@ -991,6 +1003,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.4, 0.31)
 mesh = SubResource("Mesh_Box46")
 
 [node name="TextPriceFront" type="Label3D" parent="RoadsideSign"]
+visibility_range_end = 35.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.25, 4.4, 0.33)
 pixel_size = 0.00484
@@ -1001,6 +1014,7 @@ font_size = 128
 outline_size = 0
 
 [node name="TextTenthsFront" type="Label3D" parent="RoadsideSign"]
+visibility_range_end = 60.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.82, 4.6, 0.33)
 pixel_size = 0.00417
@@ -1018,6 +1032,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.15, -0.31)
 mesh = SubResource("Mesh_Box44")
 
 [node name="TextCheckBack" type="Label3D" parent="RoadsideSign"]
+visibility_range_end = 60.0
 cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 6.15, -0.33)
 pixel_size = 0.00344
@@ -1032,6 +1047,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.6, -0.31)
 mesh = SubResource("Mesh_Box44")
 
 [node name="TextCardBack" type="Label3D" parent="RoadsideSign"]
+visibility_range_end = 60.0
 cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 5.6, -0.33)
 pixel_size = 0.0025
@@ -1046,6 +1062,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.12, -0.31)
 mesh = SubResource("Mesh_Box45")
 
 [node name="TextGradeBack" type="Label3D" parent="RoadsideSign"]
+visibility_range_end = 35.0
 cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 5.12, -0.33)
 pixel_size = 0.00281
@@ -1060,6 +1077,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.4, -0.31)
 mesh = SubResource("Mesh_Box46")
 
 [node name="TextPriceBack" type="Label3D" parent="RoadsideSign"]
+visibility_range_end = 35.0
 cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0.25, 4.4, -0.33)
 pixel_size = 0.00484
@@ -1070,6 +1088,7 @@ font_size = 128
 outline_size = 0
 
 [node name="TextTenthsBack" type="Label3D" parent="RoadsideSign"]
+visibility_range_end = 60.0
 cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -0.82, 4.6, -0.33)
 pixel_size = 0.00417

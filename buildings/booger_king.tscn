@@ -270,6 +270,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.0, 3.25, 6.45)
 mesh = SubResource("Mesh_BKWindowCanopy")
 
 [node name="NeonOpen" type="Label3D" parent="Building"]
+visibility_range_end = 50.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.0, 2.0, 6.15)
 pixel_size = 0.014
@@ -296,6 +297,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.65, 2.85, 0)
 mesh = SubResource("Mesh_BKDriveThruCanopy")
 
 [node name="DriveThruLabel" type="Label3D" parent="Building"]
+visibility_range_end = 50.0
 cast_shadow = 0
 transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -9.27, 3.2, 0)
 pixel_size = 0.012

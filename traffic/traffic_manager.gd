@@ -733,18 +733,9 @@ func _car_sweep(car: Car) -> Dictionary:
 	var backward := (
 		car.speed < 0.0 or car.desired_speed < 0.0 or car.state == Car.State.REVERSING_OUT
 	)
-	var key := [
-		car.global_transform,
-		car.path,
-		car.path_distance,
-		car.speed,
-		backward,
-		car.state,
-		car.car_length,
-		car.car_width,
-	]
+	var rev: int = car.sweep_rev
 	var cached: Dictionary = _sweep_cache.get(car.get_instance_id(), {})
-	if not cached.is_empty() and cached["key"] == key:
+	if not cached.is_empty() and cached.get("rev", -1) == rev:
 		return cached
 
 	var half_l := car.car_length * 0.5
@@ -773,7 +764,7 @@ func _car_sweep(car: Car) -> Dictionary:
 			dists.append(t)
 
 	var sweep := {
-		"key": key,
+		"rev": rev,
 		"rects": rects,
 		"dists": dists,
 		"look": look,
