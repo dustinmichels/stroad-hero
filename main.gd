@@ -67,8 +67,12 @@ static func _get_lamp_bulb_on_mat() -> StandardMaterial3D:
 	return _lamp_bulb_on_mat
 
 
-func _on_time_of_day_changed(mode: GameState.TimeOfDay) -> void:
-	_apply_time_of_day(mode, false)
+func _on_time_of_day_changed(_mode: GameState.TimeOfDay) -> void:
+	_update_streetlights(GameState.are_lights_on())
+
+
+func _on_time_changed(hours: float, _time_str: String) -> void:
+	_apply_time_hours(hours, true)
 
 
 func _update_streetlights(enabled: bool) -> void:
@@ -228,6 +232,101 @@ func _apply_time_of_day(mode: GameState.TimeOfDay, immediate: bool = false) -> v
 			_night_tween.tween_property(dl, "rotation", target_sun_rot, 0.5)
 
 
+func _apply_time_hours(hours: float, _immediate: bool = true) -> void:
+	_update_streetlights(GameState.are_lights_on())
+	var we := world_env if world_env else get_node_or_null("WorldEnvironment") as WorldEnvironment
+	var dl := (
+		sun_light if sun_light else get_node_or_null("DirectionalLight3D") as DirectionalLight3D
+	)
+	if not we or not we.environment:
+		return
+
+	var env: Environment = we.environment
+	var sky_mat := env.sky.sky_material as ProceduralSkyMaterial if env.sky else null
+
+	var target_sky_top: Color
+	var target_sky_horizon: Color
+	var target_ground_bottom: Color
+	var target_ground_horizon: Color
+	var target_ambient_color: Color
+	var target_ambient_energy: float
+	var target_ambient_contrib: float
+	var target_sun_color: Color
+	var target_sun_energy: float
+	var target_sun_rot: Vector3
+
+	var t := clampf(hours, GameState.START_HOUR, GameState.END_HOUR)
+	if t < 17.5:
+		# Afternoon daylight
+		var p := clampf((t - GameState.START_HOUR) / (17.5 - GameState.START_HOUR), 0.0, 1.0)
+		target_sky_top = _day_sky_top.lerp(DAY_SKY_TOP, p)
+		target_sky_horizon = _day_sky_horizon.lerp(DAY_SKY_HORIZON, p)
+		target_ground_bottom = _day_ground_bottom
+		target_ground_horizon = _day_ground_horizon
+		target_ambient_color = _day_ambient_color
+		target_ambient_energy = _day_ambient_energy
+		target_ambient_contrib = _day_ambient_sky_contrib
+		target_sun_color = _day_sun_color
+		target_sun_energy = _day_sun_energy
+		target_sun_rot = _day_sun_rotation
+	elif t < 19.25:
+		# Afternoon to Golden Hour / Sunset
+		var p := clampf((t - 17.5) / (19.25 - 17.5), 0.0, 1.0)
+		var s := p * p * (3.0 - 2.0 * p)
+		target_sky_top = DAY_SKY_TOP.lerp(EVENING_SKY_TOP, s)
+		target_sky_horizon = DAY_SKY_HORIZON.lerp(EVENING_SKY_HORIZON, s)
+		target_ground_bottom = DAY_GROUND_BOTTOM.lerp(EVENING_GROUND_BOTTOM, s)
+		target_ground_horizon = DAY_GROUND_HORIZON.lerp(EVENING_GROUND_HORIZON, s)
+		target_ambient_color = DAY_AMBIENT_COLOR.lerp(EVENING_AMBIENT_COLOR, s)
+		target_ambient_energy = lerpf(DAY_AMBIENT_ENERGY, EVENING_AMBIENT_ENERGY, s)
+		target_ambient_contrib = lerpf(DAY_AMBIENT_SKY_CONTRIB, EVENING_AMBIENT_SKY_CONTRIB, s)
+		target_sun_color = DAY_SUN_COLOR.lerp(EVENING_SUN_COLOR, s)
+		target_sun_energy = lerpf(DAY_SUN_ENERGY, EVENING_SUN_ENERGY, s)
+		target_sun_rot = _day_sun_rotation.lerp(EVENING_SUN_ROTATION, s)
+	elif t < 20.5:
+		# Sunset to Night / Twilight
+		var p := clampf((t - 19.25) / (20.5 - 19.25), 0.0, 1.0)
+		var s := p * p * (3.0 - 2.0 * p)
+		target_sky_top = EVENING_SKY_TOP.lerp(NIGHT_SKY_TOP, s)
+		target_sky_horizon = EVENING_SKY_HORIZON.lerp(NIGHT_SKY_HORIZON, s)
+		target_ground_bottom = EVENING_GROUND_BOTTOM.lerp(NIGHT_GROUND_BOTTOM, s)
+		target_ground_horizon = EVENING_GROUND_HORIZON.lerp(NIGHT_GROUND_HORIZON, s)
+		target_ambient_color = EVENING_AMBIENT_COLOR.lerp(NIGHT_AMBIENT_COLOR, s)
+		target_ambient_energy = lerpf(EVENING_AMBIENT_ENERGY, NIGHT_AMBIENT_ENERGY, s)
+		target_ambient_contrib = lerpf(EVENING_AMBIENT_SKY_CONTRIB, NIGHT_AMBIENT_SKY_CONTRIB, s)
+		target_sun_color = EVENING_SUN_COLOR.lerp(NIGHT_SUN_COLOR, s)
+		target_sun_energy = lerpf(EVENING_SUN_ENERGY, NIGHT_SUN_ENERGY, s)
+		target_sun_rot = EVENING_SUN_ROTATION.lerp(_day_sun_rotation, s)
+	else:
+		# Night
+		target_sky_top = NIGHT_SKY_TOP
+		target_sky_horizon = NIGHT_SKY_HORIZON
+		target_ground_bottom = NIGHT_GROUND_BOTTOM
+		target_ground_horizon = NIGHT_GROUND_HORIZON
+		target_ambient_color = NIGHT_AMBIENT_COLOR
+		target_ambient_energy = NIGHT_AMBIENT_ENERGY
+		target_ambient_contrib = NIGHT_AMBIENT_SKY_CONTRIB
+		target_sun_color = NIGHT_SUN_COLOR
+		target_sun_energy = NIGHT_SUN_ENERGY
+		target_sun_rot = _day_sun_rotation
+
+	if _night_tween and _night_tween.is_valid():
+		_night_tween.kill()
+
+	if sky_mat:
+		sky_mat.sky_top_color = target_sky_top
+		sky_mat.sky_horizon_color = target_sky_horizon
+		sky_mat.ground_bottom_color = target_ground_bottom
+		sky_mat.ground_horizon_color = target_ground_horizon
+	env.ambient_light_color = target_ambient_color
+	env.ambient_light_energy = target_ambient_energy
+	env.ambient_light_sky_contribution = target_ambient_contrib
+	if dl:
+		dl.light_color = target_sun_color
+		dl.light_energy = target_sun_energy
+		dl.rotation = target_sun_rot
+
+
 func _init() -> void:
 	_user_args = OS.get_cmdline_user_args()
 	for arg in OS.get_cmdline_args():
@@ -262,7 +361,8 @@ func _ready() -> void:
 	_capture_day_settings()
 	if GameState.instance:
 		GameState.instance.time_of_day_changed.connect(_on_time_of_day_changed)
-	_apply_time_of_day(GameState.time_of_day, true)
+		GameState.instance.time_changed.connect(_on_time_changed)
+	_apply_time_hours(GameState.current_time_hours, true)
 
 
 func _on_player_died(pos: Vector3) -> void:
@@ -271,8 +371,8 @@ func _on_player_died(pos: Vector3) -> void:
 
 
 func _exit_tree() -> void:
-	if (
-		GameState.instance
-		and GameState.instance.time_of_day_changed.is_connected(_on_time_of_day_changed)
-	):
-		GameState.instance.time_of_day_changed.disconnect(_on_time_of_day_changed)
+	if GameState.instance:
+		if GameState.instance.time_of_day_changed.is_connected(_on_time_of_day_changed):
+			GameState.instance.time_of_day_changed.disconnect(_on_time_of_day_changed)
+		if GameState.instance.time_changed.is_connected(_on_time_changed):
+			GameState.instance.time_changed.disconnect(_on_time_changed)

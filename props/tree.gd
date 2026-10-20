@@ -8,6 +8,8 @@ enum TreeType {
 	BROAD,
 	CLUSTERED,
 	COMPACT,
+	PALM,
+	LIVE_OAK,
 }
 
 @export var tree_type: TreeType = TreeType.STANDARD:
@@ -119,7 +121,10 @@ func _apply_tree_type() -> void:
 			active_node = visuals.get_node_or_null("Clustered")
 		TreeType.COMPACT:
 			active_node = visuals.get_node_or_null("Compact")
-
+		TreeType.PALM:
+			active_node = visuals.get_node_or_null("Palm")
+		TreeType.LIVE_OAK:
+			active_node = visuals.get_node_or_null("LiveOak")
 	var height_scale := 1.0
 	if tree_type == TreeType.BROAD:
 		height_scale = 1.15
@@ -166,6 +171,14 @@ func _update_dimensions() -> void:
 			radius = 0.30
 			height = 2.0
 			pos_y = 1.0
+		TreeType.PALM:
+			radius = 0.28
+			height = 7.15
+			pos_y = 3.575
+		TreeType.LIVE_OAK:
+			radius = 0.50
+			height = 2.2
+			pos_y = 1.1
 
 	var shape := CylinderShape3D.new()
 	shape.radius = radius

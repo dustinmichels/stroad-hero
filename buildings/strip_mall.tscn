@@ -496,7 +496,6 @@ font = ExtResource("1_font_archivo")
 outline_size = 0
 
 [node name="NeonOpen" type="Label3D" parent="Storefronts/Store_USAVape"]
-visibility_range_end = 50.0
 cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 2.4, 2.1, -0.07)
 pixel_size = 0.009
@@ -537,7 +536,6 @@ mesh = SubResource("Mesh_SignFace")
 surface_material_override/0 = SubResource("Mat_SignUSAVape")
 
 [node name="LabelTitle" type="Label3D" parent="Storefronts/Store_USAVape/Sign"]
-visibility_range_end = 60.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0.16)
 pixel_size = 0.0135
@@ -546,7 +544,6 @@ font = ExtResource("1_font_archivo")
 outline_size = 0
 
 [node name="LabelSub" type="Label3D" parent="Storefronts/Store_USAVape/Sign"]
-visibility_range_end = 60.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.28, 0.16)
 pixel_size = 0.0055
@@ -587,7 +584,6 @@ font = ExtResource("1_font_archivo")
 outline_size = 0
 
 [node name="NeonOpen" type="Label3D" parent="Storefronts/Store_FreedomTattoo"]
-visibility_range_end = 50.0
 cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 2.4, 2.1, -0.07)
 pixel_size = 0.009
@@ -628,7 +624,6 @@ mesh = SubResource("Mesh_SignFace")
 surface_material_override/0 = SubResource("Mat_SignFreedomTattoo")
 
 [node name="LabelTitle" type="Label3D" parent="Storefronts/Store_FreedomTattoo/Sign"]
-visibility_range_end = 60.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0.16)
 pixel_size = 0.009
@@ -637,7 +632,6 @@ font = ExtResource("1_font_archivo")
 outline_size = 0
 
 [node name="LabelSub" type="Label3D" parent="Storefronts/Store_FreedomTattoo/Sign"]
-visibility_range_end = 60.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.28, 0.16)
 pixel_size = 0.0055
@@ -678,7 +672,6 @@ font = ExtResource("1_font_archivo")
 outline_size = 0
 
 [node name="NeonOpen" type="Label3D" parent="Storefronts/Store_Abominos"]
-visibility_range_end = 50.0
 cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 2.4, 2.1, -0.07)
 pixel_size = 0.009
@@ -742,7 +735,6 @@ font = ExtResource("1_font_archivo")
 outline_size = 0
 
 [node name="NeonOpen" type="Label3D" parent="Storefronts/Store_StarNails"]
-visibility_range_end = 50.0
 cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 2.4, 2.1, -0.07)
 pixel_size = 0.009
@@ -783,7 +775,6 @@ mesh = SubResource("Mesh_SignFace")
 surface_material_override/0 = SubResource("Mat_SignNails")
 
 [node name="LabelTitle" type="Label3D" parent="Storefronts/Store_StarNails/Sign"]
-visibility_range_end = 60.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0.16)
 pixel_size = 0.009
@@ -793,7 +784,6 @@ modulate = Color(0.92, 0.12, 0.45, 1)
 outline_size = 0
 
 [node name="LabelSub" type="Label3D" parent="Storefronts/Store_StarNails/Sign"]
-visibility_range_end = 60.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.28, 0.16)
 pixel_size = 0.0055
@@ -1047,7 +1037,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.5, 0)
 mesh = SubResource("Mesh_PylonHeader")
 
 [node name="HeaderLabelF" type="Label3D" parent="RoadsideSign/PlazaHeader"]
-visibility_range_end = 60.0
 cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -0.2)
 pixel_size = 0.009
@@ -1056,7 +1045,6 @@ font = ExtResource("1_font_archivo")
 outline_size = 0
 
 [node name="HeaderLabelB" type="Label3D" parent="RoadsideSign/PlazaHeader"]
-visibility_range_end = 60.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.2)
 pixel_size = 0.009
@@ -1070,7 +1058,6 @@ mesh = SubResource("Mesh_PylonTenant")
 surface_material_override/0 = SubResource("Mat_SignUSAVape")
 
 [node name="LabelF" type="Label3D" parent="RoadsideSign/Panel_Abominos"]
-visibility_range_end = 60.0
 cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -0.21)
 pixel_size = 0.0085
@@ -1079,7 +1066,6 @@ font = ExtResource("2_font_fredoka")
 outline_size = 0
 
 [node name="LabelB" type="Label3D" parent="RoadsideSign/Panel_Abominos"]
-visibility_range_end = 60.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.21)
 pixel_size = 0.0085
@@ -1092,7 +1078,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.25, 0)
 mesh = SubResource("Mesh_PylonTenant")
 
 [node name="LabelF" type="Label3D" parent="RoadsideSign/Panel_USAVape"]
-visibility_range_end = 60.0
 cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -0.21)
 pixel_size = 0.008
@@ -1102,7 +1087,6 @@ modulate = Color(0.12, 0.3, 0.75, 1)
 outline_size = 0
 
 [node name="LabelB" type="Label3D" parent="RoadsideSign/Panel_USAVape"]
-visibility_range_end = 60.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.21)
 pixel_size = 0.008
@@ -1117,7 +1101,6 @@ mesh = SubResource("Mesh_PylonTenant")
 surface_material_override/0 = SubResource("Mat_SignFreedomTattoo")
 
 [node name="LabelF" type="Label3D" parent="RoadsideSign/Panel_FreedomTattoo"]
-visibility_range_end = 60.0
 cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -0.21)
 pixel_size = 0.0075
@@ -1127,7 +1110,6 @@ modulate = Color(0.96, 0.78, 0.18, 1)
 outline_size = 0
 
 [node name="LabelB" type="Label3D" parent="RoadsideSign/Panel_FreedomTattoo"]
-visibility_range_end = 60.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.21)
 pixel_size = 0.0075
@@ -1142,7 +1124,6 @@ mesh = SubResource("Mesh_PylonTenant")
 surface_material_override/0 = SubResource("Mat_SignNails")
 
 [node name="LabelF" type="Label3D" parent="RoadsideSign/Panel_StarNails"]
-visibility_range_end = 60.0
 cast_shadow = 0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -0.21)
 pixel_size = 0.0075
@@ -1152,7 +1133,6 @@ modulate = Color(0.92, 0.12, 0.45, 1)
 outline_size = 0
 
 [node name="LabelB" type="Label3D" parent="RoadsideSign/Panel_StarNails"]
-visibility_range_end = 60.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.21)
 pixel_size = 0.0075

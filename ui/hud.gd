@@ -17,8 +17,10 @@ extends CanvasLayer
 @onready var objective_toast: ObjectiveToast = %ObjectiveToast
 var objective_manager: ObjectiveManager = null
 var current_objective_text: String = ""
+const WeatherDisplayClass = preload("res://ui/weather_display.gd")
 
-var night_mode_button: Button = null
+var weather_display: WeatherDisplayClass = null
+var night_mode_button: Control = null
 var spd_count: int = 0
 var obj_count: int = 0
 var fade_overlay: ColorRect
@@ -32,7 +34,7 @@ var _camera: Camera3D = null
 
 func _ready() -> void:
 	_setup_fade_overlay()
-	_setup_night_mode_button()
+	_setup_weather_display()
 	_setup_objective_toast()
 	if margin_container:
 		_default_margin_pos = margin_container.position
@@ -48,9 +50,6 @@ func _process(_delta: float) -> void:
 
 
 func _exit_tree() -> void:
-	if GameState.instance:
-		if GameState.instance.time_of_day_changed.is_connected(_on_time_of_day_changed):
-			GameState.instance.time_of_day_changed.disconnect(_on_time_of_day_changed)
 	if objective_manager:
 		if objective_manager.objective_started.is_connected(_on_objective_started):
 			objective_manager.objective_started.disconnect(_on_objective_started)
@@ -85,63 +84,31 @@ func _setup_objective_toast() -> void:
 		add_child(objective_toast)
 
 
-func _setup_night_mode_button() -> void:
-	var existing := get_node_or_null("%NightModeButton") as Button
+func _setup_weather_display() -> void:
+	var existing := get_node_or_null("%WeatherDisplay") as WeatherDisplayClass
 	if existing:
+		weather_display = existing
 		night_mode_button = existing
 	else:
 		var container := MarginContainer.new()
-		container.name = "NightModeContainer"
+		container.name = "WeatherContainer"
 		container.anchors_preset = Control.PRESET_TOP_RIGHT
 		container.anchor_left = 1.0
 		container.anchor_right = 1.0
-		container.offset_left = -254.0
-		container.offset_top = 20.0
-		container.offset_right = -20.0
-		container.offset_bottom = 54.0
+		container.offset_left = -275.0
+		container.offset_top = 18.0
+		container.offset_right = -18.0
+		container.offset_bottom = 86.0
 		container.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 
-		var btn = TimeOfDayToggle.new()
-		btn.name = "NightModeButton"
-		btn.unique_name_in_owner = true
+		var disp := WeatherDisplayClass.new()
+		disp.name = "WeatherDisplay"
+		disp.unique_name_in_owner = true
 
-		container.add_child(btn)
+		container.add_child(disp)
 		add_child(container)
-		night_mode_button = btn
-	if not night_mode_button.has_method("set_mode"):
-		night_mode_button.pressed.connect(_on_night_mode_button_pressed)
-	if GameState.instance:
-		GameState.instance.time_of_day_changed.connect(_on_time_of_day_changed)
-	_update_night_mode_button(GameState.time_of_day)
-
-
-func _on_night_mode_button_pressed() -> void:
-	GameState.cycle_time_of_day()
-
-
-func _on_time_of_day_changed(mode: GameState.TimeOfDay) -> void:
-	_update_night_mode_button(mode)
-
-
-func _update_night_mode_button(mode: Variant) -> void:
-	if not night_mode_button:
-		return
-	var tod: GameState.TimeOfDay = GameState.time_of_day
-	if mode is GameState.TimeOfDay:
-		tod = mode
-	if night_mode_button.has_method("set_mode"):
-		night_mode_button.set_mode(tod)
-	else:
-		match tod:
-			GameState.TimeOfDay.DAY:
-				night_mode_button.text = "TIME: DAY [N]"
-				night_mode_button.tooltip_text = "Time of Day: Day (Click or press N for Sunset)"
-			GameState.TimeOfDay.EVENING:
-				night_mode_button.text = "TIME: SUNSET [N]"
-				night_mode_button.tooltip_text = "Time of Day: Sunset (Click or press N for Night)"
-			GameState.TimeOfDay.NIGHT:
-				night_mode_button.text = "TIME: NIGHT [N]"
-				night_mode_button.tooltip_text = "Time of Day: Night (Click or press N for Day)"
+		weather_display = disp
+		night_mode_button = disp
 
 
 func _unhandled_input(event: InputEvent) -> void:

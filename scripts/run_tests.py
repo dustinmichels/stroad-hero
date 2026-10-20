@@ -19,16 +19,17 @@ INNER_TESTS = [
     "--test-find-blocker",
     "--test-priority-arbitration",
     "--test-exit-priority",
+]
+
+EXTENDED_TESTS = [
     "--test-deadlock-watchdog",
     "--test-merge-gap",
     "--test-right-turn-following",
     "--test-mats-blocker",
     "--test-objectives",
     "--test-car-headlights",
-    "--test-verify-render",
-]
-
-EXTENDED_TESTS = [
+    "--test-day-weather",
+    "--test-car-exhaust",
     "--test-reverse-safety",
     "--test-drive-thru",
     "--test-lifecycle",
@@ -41,7 +42,6 @@ EXTENDED_TESTS = [
     "--test-mats-collision",
     "--test-start-screen",
 ]
-
 BENCHMARKS = [
     "--bench-physics",
     "--bench-physics-walk",

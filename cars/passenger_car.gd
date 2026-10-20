@@ -11,6 +11,7 @@ const PASSENGER_TYPES: Array[CarType] = [
 	CarType.MINIVAN,
 	CarType.SPORTS,
 	CarType.JEEP,
+	CarType.F150,
 ]
 
 const BODY_SCENE_PATHS: Dictionary = {
@@ -21,6 +22,7 @@ const BODY_SCENE_PATHS: Dictionary = {
 	CarType.MINIVAN: "res://cars/bodies/minivan.tscn",
 	CarType.SPORTS: "res://cars/bodies/sports.tscn",
 	CarType.JEEP: "res://cars/bodies/jeep.tscn",
+	CarType.F150: "res://cars/bodies/f150.tscn",
 }
 
 static var _body_scenes: Dictionary = {}
@@ -49,6 +51,7 @@ const BODY_NODE_PATHS: Dictionary = {
 	CarType.MINIVAN: ^"Minivan",
 	CarType.SPORTS: ^"Sports",
 	CarType.JEEP: ^"Jeep",
+	CarType.F150: ^"F150",
 }
 
 const PAINT_PALETTE: Array[Color] = [
@@ -78,11 +81,13 @@ const REGULAR_PASSENGER_TYPES: Array[CarType] = [
 	CarType.HATCHBACK,
 	CarType.MINIVAN,
 	CarType.JEEP,
+	CarType.F150,
 ]
 
 const DEFAULT_WHEEL_RADIUS := 0.35
 const WHEEL_RADII: Dictionary = {
 	CarType.JEEP: 0.4,
+	CarType.F150: 0.38,
 }
 
 
@@ -125,21 +130,82 @@ const PAINTED_NODE_NAMES: Array[StringName] = [
 	&"FenderFR",
 ]
 
+const GRITTY_TYPES: Array[CarType] = [
+	CarType.PICKUP,
+	CarType.F150,
+	CarType.JEEP,
+]
+
+static var _grit_roughness_texture: NoiseTexture2D = null
+static var _grit_normal_texture: NoiseTexture2D = null
+static var _gritty_paint_materials: Dictionary = {}
+
 static var _rng: RandomNumberGenerator = null
 static var _paint_materials: Dictionary = {}
 
 @export var body_color: Color = Color(0, 0, 0, 0)
+@export var is_gritty: bool = false
+var _grit_determined: bool = false
 var _paint_material: StandardMaterial3D = null
 
 
-static func get_paint_material(color: Color) -> StandardMaterial3D:
-	if not _paint_materials.has(color):
+static func _get_grit_roughness_texture() -> NoiseTexture2D:
+	if _grit_roughness_texture == null:
+		var noise := FastNoiseLite.new()
+		noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
+		noise.frequency = 0.08
+		noise.fractal_octaves = 3
+		noise.fractal_gain = 0.55
+		noise.fractal_lacunarity = 2.0
+
+		_grit_roughness_texture = NoiseTexture2D.new()
+		_grit_roughness_texture.width = 256
+		_grit_roughness_texture.height = 256
+		_grit_roughness_texture.seamless = true
+		_grit_roughness_texture.generate_mipmaps = true
+		_grit_roughness_texture.noise = noise
+	return _grit_roughness_texture
+
+
+static func _get_grit_normal_texture() -> NoiseTexture2D:
+	if _grit_normal_texture == null:
+		var noise := FastNoiseLite.new()
+		noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
+		noise.frequency = 0.12
+		noise.fractal_octaves = 2
+		noise.fractal_gain = 0.5
+
+		_grit_normal_texture = NoiseTexture2D.new()
+		_grit_normal_texture.width = 256
+		_grit_normal_texture.height = 256
+		_grit_normal_texture.seamless = true
+		_grit_normal_texture.generate_mipmaps = true
+		_grit_normal_texture.as_normal_map = true
+		_grit_normal_texture.bump_strength = 2.0
+		_grit_normal_texture.noise = noise
+	return _grit_normal_texture
+
+
+static func get_paint_material(color: Color, gritty: bool = false) -> StandardMaterial3D:
+	var cache: Dictionary = _gritty_paint_materials if gritty else _paint_materials
+	if not cache.has(color):
 		var mat := StandardMaterial3D.new()
-		mat.roughness = 0.32
-		mat.metallic = 0.15
 		mat.albedo_color = color
-		_paint_materials[color] = mat
-	return _paint_materials[color]
+		if gritty:
+			mat.metallic = 0.10
+			mat.roughness = 0.70
+			mat.uv1_triplanar = true
+			mat.uv1_scale = Vector3(0.6, 0.6, 0.6)
+			mat.roughness_texture = _get_grit_roughness_texture()
+			mat.roughness_texture_channel = BaseMaterial3D.TEXTURE_CHANNEL_RED
+			mat.normal_enabled = true
+			mat.normal_scale = 0.45
+			mat.normal_texture = _get_grit_normal_texture()
+		else:
+			mat.roughness = 0.32
+			mat.metallic = 0.15
+		cache[color] = mat
+	return cache[color]
 
 
 static func _get_rng() -> RandomNumberGenerator:
@@ -186,10 +252,13 @@ func _apply_visual_type() -> void:
 		_wheels_initialized = false
 		_signals_initialized = false
 		_headlamps_initialized = false
+		_exhaust_initialized = false
+		exhaust_pipe = null
+		exhaust_particles = null
+		_exhaust_emitters.clear()
 		headlamp = null
 		_headlight_meshes.clear()
 		_headlamps_on = -1
-	wheel_radius = WHEEL_RADII.get(car_type, DEFAULT_WHEEL_RADIUS)
 	super._apply_visual_type()
 	_apply_paint_material()
 
@@ -206,6 +275,12 @@ func set_body_color(c: Color) -> void:
 	_apply_paint_material()
 
 
+func set_gritty(val: bool) -> void:
+	is_gritty = val
+	_grit_determined = true
+	_apply_paint_material()
+
+
 func _apply_paint_material() -> void:
 	if car_type == CarType.SPORTS:
 		if not SPORTS_PAINT_PALETTE.has(body_color):
@@ -214,7 +289,16 @@ func _apply_paint_material() -> void:
 	elif body_color == Color(0, 0, 0, 0):
 		var rng := _get_rng()
 		body_color = PAINT_PALETTE[rng.randi_range(0, PAINT_PALETTE.size() - 1)]
-	_paint_material = get_paint_material(body_color)
+	if not _grit_determined:
+		if GRITTY_TYPES.has(car_type):
+			is_gritty = true
+		elif car_type == CarType.SPORTS:
+			is_gritty = false
+		elif _get_rng().randf() < 0.35:
+			is_gritty = true
+		_grit_determined = true
+
+	_paint_material = get_paint_material(body_color, is_gritty)
 
 	var active_model := _get_node_for_type(car_type)
 	if not active_model:

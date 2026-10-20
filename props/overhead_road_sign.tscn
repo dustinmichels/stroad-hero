@@ -89,141 +89,109 @@ position = Vector3(6.7, 6.15, 0)
 shape = SubResource("Shape_SmallPanel")
 
 [node name="LeftPost" type="MeshInstance3D" parent="."]
-visibility_range_end = 120.0
 position = Vector3(-12.125, 3.5, 0)
 mesh = SubResource("Mesh_Post")
 
 [node name="RightPost" type="MeshInstance3D" parent="."]
-visibility_range_end = 120.0
 position = Vector3(12.125, 3.5, 0)
 mesh = SubResource("Mesh_Post")
-
 [node name="Truss" type="Node3D" parent="."]
 
 [node name="TopRail" type="MeshInstance3D" parent="Truss"]
-visibility_range_end = 120.0
 position = Vector3(0, 6.85, 0)
 mesh = SubResource("Mesh_TrussRail")
 
 [node name="BottomRail" type="MeshInstance3D" parent="Truss"]
-visibility_range_end = 120.0
 position = Vector3(0, 5.8, 0)
 mesh = SubResource("Mesh_TrussRail")
-
 [node name="Vertical0" type="MeshInstance3D" parent="Truss"]
-visibility_range_end = 120.0
 position = Vector3(-12.125, 6.325, 0)
 mesh = SubResource("Mesh_TrussVertical")
 
 [node name="Vertical1" type="MeshInstance3D" parent="Truss"]
-visibility_range_end = 120.0
 position = Vector3(-6.2, 6.325, 0)
 mesh = SubResource("Mesh_TrussVertical")
 
 [node name="Vertical2" type="MeshInstance3D" parent="Truss"]
-visibility_range_end = 120.0
 position = Vector3(-4.1, 6.325, 0)
 mesh = SubResource("Mesh_TrussVertical")
 
 [node name="Vertical3" type="MeshInstance3D" parent="Truss"]
-visibility_range_end = 120.0
 position = Vector3(-2, 6.325, 0)
 mesh = SubResource("Mesh_TrussVertical")
 
 [node name="Vertical4" type="MeshInstance3D" parent="Truss"]
-visibility_range_end = 120.0
 position = Vector3(0.1, 6.325, 0)
 mesh = SubResource("Mesh_TrussVertical")
 
 [node name="Vertical5" type="MeshInstance3D" parent="Truss"]
-visibility_range_end = 120.0
 position = Vector3(2.2, 6.325, 0)
 mesh = SubResource("Mesh_TrussVertical")
 
 [node name="Vertical6" type="MeshInstance3D" parent="Truss"]
-visibility_range_end = 120.0
 position = Vector3(4.3, 6.325, 0)
 mesh = SubResource("Mesh_TrussVertical")
 
 [node name="Vertical7" type="MeshInstance3D" parent="Truss"]
-visibility_range_end = 120.0
 position = Vector3(6.4, 6.325, 0)
 mesh = SubResource("Mesh_TrussVertical")
 
 [node name="Vertical8" type="MeshInstance3D" parent="Truss"]
-visibility_range_end = 120.0
 position = Vector3(12.125, 6.325, 0)
 mesh = SubResource("Mesh_TrussVertical")
-
 [node name="Brace0" type="MeshInstance3D" parent="Truss"]
-visibility_range_end = 120.0
 transform = Transform3D(0.866025, 0.5, 0, -0.5, 0.866025, 0, 0, 0, 1, -7.25, 6.325, 0)
 mesh = SubResource("Mesh_TrussBrace")
 
 [node name="Brace1" type="MeshInstance3D" parent="Truss"]
-visibility_range_end = 120.0
 transform = Transform3D(0.866025, -0.5, 0, 0.5, 0.866025, 0, 0, 0, 1, -5.15, 6.325, 0)
 mesh = SubResource("Mesh_TrussBrace")
 
 [node name="Brace2" type="MeshInstance3D" parent="Truss"]
-visibility_range_end = 120.0
 transform = Transform3D(0.866025, 0.5, 0, -0.5, 0.866025, 0, 0, 0, 1, -3.05, 6.325, 0)
 mesh = SubResource("Mesh_TrussBrace")
 
 [node name="Brace3" type="MeshInstance3D" parent="Truss"]
-visibility_range_end = 120.0
 transform = Transform3D(0.866025, -0.5, 0, 0.5, 0.866025, 0, 0, 0, 1, -0.95, 6.325, 0)
 mesh = SubResource("Mesh_TrussBrace")
 
 [node name="Brace4" type="MeshInstance3D" parent="Truss"]
-visibility_range_end = 120.0
 transform = Transform3D(0.866025, 0.5, 0, -0.5, 0.866025, 0, 0, 0, 1, 1.15, 6.325, 0)
 mesh = SubResource("Mesh_TrussBrace")
 
 [node name="Brace5" type="MeshInstance3D" parent="Truss"]
-visibility_range_end = 120.0
 transform = Transform3D(0.866025, -0.5, 0, 0.5, 0.866025, 0, 0, 0, 1, 3.25, 6.325, 0)
 mesh = SubResource("Mesh_TrussBrace")
 
 [node name="Brace6" type="MeshInstance3D" parent="Truss"]
-visibility_range_end = 120.0
 transform = Transform3D(0.866025, 0.5, 0, -0.5, 0.866025, 0, 0, 0, 1, 5.35, 6.325, 0)
 mesh = SubResource("Mesh_TrussBrace")
 
 [node name="Brace7" type="MeshInstance3D" parent="Truss"]
-visibility_range_end = 120.0
 transform = Transform3D(0.875, -0.484123, 0, 0.484123, 0.875, 0, 0, 0, 1, 7.35, 6.325, 0)
 mesh = SubResource("Mesh_TrussBrace")
-
 [node name="LeftSign" type="Node3D" parent="."]
 position = Vector3(-3, 6.15, 0.14)
 
 [node name="Panel" type="MeshInstance3D" parent="LeftSign"]
-visibility_range_end = 120.0
 mesh = SubResource("Mesh_LargePanel")
 
 [node name="BorderTop" type="MeshInstance3D" parent="LeftSign"]
-visibility_range_end = 120.0
 position = Vector3(0, 1.025, 0.083)
 mesh = SubResource("Mesh_LargeBorderHorizontal")
 
 [node name="BorderBottom" type="MeshInstance3D" parent="LeftSign"]
-visibility_range_end = 120.0
 position = Vector3(0, -1.025, 0.083)
 mesh = SubResource("Mesh_LargeBorderHorizontal")
 
 [node name="BorderLeft" type="MeshInstance3D" parent="LeftSign"]
-visibility_range_end = 120.0
 position = Vector3(-2.5, 0, 0.083)
 mesh = SubResource("Mesh_LargeBorderVertical")
 
 [node name="BorderRight" type="MeshInstance3D" parent="LeftSign"]
-visibility_range_end = 120.0
 position = Vector3(2.5, 0, 0.083)
 mesh = SubResource("Mesh_LargeBorderVertical")
-
 [node name="Route" type="Label3D" parent="LeftSign"]
-visibility_range_end = 90.0
 cast_shadow = 0
 position = Vector3(-1.65, 0.68, 0.095)
 pixel_size = 0.006
@@ -231,9 +199,7 @@ modulate = Color(0.96, 0.98, 0.95, 1)
 text = "688"
 font_size = 32
 outline_size = 5
-
 [node name="Direction" type="Label3D" parent="LeftSign"]
-visibility_range_end = 90.0
 cast_shadow = 0
 position = Vector3(0.45, 0.68, 0.095)
 pixel_size = 0.006
@@ -241,9 +207,7 @@ modulate = Color(0.96, 0.98, 0.95, 1)
 text = "WEST"
 font_size = 28
 outline_size = 4
-
 [node name="Destination" type="Label3D" parent="LeftSign"]
-visibility_range_end = 90.0
 cast_shadow = 0
 position = Vector3(0, 0.02, 0.095)
 pixel_size = 0.0075
@@ -251,9 +215,7 @@ modulate = Color(0.96, 0.98, 0.95, 1)
 text = "INDIAN ROCKS BEACH"
 font_size = 32
 outline_size = 5
-
 [node name="Arrow" type="Label3D" parent="LeftSign"]
-visibility_range_end = 90.0
 cast_shadow = 0
 position = Vector3(0, -0.65, 0.095)
 pixel_size = 0.012
@@ -261,36 +223,28 @@ modulate = Color(0.96, 0.98, 0.95, 1)
 text = "←"
 font_size = 48
 outline_size = 4
-
 [node name="CenterSign" type="Node3D" parent="."]
 position = Vector3(2.35, 6.15, 0.14)
 
 [node name="Panel" type="MeshInstance3D" parent="CenterSign"]
-visibility_range_end = 120.0
 mesh = SubResource("Mesh_LargePanel")
 
 [node name="BorderTop" type="MeshInstance3D" parent="CenterSign"]
-visibility_range_end = 120.0
 position = Vector3(0, 1.025, 0.083)
 mesh = SubResource("Mesh_LargeBorderHorizontal")
 
 [node name="BorderBottom" type="MeshInstance3D" parent="CenterSign"]
-visibility_range_end = 120.0
 position = Vector3(0, -1.025, 0.083)
 mesh = SubResource("Mesh_LargeBorderHorizontal")
 
 [node name="BorderLeft" type="MeshInstance3D" parent="CenterSign"]
-visibility_range_end = 120.0
 position = Vector3(-2.5, 0, 0.083)
 mesh = SubResource("Mesh_LargeBorderVertical")
 
 [node name="BorderRight" type="MeshInstance3D" parent="CenterSign"]
-visibility_range_end = 120.0
 position = Vector3(2.5, 0, 0.083)
 mesh = SubResource("Mesh_LargeBorderVertical")
-
 [node name="Route" type="Label3D" parent="CenterSign"]
-visibility_range_end = 90.0
 cast_shadow = 0
 position = Vector3(0, 0.72, 0.095)
 pixel_size = 0.006
@@ -298,9 +252,7 @@ modulate = Color(0.96, 0.98, 0.95, 1)
 text = "TO  19"
 font_size = 30
 outline_size = 4
-
 [node name="Destination" type="Label3D" parent="CenterSign"]
-visibility_range_end = 90.0
 cast_shadow = 0
 position = Vector3(0, 0.08, 0.095)
 pixel_size = 0.008
@@ -308,9 +260,7 @@ modulate = Color(0.96, 0.98, 0.95, 1)
 text = "LARGO\nCLEARWATER"
 font_size = 30
 outline_size = 5
-
 [node name="LeftArrow" type="Label3D" parent="CenterSign"]
-visibility_range_end = 90.0
 cast_shadow = 0
 position = Vector3(-1.55, -0.7, 0.095)
 pixel_size = 0.011
@@ -318,9 +268,7 @@ modulate = Color(0.96, 0.98, 0.95, 1)
 text = "↓"
 font_size = 46
 outline_size = 4
-
 [node name="RightArrow" type="Label3D" parent="CenterSign"]
-visibility_range_end = 90.0
 cast_shadow = 0
 position = Vector3(1.55, -0.7, 0.095)
 pixel_size = 0.011
@@ -328,36 +276,28 @@ modulate = Color(0.96, 0.98, 0.95, 1)
 text = "↓"
 font_size = 46
 outline_size = 4
-
 [node name="RightSign" type="Node3D" parent="."]
 position = Vector3(6.7, 6.15, 0.14)
 
 [node name="Panel" type="MeshInstance3D" parent="RightSign"]
-visibility_range_end = 120.0
 mesh = SubResource("Mesh_SmallPanel")
 
 [node name="BorderTop" type="MeshInstance3D" parent="RightSign"]
-visibility_range_end = 120.0
 position = Vector3(0, 1.025, 0.083)
 mesh = SubResource("Mesh_SmallBorderHorizontal")
 
 [node name="BorderBottom" type="MeshInstance3D" parent="RightSign"]
-visibility_range_end = 120.0
 position = Vector3(0, -1.025, 0.083)
 mesh = SubResource("Mesh_SmallBorderHorizontal")
 
 [node name="BorderLeft" type="MeshInstance3D" parent="RightSign"]
-visibility_range_end = 120.0
 position = Vector3(-1.475, 0, 0.083)
 mesh = SubResource("Mesh_SmallBorderVertical")
 
 [node name="BorderRight" type="MeshInstance3D" parent="RightSign"]
-visibility_range_end = 120.0
 position = Vector3(1.475, 0, 0.083)
 mesh = SubResource("Mesh_SmallBorderVertical")
-
 [node name="Route" type="Label3D" parent="RightSign"]
-visibility_range_end = 90.0
 cast_shadow = 0
 position = Vector3(-0.6, 0.7, 0.095)
 pixel_size = 0.0055
@@ -365,9 +305,7 @@ modulate = Color(0.96, 0.98, 0.95, 1)
 text = "688"
 font_size = 28
 outline_size = 4
-
 [node name="Direction" type="Label3D" parent="RightSign"]
-visibility_range_end = 90.0
 cast_shadow = 0
 position = Vector3(0.55, 0.7, 0.095)
 pixel_size = 0.0055
@@ -375,9 +313,7 @@ modulate = Color(0.96, 0.98, 0.95, 1)
 text = "EAST"
 font_size = 28
 outline_size = 4
-
 [node name="Destination" type="Label3D" parent="RightSign"]
-visibility_range_end = 90.0
 cast_shadow = 0
 position = Vector3(0, 0.05, 0.095)
 pixel_size = 0.0075
@@ -385,9 +321,7 @@ modulate = Color(0.96, 0.98, 0.95, 1)
 text = "TAMPA"
 font_size = 30
 outline_size = 5
-
 [node name="Arrow" type="Label3D" parent="RightSign"]
-visibility_range_end = 90.0
 cast_shadow = 0
 position = Vector3(0, -0.65, 0.095)
 pixel_size = 0.011

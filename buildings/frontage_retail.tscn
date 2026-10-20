@@ -1,0 +1,237 @@
+[gd_scene format=3]
+
+[ext_resource type="FontFile" path="res://fonts/ArchivoBlack-Regular.ttf" id="1_archivo"]
+[ext_resource type="FontFile" path="res://fonts/Overpass-Bold.ttf" id="2_overpass_bold"]
+[ext_resource type="Shader" path="res://shaders/pavement.gdshader" id="3_pavement"]
+
+[sub_resource type="ShaderMaterial" id="Mat_Apron"]
+render_priority = 0
+shader = ExtResource("3_pavement")
+shader_parameter/asphalt_base = Color(0.20, 0.21, 0.23, 1)
+shader_parameter/asphalt_worn = Color(0.28, 0.29, 0.32, 1)
+shader_parameter/aggregate_color = Color(0.38, 0.39, 0.42, 1)
+shader_parameter/roughness_base = 0.85
+
+[sub_resource type="StandardMaterial3D" id="Mat_StuccoWall"]
+albedo_color = Color(0.90, 0.88, 0.83, 1)
+roughness = 0.85
+
+[sub_resource type="StandardMaterial3D" id="Mat_Foundation"]
+albedo_color = Color(0.48, 0.46, 0.44, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Mat_ParapetCap"]
+albedo_color = Color(0.35, 0.28, 0.22, 1)
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_RoofGravel"]
+albedo_color = Color(0.32, 0.31, 0.30, 1)
+roughness = 0.95
+
+[sub_resource type="StandardMaterial3D" id="Mat_Glass"]
+transparency = 1
+albedo_color = Color(0.12, 0.18, 0.24, 0.88)
+metallic = 0.5
+roughness = 0.1
+
+[sub_resource type="StandardMaterial3D" id="Mat_DarkFrame"]
+albedo_color = Color(0.20, 0.18, 0.16, 1)
+metallic = 0.6
+roughness = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Mat_Canopy"]
+albedo_color = Color(0.28, 0.38, 0.32, 1)
+roughness = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Mat_HvacMetal"]
+albedo_color = Color(0.65, 0.68, 0.70, 1)
+metallic = 0.7
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_PavementStripe"]
+albedo_color = Color(0.92, 0.92, 0.90, 1)
+
+[sub_resource type="BoxMesh" id="Mesh_Apron"]
+material = SubResource("Mat_Apron")
+size = Vector3(28, 0.1, 16)
+
+[sub_resource type="BoxShape3D" id="Shape_Apron"]
+size = Vector3(28, 0.1, 16)
+
+[sub_resource type="BoxMesh" id="Mesh_Stripe"]
+material = SubResource("Mat_PavementStripe")
+size = Vector3(0.16, 0.12, 4.8)
+
+[sub_resource type="BoxMesh" id="Mesh_MainWall"]
+material = SubResource("Mat_StuccoWall")
+size = Vector3(22, 5.2, 16)
+
+[sub_resource type="BoxShape3D" id="Shape_MainWall"]
+size = Vector3(22, 5.2, 16)
+
+[sub_resource type="BoxMesh" id="Mesh_Foundation"]
+material = SubResource("Mat_Foundation")
+size = Vector3(22.2, 0.6, 16.2)
+
+[sub_resource type="BoxMesh" id="Mesh_Parapet"]
+material = SubResource("Mat_ParapetCap")
+size = Vector3(22.3, 0.35, 16.3)
+
+[sub_resource type="BoxMesh" id="Mesh_Roof"]
+material = SubResource("Mat_RoofGravel")
+size = Vector3(21.8, 0.2, 15.8)
+
+[sub_resource type="BoxMesh" id="Mesh_DoorFrame"]
+material = SubResource("Mat_DarkFrame")
+size = Vector3(2.6, 2.7, 0.15)
+
+[sub_resource type="BoxMesh" id="Mesh_DoorGlass"]
+material = SubResource("Mat_Glass")
+size = Vector3(2.3, 2.4, 0.08)
+
+[sub_resource type="BoxMesh" id="Mesh_WindowFrame"]
+material = SubResource("Mat_DarkFrame")
+size = Vector3(5.2, 2.5, 0.15)
+
+[sub_resource type="BoxMesh" id="Mesh_WindowGlass"]
+material = SubResource("Mat_Glass")
+size = Vector3(4.9, 2.2, 0.08)
+
+[sub_resource type="BoxMesh" id="Mesh_Canopy"]
+material = SubResource("Mat_Canopy")
+size = Vector3(4.2, 0.3, 2.2)
+
+[sub_resource type="BoxMesh" id="Mesh_Hvac"]
+material = SubResource("Mat_HvacMetal")
+size = Vector3(1.8, 1.2, 1.8)
+
+[node name="FrontageRetail" type="Node3D"]
+
+[node name="Site" type="Node3D" parent="."]
+
+[node name="ParkingApron" type="MeshInstance3D" parent="Site"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, -6)
+mesh = SubResource("Mesh_Apron")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Site/ParkingApron"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Site/ParkingApron/StaticBody3D"]
+shape = SubResource("Shape_Apron")
+
+[node name="Stripes" type="Node3D" parent="Site"]
+
+[node name="Stripe1" type="MeshInstance3D" parent="Site/Stripes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.5, 0.06, -7)
+mesh = SubResource("Mesh_Stripe")
+
+[node name="Stripe2" type="MeshInstance3D" parent="Site/Stripes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 0.06, -7)
+mesh = SubResource("Mesh_Stripe")
+
+[node name="Stripe3" type="MeshInstance3D" parent="Site/Stripes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 0.06, -7)
+mesh = SubResource("Mesh_Stripe")
+
+[node name="Stripe4" type="MeshInstance3D" parent="Site/Stripes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06, -7)
+mesh = SubResource("Mesh_Stripe")
+
+[node name="Stripe5" type="MeshInstance3D" parent="Site/Stripes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 0.06, -7)
+mesh = SubResource("Mesh_Stripe")
+
+[node name="Stripe6" type="MeshInstance3D" parent="Site/Stripes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0.06, -7)
+mesh = SubResource("Mesh_Stripe")
+
+[node name="Stripe7" type="MeshInstance3D" parent="Site/Stripes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.5, 0.06, -7)
+mesh = SubResource("Mesh_Stripe")
+
+[node name="Building" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 6)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.6, 0)
+shape = SubResource("Shape_MainWall")
+
+[node name="Wall" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.6, 0)
+mesh = SubResource("Mesh_MainWall")
+
+[node name="Foundation" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+mesh = SubResource("Mesh_Foundation")
+
+[node name="Parapet" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.3, 0)
+mesh = SubResource("Mesh_Parapet")
+
+[node name="Roof" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.1, 0)
+mesh = SubResource("Mesh_Roof")
+
+[node name="EntranceDoors" type="Node3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -8.02)
+
+[node name="Frame" type="MeshInstance3D" parent="Building/EntranceDoors"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 0)
+mesh = SubResource("Mesh_DoorFrame")
+
+[node name="Glass" type="MeshInstance3D" parent="Building/EntranceDoors"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, -0.02)
+mesh = SubResource("Mesh_DoorGlass")
+
+[node name="Canopy" type="MeshInstance3D" parent="Building/EntranceDoors"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.1, -1.0)
+mesh = SubResource("Mesh_Canopy")
+
+[node name="DisplayWindowL" type="Node3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.5, 0, -8.02)
+
+[node name="Frame" type="MeshInstance3D" parent="Building/DisplayWindowL"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+mesh = SubResource("Mesh_WindowFrame")
+
+[node name="Glass" type="MeshInstance3D" parent="Building/DisplayWindowL"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -0.02)
+mesh = SubResource("Mesh_WindowGlass")
+
+[node name="DisplayWindowR" type="Node3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 0, -8.02)
+
+[node name="Frame" type="MeshInstance3D" parent="Building/DisplayWindowR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+mesh = SubResource("Mesh_WindowFrame")
+
+[node name="Glass" type="MeshInstance3D" parent="Building/DisplayWindowR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -0.02)
+mesh = SubResource("Mesh_WindowGlass")
+
+[node name="SignTitle" type="Label3D" parent="Building"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 4.4, -8.05)
+cast_shadow = 0
+pixel_size = 0.013
+font = ExtResource("1_archivo")
+font_size = 50
+modulate = Color(0.24, 0.32, 0.26, 1)
+outline_modulate = Color(0.1, 0.1, 0.1, 1)
+outline_size = 6
+text = "LEADERS OUTDOOR"
+
+[node name="SignSub" type="Label3D" parent="Building"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 3.8, -8.05)
+cast_shadow = 0
+pixel_size = 0.009
+font = ExtResource("2_overpass_bold")
+font_size = 36
+modulate = Color(0.42, 0.36, 0.28, 1)
+text = "CASUAL FURNITURE & PATIOS"
+
+[node name="Hvac1" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.5, 5.7, 3.0)
+mesh = SubResource("Mesh_Hvac")
+
+[node name="Hvac2" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 5.7, 3.0)
+mesh = SubResource("Mesh_Hvac")

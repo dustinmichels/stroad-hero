@@ -7,7 +7,7 @@
 [ext_resource type="Texture2D" path="res://props/lawyer_portrait.png" id="5_lawyer"]
 
 [sub_resource type="CylinderShape3D" id="Shape_Pole"]
-height = 6.5
+height = 5.8
 radius = 0.42
 
 [sub_resource type="BoxShape3D" id="Shape_Board"]
@@ -35,6 +35,7 @@ roughness = 0.5
 [sub_resource type="StandardMaterial3D" id="Mat_NavyBoard"]
 albedo_color = Color(0.08, 0.14, 0.34, 1)
 roughness = 0.55
+cull_mode = 2
 
 [sub_resource type="StandardMaterial3D" id="Mat_BannerRed"]
 albedo_color = Color(0.82, 0.12, 0.12, 1)
@@ -62,7 +63,7 @@ radial_segments = 16
 material = SubResource("Mat_GalvanizedSteel")
 top_radius = 0.38
 bottom_radius = 0.42
-height = 6.5
+height = 5.8
 radial_segments = 24
 
 [sub_resource type="CylinderMesh" id="Mesh_TorqueTube"]
@@ -80,7 +81,7 @@ size = Vector3(0.15, 3.6, 0.15)
 material = SubResource("Mat_GalvanizedSteel")
 top_radius = 0.08
 bottom_radius = 0.08
-height = 2.7
+height = 2.2
 radial_segments = 12
 
 [sub_resource type="BoxMesh" id="Mesh_TrimHorizontal"]
@@ -95,9 +96,9 @@ size = Vector3(0.12, 3.6, 0.36)
 material = SubResource("Mat_GalvanizedSteel")
 size = Vector3(8.06, 3.36, 0.04)
 
-[sub_resource type="BoxMesh" id="Mesh_BoardFace"]
+[sub_resource type="QuadMesh" id="Mesh_BoardFace"]
 material = SubResource("Mat_NavyBoard")
-size = Vector3(8.06, 3.36, 0.04)
+size = Vector2(8.06, 3.36)
 
 [sub_resource type="StandardMaterial3D" id="Mat_Portrait"]
 albedo_texture = ExtResource("5_lawyer")
@@ -159,11 +160,113 @@ bottom_radius = 0.015
 height = 0.38
 radial_segments = 8
 
+
+[sub_resource type="StandardMaterial3D" id="Mat_RustedSteel"]
+albedo_color = Color(0.44, 0.27, 0.18, 1)
+metallic = 0.35
+roughness = 0.82
+
+[sub_resource type="StandardMaterial3D" id="Mat_SolarFrame"]
+albedo_color = Color(0.68, 0.7, 0.72, 1)
+metallic = 0.85
+roughness = 0.28
+
+[sub_resource type="StandardMaterial3D" id="Mat_SolarCell"]
+albedo_color = Color(0.06, 0.09, 0.15, 1)
+metallic = 0.75
+roughness = 0.18
+
+[sub_resource type="StandardMaterial3D" id="Mat_LamarPlate"]
+albedo_color = Color(0.1, 0.36, 0.16, 1)
+roughness = 0.5
+
+[sub_resource type="CylinderMesh" id="Mesh_MonopoleRusted"]
+material = SubResource("Mat_RustedSteel")
+top_radius = 0.38
+bottom_radius = 0.42
+height = 5.8
+radial_segments = 24
+
+[sub_resource type="CylinderMesh" id="Mesh_TorqueTubeRusted"]
+material = SubResource("Mat_RustedSteel")
+top_radius = 0.26
+bottom_radius = 0.26
+height = 7.6
+radial_segments = 16
+
+[sub_resource type="CylinderMesh" id="Mesh_StrutLeftRusted"]
+material = SubResource("Mat_RustedSteel")
+top_radius = 0.08
+bottom_radius = 0.08
+height = 2.15
+radial_segments = 12
+
+[sub_resource type="CylinderMesh" id="Mesh_StrutRightRusted"]
+material = SubResource("Mat_RustedSteel")
+top_radius = 0.08
+bottom_radius = 0.08
+height = 1.72
+radial_segments = 12
+
+[sub_resource type="CylinderMesh" id="Mesh_LadderRailRusted"]
+material = SubResource("Mat_RustedSteel")
+top_radius = 0.02
+bottom_radius = 0.02
+height = 5.0
+radial_segments = 8
+
+[sub_resource type="CylinderMesh" id="Mesh_LadderRungRusted"]
+material = SubResource("Mat_RustedSteel")
+top_radius = 0.015
+bottom_radius = 0.015
+height = 0.38
+radial_segments = 8
+
+[sub_resource type="BoxMesh" id="Mesh_SolarBracket"]
+material = SubResource("Mat_RustedSteel")
+size = Vector3(0.06, 0.55, 0.06)
+
+[sub_resource type="BoxMesh" id="Mesh_SolarFrame"]
+material = SubResource("Mat_SolarFrame")
+size = Vector3(1.5, 0.9, 0.04)
+
+[sub_resource type="BoxMesh" id="Mesh_SolarCell"]
+material = SubResource("Mat_SolarCell")
+size = Vector3(1.44, 0.84, 0.01)
+
+[sub_resource type="BoxMesh" id="Mesh_CageFloor"]
+material = SubResource("Mat_RustedSteel")
+size = Vector3(1.0, 0.08, 0.7)
+
+[sub_resource type="BoxMesh" id="Mesh_CageRailLong"]
+material = SubResource("Mat_RustedSteel")
+size = Vector3(1.0, 0.04, 0.04)
+
+[sub_resource type="BoxMesh" id="Mesh_CageRailLongMid"]
+material = SubResource("Mat_RustedSteel")
+size = Vector3(1.0, 0.03, 0.03)
+
+[sub_resource type="BoxMesh" id="Mesh_CageRailEnd"]
+material = SubResource("Mat_RustedSteel")
+size = Vector3(0.04, 0.04, 0.7)
+
+[sub_resource type="BoxMesh" id="Mesh_CageRailEndMid"]
+material = SubResource("Mat_RustedSteel")
+size = Vector3(0.03, 0.03, 0.7)
+
+[sub_resource type="BoxMesh" id="Mesh_CagePost"]
+material = SubResource("Mat_RustedSteel")
+size = Vector3(0.04, 0.9, 0.04)
+
+[sub_resource type="BoxMesh" id="Mesh_LamarPlate"]
+material = SubResource("Mat_LamarPlate")
+size = Vector3(0.65, 0.18, 0.02)
+
 [node name="Billboard" type="StaticBody3D"]
 script = ExtResource("1_script")
 
 [node name="CollisionPole" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.25, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.9, 0)
 shape = SubResource("Shape_Pole")
 
 [node name="CollisionBoard" type="CollisionShape3D" parent="."]
@@ -172,188 +275,348 @@ shape = SubResource("Shape_Board")
 
 [node name="Structure" type="Node3D" parent="."]
 
-[node name="Foundation" type="MeshInstance3D" parent="Structure"]
-visibility_range_end = 120.0
+[node name="CenteredGroup" type="Node3D" parent="Structure"]
+
+[node name="Foundation" type="MeshInstance3D" parent="Structure/CenteredGroup"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0)
 mesh = SubResource("Mesh_Foundation")
 
-[node name="Monopole" type="MeshInstance3D" parent="Structure"]
-visibility_range_end = 120.0
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.25, 0)
+[node name="Monopole" type="MeshInstance3D" parent="Structure/CenteredGroup"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.9, 0)
 mesh = SubResource("Mesh_Monopole")
 
-[node name="TorqueTube" type="MeshInstance3D" parent="Structure"]
-visibility_range_end = 120.0
-transform = Transform3D(0, 1, 0, -1, 0, 0, 0, 0, 1, 0, 7.2, 0)
+[node name="TorqueTube" type="MeshInstance3D" parent="Structure/CenteredGroup"]
+transform = Transform3D(0, 1, 0, -1, 0, 0, 0, 0, 1, 0, 5.8, 0)
 mesh = SubResource("Mesh_TorqueTube")
 
-[node name="StrutLeft" type="MeshInstance3D" parent="Structure"]
-visibility_range_end = 120.0
-transform = Transform3D(0.852, 0.523, 0, -0.523, 0.852, 0, 0, 0, 1, -1.0, 6.2, 0)
+[node name="StrutLeft" type="MeshInstance3D" parent="Structure/CenteredGroup"]
+transform = Transform3D(0.7295, 0.6839, 0, -0.6839, 0.7295, 0, 0, 0, 1, -1.05, 5, 0)
 mesh = SubResource("Mesh_KickerStrut")
 
-[node name="StrutRight" type="MeshInstance3D" parent="Structure"]
-visibility_range_end = 120.0
-transform = Transform3D(0.852, -0.523, 0, 0.523, 0.852, 0, 0, 0, 1, 1.0, 6.2, 0)
+[node name="StrutRight" type="MeshInstance3D" parent="Structure/CenteredGroup"]
+transform = Transform3D(0.7295, -0.6839, 0, 0.6839, 0.7295, 0, 0, 0, 1, 1.05, 5, 0)
 mesh = SubResource("Mesh_KickerStrut")
 
 [node name="Upright0" type="MeshInstance3D" parent="Structure"]
-visibility_range_end = 120.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.2, 7.8, 0)
 mesh = SubResource("Mesh_UprightBeam")
 
 [node name="Upright1" type="MeshInstance3D" parent="Structure"]
-visibility_range_end = 120.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6, 7.8, 0)
 mesh = SubResource("Mesh_UprightBeam")
 
 [node name="Upright2" type="MeshInstance3D" parent="Structure"]
-visibility_range_end = 120.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.8, 0)
 mesh = SubResource("Mesh_UprightBeam")
 
 [node name="Upright3" type="MeshInstance3D" parent="Structure"]
-visibility_range_end = 120.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, 7.8, 0)
 mesh = SubResource("Mesh_UprightBeam")
 
 [node name="Upright4" type="MeshInstance3D" parent="Structure"]
-visibility_range_end = 120.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.2, 7.8, 0)
 mesh = SubResource("Mesh_UprightBeam")
 
 [node name="TrimTop" type="MeshInstance3D" parent="Structure"]
-visibility_range_end = 120.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9.54, 0)
 mesh = SubResource("Mesh_TrimHorizontal")
 
 [node name="TrimBottom" type="MeshInstance3D" parent="Structure"]
-visibility_range_end = 120.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.06, 0)
 mesh = SubResource("Mesh_TrimHorizontal")
 
 [node name="TrimLeft" type="MeshInstance3D" parent="Structure"]
-visibility_range_end = 120.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.09, 7.8, 0)
 mesh = SubResource("Mesh_TrimVertical")
 
 [node name="TrimRight" type="MeshInstance3D" parent="Structure"]
-visibility_range_end = 120.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.09, 7.8, 0)
 mesh = SubResource("Mesh_TrimVertical")
 
 [node name="BackCover" type="MeshInstance3D" parent="Structure"]
 visible = false
-visibility_range_end = 120.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.8, -0.16)
 mesh = SubResource("Mesh_BackCover")
+[node name="Ladder" type="Node3D" parent="Structure/CenteredGroup"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.44, 3.4, 0)
 
-[node name="Ladder" type="Node3D" parent="Structure"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.44, 3.5, 0)
-
-[node name="RailL" type="MeshInstance3D" parent="Structure/Ladder"]
+[node name="RailL" type="MeshInstance3D" parent="Structure/CenteredGroup/Ladder"]
 visibility_range_end = 80.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.19)
 mesh = SubResource("Mesh_LadderRail")
 
-[node name="RailR" type="MeshInstance3D" parent="Structure/Ladder"]
+[node name="RailR" type="MeshInstance3D" parent="Structure/CenteredGroup/Ladder"]
 visibility_range_end = 80.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.19)
 mesh = SubResource("Mesh_LadderRail")
 
-[node name="Rung0" type="MeshInstance3D" parent="Structure/Ladder"]
+[node name="Rung0" type="MeshInstance3D" parent="Structure/CenteredGroup/Ladder"]
 visibility_range_end = 60.0
 transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0, -2.1, 0)
 mesh = SubResource("Mesh_LadderRung")
 
-[node name="Rung1" type="MeshInstance3D" parent="Structure/Ladder"]
+[node name="Rung1" type="MeshInstance3D" parent="Structure/CenteredGroup/Ladder"]
 visibility_range_end = 60.0
 transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0, -1.75, 0)
 mesh = SubResource("Mesh_LadderRung")
 
-[node name="Rung2" type="MeshInstance3D" parent="Structure/Ladder"]
+[node name="Rung2" type="MeshInstance3D" parent="Structure/CenteredGroup/Ladder"]
 visibility_range_end = 60.0
 transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0, -1.4, 0)
 mesh = SubResource("Mesh_LadderRung")
 
-[node name="Rung3" type="MeshInstance3D" parent="Structure/Ladder"]
+[node name="Rung3" type="MeshInstance3D" parent="Structure/CenteredGroup/Ladder"]
 visibility_range_end = 60.0
 transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0, -1.05, 0)
 mesh = SubResource("Mesh_LadderRung")
 
-[node name="Rung4" type="MeshInstance3D" parent="Structure/Ladder"]
+[node name="Rung4" type="MeshInstance3D" parent="Structure/CenteredGroup/Ladder"]
 visibility_range_end = 60.0
 transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0, -0.7, 0)
 mesh = SubResource("Mesh_LadderRung")
 
-[node name="Rung5" type="MeshInstance3D" parent="Structure/Ladder"]
+[node name="Rung5" type="MeshInstance3D" parent="Structure/CenteredGroup/Ladder"]
 visibility_range_end = 60.0
 transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0, -0.35, 0)
 mesh = SubResource("Mesh_LadderRung")
 
-[node name="Rung6" type="MeshInstance3D" parent="Structure/Ladder"]
+[node name="Rung6" type="MeshInstance3D" parent="Structure/CenteredGroup/Ladder"]
 visibility_range_end = 60.0
 transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0, 0, 0)
 mesh = SubResource("Mesh_LadderRung")
 
-[node name="Rung7" type="MeshInstance3D" parent="Structure/Ladder"]
+[node name="Rung7" type="MeshInstance3D" parent="Structure/CenteredGroup/Ladder"]
 visibility_range_end = 60.0
 transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0, 0.35, 0)
 mesh = SubResource("Mesh_LadderRung")
 
-[node name="Rung8" type="MeshInstance3D" parent="Structure/Ladder"]
+[node name="Rung8" type="MeshInstance3D" parent="Structure/CenteredGroup/Ladder"]
 visibility_range_end = 60.0
 transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0, 0.7, 0)
 mesh = SubResource("Mesh_LadderRung")
 
-[node name="Rung9" type="MeshInstance3D" parent="Structure/Ladder"]
+[node name="Rung9" type="MeshInstance3D" parent="Structure/CenteredGroup/Ladder"]
 visibility_range_end = 60.0
 transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0, 1.05, 0)
 mesh = SubResource("Mesh_LadderRung")
 
-[node name="Rung10" type="MeshInstance3D" parent="Structure/Ladder"]
+[node name="Rung10" type="MeshInstance3D" parent="Structure/CenteredGroup/Ladder"]
 visibility_range_end = 60.0
 transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0, 1.4, 0)
 mesh = SubResource("Mesh_LadderRung")
 
-[node name="Rung11" type="MeshInstance3D" parent="Structure/Ladder"]
+[node name="Rung11" type="MeshInstance3D" parent="Structure/CenteredGroup/Ladder"]
 visibility_range_end = 60.0
 transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0, 1.75, 0)
 mesh = SubResource("Mesh_LadderRung")
 
-[node name="Rung12" type="MeshInstance3D" parent="Structure/Ladder"]
+[node name="Rung12" type="MeshInstance3D" parent="Structure/CenteredGroup/Ladder"]
 visibility_range_end = 60.0
 transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0, 2.1, 0)
 mesh = SubResource("Mesh_LadderRung")
 
+
+
+[node name="OffsetGroup" type="Node3D" parent="Structure"]
+visible = false
+
+[node name="Foundation" type="MeshInstance3D" parent="Structure/OffsetGroup"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.1, 0.2, 0)
+mesh = SubResource("Mesh_Foundation")
+
+[node name="Monopole" type="MeshInstance3D" parent="Structure/OffsetGroup"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.1, 2.9, 0)
+mesh = SubResource("Mesh_MonopoleRusted")
+
+[node name="TorqueTube" type="MeshInstance3D" parent="Structure/OffsetGroup"]
+transform = Transform3D(0, 1, 0, -1, 0, 0, 0, 0, 1, 0.2, 5.8, 0)
+mesh = SubResource("Mesh_TorqueTubeRusted")
+
+[node name="StrutLeft" type="MeshInstance3D" parent="Structure/OffsetGroup"]
+transform = Transform3D(0.466, 0.885, 0, -0.885, 0.466, 0, 0, 0, 1, 1.15, 5.3, 0)
+mesh = SubResource("Mesh_StrutLeftRusted")
+
+[node name="StrutRight" type="MeshInstance3D" parent="Structure/OffsetGroup"]
+transform = Transform3D(0.581, -0.814, 0, 0.814, 0.581, 0, 0, 0, 1, 2.8, 5.3, 0)
+mesh = SubResource("Mesh_StrutRightRusted")
+
+[node name="Ladder" type="Node3D" parent="Structure/OffsetGroup"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.54, 3.4, 0)
+
+[node name="RailL" type="MeshInstance3D" parent="Structure/OffsetGroup/Ladder"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.19)
+mesh = SubResource("Mesh_LadderRailRusted")
+
+[node name="RailR" type="MeshInstance3D" parent="Structure/OffsetGroup/Ladder"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.19)
+mesh = SubResource("Mesh_LadderRailRusted")
+
+[node name="Rung0" type="MeshInstance3D" parent="Structure/OffsetGroup/Ladder"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0, -2.10, 0)
+mesh = SubResource("Mesh_LadderRungRusted")
+
+[node name="Rung1" type="MeshInstance3D" parent="Structure/OffsetGroup/Ladder"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0, -1.75, 0)
+mesh = SubResource("Mesh_LadderRungRusted")
+
+[node name="Rung2" type="MeshInstance3D" parent="Structure/OffsetGroup/Ladder"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0, -1.40, 0)
+mesh = SubResource("Mesh_LadderRungRusted")
+
+[node name="Rung3" type="MeshInstance3D" parent="Structure/OffsetGroup/Ladder"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0, -1.05, 0)
+mesh = SubResource("Mesh_LadderRungRusted")
+
+[node name="Rung4" type="MeshInstance3D" parent="Structure/OffsetGroup/Ladder"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0, -0.70, 0)
+mesh = SubResource("Mesh_LadderRungRusted")
+
+[node name="Rung5" type="MeshInstance3D" parent="Structure/OffsetGroup/Ladder"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0, -0.35, 0)
+mesh = SubResource("Mesh_LadderRungRusted")
+
+[node name="Rung6" type="MeshInstance3D" parent="Structure/OffsetGroup/Ladder"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0, -0.00, 0)
+mesh = SubResource("Mesh_LadderRungRusted")
+
+[node name="Rung7" type="MeshInstance3D" parent="Structure/OffsetGroup/Ladder"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0, 0.35, 0)
+mesh = SubResource("Mesh_LadderRungRusted")
+
+[node name="Rung8" type="MeshInstance3D" parent="Structure/OffsetGroup/Ladder"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0, 0.70, 0)
+mesh = SubResource("Mesh_LadderRungRusted")
+
+[node name="Rung9" type="MeshInstance3D" parent="Structure/OffsetGroup/Ladder"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0, 1.05, 0)
+mesh = SubResource("Mesh_LadderRungRusted")
+
+[node name="Rung10" type="MeshInstance3D" parent="Structure/OffsetGroup/Ladder"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0, 1.40, 0)
+mesh = SubResource("Mesh_LadderRungRusted")
+
+[node name="Rung11" type="MeshInstance3D" parent="Structure/OffsetGroup/Ladder"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0, 1.75, 0)
+mesh = SubResource("Mesh_LadderRungRusted")
+
+[node name="Rung12" type="MeshInstance3D" parent="Structure/OffsetGroup/Ladder"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0, 2.10, 0)
+mesh = SubResource("Mesh_LadderRungRusted")
+
+[node name="MaintenanceCage" type="Node3D" parent="Structure/OffsetGroup"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.55, 5.95, 0.38)
+
+[node name="Floor" type="MeshInstance3D" parent="Structure/OffsetGroup/MaintenanceCage"]
+mesh = SubResource("Mesh_CageFloor")
+
+[node name="RailOuterTop" type="MeshInstance3D" parent="Structure/OffsetGroup/MaintenanceCage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0.35)
+mesh = SubResource("Mesh_CageRailLong")
+
+[node name="RailOuterMid" type="MeshInstance3D" parent="Structure/OffsetGroup/MaintenanceCage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0.35)
+mesh = SubResource("Mesh_CageRailLongMid")
+
+[node name="RailRightTop" type="MeshInstance3D" parent="Structure/OffsetGroup/MaintenanceCage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0.9, 0)
+mesh = SubResource("Mesh_CageRailEnd")
+
+[node name="RailRightMid" type="MeshInstance3D" parent="Structure/OffsetGroup/MaintenanceCage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0.45, 0)
+mesh = SubResource("Mesh_CageRailEndMid")
+
+[node name="RailBackTop" type="MeshInstance3D" parent="Structure/OffsetGroup/MaintenanceCage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, -0.35)
+mesh = SubResource("Mesh_CageRailLong")
+
+[node name="RailBackMid" type="MeshInstance3D" parent="Structure/OffsetGroup/MaintenanceCage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, -0.35)
+mesh = SubResource("Mesh_CageRailLongMid")
+
+[node name="PostRightFront" type="MeshInstance3D" parent="Structure/OffsetGroup/MaintenanceCage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0.45, 0.35)
+mesh = SubResource("Mesh_CagePost")
+
+[node name="PostRightBack" type="MeshInstance3D" parent="Structure/OffsetGroup/MaintenanceCage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0.45, -0.35)
+mesh = SubResource("Mesh_CagePost")
+
+[node name="PostLeftBack" type="MeshInstance3D" parent="Structure/OffsetGroup/MaintenanceCage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 0.45, -0.35)
+mesh = SubResource("Mesh_CagePost")
+
+[node name="SolarPanel0" type="Node3D" parent="Structure/OffsetGroup"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6, 9.85, -0.15)
+
+[node name="Bracket" type="MeshInstance3D" parent="Structure/OffsetGroup/SolarPanel0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.22, 0)
+mesh = SubResource("Mesh_SolarBracket")
+
+[node name="Mount" type="Node3D" parent="Structure/OffsetGroup/SolarPanel0"]
+transform = Transform3D(1, 0, 0, 0, 0.819152, 0.573576, 0, -0.573576, 0.819152, 0, 0, 0)
+
+[node name="Frame" type="MeshInstance3D" parent="Structure/OffsetGroup/SolarPanel0/Mount"]
+mesh = SubResource("Mesh_SolarFrame")
+
+[node name="Cell" type="MeshInstance3D" parent="Structure/OffsetGroup/SolarPanel0/Mount"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.02)
+mesh = SubResource("Mesh_SolarCell")
+
+[node name="SolarPanel1" type="Node3D" parent="Structure/OffsetGroup"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 9.85, -0.15)
+
+[node name="Bracket" type="MeshInstance3D" parent="Structure/OffsetGroup/SolarPanel1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.22, 0)
+mesh = SubResource("Mesh_SolarBracket")
+
+[node name="Mount" type="Node3D" parent="Structure/OffsetGroup/SolarPanel1"]
+transform = Transform3D(1, 0, 0, 0, 0.819152, 0.573576, 0, -0.573576, 0.819152, 0, 0, 0)
+
+[node name="Frame" type="MeshInstance3D" parent="Structure/OffsetGroup/SolarPanel1/Mount"]
+mesh = SubResource("Mesh_SolarFrame")
+
+[node name="Cell" type="MeshInstance3D" parent="Structure/OffsetGroup/SolarPanel1/Mount"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.02)
+mesh = SubResource("Mesh_SolarCell")
+
+[node name="LamarPlate" type="Node3D" parent="Structure/OffsetGroup"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.95, 0.74)
+
+[node name="Plate" type="MeshInstance3D" parent="Structure/OffsetGroup/LamarPlate"]
+mesh = SubResource("Mesh_LamarPlate")
+
+[node name="Label" type="Label3D" parent="Structure/OffsetGroup/LamarPlate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.015)
+render_priority = 3
+text = "LAMAR"
+font = ExtResource("2_archivo")
+font_size = 28
+pixel_size = 0.003
+outline_size = 4
+outline_modulate = Color(0.04, 0.18, 0.08, 1)
 [node name="FrontSide" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.16)
 
 [node name="Board" type="MeshInstance3D" parent="FrontSide"]
-visibility_range_end = 130.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.8, 0)
 mesh = SubResource("Mesh_BoardFace")
 
 [node name="Banner" type="MeshInstance3D" parent="FrontSide"]
-visibility_range_end = 120.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.18, 0.025)
 mesh = SubResource("Mesh_Banner")
 
 [node name="PortraitFrame" type="MeshInstance3D" parent="FrontSide"]
-visibility_range_end = 120.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.35, 7.8, 0.021)
 mesh = SubResource("Mesh_PortraitFrame")
 
 [node name="Portrait" type="MeshInstance3D" parent="FrontSide"]
 material_override = SubResource("Mat_Portrait")
-visibility_range_end = 120.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.35, 7.8, 0.035)
 mesh = SubResource("Mesh_Portrait")
 [node name="Labels" type="Node3D" parent="FrontSide"]
 
 [node name="Headline" type="Label3D" parent="FrontSide/Labels"]
 render_priority = 1
-visibility_range_end = 110.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.85, 0.04)
 pixel_size = 0.007
@@ -363,10 +626,8 @@ text = "INJURED ON THE STROAD?"
 font = ExtResource("2_archivo")
 font_size = 54
 outline_size = 12
-
 [node name="Tagline" type="Label3D" parent="FrontSide/Labels"]
 render_priority = 1
-visibility_range_end = 110.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.05, 0.04)
 pixel_size = 0.0075
@@ -376,10 +637,8 @@ text = "Call Me!"
 font = ExtResource("3_lobster")
 font_size = 62
 outline_size = 14
-
 [node name="Contact" type="Label3D" parent="FrontSide/Labels"]
 render_priority = 2
-visibility_range_end = 110.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.18, 0.04)
 pixel_size = 0.007
@@ -389,10 +648,8 @@ text = "444-STROAD"
 font = ExtResource("2_archivo")
 font_size = 72
 outline_size = 12
-
 [node name="Disclaimer" type="Label3D" parent="FrontSide/Labels"]
 render_priority = 1
-visibility_range_end = 100.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.45, 0.04)
 pixel_size = 0.0065
@@ -402,15 +659,12 @@ text = "ACCIDENT & INJURY LAW • FREE CONSULTATION"
 font = ExtResource("4_overpass")
 font_size = 26
 outline_size = 6
-
 [node name="Catwalk" type="Node3D" parent="FrontSide"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.95, 0.38)
 
 [node name="Walkway" type="MeshInstance3D" parent="FrontSide/Catwalk"]
-visibility_range_end = 120.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 mesh = SubResource("Mesh_Walkway")
-
 [node name="HandrailTop" type="MeshInstance3D" parent="FrontSide/Catwalk"]
 visibility_range_end = 100.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0.35)
@@ -556,30 +810,25 @@ spot_angle = 50.0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -0.16)
 
 [node name="Board" type="MeshInstance3D" parent="BackSide"]
-visibility_range_end = 130.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.8, 0)
 mesh = SubResource("Mesh_BoardFace")
 
 [node name="Banner" type="MeshInstance3D" parent="BackSide"]
-visibility_range_end = 120.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.18, 0.025)
 mesh = SubResource("Mesh_Banner")
 
 [node name="PortraitFrame" type="MeshInstance3D" parent="BackSide"]
-visibility_range_end = 120.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.35, 7.8, 0.021)
 mesh = SubResource("Mesh_PortraitFrame")
 
 [node name="Portrait" type="MeshInstance3D" parent="BackSide"]
 material_override = SubResource("Mat_Portrait")
-visibility_range_end = 120.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.35, 7.8, 0.035)
 mesh = SubResource("Mesh_Portrait")
 [node name="Labels" type="Node3D" parent="BackSide"]
 
 [node name="Headline" type="Label3D" parent="BackSide/Labels"]
 render_priority = 1
-visibility_range_end = 110.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.85, 0.04)
 pixel_size = 0.007
@@ -589,10 +838,8 @@ text = "INJURED ON THE STROAD?"
 font = ExtResource("2_archivo")
 font_size = 54
 outline_size = 12
-
 [node name="Tagline" type="Label3D" parent="BackSide/Labels"]
 render_priority = 1
-visibility_range_end = 110.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.05, 0.04)
 pixel_size = 0.0075
@@ -602,10 +849,8 @@ text = "Call Me!"
 font = ExtResource("3_lobster")
 font_size = 62
 outline_size = 14
-
 [node name="Contact" type="Label3D" parent="BackSide/Labels"]
 render_priority = 2
-visibility_range_end = 110.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.18, 0.04)
 pixel_size = 0.007
@@ -615,10 +860,8 @@ text = "444-STROAD"
 font = ExtResource("2_archivo")
 font_size = 72
 outline_size = 12
-
 [node name="Disclaimer" type="Label3D" parent="BackSide/Labels"]
 render_priority = 1
-visibility_range_end = 100.0
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.45, 0.04)
 pixel_size = 0.0065
@@ -628,15 +871,12 @@ text = "ACCIDENT & INJURY LAW • FREE CONSULTATION"
 font = ExtResource("4_overpass")
 font_size = 26
 outline_size = 6
-
 [node name="Catwalk" type="Node3D" parent="BackSide"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.95, 0.38)
 
 [node name="Walkway" type="MeshInstance3D" parent="BackSide/Catwalk"]
-visibility_range_end = 120.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 mesh = SubResource("Mesh_Walkway")
-
 [node name="HandrailTop" type="MeshInstance3D" parent="BackSide/Catwalk"]
 visibility_range_end = 100.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0.35)

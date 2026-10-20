@@ -126,6 +126,24 @@ static func dest_group(dest: StringName) -> StringName:
 	return &"north"
 
 
+## Rule: Dorf parking lot does not allow Jeeps, sports cars, or taxis.
+const DISALLOWED_DORF_LOT_CAR_TYPES: Array[Car.CarType] = [
+	Car.CarType.JEEP,
+	Car.CarType.SPORTS,
+	Car.CarType.TAXI,
+]
+
+
+static func is_car_type_allowed_in_dorf_lot(type: Car.CarType) -> bool:
+	return not (type in DISALLOWED_DORF_LOT_CAR_TYPES)
+
+
+static func is_car_allowed_in_dorf_lot(car: Car) -> bool:
+	if car == null:
+		return false
+	return is_car_type_allowed_in_dorf_lot(car.car_type)
+
+
 static func _spot_position(spot) -> Vector3:
 	if spot is ParkingSpot:
 		return spot.transform.origin
@@ -575,6 +593,8 @@ func request_spot(car: Car, errand) -> ParkingSpot:
 		if not spot.is_free() or lot_group(spot) != target_group:
 			continue
 		if target_group == &"smell" and not (dest in spot.serves):
+			continue
+		if &"dorf" in spot.serves and not is_car_allowed_in_dorf_lot(car):
 			continue
 		var spot_2d := Vector2(spot.transform.origin.x, spot.transform.origin.z)
 		var dist := spot_2d.distance_to(entrance_2d)

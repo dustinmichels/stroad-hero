@@ -1,0 +1,779 @@
+[gd_scene format=3]
+
+[ext_resource type="FontFile" path="res://fonts/ArchivoBlack-Regular.ttf" id="1_archivo"]
+[ext_resource type="FontFile" path="res://fonts/Overpass-Bold.ttf" id="2_overpass_bold"]
+[ext_resource type="FontFile" path="res://fonts/Overpass-Regular.ttf" id="3_overpass_reg"]
+[ext_resource type="PackedScene" path="res://props/bollard.tscn" id="4_bollard"]
+[ext_resource type="Shader" path="res://shaders/pavement.gdshader" id="5_pavement"]
+
+[sub_resource type="ShaderMaterial" id="Mat_ApronConcrete"]
+render_priority = 0
+shader = ExtResource("5_pavement")
+shader_parameter/asphalt_base = Color(0.68, 0.68, 0.66, 1)
+shader_parameter/asphalt_worn = Color(0.74, 0.74, 0.72, 1)
+shader_parameter/aggregate_color = Color(0.55, 0.55, 0.53, 1)
+shader_parameter/roughness_base = 0.88
+
+[sub_resource type="StandardMaterial3D" id="Mat_WhiteStucco"]
+albedo_color = Color(0.93, 0.93, 0.91, 1)
+roughness = 0.85
+
+[sub_resource type="StandardMaterial3D" id="Mat_FoundationGray"]
+albedo_color = Color(0.62, 0.63, 0.64, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Mat_MansardRed"]
+albedo_color = Color(0.80, 0.12, 0.12, 1)
+roughness = 0.45
+
+[sub_resource type="StandardMaterial3D" id="Mat_TrimRed"]
+albedo_color = Color(0.84, 0.14, 0.14, 1)
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_RoofGravel"]
+albedo_color = Color(0.32, 0.31, 0.30, 1)
+roughness = 0.95
+
+[sub_resource type="StandardMaterial3D" id="Mat_Glass"]
+transparency = 1
+albedo_color = Color(0.12, 0.18, 0.24, 0.88)
+metallic = 0.5
+roughness = 0.1
+
+[sub_resource type="StandardMaterial3D" id="Mat_DarkFrame"]
+albedo_color = Color(0.18, 0.19, 0.21, 1)
+metallic = 0.7
+roughness = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Mat_BlueShutter"]
+albedo_color = Color(0.14, 0.28, 0.52, 1)
+roughness = 0.6
+
+[sub_resource type="StandardMaterial3D" id="Mat_GarageDoor"]
+albedo_color = Color(0.86, 0.87, 0.88, 1)
+metallic = 0.4
+roughness = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Mat_GarageGlass"]
+transparency = 1
+albedo_color = Color(0.18, 0.26, 0.32, 0.8)
+roughness = 0.15
+
+[sub_resource type="StandardMaterial3D" id="Mat_SteelColumn"]
+albedo_color = Color(0.82, 0.83, 0.85, 1)
+metallic = 0.8
+roughness = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Mat_CanopyLight"]
+albedo_color = Color(1, 1, 0.92, 1)
+emission_enabled = true
+emission = Color(1, 0.98, 0.90, 1)
+emission_energy_multiplier = 1.5
+
+[sub_resource type="StandardMaterial3D" id="Mat_TireRubber"]
+albedo_color = Color(0.16, 0.16, 0.17, 1)
+roughness = 0.92
+
+[sub_resource type="StandardMaterial3D" id="Mat_AirBlue"]
+albedo_color = Color(0.12, 0.38, 0.72, 1)
+roughness = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Mat_SafetyYellow"]
+albedo_color = Color(0.96, 0.76, 0.08, 1)
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_PavementStripe"]
+albedo_color = Color(0.94, 0.94, 0.92, 1)
+
+[sub_resource type="StandardMaterial3D" id="Mat_SignWhite"]
+albedo_color = Color(0.96, 0.96, 0.95, 1)
+roughness = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Mat_SignPost"]
+albedo_color = Color(0.24, 0.25, 0.27, 1)
+metallic = 0.6
+roughness = 0.5
+
+[sub_resource type="BoxMesh" id="Mesh_Apron"]
+material = SubResource("Mat_ApronConcrete")
+size = Vector3(38, 0.1, 18)
+
+[sub_resource type="BoxShape3D" id="Shape_Apron"]
+size = Vector3(38, 0.1, 18)
+
+[sub_resource type="BoxMesh" id="Mesh_Stripe"]
+material = SubResource("Mat_PavementStripe")
+size = Vector3(0.16, 0.12, 4.8)
+
+[sub_resource type="BoxMesh" id="Mesh_MainWall"]
+material = SubResource("Mat_WhiteStucco")
+size = Vector3(14, 5.2, 12)
+
+[sub_resource type="BoxShape3D" id="Shape_MainBuilding"]
+size = Vector3(14, 7.2, 12)
+
+[sub_resource type="BoxMesh" id="Mesh_Foundation"]
+material = SubResource("Mat_FoundationGray")
+size = Vector3(14.2, 0.5, 12.2)
+
+[sub_resource type="PrismMesh" id="Mesh_RoofHip"]
+material = SubResource("Mat_MansardRed")
+left_to_right = 0.5
+size = Vector3(14.8, 2.2, 12.8)
+
+[sub_resource type="BoxMesh" id="Mesh_BeltTrim"]
+material = SubResource("Mat_TrimRed")
+size = Vector3(14.4, 0.35, 12.4)
+
+[sub_resource type="BoxMesh" id="Mesh_RoofFascia"]
+material = SubResource("Mat_TrimRed")
+size = Vector3(14.6, 0.4, 12.6)
+
+[sub_resource type="BoxMesh" id="Mesh_DoorFrame"]
+material = SubResource("Mat_DarkFrame")
+size = Vector3(2.4, 2.5, 0.15)
+
+[sub_resource type="BoxMesh" id="Mesh_DoorGlass"]
+material = SubResource("Mat_Glass")
+size = Vector3(2.1, 2.3, 0.08)
+
+[sub_resource type="BoxMesh" id="Mesh_StoreWindowFrame"]
+material = SubResource("Mat_DarkFrame")
+size = Vector3(3.2, 2.2, 0.15)
+
+[sub_resource type="BoxMesh" id="Mesh_StoreWindowGlass"]
+material = SubResource("Mat_Glass")
+size = Vector3(2.9, 1.9, 0.08)
+
+[sub_resource type="BoxMesh" id="Mesh_UpperWindowFrame"]
+material = SubResource("Mat_DarkFrame")
+size = Vector3(1.6, 1.5, 0.15)
+
+[sub_resource type="BoxMesh" id="Mesh_UpperWindowGlass"]
+material = SubResource("Mat_Glass")
+size = Vector3(1.3, 1.2, 0.08)
+
+[sub_resource type="BoxMesh" id="Mesh_Shutter"]
+material = SubResource("Mat_BlueShutter")
+size = Vector3(0.35, 1.5, 0.08)
+
+[sub_resource type="BoxMesh" id="Mesh_BaysWall"]
+material = SubResource("Mat_WhiteStucco")
+size = Vector3(11, 4.8, 12)
+
+[sub_resource type="BoxShape3D" id="Shape_BaysWing"]
+size = Vector3(11, 4.8, 12)
+
+[sub_resource type="BoxMesh" id="Mesh_BaysFoundation"]
+material = SubResource("Mat_FoundationGray")
+size = Vector3(11.2, 0.5, 12.2)
+
+[sub_resource type="BoxMesh" id="Mesh_BaysFascia"]
+material = SubResource("Mat_TrimRed")
+size = Vector3(11.4, 0.5, 12.4)
+
+[sub_resource type="BoxMesh" id="Mesh_BaysRoof"]
+material = SubResource("Mat_RoofGravel")
+size = Vector3(11, 0.2, 12)
+
+[sub_resource type="BoxMesh" id="Mesh_GarageDoorFrame"]
+material = SubResource("Mat_DarkFrame")
+size = Vector3(4.0, 3.8, 0.2)
+
+[sub_resource type="BoxMesh" id="Mesh_GarageDoorPanel"]
+material = SubResource("Mat_GarageDoor")
+size = Vector3(3.7, 3.6, 0.08)
+
+[sub_resource type="BoxMesh" id="Mesh_GarageGlassPanel"]
+material = SubResource("Mat_GarageGlass")
+size = Vector3(3.5, 0.55, 0.1)
+
+[sub_resource type="BoxMesh" id="Mesh_GarageRib"]
+material = SubResource("Mat_DarkFrame")
+size = Vector3(3.7, 0.04, 0.1)
+
+[sub_resource type="BoxMesh" id="Mesh_CanopyRoof"]
+material = SubResource("Mat_TrimRed")
+size = Vector3(10.5, 0.6, 12.5)
+
+[sub_resource type="BoxMesh" id="Mesh_CanopyCeiling"]
+material = SubResource("Mat_WhiteStucco")
+size = Vector3(10.1, 0.1, 12.1)
+
+[sub_resource type="BoxShape3D" id="Shape_CanopyRoof"]
+size = Vector3(10.5, 0.6, 12.5)
+
+[sub_resource type="CylinderMesh" id="Mesh_SteelColumn"]
+material = SubResource("Mat_SteelColumn")
+top_radius = 0.18
+bottom_radius = 0.18
+height = 4.2
+
+[sub_resource type="CylinderShape3D" id="Shape_SteelColumn"]
+radius = 0.25
+height = 4.2
+
+[sub_resource type="BoxMesh" id="Mesh_CanopyLight"]
+material = SubResource("Mat_CanopyLight")
+size = Vector3(0.3, 0.08, 3.5)
+
+[sub_resource type="CylinderMesh" id="Mesh_Tire"]
+material = SubResource("Mat_TireRubber")
+top_radius = 0.36
+bottom_radius = 0.36
+height = 0.24
+
+[sub_resource type="BoxMesh" id="Mesh_TireRackFrame"]
+material = SubResource("Mat_DarkFrame")
+size = Vector3(2.6, 1.4, 0.8)
+
+[sub_resource type="BoxMesh" id="Mesh_AirStation"]
+material = SubResource("Mat_AirBlue")
+size = Vector3(0.6, 1.2, 0.5)
+
+[sub_resource type="CylinderMesh" id="Mesh_AirReel"]
+material = SubResource("Mat_SafetyYellow")
+top_radius = 0.2
+bottom_radius = 0.2
+height = 0.15
+
+[sub_resource type="BoxMesh" id="Mesh_SignPost"]
+material = SubResource("Mat_SignPost")
+size = Vector3(0.2, 5.8, 0.2)
+
+[sub_resource type="BoxShape3D" id="Shape_SignPost"]
+size = Vector3(0.2, 5.8, 0.2)
+
+[sub_resource type="BoxMesh" id="Mesh_SignCabinet"]
+material = SubResource("Mat_SignWhite")
+size = Vector3(4.8, 2.6, 0.35)
+
+[sub_resource type="BoxMesh" id="Mesh_SignBorder"]
+material = SubResource("Mat_TrimRed")
+size = Vector3(4.95, 2.75, 0.3)
+
+[sub_resource type="BoxShape3D" id="Shape_SignCabinet"]
+size = Vector3(4.95, 2.75, 0.35)
+
+[sub_resource type="BoxMesh" id="Mesh_MailboxPost"]
+material = SubResource("Mat_DarkFrame")
+size = Vector3(0.12, 1.1, 0.12)
+
+[sub_resource type="BoxMesh" id="Mesh_MailboxBody"]
+material = SubResource("Mat_DarkFrame")
+size = Vector3(0.24, 0.28, 0.48)
+
+[node name="ConsumerCarCare" type="Node3D"]
+
+[node name="Site" type="Node3D" parent="."]
+
+[node name="ParkingApron" type="MeshInstance3D" parent="Site"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, -3)
+mesh = SubResource("Mesh_Apron")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Site/ParkingApron"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Site/ParkingApron/StaticBody3D"]
+shape = SubResource("Shape_Apron")
+
+[node name="Stripes" type="Node3D" parent="Site"]
+
+[node name="Stripe1" type="MeshInstance3D" parent="Site/Stripes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 0.06, -6)
+mesh = SubResource("Mesh_Stripe")
+
+[node name="Stripe2" type="MeshInstance3D" parent="Site/Stripes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.5, 0.06, -6)
+mesh = SubResource("Mesh_Stripe")
+
+[node name="Stripe3" type="MeshInstance3D" parent="Site/Stripes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 0.06, -6)
+mesh = SubResource("Mesh_Stripe")
+
+[node name="Stripe4" type="MeshInstance3D" parent="Site/Stripes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 0.06, -6)
+mesh = SubResource("Mesh_Stripe")
+
+[node name="Stripe5" type="MeshInstance3D" parent="Site/Stripes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06, -6)
+mesh = SubResource("Mesh_Stripe")
+
+[node name="Stripe6" type="MeshInstance3D" parent="Site/Stripes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 0.06, -6)
+mesh = SubResource("Mesh_Stripe")
+
+[node name="Building" type="Node3D" parent="."]
+
+[node name="MainSection" type="StaticBody3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 4)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Building/MainSection"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.6, 0)
+shape = SubResource("Shape_MainBuilding")
+
+[node name="Wall" type="MeshInstance3D" parent="Building/MainSection"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.6, 0)
+mesh = SubResource("Mesh_MainWall")
+
+[node name="Foundation" type="MeshInstance3D" parent="Building/MainSection"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 0)
+mesh = SubResource("Mesh_Foundation")
+
+[node name="BeltTrim" type="MeshInstance3D" parent="Building/MainSection"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.0, 0)
+mesh = SubResource("Mesh_BeltTrim")
+
+[node name="RoofFascia" type="MeshInstance3D" parent="Building/MainSection"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.2, 0)
+mesh = SubResource("Mesh_RoofFascia")
+
+[node name="RoofHip" type="MeshInstance3D" parent="Building/MainSection"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.3, 0)
+mesh = SubResource("Mesh_RoofHip")
+
+[node name="EntryDoors" type="Node3D" parent="Building/MainSection"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.2, 0, -6.02)
+
+[node name="Frame" type="MeshInstance3D" parent="Building/MainSection/EntryDoors"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+mesh = SubResource("Mesh_DoorFrame")
+
+[node name="Glass" type="MeshInstance3D" parent="Building/MainSection/EntryDoors"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, -0.02)
+mesh = SubResource("Mesh_DoorGlass")
+
+[node name="ShowroomWindow" type="Node3D" parent="Building/MainSection"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.8, 0, -6.02)
+
+[node name="Frame" type="MeshInstance3D" parent="Building/MainSection/ShowroomWindow"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 0)
+mesh = SubResource("Mesh_StoreWindowFrame")
+
+[node name="Glass" type="MeshInstance3D" parent="Building/MainSection/ShowroomWindow"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, -0.02)
+mesh = SubResource("Mesh_StoreWindowGlass")
+
+[node name="UpperWindow1" type="Node3D" parent="Building/MainSection"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.2, 4.0, -6.02)
+
+[node name="Frame" type="MeshInstance3D" parent="Building/MainSection/UpperWindow1"]
+mesh = SubResource("Mesh_UpperWindowFrame")
+
+[node name="Glass" type="MeshInstance3D" parent="Building/MainSection/UpperWindow1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.02)
+mesh = SubResource("Mesh_UpperWindowGlass")
+
+[node name="ShutterL" type="MeshInstance3D" parent="Building/MainSection/UpperWindow1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 0, -0.03)
+mesh = SubResource("Mesh_Shutter")
+
+[node name="ShutterR" type="MeshInstance3D" parent="Building/MainSection/UpperWindow1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0, 0, -0.03)
+mesh = SubResource("Mesh_Shutter")
+
+[node name="UpperWindow2" type="Node3D" parent="Building/MainSection"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.0, -6.02)
+
+[node name="Frame" type="MeshInstance3D" parent="Building/MainSection/UpperWindow2"]
+mesh = SubResource("Mesh_UpperWindowFrame")
+
+[node name="Glass" type="MeshInstance3D" parent="Building/MainSection/UpperWindow2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.02)
+mesh = SubResource("Mesh_UpperWindowGlass")
+
+[node name="ShutterL" type="MeshInstance3D" parent="Building/MainSection/UpperWindow2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 0, -0.03)
+mesh = SubResource("Mesh_Shutter")
+
+[node name="ShutterR" type="MeshInstance3D" parent="Building/MainSection/UpperWindow2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0, 0, -0.03)
+mesh = SubResource("Mesh_Shutter")
+
+[node name="UpperWindow3" type="Node3D" parent="Building/MainSection"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.2, 4.0, -6.02)
+
+[node name="Frame" type="MeshInstance3D" parent="Building/MainSection/UpperWindow3"]
+mesh = SubResource("Mesh_UpperWindowFrame")
+
+[node name="Glass" type="MeshInstance3D" parent="Building/MainSection/UpperWindow3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.02)
+mesh = SubResource("Mesh_UpperWindowGlass")
+
+[node name="ShutterL" type="MeshInstance3D" parent="Building/MainSection/UpperWindow3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 0, -0.03)
+mesh = SubResource("Mesh_Shutter")
+
+[node name="ShutterR" type="MeshInstance3D" parent="Building/MainSection/UpperWindow3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0, 0, -0.03)
+mesh = SubResource("Mesh_Shutter")
+
+[node name="MainSignText" type="Label3D" parent="Building/MainSection"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 2.5, -6.06)
+cast_shadow = 0
+pixel_size = 0.012
+font = ExtResource("1_archivo")
+font_size = 54
+modulate = Color(0.82, 0.12, 0.12, 1)
+outline_modulate = Color(0.1, 0.1, 0.1, 1)
+outline_size = 8
+text = "CONSUMER CAR CARE"
+
+[node name="SubSignText" type="Label3D" parent="Building/MainSection"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 1.95, -6.06)
+cast_shadow = 0
+pixel_size = 0.010
+font = ExtResource("2_overpass_bold")
+font_size = 40
+modulate = Color(0.12, 0.28, 0.65, 1)
+outline_modulate = Color(1, 1, 1, 1)
+outline_size = 4
+text = "TIRE & AUTO CENTER"
+
+[node name="ServiceWing" type="StaticBody3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.5, 0, 4)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Building/ServiceWing"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4, 0)
+shape = SubResource("Shape_BaysWing")
+
+[node name="Wall" type="MeshInstance3D" parent="Building/ServiceWing"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4, 0)
+mesh = SubResource("Mesh_BaysWall")
+
+[node name="Foundation" type="MeshInstance3D" parent="Building/ServiceWing"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 0)
+mesh = SubResource("Mesh_BaysFoundation")
+
+[node name="Fascia" type="MeshInstance3D" parent="Building/ServiceWing"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.8, 0)
+mesh = SubResource("Mesh_BaysFascia")
+
+[node name="Roof" type="MeshInstance3D" parent="Building/ServiceWing"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.9, 0)
+mesh = SubResource("Mesh_BaysRoof")
+
+[node name="Bay1" type="Node3D" parent="Building/ServiceWing"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.6, 0, -6.02)
+
+[node name="Frame" type="MeshInstance3D" parent="Building/ServiceWing/Bay1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.9, 0)
+mesh = SubResource("Mesh_GarageDoorFrame")
+
+[node name="Door" type="MeshInstance3D" parent="Building/ServiceWing/Bay1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, 0.02)
+mesh = SubResource("Mesh_GarageDoorPanel")
+
+[node name="GlassPanel" type="MeshInstance3D" parent="Building/ServiceWing/Bay1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, -0.01)
+mesh = SubResource("Mesh_GarageGlassPanel")
+
+[node name="Rib1" type="MeshInstance3D" parent="Building/ServiceWing/Bay1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, -0.02)
+mesh = SubResource("Mesh_GarageRib")
+
+[node name="Rib2" type="MeshInstance3D" parent="Building/ServiceWing/Bay1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, -0.02)
+mesh = SubResource("Mesh_GarageRib")
+
+[node name="Rib3" type="MeshInstance3D" parent="Building/ServiceWing/Bay1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.7, -0.02)
+mesh = SubResource("Mesh_GarageRib")
+
+[node name="Bay1Label" type="Label3D" parent="Building/ServiceWing/Bay1"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 4.15, -0.04)
+cast_shadow = 0
+pixel_size = 0.009
+font = ExtResource("2_overpass_bold")
+font_size = 36
+modulate = Color(0.9, 0.9, 0.92, 1)
+outline_modulate = Color(0.1, 0.1, 0.1, 1)
+outline_size = 6
+text = "BAY 1"
+
+[node name="BollardL" parent="Building/ServiceWing/Bay1" instance=ExtResource("4_bollard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.1, 0, -0.4)
+
+[node name="BollardR" parent="Building/ServiceWing/Bay1" instance=ExtResource("4_bollard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.1, 0, -0.4)
+
+[node name="Bay2" type="Node3D" parent="Building/ServiceWing"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6, 0, -6.02)
+
+[node name="Frame" type="MeshInstance3D" parent="Building/ServiceWing/Bay2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.9, 0)
+mesh = SubResource("Mesh_GarageDoorFrame")
+
+[node name="Door" type="MeshInstance3D" parent="Building/ServiceWing/Bay2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, 0.02)
+mesh = SubResource("Mesh_GarageDoorPanel")
+
+[node name="GlassPanel" type="MeshInstance3D" parent="Building/ServiceWing/Bay2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, -0.01)
+mesh = SubResource("Mesh_GarageGlassPanel")
+
+[node name="Rib1" type="MeshInstance3D" parent="Building/ServiceWing/Bay2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, -0.02)
+mesh = SubResource("Mesh_GarageRib")
+
+[node name="Rib2" type="MeshInstance3D" parent="Building/ServiceWing/Bay2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, -0.02)
+mesh = SubResource("Mesh_GarageRib")
+
+[node name="Rib3" type="MeshInstance3D" parent="Building/ServiceWing/Bay2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.7, -0.02)
+mesh = SubResource("Mesh_GarageRib")
+
+[node name="Bay2Label" type="Label3D" parent="Building/ServiceWing/Bay2"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 4.15, -0.04)
+cast_shadow = 0
+pixel_size = 0.009
+font = ExtResource("2_overpass_bold")
+font_size = 36
+modulate = Color(0.9, 0.9, 0.92, 1)
+outline_modulate = Color(0.1, 0.1, 0.1, 1)
+outline_size = 6
+text = "BAY 2"
+
+[node name="BollardL" parent="Building/ServiceWing/Bay2" instance=ExtResource("4_bollard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.1, 0, -0.4)
+
+[node name="BollardR" parent="Building/ServiceWing/Bay2" instance=ExtResource("4_bollard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.1, 0, -0.4)
+
+[node name="CanopyWing" type="Node3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.2, 0, 4)
+
+[node name="RoofBody" type="StaticBody3D" parent="Building/CanopyWing"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Building/CanopyWing/RoofBody"]
+shape = SubResource("Shape_CanopyRoof")
+
+[node name="RoofMesh" type="MeshInstance3D" parent="Building/CanopyWing/RoofBody"]
+mesh = SubResource("Mesh_CanopyRoof")
+
+[node name="CeilingMesh" type="MeshInstance3D" parent="Building/CanopyWing/RoofBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 0)
+mesh = SubResource("Mesh_CanopyCeiling")
+
+[node name="CanopySign" type="Label3D" parent="Building/CanopyWing/RoofBody"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -6.28)
+cast_shadow = 0
+pixel_size = 0.0095
+font = ExtResource("1_archivo")
+font_size = 42
+modulate = Color(1, 1, 1, 1)
+outline_modulate = Color(0.2, 0.05, 0.05, 1)
+outline_size = 6
+text = "EXPRESS WASH & SERVICE"
+
+[node name="Light1" type="MeshInstance3D" parent="Building/CanopyWing/RoofBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, -0.32, 0)
+mesh = SubResource("Mesh_CanopyLight")
+
+[node name="Light2" type="MeshInstance3D" parent="Building/CanopyWing/RoofBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, -0.32, 0)
+mesh = SubResource("Mesh_CanopyLight")
+
+[node name="Column1" type="StaticBody3D" parent="Building/CanopyWing"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 2.1, -5.5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Building/CanopyWing/Column1"]
+shape = SubResource("Shape_SteelColumn")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Building/CanopyWing/Column1"]
+mesh = SubResource("Mesh_SteelColumn")
+
+[node name="Column2" type="StaticBody3D" parent="Building/CanopyWing"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 2.1, 5.5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Building/CanopyWing/Column2"]
+shape = SubResource("Shape_SteelColumn")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Building/CanopyWing/Column2"]
+mesh = SubResource("Mesh_SteelColumn")
+
+[node name="CanopyBollardF" parent="Building/CanopyWing" instance=ExtResource("4_bollard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 0, -6.2)
+
+[node name="CanopyBollardB" parent="Building/CanopyWing" instance=ExtResource("4_bollard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 0, 6.2)
+
+[node name="SiteProps" type="Node3D" parent="."]
+
+[node name="TireRack" type="Node3D" parent="SiteProps"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.6, 0, -1.8)
+
+[node name="Frame" type="MeshInstance3D" parent="SiteProps/TireRack"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+mesh = SubResource("Mesh_TireRackFrame")
+
+[node name="Tire1" type="MeshInstance3D" parent="SiteProps/TireRack"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, -0.8, 0.45, 0)
+mesh = SubResource("Mesh_Tire")
+
+[node name="Tire2" type="MeshInstance3D" parent="SiteProps/TireRack"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0.45, 0)
+mesh = SubResource("Mesh_Tire")
+
+[node name="Tire3" type="MeshInstance3D" parent="SiteProps/TireRack"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0.8, 0.45, 0)
+mesh = SubResource("Mesh_Tire")
+
+[node name="Tire4" type="MeshInstance3D" parent="SiteProps/TireRack"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, -0.8, 1.05, 0)
+mesh = SubResource("Mesh_Tire")
+
+[node name="Tire5" type="MeshInstance3D" parent="SiteProps/TireRack"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 1.05, 0)
+mesh = SubResource("Mesh_Tire")
+
+[node name="Tire6" type="MeshInstance3D" parent="SiteProps/TireRack"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0.8, 1.05, 0)
+mesh = SubResource("Mesh_Tire")
+
+[node name="AirStation" type="Node3D" parent="SiteProps"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.8, 0, -2.1)
+
+[node name="Housing" type="MeshInstance3D" parent="SiteProps/AirStation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+mesh = SubResource("Mesh_AirStation")
+
+[node name="Reel" type="MeshInstance3D" parent="SiteProps/AirStation"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0.7, -0.28)
+mesh = SubResource("Mesh_AirReel")
+
+[node name="AirLabel" type="Label3D" parent="SiteProps/AirStation"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 1.0, -0.26)
+cast_shadow = 0
+pixel_size = 0.007
+font = ExtResource("2_overpass_bold")
+font_size = 36
+modulate = Color(1, 1, 1, 1)
+outline_modulate = Color(0.1, 0.1, 0.1, 1)
+outline_size = 4
+text = "AIR / WATER"
+
+[node name="RoadsideSign" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0, -14.5)
+
+[node name="PostL" type="StaticBody3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.8, 2.9, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RoadsideSign/PostL"]
+shape = SubResource("Shape_SignPost")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="RoadsideSign/PostL"]
+mesh = SubResource("Mesh_SignPost")
+
+[node name="PostR" type="StaticBody3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8, 2.9, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RoadsideSign/PostR"]
+shape = SubResource("Shape_SignPost")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="RoadsideSign/PostR"]
+mesh = SubResource("Mesh_SignPost")
+
+[node name="Cabinet" type="StaticBody3D" parent="RoadsideSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.4, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RoadsideSign/Cabinet"]
+shape = SubResource("Shape_SignCabinet")
+
+[node name="Border" type="MeshInstance3D" parent="RoadsideSign/Cabinet"]
+mesh = SubResource("Mesh_SignBorder")
+
+[node name="Face" type="MeshInstance3D" parent="RoadsideSign/Cabinet"]
+mesh = SubResource("Mesh_SignCabinet")
+
+[node name="SignTitleFront" type="Label3D" parent="RoadsideSign/Cabinet"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0.72, -0.19)
+cast_shadow = 0
+pixel_size = 0.009
+font = ExtResource("1_archivo")
+font_size = 46
+modulate = Color(0.82, 0.12, 0.12, 1)
+outline_modulate = Color(0.1, 0.1, 0.1, 1)
+outline_size = 6
+text = "CONSUMER"
+
+[node name="SignTitle2Front" type="Label3D" parent="RoadsideSign/Cabinet"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0.28, -0.19)
+cast_shadow = 0
+pixel_size = 0.009
+font = ExtResource("1_archivo")
+font_size = 46
+modulate = Color(0.82, 0.12, 0.12, 1)
+outline_modulate = Color(0.1, 0.1, 0.1, 1)
+outline_size = 6
+text = "CAR CARE"
+
+[node name="SignServiceFront" type="Label3D" parent="RoadsideSign/Cabinet"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, -0.25, -0.19)
+cast_shadow = 0
+pixel_size = 0.008
+font = ExtResource("2_overpass_bold")
+font_size = 32
+modulate = Color(0.12, 0.24, 0.55, 1)
+text = "FULL SERVICE AUTO REPAIR"
+
+[node name="SignListFront" type="Label3D" parent="RoadsideSign/Cabinet"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, -0.75, -0.19)
+cast_shadow = 0
+pixel_size = 0.007
+font = ExtResource("3_overpass_reg")
+font_size = 28
+modulate = Color(0.2, 0.2, 0.2, 1)
+text = "TIRES • BRAKES • A/C • OIL"
+
+[node name="SignTitleBack" type="Label3D" parent="RoadsideSign/Cabinet"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.72, 0.19)
+cast_shadow = 0
+pixel_size = 0.009
+font = ExtResource("1_archivo")
+font_size = 46
+modulate = Color(0.82, 0.12, 0.12, 1)
+outline_modulate = Color(0.1, 0.1, 0.1, 1)
+outline_size = 6
+text = "CONSUMER"
+
+[node name="SignTitle2Back" type="Label3D" parent="RoadsideSign/Cabinet"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.28, 0.19)
+cast_shadow = 0
+pixel_size = 0.009
+font = ExtResource("1_archivo")
+font_size = 46
+modulate = Color(0.82, 0.12, 0.12, 1)
+outline_modulate = Color(0.1, 0.1, 0.1, 1)
+outline_size = 6
+text = "CAR CARE"
+
+[node name="SignServiceBack" type="Label3D" parent="RoadsideSign/Cabinet"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0.19)
+cast_shadow = 0
+pixel_size = 0.008
+font = ExtResource("2_overpass_bold")
+font_size = 32
+modulate = Color(0.12, 0.24, 0.55, 1)
+text = "FULL SERVICE AUTO REPAIR"
+
+[node name="SignListBack" type="Label3D" parent="RoadsideSign/Cabinet"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.75, 0.19)
+cast_shadow = 0
+pixel_size = 0.007
+font = ExtResource("3_overpass_reg")
+font_size = 28
+modulate = Color(0.2, 0.2, 0.2, 1)
+text = "TIRES • BRAKES • A/C • OIL"
+
+[node name="CurbsideMailbox" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.5, 0, -14.8)
+
+[node name="Post" type="MeshInstance3D" parent="CurbsideMailbox"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)
+mesh = SubResource("Mesh_MailboxPost")
+
+[node name="Box" type="MeshInstance3D" parent="CurbsideMailbox"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.05, -0.08)
+mesh = SubResource("Mesh_MailboxBody")

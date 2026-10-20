@@ -956,6 +956,8 @@ static func bake_trees(container: Node3D, actual_owner: Node) -> void:
 			4:
 				active_name = "Compact"
 				height_scale = 1.25
+			5:
+				active_name = "Palm"
 
 		var active_node := visuals.get_node_or_null(active_name) as Node3D
 		if active_node == null:

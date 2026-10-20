@@ -2,7 +2,19 @@ class_name Car
 extends Area3D
 
 enum CarType {
-	SEDAN, SUV, TAXI, TRUCK, PICKUP, BUS, HATCHBACK, MINIVAN, SPORTS, VAN, SHIPPING_TRUCK, JEEP
+	SEDAN,
+	SUV,
+	TAXI,
+	TRUCK,
+	PICKUP,
+	BUS,
+	HATCHBACK,
+	MINIVAN,
+	SPORTS,
+	VAN,
+	SHIPPING_TRUCK,
+	JEEP,
+	F150
 }
 
 enum Motion { LANE, PATH }
@@ -29,6 +41,7 @@ const PARKING_CAR_TYPES: Array[CarType] = [
 	CarType.MINIVAN,
 	CarType.SPORTS,
 	CarType.JEEP,
+	CarType.F150,
 ]
 
 
@@ -71,6 +84,7 @@ var state := State.CRUISING:
 			state = value
 			sweep_rev += 1
 			_update_headlamps()
+			_update_exhaust()
 
 
 func get_state_name() -> String:
@@ -195,6 +209,27 @@ var wheel_rotation: float = 0.0
 var _wheels_initialized: bool = false
 var _active_wheels: Array[Node3D] = []
 
+@export var has_exhaust: bool = false:
+	set(value):
+		has_exhaust = value
+		_exhaust_explicitly_set = true
+		if _exhaust_initialized:
+			_apply_exhaust_visibility()
+			_update_exhaust()
+
+var _exhaust_explicitly_set: bool = false
+var _exhaust_initialized: bool = false
+var exhaust_pipe: Node3D = null
+var exhaust_particles: CPUParticles3D = null
+var _exhaust_emitters: Array[CPUParticles3D] = []
+
+static var _exhaust_mesh: CylinderMesh = null
+static var _exhaust_mat: StandardMaterial3D = null
+static var _smog_quad_mesh: QuadMesh = null
+static var _smog_material: StandardMaterial3D = null
+static var _smog_gradient: Gradient = null
+static var _smog_scale_curve: Curve = null
+static var _smog_texture: ImageTexture = null
 @onready var _collision_shape: CollisionShape3D = get_node_or_null("CollisionShape3D")
 var blocker: AnimatableBody3D = null
 var _blocker_shape: CollisionShape3D = null
@@ -363,6 +398,7 @@ func _apply_visual_type() -> void:
 	_setup_wheels()
 	_setup_signals()
 	_setup_headlamps()
+	_setup_exhaust()
 	_collect_active_parts()
 
 
@@ -574,6 +610,269 @@ func _update_signals(delta: float) -> void:
 			s.material_override = target_mat
 		for s in _active_right_signals:
 			s.visible = false
+
+
+static func _init_exhaust_resources() -> void:
+	if _exhaust_mesh != null:
+		return
+
+	_exhaust_mat = StandardMaterial3D.new()
+	_exhaust_mat.resource_name = "CarExhaustMetal"
+	_exhaust_mat.albedo_color = Color(0.72, 0.74, 0.76, 1.0)
+	_exhaust_mat.metallic = 0.85
+	_exhaust_mat.roughness = 0.3
+
+	_exhaust_mesh = CylinderMesh.new()
+	_exhaust_mesh.top_radius = 0.045
+	_exhaust_mesh.bottom_radius = 0.045
+	_exhaust_mesh.height = 0.16
+	_exhaust_mesh.radial_segments = 16
+	_exhaust_mesh.material = _exhaust_mat
+
+	var size := 32
+	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	var center := Vector2((size - 1) * 0.5, (size - 1) * 0.5)
+	var max_r := size * 0.40
+	for y in range(size):
+		for x in range(size):
+			var dx := float(x) - center.x
+			var dy := float(y) - center.y
+			var dist := sqrt(dx * dx + dy * dy) / max_r
+			var ang := atan2(dy, dx)
+			var r_mod := 1.0 + 0.14 * sin(ang * 3.0 + 0.4) + 0.09 * cos(ang * 2.0 - 0.6)
+			var d_norm := dist / r_mod
+			if d_norm >= 1.0:
+				img.set_pixel(x, y, Color(1.0, 1.0, 1.0, 0.0))
+			else:
+				var t := 1.0 - d_norm
+				var a := t * t * (3.0 - 2.0 * t)
+				img.set_pixel(x, y, Color(1.0, 1.0, 1.0, a))
+	_smog_texture = ImageTexture.create_from_image(img)
+
+	_smog_quad_mesh = QuadMesh.new()
+	_smog_quad_mesh.size = Vector2(0.36, 0.36)
+
+	_smog_material = StandardMaterial3D.new()
+	_smog_material.resource_name = "CarSmogMaterial"
+	_smog_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_smog_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_smog_material.vertex_color_use_as_albedo = true
+	_smog_material.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	_smog_material.billboard_keep_scale = true
+	_smog_material.albedo_texture = _smog_texture
+
+	_smog_gradient = Gradient.new()
+	_smog_gradient.set_color(0, Color(0.76, 0.77, 0.79, 0.0))
+	_smog_gradient.add_point(0.12, Color(0.76, 0.77, 0.79, 0.28))
+	_smog_gradient.add_point(0.40, Color(0.80, 0.81, 0.83, 0.17))
+	_smog_gradient.add_point(0.72, Color(0.85, 0.86, 0.88, 0.07))
+	_smog_gradient.set_color(_smog_gradient.get_point_count() - 1, Color(0.90, 0.90, 0.92, 0.0))
+
+	_smog_scale_curve = Curve.new()
+	_smog_scale_curve.add_point(Vector2(0.0, 0.45))
+	_smog_scale_curve.add_point(Vector2(0.35, 0.95))
+	_smog_scale_curve.add_point(Vector2(1.0, 1.55))
+
+
+func _roll_exhaust() -> bool:
+	match car_type:
+		CarType.PICKUP, CarType.F150, CarType.TRUCK, CarType.VAN, CarType.SHIPPING_TRUCK:
+			return randf() < 0.50
+		CarType.BUS:
+			return randf() < 0.40
+		CarType.SEDAN, CarType.HATCHBACK, CarType.SUV, CarType.MINIVAN, CarType.JEEP, CarType.TAXI:
+			return randf() < 0.35
+		CarType.SPORTS:
+			return randf() < 0.15
+		_:
+			return randf() < 0.35
+
+
+func _setup_exhaust() -> void:
+	if not _exhaust_explicitly_set:
+		has_exhaust = _roll_exhaust()
+
+	_exhaust_initialized = true
+	_init_exhaust_resources()
+	_exhaust_emitters.clear()
+	exhaust_pipe = null
+	exhaust_particles = null
+
+	var visuals := get_node_or_null("Visuals")
+	if not visuals:
+		return
+	var car_model := get_active_model()
+	if not car_model:
+		return
+
+	# Remove any existing generated pipe or smog on this model
+	var old_pipe := car_model.get_node_or_null("ExhaustPipe")
+	if old_pipe:
+		car_model.remove_child(old_pipe)
+		old_pipe.free()
+	for child in car_model.get_children():
+		if child is CPUParticles3D and child.name.begins_with("ExhaustSmog"):
+			car_model.remove_child(child)
+			child.free()
+
+	# Check for pre-existing modeled exhausts (e.g. Taxi, Sports)
+	var existing_exhausts: Array[Node3D] = []
+	for child in car_model.get_children():
+		if child is Node3D and (child.name == "Exhaust" or child.name.begins_with("Exhaust")):
+			if child.name != "ExhaustPipe" and not child.name.begins_with("ExhaustSmog"):
+				existing_exhausts.append(child)
+
+	if not existing_exhausts.is_empty():
+		exhaust_pipe = existing_exhausts[0]
+		var count := existing_exhausts.size()
+		for i in range(count):
+			var exh := existing_exhausts[i]
+			var tip_pos := exh.position + Vector3(-0.04, 0.0, 0.0)
+			var emitter_name := "ExhaustSmog" if i == 0 else "ExhaustSmog%d" % i
+			var emitter := _create_smog_emitter(car_model, emitter_name, tip_pos)
+			if count > 1:
+				emitter.amount = maxi(5, int(emitter.amount * 0.65))
+			_exhaust_emitters.append(emitter)
+		exhaust_particles = _exhaust_emitters[0]
+	else:
+		var tl_l := car_model.get_node_or_null("TaillightL") as Node3D
+		var rear_x: float = -car_length * 0.5
+		var rear_z: float = 0.55
+		var rear_y: float = 0.28
+
+		if tl_l:
+			rear_x = tl_l.position.x - 0.02
+			rear_z = tl_l.position.z * 0.78
+			rear_y = 0.28
+
+		var b_rear: Node3D = null
+		for c in car_model.get_children():
+			if "Bumper" in c.name and ("R" in c.name or "Rear" in c.name):
+				b_rear = c
+				break
+		if b_rear:
+			rear_x = b_rear.position.x - 0.02
+			rear_y = maxf(0.26, b_rear.position.y - 0.18)
+
+		if car_type == CarType.SHIPPING_TRUCK:
+			rear_y = 0.42
+			rear_z = 0.75
+		elif car_type == CarType.BUS:
+			rear_y = 0.34
+			rear_z = 0.70
+		elif car_type == CarType.PICKUP or car_type == CarType.F150:
+			rear_y = 0.32
+			rear_z = 0.65
+		elif car_type == CarType.TRUCK:
+			rear_y = 0.32
+			rear_z = 0.55
+
+		var pipe := MeshInstance3D.new()
+		pipe.name = "ExhaustPipe"
+		pipe.mesh = _exhaust_mesh
+		pipe.material_override = _exhaust_mat
+		pipe.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		pipe.visibility_range_end = 80.0
+		pipe.transform = Transform3D(
+			Basis(Vector3(0, 0, 1), PI * 0.5), Vector3(rear_x, rear_y, rear_z)
+		)
+		car_model.add_child(pipe)
+		exhaust_pipe = pipe
+
+		var tip_pos := Vector3(rear_x - 0.08, rear_y, rear_z)
+		var emitter := _create_smog_emitter(car_model, "ExhaustSmog", tip_pos)
+		_exhaust_emitters.append(emitter)
+		exhaust_particles = emitter
+
+	_apply_exhaust_visibility()
+	_update_exhaust()
+
+
+func _create_smog_emitter(parent: Node3D, node_name: String, local_pos: Vector3) -> CPUParticles3D:
+	var emitter := CPUParticles3D.new()
+	emitter.name = node_name
+	emitter.mesh = _smog_quad_mesh
+	emitter.material_override = _smog_material
+	emitter.color_ramp = _smog_gradient
+	emitter.scale_amount_curve = _smog_scale_curve
+	emitter.local_coords = false
+	emitter.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	emitter.visibility_range_end = 100.0
+
+	var base_amount := 12
+	var base_lifetime := 1.05
+	var vel_min := 0.7
+	var vel_max := 1.6
+	var tint := Color(1.0, 1.0, 1.0, 1.0)
+
+	match car_type:
+		CarType.TRUCK, CarType.SHIPPING_TRUCK, CarType.BUS, CarType.PICKUP, CarType.F150, CarType.VAN:
+			base_amount = randi_range(14, 18)
+			base_lifetime = randf_range(1.1, 1.3)
+			vel_min = 0.6
+			vel_max = 1.5
+			var tone := randf_range(0.80, 0.88)
+			tint = Color(tone, tone * 0.98, tone * 0.95, randf_range(0.95, 1.05))
+		CarType.SPORTS:
+			base_amount = randi_range(7, 10)
+			base_lifetime = randf_range(0.75, 0.95)
+			vel_min = 1.0
+			vel_max = 2.0
+			tint = Color(0.94, 0.95, 0.98, randf_range(0.65, 0.80))
+		_:
+			base_amount = randi_range(10, 14)
+			base_lifetime = randf_range(0.9, 1.1)
+			vel_min = 0.7
+			vel_max = 1.6
+			var tone := randf_range(0.88, 0.96)
+			tint = Color(tone, tone, tone * 1.02, randf_range(0.75, 0.92))
+
+	emitter.amount = base_amount
+	emitter.lifetime = base_lifetime
+	emitter.lifetime_randomness = 0.35
+	emitter.color = tint
+
+	emitter.direction = Vector3(-1.0, randf_range(0.25, 0.40), 0.0)
+	emitter.spread = randf_range(20.0, 26.0)
+	emitter.initial_velocity_min = vel_min
+	emitter.initial_velocity_max = vel_max
+
+	emitter.scale_amount_min = 0.55
+	emitter.scale_amount_max = 1.15
+
+	emitter.angle_min = 0.0
+	emitter.angle_max = 360.0
+	emitter.angular_velocity_min = -18.0
+	emitter.angular_velocity_max = 18.0
+
+	emitter.tangential_accel_min = -0.3
+	emitter.tangential_accel_max = 0.3
+
+	emitter.gravity = Vector3(0.0, randf_range(0.35, 0.55), 0.0)
+	emitter.damping_min = 0.7
+	emitter.damping_max = 1.3
+
+	emitter.position = local_pos
+	emitter.emitting = false
+	parent.add_child(emitter)
+	return emitter
+
+
+func _apply_exhaust_visibility() -> void:
+	if not _exhaust_initialized:
+		return
+	if is_instance_valid(exhaust_pipe) and exhaust_pipe.name == "ExhaustPipe":
+		exhaust_pipe.visible = has_exhaust
+	for emitter in _exhaust_emitters:
+		if is_instance_valid(emitter):
+			emitter.visible = has_exhaust
+
+
+func _update_exhaust() -> void:
+	var should_emit := has_exhaust and state != State.PARKED
+	for emitter in _exhaust_emitters:
+		if is_instance_valid(emitter):
+			emitter.emitting = should_emit
 
 
 func _update_dimensions() -> void:

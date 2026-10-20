@@ -295,6 +295,17 @@ func _seed_parked_car_at(spot: ParkingSpot) -> void:
 	stats["cars_spawned"] += 1
 
 
+const DISALLOWED_DORF_LOT_CAR_TYPES: Array[Car.CarType] = ParkingLot.DISALLOWED_DORF_LOT_CAR_TYPES
+
+
+static func is_car_type_allowed_in_dorf_lot(type: Car.CarType) -> bool:
+	return ParkingLot.is_car_type_allowed_in_dorf_lot(type)
+
+
+static func is_car_allowed_in_dorf_lot(car: Car) -> bool:
+	return ParkingLot.is_car_allowed_in_dorf_lot(car)
+
+
 func _seed_dorf_cars() -> void:
 	if not dorf_cars.is_empty():
 		return
@@ -313,7 +324,7 @@ func _seed_dorf_cars() -> void:
 			"color": Color(0.82, 0.16, 0.14)
 		},
 		{
-			"type": Car.CarType.SPORTS,
+			"type": Car.CarType.SUV,
 			"pos": Vector3(105.5, 0.25, -34.0),
 			"basis": turntable_basis,
 			"color": Color(0.98, 0.88, 0.05)
@@ -332,7 +343,7 @@ func _seed_dorf_cars() -> void:
 			"color": Color(0.92, 0.93, 0.94)
 		},
 		{
-			"type": Car.CarType.JEEP,
+			"type": Car.CarType.PICKUP,
 			"pos": Vector3(92.0, 0.05, -15.5),
 			"basis": stall_basis,
 			"color": Color(0.18, 0.38, 0.24)
@@ -375,14 +386,14 @@ func _seed_dorf_cars() -> void:
 			"color": Color(0.92, 0.93, 0.94)
 		},
 		{
-			"type": Car.CarType.JEEP,
+			"type": Car.CarType.MINIVAN,
 			"pos": Vector3(94.0, 0.05, -22.5),
 			"basis": stall_basis,
 			"color": Color(0.82, 0.76, 0.65)
 		},
 		# Showroom row (z = -25.5) facing +Z
 		{
-			"type": Car.CarType.SPORTS,
+			"type": Car.CarType.SUV,
 			"pos": Vector3(102.0, 0.05, -25.5),
 			"basis": stall_basis,
 			"color": Color(0.88, 0.12, 0.12)
@@ -402,13 +413,30 @@ func _seed_dorf_cars() -> void:
 	]
 
 	for cfg in dorf_configs:
+		var cfg_type: Car.CarType = cfg["type"]
+		assert(
+			is_car_type_allowed_in_dorf_lot(cfg_type),
+			(
+				"Dorf parking lot rule violation: car type %s is not allowed"
+				% Car.CarType.keys()[cfg_type]
+			)
+		)
+		if not is_car_type_allowed_in_dorf_lot(cfg_type):
+			push_error(
+				(
+					"Dorf parking lot rule violation: car type %s is not allowed"
+					% Car.CarType.keys()[cfg_type]
+				)
+			)
+			continue
 		var car: PassengerCar = PassengerCarScene.instantiate()
-		car.car_type = cfg["type"]
+		car.car_type = cfg_type
 		car.speed = 0.0
 		car.desired_speed = 0.0
 		car.state = Car.State.PARKED
 		if cfg.has("color"):
 			car.body_color = cfg["color"]
+		car.set_gritty(false)
 		add_child(car)
 		car.global_position = cfg["pos"]
 		if cfg.has("basis"):

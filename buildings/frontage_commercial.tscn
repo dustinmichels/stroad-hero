@@ -1,0 +1,298 @@
+[gd_scene format=3]
+
+[ext_resource type="FontFile" path="res://fonts/ArchivoBlack-Regular.ttf" id="1_archivo"]
+[ext_resource type="FontFile" path="res://fonts/Lobster-Regular.ttf" id="2_lobster"]
+[ext_resource type="FontFile" path="res://fonts/Fredoka.ttf" id="3_fredoka"]
+[ext_resource type="PackedScene" path="res://props/bollard.tscn" id="4_bollard"]
+[ext_resource type="Shader" path="res://shaders/pavement.gdshader" id="5_pavement"]
+
+[sub_resource type="ShaderMaterial" id="Mat_Apron"]
+render_priority = 0
+shader = ExtResource("5_pavement")
+shader_parameter/asphalt_base = Color(0.20, 0.21, 0.23, 1)
+shader_parameter/asphalt_worn = Color(0.28, 0.29, 0.32, 1)
+shader_parameter/aggregate_color = Color(0.38, 0.39, 0.42, 1)
+shader_parameter/roughness_base = 0.85
+
+[sub_resource type="StandardMaterial3D" id="Mat_WhiteTile"]
+albedo_color = Color(0.95, 0.95, 0.94, 1)
+roughness = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Mat_BlackTile"]
+albedo_color = Color(0.12, 0.12, 0.13, 1)
+roughness = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Mat_CheckersRed"]
+albedo_color = Color(0.85, 0.10, 0.10, 1)
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_RoofMembrane"]
+albedo_color = Color(0.34, 0.33, 0.32, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Mat_Stainless"]
+albedo_color = Color(0.85, 0.86, 0.88, 1)
+metallic = 0.9
+roughness = 0.2
+
+[sub_resource type="StandardMaterial3D" id="Mat_Glass"]
+transparency = 1
+albedo_color = Color(0.12, 0.18, 0.24, 0.88)
+metallic = 0.5
+roughness = 0.1
+
+[sub_resource type="StandardMaterial3D" id="Mat_DarkFrame"]
+albedo_color = Color(0.18, 0.19, 0.20, 1)
+metallic = 0.6
+roughness = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Mat_PicnicRed"]
+albedo_color = Color(0.78, 0.12, 0.12, 1)
+roughness = 0.6
+
+[sub_resource type="StandardMaterial3D" id="Mat_DriveThruStripe"]
+albedo_color = Color(0.96, 0.76, 0.08, 1)
+
+[sub_resource type="StandardMaterial3D" id="Mat_PavementStripe"]
+albedo_color = Color(0.92, 0.92, 0.90, 1)
+
+[sub_resource type="BoxMesh" id="Mesh_Apron"]
+material = SubResource("Mat_Apron")
+size = Vector3(26, 0.1, 18)
+
+[sub_resource type="BoxShape3D" id="Shape_Apron"]
+size = Vector3(26, 0.1, 18)
+
+[sub_resource type="BoxMesh" id="Mesh_Stripe"]
+material = SubResource("Mat_PavementStripe")
+size = Vector3(0.16, 0.12, 4.8)
+
+[sub_resource type="BoxMesh" id="Mesh_MainWall"]
+material = SubResource("Mat_WhiteTile")
+size = Vector3(14, 4.4, 11)
+
+[sub_resource type="BoxShape3D" id="Shape_MainWall"]
+size = Vector3(14, 4.4, 11)
+
+[sub_resource type="BoxMesh" id="Mesh_CheckerBand"]
+material = SubResource("Mat_BlackTile")
+size = Vector3(14.1, 0.45, 11.1)
+
+[sub_resource type="BoxMesh" id="Mesh_RedFascia"]
+material = SubResource("Mat_CheckersRed")
+size = Vector3(14.3, 0.5, 11.3)
+
+[sub_resource type="BoxMesh" id="Mesh_Roof"]
+material = SubResource("Mat_RoofMembrane")
+size = Vector3(13.8, 0.2, 10.8)
+
+[sub_resource type="BoxMesh" id="Mesh_OrderWindowFrame"]
+material = SubResource("Mat_Stainless")
+size = Vector3(2.2, 1.8, 0.15)
+
+[sub_resource type="BoxMesh" id="Mesh_OrderWindowGlass"]
+material = SubResource("Mat_Glass")
+size = Vector3(1.9, 1.5, 0.08)
+
+[sub_resource type="BoxMesh" id="Mesh_OrderCounter"]
+material = SubResource("Mat_Stainless")
+size = Vector3(2.4, 0.08, 0.5)
+
+[sub_resource type="BoxMesh" id="Mesh_PatioCanopy"]
+material = SubResource("Mat_CheckersRed")
+size = Vector3(5.5, 0.3, 4.5)
+
+[sub_resource type="BoxShape3D" id="Shape_PatioCanopy"]
+size = Vector3(5.5, 0.3, 4.5)
+
+[sub_resource type="CylinderMesh" id="Mesh_PatioPost"]
+material = SubResource("Mat_Stainless")
+top_radius = 0.08
+bottom_radius = 0.08
+height = 3.2
+
+[sub_resource type="BoxMesh" id="Mesh_TableTop"]
+material = SubResource("Mat_PicnicRed")
+size = Vector3(1.8, 0.08, 0.8)
+
+[sub_resource type="BoxMesh" id="Mesh_TableBench"]
+material = SubResource("Mat_PicnicRed")
+size = Vector3(1.8, 0.08, 0.3)
+
+[sub_resource type="BoxMesh" id="Mesh_TableLegs"]
+material = SubResource("Mat_DarkFrame")
+size = Vector3(1.6, 0.7, 1.4)
+
+[node name="FrontageCommercial" type="Node3D"]
+
+[node name="Site" type="Node3D" parent="."]
+
+[node name="ParkingApron" type="MeshInstance3D" parent="Site"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, -3.5)
+mesh = SubResource("Mesh_Apron")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Site/ParkingApron"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Site/ParkingApron/StaticBody3D"]
+shape = SubResource("Shape_Apron")
+
+[node name="Stripes" type="Node3D" parent="Site"]
+
+[node name="Stripe1" type="MeshInstance3D" parent="Site/Stripes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5, 0.06, -7)
+mesh = SubResource("Mesh_Stripe")
+
+[node name="Stripe2" type="MeshInstance3D" parent="Site/Stripes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.5, 0.06, -7)
+mesh = SubResource("Mesh_Stripe")
+
+[node name="Stripe3" type="MeshInstance3D" parent="Site/Stripes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 0.06, -7)
+mesh = SubResource("Mesh_Stripe")
+
+[node name="Building" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 4)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, 0)
+shape = SubResource("Shape_MainWall")
+
+[node name="Wall" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, 0)
+mesh = SubResource("Mesh_MainWall")
+
+[node name="CheckerBandLow" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
+mesh = SubResource("Mesh_CheckerBand")
+
+[node name="CheckerBandMid" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.1, 0)
+mesh = SubResource("Mesh_CheckerBand")
+
+[node name="RedFascia" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.3, 0)
+mesh = SubResource("Mesh_RedFascia")
+
+[node name="Roof" type="MeshInstance3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.4, 0)
+mesh = SubResource("Mesh_Roof")
+
+[node name="WalkUpWindow" type="Node3D" parent="Building"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 0, -5.52)
+
+[node name="Frame" type="MeshInstance3D" parent="Building/WalkUpWindow"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
+mesh = SubResource("Mesh_OrderWindowFrame")
+
+[node name="Glass" type="MeshInstance3D" parent="Building/WalkUpWindow"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, -0.02)
+mesh = SubResource("Mesh_OrderWindowGlass")
+
+[node name="Counter" type="MeshInstance3D" parent="Building/WalkUpWindow"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, -0.25)
+mesh = SubResource("Mesh_OrderCounter")
+
+[node name="OrderLabel" type="Label3D" parent="Building/WalkUpWindow"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 2.7, -0.04)
+cast_shadow = 0
+pixel_size = 0.008
+font = ExtResource("3_fredoka")
+font_size = 32
+modulate = Color(1, 1, 1, 1)
+outline_modulate = Color(0.85, 0.1, 0.1, 1)
+outline_size = 4
+text = "WALK-UP ORDER"
+
+[node name="BollardL" parent="Building/WalkUpWindow" instance=ExtResource("4_bollard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.3, 0, -0.8)
+
+[node name="BollardR" parent="Building/WalkUpWindow" instance=ExtResource("4_bollard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3, 0, -0.8)
+
+[node name="MainBrandSign" type="Label3D" parent="Building"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -1.5, 3.6, -5.56)
+cast_shadow = 0
+pixel_size = 0.015
+font = ExtResource("2_lobster")
+font_size = 56
+modulate = Color(0.85, 0.10, 0.10, 1)
+outline_modulate = Color(1, 1, 1, 1)
+outline_size = 8
+text = "Checkers"
+
+[node name="SubBrandSign" type="Label3D" parent="Building"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -1.5, 3.0, -5.56)
+cast_shadow = 0
+pixel_size = 0.008
+font = ExtResource("1_archivo")
+font_size = 32
+modulate = Color(0.12, 0.12, 0.14, 1)
+outline_modulate = Color(1, 1, 1, 1)
+outline_size = 4
+text = "CRAZY GOOD FOOD"
+
+[node name="PatioDining" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.2, 0, -1.5)
+
+[node name="CanopyBody" type="StaticBody3D" parent="PatioDining"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.2, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PatioDining/CanopyBody"]
+shape = SubResource("Shape_PatioCanopy")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="PatioDining/CanopyBody"]
+mesh = SubResource("Mesh_PatioCanopy")
+
+[node name="Post1" type="MeshInstance3D" parent="PatioDining"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.4, 1.6, -1.9)
+mesh = SubResource("Mesh_PatioPost")
+
+[node name="Post2" type="MeshInstance3D" parent="PatioDining"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4, 1.6, -1.9)
+mesh = SubResource("Mesh_PatioPost")
+
+[node name="Post3" type="MeshInstance3D" parent="PatioDining"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.4, 1.6, 1.9)
+mesh = SubResource("Mesh_PatioPost")
+
+[node name="Post4" type="MeshInstance3D" parent="PatioDining"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4, 1.6, 1.9)
+mesh = SubResource("Mesh_PatioPost")
+
+[node name="PicnicTable1" type="Node3D" parent="PatioDining"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.1, 0, 0)
+
+[node name="TableTop" type="MeshInstance3D" parent="PatioDining/PicnicTable1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.74, 0)
+mesh = SubResource("Mesh_TableTop")
+
+[node name="BenchF" type="MeshInstance3D" parent="PatioDining/PicnicTable1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.44, -0.55)
+mesh = SubResource("Mesh_TableBench")
+
+[node name="BenchB" type="MeshInstance3D" parent="PatioDining/PicnicTable1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.44, 0.55)
+mesh = SubResource("Mesh_TableBench")
+
+[node name="Legs" type="MeshInstance3D" parent="PatioDining/PicnicTable1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.35, 0)
+mesh = SubResource("Mesh_TableLegs")
+
+[node name="PicnicTable2" type="Node3D" parent="PatioDining"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.1, 0, 0)
+
+[node name="TableTop" type="MeshInstance3D" parent="PatioDining/PicnicTable2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.74, 0)
+mesh = SubResource("Mesh_TableTop")
+
+[node name="BenchF" type="MeshInstance3D" parent="PatioDining/PicnicTable2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.44, -0.55)
+mesh = SubResource("Mesh_TableBench")
+
+[node name="BenchB" type="MeshInstance3D" parent="PatioDining/PicnicTable2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.44, 0.55)
+mesh = SubResource("Mesh_TableBench")
+
+[node name="Legs" type="MeshInstance3D" parent="PatioDining/PicnicTable2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.35, 0)
+mesh = SubResource("Mesh_TableLegs")

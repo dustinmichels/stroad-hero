@@ -465,6 +465,183 @@ func _ready() -> void:
 		print("CAR_HEADLIGHTS_TEST: SUCCESS - --test-car-headlights passed cleanly!")
 		get_tree().quit(0)
 		return
+	if "--test-day-weather" in _user_args:
+		await get_tree().process_frame
+		# 1. Verify day span constants
+		assert(is_equal_approx(GameState.START_HOUR, 15.5), "Day must start at 3:30 PM (15.5)")
+		assert(is_equal_approx(GameState.END_HOUR, 21.0), "Day must end at 9:00 PM (21.0)")
+
+		# 2. Time string formatting and period
+		GameState.set_time_hours(15.5)
+		assert(GameState.get_time_string() == "3:30 PM", "15.5 should format as 3:30 PM")
+		assert(GameState.get_period_name() == "AFTERNOON", "15.5 should be AFTERNOON")
+		assert(GameState.are_lights_on() == false, "Lights should be off at 3:30 PM")
+
+		# 3. Evening / Dusk progression
+		GameState.set_time_hours(18.5)
+		assert(GameState.get_time_string() == "6:30 PM", "18.5 should format as 6:30 PM")
+		assert(GameState.are_lights_on() == true, "Lights should be on at 6:30 PM")
+		assert(GameState.time_of_day == GameState.TimeOfDay.EVENING, "18.5 should be EVENING")
+
+		# 4. Night progression
+		GameState.set_time_hours(20.5)
+		assert(GameState.get_time_string() == "8:30 PM", "20.5 should format as 8:30 PM")
+		assert(GameState.are_lights_on() == true, "Lights should be on at night")
+		assert(GameState.time_of_day == GameState.TimeOfDay.NIGHT, "20.5 should be NIGHT")
+
+		# 5. Day rollover / loop
+		GameState.current_day = 1
+		GameState.set_time_hours(20.9)
+		GameState.advance_time(0.2)
+		assert(GameState.current_day == 2, "Reaching 9:00 PM should increment current_day to 2")
+		assert(
+			GameState.current_time_hours >= 15.5 and GameState.current_time_hours < 16.0,
+			"Time should wrap back to 3:30 PM"
+		)
+
+		# 6. Cardinal direction calculation
+		assert(
+			GameState.get_cardinal_direction_name(Vector3(0, 0, -1)) == "N",
+			"World -Z must be North"
+		)
+		assert(
+			GameState.get_cardinal_direction_name(Vector3(1, 0, 0)) == "E", "World +X must be East"
+		)
+		assert(
+			GameState.get_cardinal_direction_name(Vector3(0, 0, 1)) == "S", "World +Z must be South"
+		)
+		assert(
+			GameState.get_cardinal_direction_name(Vector3(-1, 0, 0)) == "W", "World -X must be West"
+		)
+		assert(
+			GameState.get_cardinal_direction_name(Vector3(1, 0, -1).normalized()) == "NE",
+			"World +X, -Z must be NE"
+		)
+
+		# 7. WeatherDisplay component exists and updates
+		assert(hud != null, "HUD must exist")
+		assert(hud.weather_display != null, "WeatherDisplay must be mounted in HUD")
+		assert(
+			hud.weather_display.compass_dial != null, "Compass dial must exist in WeatherDisplay"
+		)
+		assert(hud.weather_display.time_label.text.length() > 0, "Time label must have text")
+
+		print("DAY_WEATHER_TEST: SUCCESS - --test-day-weather passed cleanly!")
+		get_tree().quit(0)
+		return
+	if "--test-car-exhaust" in _user_args:
+		await get_tree().process_frame
+
+		# 1. Car with has_exhaust = false
+		var pcar_scene = load("res://cars/passenger_car.tscn")
+		var car_clean: Car = pcar_scene.instantiate()
+		car_clean.car_type = Car.CarType.SEDAN
+		car_clean.has_exhaust = false
+		add_child(car_clean)
+		await get_tree().process_frame
+
+		assert(car_clean.has_exhaust == false, "Car should have has_exhaust = false")
+		for em in car_clean._exhaust_emitters:
+			assert(em.emitting == false, "Clean car should not have emitting exhaust particles")
+
+		# 2. Car with has_exhaust = true (Sedan)
+		var car_smog: Car = pcar_scene.instantiate()
+		car_smog.car_type = Car.CarType.SEDAN
+		car_smog.has_exhaust = true
+		add_child(car_smog)
+		await get_tree().process_frame
+
+		assert(car_smog.has_exhaust == true, "Car should have has_exhaust = true")
+		assert(car_smog.exhaust_pipe != null, "Car should have an exhaust pipe")
+		assert(car_smog.exhaust_pipe.visible == true, "Exhaust pipe should be visible")
+		assert(
+			car_smog.exhaust_pipe.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_OFF,
+			"Exhaust pipe should have cast_shadow off"
+		)
+		assert(car_smog.exhaust_pipe.position.x < -1.5, "Exhaust pipe should be at the rear (-X)")
+		assert(car_smog.exhaust_particles != null, "Car should have exhaust smog particles")
+		assert(
+			car_smog.exhaust_particles.local_coords == false,
+			"Exhaust smog should use world coordinates (local_coords = false) for realistic trail"
+		)
+		assert(car_smog.exhaust_particles.amount > 0, "Exhaust smog should have > 0 amount")
+		assert(
+			car_smog.exhaust_particles.color_ramp != null,
+			"Exhaust smog should have a color/alpha fade ramp"
+		)
+		assert(
+			car_smog.exhaust_particles.scale_amount_curve != null,
+			"Exhaust smog should have an expansion curve"
+		)
+
+		# Cruising -> emitting
+		car_smog.state = Car.State.CRUISING
+		assert(car_smog.exhaust_particles.emitting == true, "Cruising car should spew exhaust smog")
+
+		# Parked -> stop emitting (engine off)
+		car_smog.state = Car.State.PARKED
+		assert(
+			car_smog.exhaust_particles.emitting == false, "Parked car should turn off exhaust smog"
+		)
+
+		# Back to cruising -> resume emitting
+		car_smog.state = Car.State.CRUISING
+		assert(
+			car_smog.exhaust_particles.emitting == true, "Cruising car should resume exhaust smog"
+		)
+
+		# 3. Commercial truck with has_exhaust = true
+		var truck_scene = load("res://cars/truck.tscn")
+		var truck: Car = truck_scene.instantiate()
+		truck.has_exhaust = true
+		add_child(truck)
+		await get_tree().process_frame
+		assert(truck.exhaust_pipe != null, "Truck should have exhaust pipe")
+		assert(truck.exhaust_particles != null, "Truck should have exhaust particles")
+		assert(truck.exhaust_particles.emitting == true, "Truck should emit smog when cruising")
+
+		# 4. Taxi with existing modeled exhaust node
+		var taxi_scene = load("res://cars/taxi.tscn")
+		var taxi: Car = taxi_scene.instantiate()
+		taxi.has_exhaust = true
+		add_child(taxi)
+		await get_tree().process_frame
+		assert(taxi.exhaust_pipe != null, "Taxi should find existing exhaust pipe")
+		assert(taxi.exhaust_particles != null, "Taxi should have exhaust particles")
+		assert(taxi.exhaust_particles.emitting == true, "Taxi should emit smog when cruising")
+
+		# 5. Distribution test: some of the cars get exhaust automatically
+		var sample_cars: Array[Car] = []
+		var exhaust_count := 0
+		for i in range(30):
+			var c: Car = pcar_scene.instantiate()
+			add_child(c)
+			sample_cars.append(c)
+		await get_tree().process_frame
+
+		for c in sample_cars:
+			if c.has_exhaust:
+				exhaust_count += 1
+		assert(
+			exhaust_count > 0 and exhaust_count < 30,
+			(
+				"Only 'some of the cars' should have exhaust enabled by default (got %d / 30)"
+				% exhaust_count
+			)
+		)
+		print("  Exhaust distribution verified: %d of 30 cars rolled exhaust" % exhaust_count)
+
+		# Cleanup
+		car_clean.queue_free()
+		car_smog.queue_free()
+		truck.queue_free()
+		taxi.queue_free()
+		for c in sample_cars:
+			c.queue_free()
+
+		print("CAR_EXHAUST_TEST: SUCCESS - --test-car-exhaust passed cleanly!")
+		get_tree().quit(0)
+		return
 	if "--test-verify-render" in _user_args:
 		await _run_verify_render_test()
 		return
@@ -3420,6 +3597,9 @@ func _run_verify_render_test() -> void:
 		"Props/CrampedInn",
 		"Props/SmellGasStation",
 		"Props/Dorf",
+		"Props/ConsumerCarCare",
+		"Props/FrontageRetail",
+		"Props/FrontageCommercial",
 	]
 	var total_building_meshes := 0
 	var total_building_collisions := 0
@@ -3480,11 +3660,53 @@ func _run_verify_render_test() -> void:
 	var tm_node = get_node_or_null("TrafficManager") as TrafficManager
 	assert(tm_node != null, "TrafficManager must exist")
 	assert(tm_node.dorf_cars.size() == 15, "Dorf lot must have 15 parked cars")
+	assert(
+		not ParkingLot.is_car_type_allowed_in_dorf_lot(Car.CarType.JEEP),
+		"Jeep must not be allowed in Dorf lot"
+	)
+	assert(
+		not ParkingLot.is_car_type_allowed_in_dorf_lot(Car.CarType.SPORTS),
+		"Sports car must not be allowed in Dorf lot"
+	)
+	assert(
+		not ParkingLot.is_car_type_allowed_in_dorf_lot(Car.CarType.TAXI),
+		"Taxi must not be allowed in Dorf lot"
+	)
+	assert(
+		ParkingLot.is_car_type_allowed_in_dorf_lot(Car.CarType.SEDAN),
+		"Sedan must be allowed in Dorf lot"
+	)
+	assert(
+		ParkingLot.is_car_type_allowed_in_dorf_lot(Car.CarType.SUV),
+		"SUV must be allowed in Dorf lot"
+	)
+	assert(
+		ParkingLot.is_car_type_allowed_in_dorf_lot(Car.CarType.PICKUP),
+		"Pickup must be allowed in Dorf lot"
+	)
 	for dc in tm_node.dorf_cars:
 		assert(dc.state == Car.State.PARKED, "Dorf car must be PARKED")
 		assert(is_inf(dc.dwell_left), "Dorf car must never leave (infinite dwell)")
 		assert(dc.speed == 0.0, "Dorf car must not be moving")
-	print("  Dorf parking lot & 15 permanent parked cars verified")
+		assert(
+			TrafficManager.is_car_allowed_in_dorf_lot(dc),
+			(
+				"Dorf lot car must be allowed by Dorf lot rule (type: %s)"
+				% Car.CarType.keys()[dc.car_type]
+			)
+		)
+		assert(
+			(
+				dc.car_type != Car.CarType.JEEP
+				and dc.car_type != Car.CarType.SPORTS
+				and dc.car_type != Car.CarType.TAXI
+			),
+			(
+				"Dorf lot must not have Jeeps, sports cars, or taxis (found %s)"
+				% Car.CarType.keys()[dc.car_type]
+			)
+		)
+	print("  Dorf parking lot & 15 permanent parked cars verified (no Jeeps, sports cars, taxis)")
 
 	# --- 2. Vehicles ---
 	print("VERIFY_RENDER [2/7]: Verifying vehicles & body variants...")
@@ -3502,6 +3724,7 @@ func _run_verify_render_test() -> void:
 		Car.CarType.HATCHBACK,
 		Car.CarType.MINIVAN,
 		Car.CarType.JEEP,
+		Car.CarType.F150,
 	]
 	for ct in all_types:
 		test_car.car_type = ct
@@ -3543,6 +3766,15 @@ func _run_verify_render_test() -> void:
 		assert(pmat != null, "Paint material must generate for palette color %s" % c)
 		assert(pmat.albedo_color == c, "Paint material albedo must match %s" % c)
 		assert(pmat.vertex_color_use_as_albedo == false, "Paint material must not use vertex color")
+		var gmat := PassengerCar.get_paint_material(c, true)
+		assert(gmat != null, "Gritty paint material must generate for color %s" % c)
+		assert(gmat.albedo_color == c, "Gritty paint material albedo must match %s" % c)
+		assert(gmat.uv1_triplanar == true, "Gritty paint material must use triplanar mapping")
+		assert(
+			gmat.roughness_texture != null,
+			"Gritty paint material must have roughness noise texture"
+		)
+		assert(gmat.normal_enabled == true, "Gritty paint material must have normal map enabled")
 	for c in PassengerCar.SPORTS_PAINT_PALETTE:
 		var pmat := PassengerCar.get_paint_material(c)
 		assert(pmat != null, "Sports paint material must generate for color %s" % c)

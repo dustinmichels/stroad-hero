@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://props/billboard.tscn" id="1_billboard"]
+[ext_resource type="Texture2D" path="res://props/billboard_jewelry_face.png" id="2_face"]
+
+[node name="BillboardOffset" instance=ExtResource("1_billboard")]
+variant = 1
+custom_texture = ExtResource("2_face")
+portrait_on_left = true
+
+[node name="CollisionPole" parent="." index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.1, 2.9, 0)
+
+[node name="CenteredGroup" parent="Structure" index="0"]
+visible = false
+
+[node name="OffsetGroup" parent="Structure" index="1"]
+visible = true
