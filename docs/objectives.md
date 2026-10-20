@@ -73,7 +73,7 @@ stateDiagram-v2
    - `PhoneCall` UI displays Mom's dialogue with a typewriter effect (`visible_ratio` tween).
    - If player presses `answer_phone` while the typewriter is running, it snaps immediately to 100% visible text.
    - `Mats` player controller switches to `PhoneMode.TALKING`: Mats holds the phone to his right ear, tilts his head, and subtly nods while breathing.
-   - Player movement input is held still, but traffic and world physics continue. `FollowCamera` ignores `camera_left` to avoid accidental camera rotation on A-press.
+   - Player movement input is held still, but traffic and world physics continue (camera controls remain active).
 
 4. **`ACTIVE`**:
    - Triggered when the player acknowledges the call dialogue (`dismiss_call()`).
@@ -232,14 +232,13 @@ Constructed programmatically in `objectives/objective_marker.gd`:
 
 ## 7. Edge Cases & Safeguards
 
-| Scenario                    | Behavior / Mitigation                                                                                                                                      |
-| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Start Screen Open**       | Phone call timers pause while `StartScreen` is visible. Calls never interrupt the title/controls screen.                                                   |
-| **Character Editor Open**   | Phone call panels and objective arrows hide when `CharacterEditor` opens. Timers pause; resumed when closed.                                               |
-| **Already at Entrance**     | If Mats is already within $2.5\text{ m}$ of a store entrance when an errand starts, arrival triggers cleanly on the next physics tick.                     |
-| **Building Node Missing**   | If a target door node path cannot be resolved in `Main`, `get_target_position()` falls back to hardcoded world coordinates.                                |
-| **Camera Control Conflict** | `FollowCamera` polls `ObjectiveManager.is_call_showing()` and ignores `camera_left` while ringing or in-call, preventing A-key rotation conflicts.         |
-| **Web Export Fonts**        | Handset icons, checkmarks, and triangles are drawn via `_draw()` primitives rather than Unicode emoji, preventing missing glyph boxes on the WebGL export. |
+| Scenario                  | Behavior / Mitigation                                                                                                                                      |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Start Screen Open**     | Phone call timers pause while `StartScreen` is visible. Calls never interrupt the title/controls screen.                                                   |
+| **Character Editor Open** | Phone call panels and objective arrows hide when `CharacterEditor` opens. Timers pause; resumed when closed.                                               |
+| **Already at Entrance**   | If Mats is already within $2.5\text{ m}$ of a store entrance when an errand starts, arrival triggers cleanly on the next physics tick.                     |
+| **Building Node Missing** | If a target door node path cannot be resolved in `Main`, `get_target_position()` falls back to hardcoded world coordinates.                                |
+| **Web Export Fonts**      | Handset icons, checkmarks, and triangles are drawn via `_draw()` primitives rather than Unicode emoji, preventing missing glyph boxes on the WebGL export. |
 
 ---
 

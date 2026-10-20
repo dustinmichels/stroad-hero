@@ -1637,39 +1637,40 @@ func _ready() -> void:
 		phone_call.dismiss()
 		assert(obj_mgr.current_state == ObjectiveManager.State.ACTIVE)
 		obj_mgr.complete_objective()
-		# 6. FollowCamera ignores camera_left during phone call:
+		# 6. ObjectiveManager call state checks:
 		var cam := get_node_or_null("Camera3D") as FollowCamera
+		obj_mgr.current_state = ObjectiveManager.State.RINGING
+		assert(
+			obj_mgr.is_call_showing() == true,
+			"ObjectiveManager must report call showing when ringing"
+		)
+		obj_mgr.current_state = ObjectiveManager.State.IN_CALL
+		assert(
+			obj_mgr.is_call_showing() == true,
+			"ObjectiveManager must report call showing when in call"
+		)
+		obj_mgr.current_state = ObjectiveManager.State.ACTIVE
+		assert(
+			obj_mgr.is_call_showing() == false,
+			"ObjectiveManager must not report call showing when active"
+		)
+		obj_mgr.current_state = ObjectiveManager.State.IDLE
+		assert(
+			obj_mgr.is_call_showing() == false,
+			"ObjectiveManager must not report call showing when idle"
+		)
 		if cam:
+			cam.reset_view()
+			var initial_yaw: float = cam._target_yaw
 			obj_mgr.current_state = ObjectiveManager.State.RINGING
+			Input.action_press("camera_left")
+			cam._process(0.016)
+			Input.action_release("camera_left")
 			assert(
-				obj_mgr.is_call_showing() == true,
-				"ObjectiveManager must report call showing when ringing"
+				cam._target_yaw > initial_yaw,
+				"Camera yaw must step left on camera_left even when call is ringing"
 			)
-			assert(
-				cam._is_phone_call_showing() == true, "Camera must detect ringing call via group"
-			)
-			obj_mgr.current_state = ObjectiveManager.State.IN_CALL
-			assert(
-				obj_mgr.is_call_showing() == true,
-				"ObjectiveManager must report call showing when in call"
-			)
-			assert(
-				cam._is_phone_call_showing() == true, "Camera must detect in-call state via group"
-			)
-			obj_mgr.current_state = ObjectiveManager.State.ACTIVE
-			assert(
-				obj_mgr.is_call_showing() == false,
-				"ObjectiveManager must not report call showing when active"
-			)
-			assert(
-				cam._is_phone_call_showing() == false,
-				"Camera must not report call showing when active"
-			)
-			obj_mgr.current_state = ObjectiveManager.State.IDLE
-			assert(
-				cam._is_phone_call_showing() == false,
-				"Camera must not report call showing when idle"
-			)
+			cam.reset_view()
 		# 7. World marker (ObjectiveMarker) tests:
 		obj_mgr.current_state = ObjectiveManager.State.IDLE
 		obj_mgr.start_call(obj_mgr.get_errand_by_id(&"cough_syrup"))
