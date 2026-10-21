@@ -14,6 +14,7 @@ func matches_args() -> bool:
 				"--test-deadlock-watchdog",
 				"--test-car-headlights",
 				"--test-car-exhaust",
+				"--test-police-siren",
 				"--test-frontage-contracts",
 				"--test-speed-variation",
 				"--test-lane-wander",
@@ -46,6 +47,9 @@ func setup_ready() -> void:
 		return
 	if "--test-car-exhaust" in user_args:
 		_run_test_car_exhaust()
+		return
+	if "--test-police-siren" in user_args:
+		_run_test_police_siren()
 		return
 	if "--test-frontage-contracts" in user_args:
 		_run_test_frontage_contracts()
@@ -718,6 +722,83 @@ func _run_test_deadlock_watchdog() -> void:
 		"DEADLOCK_WATCHDOG_TEST: SUCCESS - Watchdog triggered at 4.0s, tiebreaker cleanly resolved deadlock!"
 	)
 	main.get_tree().quit(0)
+
+
+func _run_test_police_siren() -> void:
+	var body_scene := load("res://cars/bodies/police_suv.tscn") as PackedScene
+	for bake_mode in range(3):
+		var body := body_scene.instantiate() as Node3D
+		if bake_mode != 0:
+			if bake_mode == 1:
+				PassengerCar.MeshBakerScript.bake_car_body(body)
+			else:
+				PassengerCar.MeshBakerScript.bake_vehicle_model(body)
+			var packed := PackedScene.new()
+			assert(packed.pack(body) == OK)
+			body.free()
+			body = packed.instantiate()
+		body.set("siren_active", false)
+		main.add_child(body)
+		var audio := (
+			body.find_children("*", "AudioStreamPlayer3D", true, false)[0] as AudioStreamPlayer3D
+		)
+		assert(not audio.playing, "Siren disabled before ready must remain silent")
+		var other := body_scene.instantiate() as Node3D
+		main.add_child(other)
+		body.set("siren_active", true)
+		await main.get_tree().process_frame
+		assert(audio.playing, "Enabling siren must start positional audio")
+		var red_seen := false
+		var blue_seen := false
+		var end_time := Time.get_ticks_msec() + 900
+		while Time.get_ticks_msec() < end_time:
+			red_seen = red_seen or _police_lenses_lit(body.get_node("SirenRed"))
+			blue_seen = blue_seen or _police_lenses_lit(body.get_node("SirenBlue"))
+			await main.get_tree().process_frame
+		assert(
+			red_seen and blue_seen,
+			"Both emergency colors must flash, including after export baking"
+		)
+		other.set("siren_active", false)
+		other.set("siren_active", true)
+		var other_lit := (
+			_police_lenses_lit(other.get_node("SirenRed"))
+			or _police_lenses_lit(other.get_node("SirenBlue"))
+		)
+		body.set("siren_active", false)
+		assert(not audio.playing, "Disabling siren must stop audio")
+		assert(not _police_lenses_lit(body.get_node("SirenRed")))
+		assert(not _police_lenses_lit(body.get_node("SirenBlue")))
+		assert(
+			(
+				other_lit
+				and (
+					_police_lenses_lit(other.get_node("SirenRed"))
+					or _police_lenses_lit(other.get_node("SirenBlue"))
+				)
+			),
+			"Disabling one SUV must not darken another SUV's lenses"
+		)
+		var other_audio := (
+			other.find_children("*", "AudioStreamPlayer3D", true, false)[0] as AudioStreamPlayer3D
+		)
+		assert(other_audio.playing, "Disabling one SUV must not silence another")
+		body.set("siren_active", true)
+		await main.get_tree().process_frame
+		assert(audio.playing, "Siren must restart after being disabled")
+		body.queue_free()
+		other.queue_free()
+		await main.get_tree().process_frame
+	print("POLICE_SIREN_TEST: SUCCESS - live and baked sirens toggle independently")
+	main.get_tree().quit(0)
+
+
+func _police_lenses_lit(group: Node) -> bool:
+	for lens in group.find_children("*", "MeshInstance3D", true, false):
+		var material := (lens as MeshInstance3D).get_active_material(0) as StandardMaterial3D
+		if material.emission_enabled and material.emission_energy_multiplier > 0.0:
+			return true
+	return false
 
 
 func _run_test_car_headlights() -> void:

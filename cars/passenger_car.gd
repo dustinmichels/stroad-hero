@@ -97,6 +97,7 @@ const WHEEL_RADII: Dictionary = {
 	CarType.JEEP: 0.4,
 	CarType.F150: 0.38,
 	CarType.CYBERTRUCK: 0.40,
+	CarType.POLICE_SUV: 0.40,
 }
 
 const SPORTS_SPAWN_CHANCE: float = 0.08

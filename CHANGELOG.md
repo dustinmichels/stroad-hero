@@ -2,6 +2,7 @@
 
 ## Oct 21, 2026
 
+- **Police SUV**: Added reference-inspired black-and-white interceptor with push bar, steel wheels, POLICE markings, and roof/grille/rear red-blue strobes to the traffic pool. Sirens start enabled with looping positional wail audio; `PoliceSUV.siren_active` on the body toggles lights and sound together. Flashers survive mesh baking and export.
 - **Erratic driving & grass shortcuts**: Lane wander and reckless overtakes; grass shortcuts now connect Colonial Plaza–Cramped Inn, Smell–Walgroins, and Cramped Inn–Leaders in both directions, with tire ruts and a 25% eligible departure chance (up from 1%).
 - **Profiling & rendering optimizations**: Multi-meshed forest trees (replacing 688 bodies with 36 MultiMeshes), cached traffic blocker candidate sets and vehicle sweeps, throttled environment updates, culled unneeded shadows and 3D labels, and warmed up nighttime lighting shaders. Slashed dusk lights-on freeze from 852ms to 61ms on Compatibility (and 153ms to 38ms on Forward+), halved Compatibility draw calls from ~3,400 to ~1,565, and brought Forward+ night performance to a stable 60 fps.
 - **Cybertruck rebuild**: Replaced box-assembled body with generated faceted meshes (`scripts/generate_cybertruck.gd`): single-ridge wedge profile, inward-leaning greenhouse with flush windshield/side glass, tonneau cover, polygonal arch flares, headlight/taillight markers for lamps and turn signals. Stainless steel is its only finish (never repainted).

@@ -33,6 +33,7 @@ EXTENDED_TESTS = [
     "--test-car-headlights",
     "--test-day-weather",
     "--test-car-exhaust",
+    "--test-police-siren",
     "--test-reverse-safety",
     "--test-drive-thru",
     "--test-lifecycle",

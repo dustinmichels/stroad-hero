@@ -1,7 +1,6 @@
 # Visual Style & Polish Checklist
 
-Items marked **`[HUMAN REVIEW NEEDED]`** highlight unresolved choices in the document and direct contradictions between the descriptive recommendations (Sections 1–4) and the Immediate Implementation Plan (Section 5).
-
+Items marked **`[HUMAN REVIEW NEEDED]`** highlight open design questions or implementation choices.
 ---
 
 ## 1. Lighting & "Toybox" Post-Processing (`WorldEnvironment`)
@@ -15,10 +14,8 @@ Items marked **`[HUMAN REVIEW NEEDED]`** highlight unresolved choices in the doc
   - [x] Set ambient light (`Environment > Ambient Light > Sky/Color`) to soft cool periwinkle blue so shadows are not pitch black.
 - [ ] **Screen-Space Ambient Occlusion (SSAO)**
   - [ ] Enable SSAO in `WorldEnvironment` for soft contact shadows under car chassis, building walls/asphalt seams, and curbs.
-- [ ] **Tonemapping & Color Grading**
-  - [ ] [HUMAN REVIEW NEEDED] Contradiction with Section 5: Section 1 suggests choosing between `Filmic` or `ACES`, whereas Section 5 preselects `ACES`.
-    - [x] `Filmic` (Active in `main.tscn` via `tonemap_mode = 2`)
-    - [ ] `ACES`
+- [x] **Tonemapping & Color Grading**
+  - [x] `Filmic` (Active in `main.tscn` via `tonemap_mode = 2`).
   - [ ] Bump saturation slightly (1.1–1.15) to make bright reds, yellows, and greens punch through cleanly.
 
 ---
@@ -71,10 +68,8 @@ Items marked **`[HUMAN REVIEW NEEDED]`** highlight unresolved choices in the doc
   - [ ] [HUMAN REVIEW NEEDED] Choice in doc: Implement via simple tweening or raycast spring damping.
     - [ ] Simple tweening.
     - [ ] Raycast spring damping.
-- [ ] **Particle Systems (`GPUParticles3D`)**
-  - [ ] [HUMAN REVIEW NEEDED] Choice in doc: Car exhaust smoke style:
-    - [ ] 2D billowy sprite.
-    - [ ] Low-poly white spheres that quickly shrink.
+- [x] **Particle Systems (`CPUParticles3D`)**
+  - [x] Car exhaust smoke emitters (Implemented in `cars/car.gd` via `_setup_exhaust` and `_update_exhaust`).
   - [ ] Add simple dust poofs under player shoes when walking or sprinting.
 - [ ] **Blinking / Neon Flicker**
   - [ ] Add small script to randomly flicker "OPEN" sign.
@@ -84,26 +79,3 @@ Items marked **`[HUMAN REVIEW NEEDED]`** highlight unresolved choices in the doc
   - [x] Global wind manager (`GameState`) simulating dynamic wind direction and speed fluctuations with gusts.
   - [x] Dynamic flagpole alignment swiveling cloth meshes to match prevailing wind while preserving hoist edge attachment.
   - [x] Custom vertex displacement shader (`shaders/us_flag.gdshader`) reacting to wind speed.
-
----
-
-## 5. Immediate Implementation Plan
-
-- [ ] **1. Godot Environment Pass (15 min)**
-  - [x] Add `WorldEnvironment` node.
-  - [ ] [HUMAN REVIEW NEEDED] Set Tonemap to `ACES` (Conflicted: commits to `ACES`, while Section 1 leaves `Filmic` open; currently using `Filmic` / mode 2 in `main.tscn`).
-  - [ ] Enable SSAO.
-  - [x] Enable Glow (Soft).
-  - [ ] Add slight DOF.
-- [ ] **2. Road & Lot Decals (30 min)**
-  - [ ] [HUMAN REVIEW NEEDED] Choice in doc: Place 3D Decal nodes or thin flat planes for markings.
-    - [ ] Option A: 3D Decal nodes.
-    - [ ] Option B: Thin flat planes.
-  - [ ] Apply to crosswalk zebra stripes, manhole covers, and oil stains.
-- [ ] **3. Car & Entity Outlines (20 min)**
-  - [ ] [HUMAN REVIEW NEEDED] Attach an inverted hull outline pass (black/dark navy, `cull_front`, unshaded) to car base materials (Conflicted: commits to inverted hull on cars only, while Section 2 also suggested a screen-space pixel shader and included signs and character meshes).
-- [x] **4. Micro-Props (30 min)**
-  - [x] Build 3 quick Godot assemblies:
-    - [x] Low-poly dumpster.
-    - [x] Fire hydrant.
-    - [x] Parking lot shopping cart.

@@ -1,0 +1,803 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://cars/police_siren.gd" id="1_siren"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_BlackPaint"]
+albedo_color = Color(0.025, 0.032, 0.044, 1)
+metallic = 0.32
+roughness = 0.29
+
+[sub_resource type="StandardMaterial3D" id="Mat_WhitePaint"]
+albedo_color = Color(0.91, 0.925, 0.94, 1)
+metallic = 0.12
+roughness = 0.34
+
+[sub_resource type="StandardMaterial3D" id="Mat_Trim"]
+albedo_color = Color(0.065, 0.075, 0.087, 1)
+roughness = 0.8
+
+[sub_resource type="StandardMaterial3D" id="Mat_Glass"]
+albedo_color = Color(0.065, 0.115, 0.16, 1)
+metallic = 0.38
+roughness = 0.16
+
+[sub_resource type="StandardMaterial3D" id="Mat_Windshield"]
+albedo_color = Color(0.15, 0.24, 0.29, 1)
+metallic = 0.35
+roughness = 0.19
+
+[sub_resource type="StandardMaterial3D" id="Mat_Steel"]
+albedo_color = Color(0.11, 0.125, 0.145, 1)
+metallic = 0.72
+roughness = 0.38
+
+[sub_resource type="StandardMaterial3D" id="Mat_Silver"]
+albedo_color = Color(0.48, 0.53, 0.57, 1)
+metallic = 0.8
+roughness = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Mat_Rubber"]
+albedo_color = Color(0.035, 0.04, 0.047, 1)
+roughness = 0.95
+
+[sub_resource type="StandardMaterial3D" id="Mat_Lettering"]
+albedo_color = Color(0.018, 0.025, 0.035, 1)
+roughness = 0.8
+
+[sub_resource type="StandardMaterial3D" id="Mat_Headlight"]
+albedo_color = Color(0.84, 0.92, 1, 1)
+roughness = 0.18
+emission_enabled = false
+emission = Color(0.84, 0.92, 1, 1)
+emission_energy_multiplier = 2.0
+
+[sub_resource type="StandardMaterial3D" id="Mat_Taillight"]
+albedo_color = Color(0.66, 0.025, 0.04, 1)
+roughness = 0.22
+emission_enabled = true
+emission = Color(0.9, 0.025, 0.035, 1)
+emission_energy_multiplier = 1.2
+
+[sub_resource type="StandardMaterial3D" id="Mat_SirenRed"]
+resource_local_to_scene = true
+albedo_color = Color(0.24, 0.006, 0.012, 1)
+roughness = 0.2
+emission_enabled = true
+emission = Color(1, 0.015, 0.025, 1)
+emission_energy_multiplier = 4.0
+
+[sub_resource type="StandardMaterial3D" id="Mat_SirenBlue"]
+resource_local_to_scene = true
+albedo_color = Color(0.006, 0.035, 0.25, 1)
+roughness = 0.2
+emission_enabled = true
+emission = Color(0.015, 0.12, 1, 1)
+emission_energy_multiplier = 4.0
+
+[sub_resource type="BoxMesh" id="Mesh_Black"]
+material = SubResource("Mat_BlackPaint")
+size = Vector3(1, 1, 1)
+
+[sub_resource type="BoxMesh" id="Mesh_White"]
+material = SubResource("Mat_WhitePaint")
+size = Vector3(1, 1, 1)
+
+[sub_resource type="BoxMesh" id="Mesh_Trim"]
+material = SubResource("Mat_Trim")
+size = Vector3(1, 1, 1)
+
+[sub_resource type="BoxMesh" id="Mesh_Glass"]
+material = SubResource("Mat_Glass")
+size = Vector3(1, 1, 1)
+
+[sub_resource type="BoxMesh" id="Mesh_Windshield"]
+material = SubResource("Mat_Windshield")
+size = Vector3(1, 1, 1)
+
+[sub_resource type="BoxMesh" id="Mesh_Steel"]
+material = SubResource("Mat_Steel")
+size = Vector3(1, 1, 1)
+
+[sub_resource type="BoxMesh" id="Mesh_Silver"]
+material = SubResource("Mat_Silver")
+size = Vector3(1, 1, 1)
+
+[sub_resource type="BoxMesh" id="Mesh_Headlight"]
+material = SubResource("Mat_Headlight")
+size = Vector3(0.09, 0.14, 0.39)
+
+[sub_resource type="BoxMesh" id="Mesh_Taillight"]
+material = SubResource("Mat_Taillight")
+size = Vector3(0.09, 0.24, 0.26)
+
+[sub_resource type="BoxMesh" id="Mesh_RedLED"]
+material = SubResource("Mat_SirenRed")
+size = Vector3(1, 1, 1)
+
+[sub_resource type="BoxMesh" id="Mesh_BlueLED"]
+material = SubResource("Mat_SirenBlue")
+size = Vector3(1, 1, 1)
+
+[sub_resource type="CylinderMesh" id="Mesh_Arch"]
+material = SubResource("Mat_Trim")
+top_radius = 0.465
+bottom_radius = 0.465
+height = 0.045
+radial_segments = 32
+
+[sub_resource type="CylinderMesh" id="Mesh_Tire"]
+material = SubResource("Mat_Rubber")
+top_radius = 0.4
+bottom_radius = 0.4
+height = 0.22
+radial_segments = 32
+
+[sub_resource type="CylinderMesh" id="Mesh_SteelRim"]
+material = SubResource("Mat_Steel")
+top_radius = 0.27
+bottom_radius = 0.27
+height = 0.018
+radial_segments = 24
+
+[sub_resource type="CylinderMesh" id="Mesh_RimInset"]
+material = SubResource("Mat_BlackPaint")
+top_radius = 0.215
+bottom_radius = 0.215
+height = 0.018
+radial_segments = 24
+
+[sub_resource type="CylinderMesh" id="Mesh_Hub"]
+material = SubResource("Mat_Steel")
+top_radius = 0.11
+bottom_radius = 0.11
+height = 0.035
+radial_segments = 12
+
+[sub_resource type="CylinderMesh" id="Mesh_HubCap"]
+material = SubResource("Mat_Silver")
+top_radius = 0.052
+bottom_radius = 0.052
+height = 0.012
+radial_segments = 12
+
+[sub_resource type="SystemFont" id="Font_Police"]
+font_names = PackedStringArray("Arial", "Helvetica", "Liberation Sans")
+font_italic = true
+font_weight = 800
+
+[sub_resource type="SystemFont" id="Font_Detail"]
+font_names = PackedStringArray("Arial", "Helvetica", "Liberation Sans")
+font_weight = 700
+
+[sub_resource type="TextMesh" id="Mesh_PoliceText"]
+material = SubResource("Mat_Lettering")
+text = "POLICE"
+font = SubResource("Font_Police")
+font_size = 64
+pixel_size = 0.0074
+depth = 0.001
+
+[sub_resource type="TextMesh" id="Mesh_InterceptorText"]
+material = SubResource("Mat_Lettering")
+text = "INTERCEPTOR"
+font = SubResource("Font_Detail")
+font_size = 40
+pixel_size = 0.0028
+depth = 0.001
+
+[sub_resource type="TextMesh" id="Mesh_UnitText"]
+material = SubResource("Mat_WhitePaint")
+text = "002"
+font = SubResource("Font_Detail")
+font_size = 32
+pixel_size = 0.0032
+depth = 0.001
+
+[sub_resource type="TextMesh" id="Mesh_EmergencyText"]
+material = SubResource("Mat_WhitePaint")
+text = "911"
+font = SubResource("Font_Detail")
+font_size = 32
+pixel_size = 0.003
+depth = 0.001
+
+[sub_resource type="TextMesh" id="Mesh_RearPoliceText"]
+material = SubResource("Mat_WhitePaint")
+text = "POLICE"
+font = SubResource("Font_Detail")
+font_size = 40
+pixel_size = 0.0036
+depth = 0.001
+
+[node name="PoliceSUV" type="Node3D"]
+script = ExtResource("1_siren")
+
+[node name="ChassisCladding" type="MeshInstance3D" parent="."]
+position = Vector3(0, 0.43, 0)
+scale = Vector3(4.5, 0.22, 1.88)
+mesh = SubResource("Mesh_Trim")
+
+[node name="Body" type="MeshInstance3D" parent="."]
+position = Vector3(-0.02, 0.82, 0)
+scale = Vector3(4.48, 0.55, 1.92)
+mesh = SubResource("Mesh_Black")
+
+[node name="Hood" type="MeshInstance3D" parent="."]
+position = Vector3(1.59, 1.115, 0)
+rotation = Vector3(0, 0, -0.045)
+scale = Vector3(1.27, 0.115, 1.88)
+mesh = SubResource("Mesh_Black")
+
+[node name="HoodCreaseL" type="MeshInstance3D" parent="."]
+position = Vector3(1.58, 1.177, 0.56)
+rotation = Vector3(0, 0, -0.045)
+scale = Vector3(1.08, 0.018, 0.035)
+mesh = SubResource("Mesh_Black")
+
+[node name="HoodCreaseR" type="MeshInstance3D" parent="."]
+position = Vector3(1.58, 1.177, -0.56)
+rotation = Vector3(0, 0, -0.045)
+scale = Vector3(1.08, 0.018, 0.035)
+mesh = SubResource("Mesh_Black")
+
+[node name="FrontBumper" type="MeshInstance3D" parent="."]
+position = Vector3(2.23, 0.66, 0)
+scale = Vector3(0.22, 0.35, 1.94)
+mesh = SubResource("Mesh_Black")
+
+[node name="LowerIntake" type="MeshInstance3D" parent="."]
+position = Vector3(2.345, 0.63, 0)
+scale = Vector3(0.02, 0.17, 1.15)
+mesh = SubResource("Mesh_Trim")
+
+[node name="FrontGrille" type="MeshInstance3D" parent="."]
+position = Vector3(2.265, 0.947, 0)
+scale = Vector3(0.045, 0.29, 1.12)
+mesh = SubResource("Mesh_Trim")
+
+[node name="GrilleSlatUpper" type="MeshInstance3D" parent="."]
+position = Vector3(2.292, 1.035, 0)
+scale = Vector3(0.025, 0.025, 1.05)
+mesh = SubResource("Mesh_Steel")
+
+[node name="GrilleSlatLower" type="MeshInstance3D" parent="."]
+position = Vector3(2.292, 0.887, 0)
+scale = Vector3(0.025, 0.025, 1.05)
+mesh = SubResource("Mesh_Steel")
+
+[node name="GrilleBadge" type="MeshInstance3D" parent="."]
+position = Vector3(2.3, 0.965, 0)
+scale = Vector3(0.025, 0.055, 0.125)
+mesh = SubResource("Mesh_Silver")
+
+[node name="HeadlightL" type="MeshInstance3D" parent="."]
+position = Vector3(2.25, 1.025, 0.735)
+cast_shadow = 0
+mesh = SubResource("Mesh_Headlight")
+
+[node name="HeadlightR" type="MeshInstance3D" parent="."]
+position = Vector3(2.25, 1.025, -0.735)
+cast_shadow = 0
+mesh = SubResource("Mesh_Headlight")
+
+[node name="PushBarUprightL" type="MeshInstance3D" parent="."]
+position = Vector3(2.425, 0.75, 0.54)
+rotation = Vector3(0, 0, -0.07)
+scale = Vector3(0.095, 0.76, 0.095)
+mesh = SubResource("Mesh_Steel")
+
+[node name="PushBarUprightR" type="MeshInstance3D" parent="."]
+position = Vector3(2.425, 0.75, -0.54)
+rotation = Vector3(0, 0, -0.07)
+scale = Vector3(0.095, 0.76, 0.095)
+mesh = SubResource("Mesh_Steel")
+
+[node name="PushBarTop" type="MeshInstance3D" parent="."]
+position = Vector3(2.45, 1.11, 0)
+scale = Vector3(0.09, 0.075, 1.18)
+mesh = SubResource("Mesh_Steel")
+
+[node name="PushBarLower" type="MeshInstance3D" parent="."]
+position = Vector3(2.405, 0.48, 0)
+scale = Vector3(0.09, 0.075, 1.18)
+mesh = SubResource("Mesh_Steel")
+
+[node name="PushBarMountL" type="MeshInstance3D" parent="."]
+position = Vector3(2.31, 0.51, 0.54)
+scale = Vector3(0.25, 0.08, 0.095)
+mesh = SubResource("Mesh_Trim")
+
+[node name="PushBarMountR" type="MeshInstance3D" parent="."]
+position = Vector3(2.31, 0.51, -0.54)
+scale = Vector3(0.25, 0.08, 0.095)
+mesh = SubResource("Mesh_Trim")
+
+[node name="RearBumper" type="MeshInstance3D" parent="."]
+position = Vector3(-2.275, 0.61, 0)
+scale = Vector3(0.25, 0.3, 1.94)
+mesh = SubResource("Mesh_Trim")
+
+[node name="RearHatch" type="MeshInstance3D" parent="."]
+position = Vector3(-2.225, 0.96, 0)
+scale = Vector3(0.08, 0.47, 1.85)
+mesh = SubResource("Mesh_Black")
+
+[node name="RearHatchTrim" type="MeshInstance3D" parent="."]
+position = Vector3(-2.271, 0.9, 0)
+scale = Vector3(0.018, 0.035, 1.21)
+mesh = SubResource("Mesh_Steel")
+
+[node name="LicensePlate" type="MeshInstance3D" parent="."]
+position = Vector3(-2.275, 0.79, 0)
+scale = Vector3(0.015, 0.14, 0.31)
+mesh = SubResource("Mesh_White")
+
+[node name="TaillightL" type="MeshInstance3D" parent="."]
+position = Vector3(-2.25, 1.015, 0.78)
+cast_shadow = 0
+mesh = SubResource("Mesh_Taillight")
+
+[node name="TaillightR" type="MeshInstance3D" parent="."]
+position = Vector3(-2.25, 1.015, -0.78)
+cast_shadow = 0
+mesh = SubResource("Mesh_Taillight")
+
+[node name="TaillightWrapL" type="MeshInstance3D" parent="."]
+position = Vector3(-2.12, 1.04, 0.966)
+scale = Vector3(2.9, 0.4, 0.08)
+cast_shadow = 0
+mesh = SubResource("Mesh_Taillight")
+
+[node name="TaillightWrapR" type="MeshInstance3D" parent="."]
+position = Vector3(-2.12, 1.04, -0.966)
+scale = Vector3(2.9, 0.4, 0.08)
+cast_shadow = 0
+mesh = SubResource("Mesh_Taillight")
+
+[node name="Cabin" type="MeshInstance3D" parent="."]
+position = Vector3(-0.51, 1.455, 0)
+scale = Vector3(2.65, 0.55, 1.73)
+mesh = SubResource("Mesh_Glass")
+
+[node name="Windshield" type="MeshInstance3D" parent="."]
+position = Vector3(0.965, 1.46, 0)
+rotation = Vector3(0, 0, 0.55)
+scale = Vector3(0.045, 0.66, 1.67)
+mesh = SubResource("Mesh_Windshield")
+
+[node name="FrontWindowL" type="MeshInstance3D" parent="."]
+position = Vector3(0.83, 1.46, 0.868)
+rotation = Vector3(0, 0, 0.55)
+scale = Vector3(0.28, 0.61, 0.018)
+mesh = SubResource("Mesh_Glass")
+
+[node name="FrontWindowR" type="MeshInstance3D" parent="."]
+position = Vector3(0.83, 1.46, -0.868)
+rotation = Vector3(0, 0, 0.55)
+scale = Vector3(0.28, 0.61, 0.018)
+mesh = SubResource("Mesh_Glass")
+
+[node name="TailgateGlass" type="MeshInstance3D" parent="."]
+position = Vector3(-1.98, 1.435, 0)
+rotation = Vector3(0, 0, -0.32)
+scale = Vector3(0.045, 0.62, 1.69)
+mesh = SubResource("Mesh_Glass")
+
+[node name="Roof" type="MeshInstance3D" parent="."]
+position = Vector3(-0.535, 1.765, 0)
+scale = Vector3(2.77, 0.09, 1.76)
+mesh = SubResource("Mesh_Black")
+
+[node name="RoofSpoiler" type="MeshInstance3D" parent="."]
+position = Vector3(-2.005, 1.765, 0)
+rotation = Vector3(0, 0, -0.04)
+scale = Vector3(0.32, 0.07, 1.82)
+mesh = SubResource("Mesh_Black")
+
+[node name="APillarL" type="MeshInstance3D" parent="."]
+position = Vector3(0.965, 1.46, 0.863)
+rotation = Vector3(0, 0, 0.55)
+scale = Vector3(0.085, 0.68, 0.075)
+mesh = SubResource("Mesh_Black")
+
+[node name="APillarR" type="MeshInstance3D" parent="."]
+position = Vector3(0.965, 1.46, -0.863)
+rotation = Vector3(0, 0, 0.55)
+scale = Vector3(0.085, 0.68, 0.075)
+mesh = SubResource("Mesh_Black")
+
+[node name="BPillarL" type="MeshInstance3D" parent="."]
+position = Vector3(-0.08, 1.45, 0.873)
+scale = Vector3(0.105, 0.58, 0.035)
+mesh = SubResource("Mesh_Black")
+
+[node name="BPillarR" type="MeshInstance3D" parent="."]
+position = Vector3(-0.08, 1.45, -0.873)
+scale = Vector3(0.105, 0.58, 0.035)
+mesh = SubResource("Mesh_Black")
+
+[node name="CPillarL" type="MeshInstance3D" parent="."]
+position = Vector3(-1.16, 1.45, 0.873)
+rotation = Vector3(0, 0, -0.08)
+scale = Vector3(0.1, 0.58, 0.035)
+mesh = SubResource("Mesh_Black")
+
+[node name="CPillarR" type="MeshInstance3D" parent="."]
+position = Vector3(-1.16, 1.45, -0.873)
+rotation = Vector3(0, 0, -0.08)
+scale = Vector3(0.1, 0.58, 0.035)
+mesh = SubResource("Mesh_Black")
+
+[node name="DPillarL" type="MeshInstance3D" parent="."]
+position = Vector3(-1.91, 1.435, 0.869)
+rotation = Vector3(0, 0, -0.32)
+scale = Vector3(0.17, 0.64, 0.065)
+mesh = SubResource("Mesh_Black")
+
+[node name="DPillarR" type="MeshInstance3D" parent="."]
+position = Vector3(-1.91, 1.435, -0.869)
+rotation = Vector3(0, 0, -0.32)
+scale = Vector3(0.17, 0.64, 0.065)
+mesh = SubResource("Mesh_Black")
+
+[node name="WindowSillL" type="MeshInstance3D" parent="."]
+position = Vector3(-0.38, 1.168, 0.926)
+scale = Vector3(3.3, 0.058, 0.078)
+mesh = SubResource("Mesh_Black")
+
+[node name="WindowSillR" type="MeshInstance3D" parent="."]
+position = Vector3(-0.38, 1.168, -0.926)
+scale = Vector3(3.3, 0.058, 0.078)
+mesh = SubResource("Mesh_Black")
+
+[node name="WhiteDoorsL" type="MeshInstance3D" parent="."]
+position = Vector3(-0.04, 0.905, 0.971)
+scale = Vector3(2.52, 0.5, 0.025)
+mesh = SubResource("Mesh_White")
+
+[node name="WhiteDoorsR" type="MeshInstance3D" parent="."]
+position = Vector3(-0.04, 0.905, -0.971)
+scale = Vector3(2.52, 0.5, 0.025)
+mesh = SubResource("Mesh_White")
+
+[node name="DoorSeamL" type="MeshInstance3D" parent="."]
+position = Vector3(-0.08, 0.907, 0.987)
+scale = Vector3(0.012, 0.485, 0.004)
+mesh = SubResource("Mesh_Trim")
+
+[node name="DoorSeamR" type="MeshInstance3D" parent="."]
+position = Vector3(-0.08, 0.907, -0.987)
+scale = Vector3(0.012, 0.485, 0.004)
+mesh = SubResource("Mesh_Trim")
+
+[node name="RockerL" type="MeshInstance3D" parent="."]
+position = Vector3(-0.03, 0.565, 0.972)
+scale = Vector3(2.0, 0.13, 0.075)
+mesh = SubResource("Mesh_Trim")
+
+[node name="RockerR" type="MeshInstance3D" parent="."]
+position = Vector3(-0.03, 0.565, -0.972)
+scale = Vector3(2.0, 0.13, 0.075)
+mesh = SubResource("Mesh_Trim")
+
+[node name="FrontDoorHandleL" type="MeshInstance3D" parent="."]
+position = Vector3(0.11, 1.105, 0.999)
+scale = Vector3(0.18, 0.035, 0.022)
+mesh = SubResource("Mesh_Black")
+
+[node name="FrontDoorHandleR" type="MeshInstance3D" parent="."]
+position = Vector3(0.11, 1.105, -0.999)
+scale = Vector3(0.18, 0.035, 0.022)
+mesh = SubResource("Mesh_Black")
+
+[node name="RearDoorHandleL" type="MeshInstance3D" parent="."]
+position = Vector3(-0.96, 1.105, 0.999)
+scale = Vector3(0.18, 0.035, 0.022)
+mesh = SubResource("Mesh_Black")
+
+[node name="RearDoorHandleR" type="MeshInstance3D" parent="."]
+position = Vector3(-0.96, 1.105, -0.999)
+scale = Vector3(0.18, 0.035, 0.022)
+mesh = SubResource("Mesh_Black")
+
+[node name="MirrorStemL" type="MeshInstance3D" parent="."]
+position = Vector3(0.87, 1.25, 0.98)
+scale = Vector3(0.08, 0.07, 0.22)
+mesh = SubResource("Mesh_Trim")
+
+[node name="MirrorStemR" type="MeshInstance3D" parent="."]
+position = Vector3(0.87, 1.25, -0.98)
+scale = Vector3(0.08, 0.07, 0.22)
+mesh = SubResource("Mesh_Trim")
+
+[node name="MirrorHousingL" type="MeshInstance3D" parent="."]
+position = Vector3(0.87, 1.285, 1.09)
+scale = Vector3(0.23, 0.145, 0.18)
+mesh = SubResource("Mesh_Black")
+
+[node name="MirrorHousingR" type="MeshInstance3D" parent="."]
+position = Vector3(0.87, 1.285, -1.09)
+scale = Vector3(0.23, 0.145, 0.18)
+mesh = SubResource("Mesh_Black")
+
+[node name="MirrorGlassL" type="MeshInstance3D" parent="."]
+position = Vector3(0.751, 1.285, 1.09)
+scale = Vector3(0.012, 0.1, 0.135)
+mesh = SubResource("Mesh_Silver")
+
+[node name="MirrorGlassR" type="MeshInstance3D" parent="."]
+position = Vector3(0.751, 1.285, -1.09)
+scale = Vector3(0.012, 0.1, 0.135)
+mesh = SubResource("Mesh_Silver")
+
+[node name="PoliceMarkingL" type="MeshInstance3D" parent="."]
+position = Vector3(-0.03, 0.925, 0.995)
+cast_shadow = 0
+mesh = SubResource("Mesh_PoliceText")
+
+[node name="PoliceMarkingR" type="MeshInstance3D" parent="."]
+position = Vector3(-0.03, 0.925, -0.995)
+rotation = Vector3(0, 3.1415927, 0)
+cast_shadow = 0
+mesh = SubResource("Mesh_PoliceText")
+
+[node name="InterceptorMarkingL" type="MeshInstance3D" parent="."]
+position = Vector3(-0.03, 0.725, 0.995)
+cast_shadow = 0
+mesh = SubResource("Mesh_InterceptorText")
+
+[node name="InterceptorMarkingR" type="MeshInstance3D" parent="."]
+position = Vector3(-0.03, 0.725, -0.995)
+rotation = Vector3(0, 3.1415927, 0)
+cast_shadow = 0
+mesh = SubResource("Mesh_InterceptorText")
+
+[node name="UnitNumberL" type="MeshInstance3D" parent="."]
+position = Vector3(1.69, 0.96, 0.966)
+cast_shadow = 0
+mesh = SubResource("Mesh_UnitText")
+
+[node name="UnitNumberR" type="MeshInstance3D" parent="."]
+position = Vector3(1.69, 0.96, -0.966)
+rotation = Vector3(0, 3.1415927, 0)
+cast_shadow = 0
+mesh = SubResource("Mesh_UnitText")
+
+[node name="EmergencyNumberL" type="MeshInstance3D" parent="."]
+position = Vector3(-1.84, 0.93, 0.967)
+cast_shadow = 0
+mesh = SubResource("Mesh_EmergencyText")
+
+[node name="EmergencyNumberR" type="MeshInstance3D" parent="."]
+position = Vector3(-1.84, 0.93, -0.967)
+rotation = Vector3(0, 3.1415927, 0)
+cast_shadow = 0
+mesh = SubResource("Mesh_EmergencyText")
+
+[node name="RearPoliceMarking" type="MeshInstance3D" parent="."]
+position = Vector3(-2.272, 1.065, 0)
+rotation = Vector3(0, -1.5707963, 0)
+cast_shadow = 0
+mesh = SubResource("Mesh_RearPoliceText")
+
+[node name="FenderFlareFL" type="MeshInstance3D" parent="."]
+position = Vector3(1.48, 0.465, 0.974)
+rotation = Vector3(1.5707963, 0, 0)
+mesh = SubResource("Mesh_Arch")
+
+[node name="FenderFlareFR" type="MeshInstance3D" parent="."]
+position = Vector3(1.48, 0.465, -0.974)
+rotation = Vector3(1.5707963, 0, 0)
+mesh = SubResource("Mesh_Arch")
+
+[node name="FenderFlareRL" type="MeshInstance3D" parent="."]
+position = Vector3(-1.48, 0.465, 0.974)
+rotation = Vector3(1.5707963, 0, 0)
+mesh = SubResource("Mesh_Arch")
+
+[node name="FenderFlareRR" type="MeshInstance3D" parent="."]
+position = Vector3(-1.48, 0.465, -0.974)
+rotation = Vector3(1.5707963, 0, 0)
+mesh = SubResource("Mesh_Arch")
+
+[node name="WheelFL" type="MeshInstance3D" parent="."]
+position = Vector3(1.48, 0.4, 0.94)
+rotation = Vector3(1.5707963, 0, 0)
+mesh = SubResource("Mesh_Tire")
+metadata/baked_wheel = true
+
+[node name="Spoke" type="MeshInstance3D" parent="WheelFL"]
+position = Vector3(0, 0.116, 0)
+mesh = SubResource("Mesh_SteelRim")
+
+[node name="Dish" type="MeshInstance3D" parent="WheelFL"]
+position = Vector3(0, 0.128, 0)
+mesh = SubResource("Mesh_RimInset")
+
+[node name="Hub" type="MeshInstance3D" parent="WheelFL"]
+position = Vector3(0, 0.14, 0)
+mesh = SubResource("Mesh_Hub")
+
+[node name="HubCap" type="MeshInstance3D" parent="WheelFL"]
+position = Vector3(0, 0.162, 0)
+mesh = SubResource("Mesh_HubCap")
+
+[node name="WheelFR" type="MeshInstance3D" parent="."]
+position = Vector3(1.48, 0.4, -0.94)
+rotation = Vector3(1.5707963, 0, 0)
+mesh = SubResource("Mesh_Tire")
+metadata/baked_wheel = true
+
+[node name="Spoke" type="MeshInstance3D" parent="WheelFR"]
+position = Vector3(0, -0.116, 0)
+mesh = SubResource("Mesh_SteelRim")
+
+[node name="Dish" type="MeshInstance3D" parent="WheelFR"]
+position = Vector3(0, -0.128, 0)
+mesh = SubResource("Mesh_RimInset")
+
+[node name="Hub" type="MeshInstance3D" parent="WheelFR"]
+position = Vector3(0, -0.14, 0)
+mesh = SubResource("Mesh_Hub")
+
+[node name="HubCap" type="MeshInstance3D" parent="WheelFR"]
+position = Vector3(0, -0.162, 0)
+mesh = SubResource("Mesh_HubCap")
+
+[node name="WheelRL" type="MeshInstance3D" parent="."]
+position = Vector3(-1.48, 0.4, 0.94)
+rotation = Vector3(1.5707963, 0, 0)
+mesh = SubResource("Mesh_Tire")
+metadata/baked_wheel = true
+
+[node name="Spoke" type="MeshInstance3D" parent="WheelRL"]
+position = Vector3(0, 0.116, 0)
+mesh = SubResource("Mesh_SteelRim")
+
+[node name="Dish" type="MeshInstance3D" parent="WheelRL"]
+position = Vector3(0, 0.128, 0)
+mesh = SubResource("Mesh_RimInset")
+
+[node name="Hub" type="MeshInstance3D" parent="WheelRL"]
+position = Vector3(0, 0.14, 0)
+mesh = SubResource("Mesh_Hub")
+
+[node name="HubCap" type="MeshInstance3D" parent="WheelRL"]
+position = Vector3(0, 0.162, 0)
+mesh = SubResource("Mesh_HubCap")
+
+[node name="WheelRR" type="MeshInstance3D" parent="."]
+position = Vector3(-1.48, 0.4, -0.94)
+rotation = Vector3(1.5707963, 0, 0)
+mesh = SubResource("Mesh_Tire")
+metadata/baked_wheel = true
+
+[node name="Spoke" type="MeshInstance3D" parent="WheelRR"]
+position = Vector3(0, -0.116, 0)
+mesh = SubResource("Mesh_SteelRim")
+
+[node name="Dish" type="MeshInstance3D" parent="WheelRR"]
+position = Vector3(0, -0.128, 0)
+mesh = SubResource("Mesh_RimInset")
+
+[node name="Hub" type="MeshInstance3D" parent="WheelRR"]
+position = Vector3(0, -0.14, 0)
+mesh = SubResource("Mesh_Hub")
+
+[node name="HubCap" type="MeshInstance3D" parent="WheelRR"]
+position = Vector3(0, -0.162, 0)
+mesh = SubResource("Mesh_HubCap")
+
+[node name="LightbarMountL" type="MeshInstance3D" parent="."]
+position = Vector3(0.24, 1.835, 0.55)
+scale = Vector3(0.18, 0.05, 0.09)
+mesh = SubResource("Mesh_Trim")
+
+[node name="LightbarMountR" type="MeshInstance3D" parent="."]
+position = Vector3(0.24, 1.835, -0.55)
+scale = Vector3(0.18, 0.05, 0.09)
+mesh = SubResource("Mesh_Trim")
+
+[node name="LightbarBase" type="MeshInstance3D" parent="."]
+position = Vector3(0.24, 1.87, 0)
+scale = Vector3(0.29, 0.055, 1.48)
+mesh = SubResource("Mesh_Trim")
+
+[node name="LightbarCenter" type="MeshInstance3D" parent="."]
+position = Vector3(0.24, 1.922, 0)
+scale = Vector3(0.27, 0.065, 0.14)
+mesh = SubResource("Mesh_Silver")
+
+[node name="LightbarCap" type="MeshInstance3D" parent="."]
+position = Vector3(0.24, 1.96, 0)
+scale = Vector3(0.29, 0.018, 1.48)
+mesh = SubResource("Mesh_Trim")
+
+[node name="AntennaBase" type="MeshInstance3D" parent="."]
+position = Vector3(-1.42, 1.827, 0)
+scale = Vector3(0.14, 0.035, 0.11)
+mesh = SubResource("Mesh_Trim")
+
+[node name="Antenna" type="MeshInstance3D" parent="."]
+position = Vector3(-1.44, 1.955, 0)
+rotation = Vector3(0, 0, 0.14)
+scale = Vector3(0.018, 0.23, 0.018)
+mesh = SubResource("Mesh_Trim")
+
+[node name="SirenRed" type="Node3D" parent="."]
+
+[node name="RoofOuter" type="MeshInstance3D" parent="SirenRed"]
+position = Vector3(0.24, 1.923, 0.6)
+scale = Vector3(0.275, 0.065, 0.25)
+cast_shadow = 0
+mesh = SubResource("Mesh_RedLED")
+
+[node name="RoofMiddle" type="MeshInstance3D" parent="SirenRed"]
+position = Vector3(0.24, 1.923, 0.34)
+scale = Vector3(0.275, 0.065, 0.24)
+cast_shadow = 0
+mesh = SubResource("Mesh_RedLED")
+
+[node name="RoofInner" type="MeshInstance3D" parent="SirenRed"]
+position = Vector3(0.24, 1.923, 0.14)
+scale = Vector3(0.275, 0.065, 0.12)
+cast_shadow = 0
+mesh = SubResource("Mesh_RedLED")
+
+[node name="Grille" type="MeshInstance3D" parent="SirenRed"]
+position = Vector3(2.302, 0.964, 0.33)
+scale = Vector3(0.025, 0.072, 0.18)
+cast_shadow = 0
+mesh = SubResource("Mesh_RedLED")
+
+[node name="RearWindow" type="MeshInstance3D" parent="SirenRed"]
+position = Vector3(-2.018, 1.39, 0.59)
+rotation = Vector3(0, 0, -0.32)
+scale = Vector3(0.04, 0.075, 0.2)
+cast_shadow = 0
+mesh = SubResource("Mesh_RedLED")
+
+[node name="RearBumper" type="MeshInstance3D" parent="SirenRed"]
+position = Vector3(-2.405, 0.62, 0.64)
+scale = Vector3(0.025, 0.055, 0.19)
+cast_shadow = 0
+mesh = SubResource("Mesh_RedLED")
+
+[node name="SirenBlue" type="Node3D" parent="."]
+
+[node name="RoofOuter" type="MeshInstance3D" parent="SirenBlue"]
+position = Vector3(0.24, 1.923, -0.6)
+scale = Vector3(0.275, 0.065, 0.25)
+cast_shadow = 0
+mesh = SubResource("Mesh_BlueLED")
+
+[node name="RoofMiddle" type="MeshInstance3D" parent="SirenBlue"]
+position = Vector3(0.24, 1.923, -0.34)
+scale = Vector3(0.275, 0.065, 0.24)
+cast_shadow = 0
+mesh = SubResource("Mesh_BlueLED")
+
+[node name="RoofInner" type="MeshInstance3D" parent="SirenBlue"]
+position = Vector3(0.24, 1.923, -0.14)
+scale = Vector3(0.275, 0.065, 0.12)
+cast_shadow = 0
+mesh = SubResource("Mesh_BlueLED")
+
+[node name="Grille" type="MeshInstance3D" parent="SirenBlue"]
+position = Vector3(2.302, 0.964, -0.33)
+scale = Vector3(0.025, 0.072, 0.18)
+cast_shadow = 0
+mesh = SubResource("Mesh_BlueLED")
+
+[node name="RearWindow" type="MeshInstance3D" parent="SirenBlue"]
+position = Vector3(-2.018, 1.39, -0.59)
+rotation = Vector3(0, 0, -0.32)
+scale = Vector3(0.04, 0.075, 0.2)
+cast_shadow = 0
+mesh = SubResource("Mesh_BlueLED")
+
+[node name="RearBumper" type="MeshInstance3D" parent="SirenBlue"]
+position = Vector3(-2.405, 0.62, -0.64)
+scale = Vector3(0.025, 0.055, 0.19)
+cast_shadow = 0
+mesh = SubResource("Mesh_BlueLED")

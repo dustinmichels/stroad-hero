@@ -479,7 +479,6 @@ static func bake_car_body(root: Node3D, scene_root: Node = null) -> Node3D:
 				lens.owner = actual_owner
 			continue
 
-
 		if child_name in [&"HeadlightL", &"HeadlightR"]:
 			child.owner = actual_owner
 			continue
@@ -681,7 +680,6 @@ static func bake_vehicle_model(model: Node3D, scene_root: Node = null) -> Node3D
 			for lens in child.find_children("*", "", true, false):
 				lens.owner = actual_owner
 			continue
-
 
 		if child_name in [&"HeadlightL", &"HeadlightR"]:
 			child.owner = actual_owner
