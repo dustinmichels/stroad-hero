@@ -1322,6 +1322,14 @@ func _run_verify_render_test() -> void:
 			lbl.visibility_range_end > 0.0,
 			"Label3D %s (%s) must have visibility_range_end > 0.0" % [lbl.name, lbl.get_path()]
 		)
+		assert(
+			lbl.visibility_range_end_margin > 0.0,
+			"Label3D %s must fade over a nonzero visibility margin" % lbl.name
+		)
+		assert(
+			lbl.visibility_range_fade_mode == GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF,
+			"Label3D %s must fade itself at its visibility limit" % lbl.name
+		)
 		culled_labels += 1
 		assert(lbl.text != "", "Label3D %s text must not be empty" % lbl.name)
 	print(

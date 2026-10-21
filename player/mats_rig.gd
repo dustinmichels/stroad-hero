@@ -57,7 +57,7 @@ const SHIN_LENGTH := 0.25
 const SHOE_HEIGHT := 0.07
 const LEG_LENGTH := THIGH_LENGTH + SHIN_LENGTH + SHOE_HEIGHT
 const LEG_SWING := 0.6
-const RUN_LEG_SWING := 0.66
+const RUN_LEG_SWING := 0.82
 const STRIDE_RATE_WALK := 3.2
 const STRIDE_RATE_RUN := 2.7
 const ARM_SWING := 0.5
@@ -68,10 +68,9 @@ const ELBOW_REST := 0.25
 const ELBOW_SWING := 0.5
 const ANKLE_LEVELING := 0.7
 
-const RUN_SPEED_THRESHOLD := 2.5
 const RUN_KNEE_SWING := 1.0
-const RUN_LEAN := 0.10
-const RUN_ARM_SWING := 0.65
+const RUN_LEAN := 0.15
+const RUN_ARM_SWING := 0.73
 const RUN_ELBOW_BEND := 0.35
 const RUN_ARM_OUTWARD_Z := 0.20
 const RUN_ARM_FLAIL_Z := 0.10
@@ -558,11 +557,6 @@ func update_locomotion(
 	var walk_blend := clampf(planar_speed / walk_speed, 0.0, 1.0) if walk_speed > 0.0 else 0.0
 	var idle_blend := (1.0 - walk_blend) if on_floor else 0.0
 	var run_blend := (
-		clampf((planar_speed - RUN_SPEED_THRESHOLD) / (walk_speed - RUN_SPEED_THRESHOLD), 0.0, 1.0)
-		if on_floor and walk_speed > RUN_SPEED_THRESHOLD
-		else 0.0
-	)
-	var sprint_blend := (
 		clampf((planar_speed - walk_speed) / (sprint_speed - walk_speed), 0.0, 1.0)
 		if on_floor and sprint_speed > walk_speed
 		else 0.0
@@ -576,7 +570,7 @@ func update_locomotion(
 	var sway := sin(_idle_time * IDLE_SWAY_RATE)
 
 	# Leg targets
-	var leg_swing := lerpf(LEG_SWING, RUN_LEG_SWING + 0.05 * sprint_blend, run_blend)
+	var leg_swing := lerpf(LEG_SWING, RUN_LEG_SWING, run_blend)
 	var leg_x := swing * leg_swing * walk_blend
 	var idle_leg_l := maxf(0.0, sway) * 0.04 * idle_blend
 	var idle_leg_r := maxf(0.0, -sway) * 0.04 * idle_blend
@@ -585,7 +579,7 @@ func update_locomotion(
 	var target_right_leg_x := -leg_x + idle_leg_r + squash_hip
 
 	# Arm targets
-	var arm_swing := lerpf(ARM_SWING, RUN_ARM_SWING + 0.08 * sprint_blend, run_blend)
+	var arm_swing := lerpf(ARM_SWING, RUN_ARM_SWING, run_blend)
 	var walk_arm_x := -swing * arm_swing * walk_blend
 	var idle_arm_x := (0.02 + cos(_idle_time * IDLE_BREATH_RATE) * IDLE_ARM_BREATH_X) * idle_blend
 	var base_arm_z := IDLE_ARM_REST_Z + breath * IDLE_ARM_BREATH_Z * idle_blend
@@ -629,7 +623,7 @@ func update_locomotion(
 	var target_right_elbow := -(
 		elbow_rest + ELBOW_SWING * maxf(0.0, -swing) * walk_blend + elbow_wobble_r
 	)
-	var target_lean_x := (RUN_LEAN + 0.05 * sprint_blend) * run_blend
+	var target_lean_x := RUN_LEAN * run_blend
 	if not on_floor:
 		# Mid-hop: legs split with knees tucked, arms flung out.
 		target_left_leg_x = 0.45

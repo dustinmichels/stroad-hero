@@ -273,32 +273,37 @@ const SITES: Dictionary[StringName, Dictionary] = {
 	},
 }
 ## Authored shortcut links between adjacent lots across grass.
-## Each link explicitly specifies source and destination site_id values plus
-## world-space waypoints connecting the lots.
 ## Links are strictly explicit site-to-site topologies; never infer links from spot distance.
+## - "waypoints": route from the source lot aisle, across the grass, to the destination lot
+##   aisle; "grass_entry"/"grass_exit" must be among them. Lot-side waypoints already behind the
+##   car, or past the destination stall, are skipped.
+## - "grass": XZ bounds of the off-pavement stretch, driven at grass speed.
+## - "source_serves"/"destination_serves" (optional): only stalls serving these businesses use
+##   the link, keeping each shortcut between the two businesses it actually connects.
+## - "arrival_aisle_z" (optional): aisle used to reach the destination stall, when the lot's
+##   normal entry aisle would point the shortcut car against that aisle's flow.
+## - "departure_aisle_z" (optional): back out into the aisle flowing toward the shortcut.
 const SHORTCUT_LINKS: Array[Dictionary] = [
 	{
 		"source_site_id": &"strip_mall",
 		"destination_site_id": &"cramped_inn",
-		"from_site": &"strip_mall",
-		"to_site": &"cramped_inn",
 		"waypoints":
 		[
 			Vector3(11.0, 0.0, 24.8),
 			Vector3(13.0, 0.0, 24.8),
 			Vector3(18.0, 0.0, 24.8),
-			Vector3(20.0, 0.0, 24.8),
+			Vector3(20.0, 0.0, 21.5),
 		],
 		"grass_entry": Vector3(13.0, 0.0, 24.8),
 		"grass_exit": Vector3(18.0, 0.0, 24.8),
+		"grass": Rect2(13.0, 23.0, 5.0, 3.5),
 	},
 	{
 		"source_site_id": &"cramped_inn",
 		"destination_site_id": &"strip_mall",
-		"from_site": &"cramped_inn",
-		"to_site": &"strip_mall",
 		"waypoints":
 		[
+			Vector3(38.0, 0.0, 23.5),  # stay on the aisle past the inn canopy columns
 			Vector3(20.0, 0.0, 24.8),
 			Vector3(18.0, 0.0, 24.8),
 			Vector3(13.0, 0.0, 24.8),
@@ -306,20 +311,83 @@ const SHORTCUT_LINKS: Array[Dictionary] = [
 		],
 		"grass_entry": Vector3(18.0, 0.0, 24.8),
 		"grass_exit": Vector3(13.0, 0.0, 24.8),
+		"grass": Rect2(13.0, 23.0, 5.0, 3.5),
+	},
+	# Smell gas/store <-> Walgroins: across the lawn north of the trees between the two lots.
+	{
+		"source_site_id": &"smell",
+		"destination_site_id": &"north",
+		"destination_serves": [&"walgroins"],
+		"waypoints":
+		[
+			Vector3(-43.0, 0.0, -22.0),
+			Vector3(-43.0, 0.0, -30.0),
+			Vector3(-41.0, 0.0, -30.0),
+			Vector3(-29.0, 0.0, -30.0),
+			Vector3(-25.0, 0.0, -30.0),
+			Vector3(-21.0, 0.0, -24.0),
+		],
+		"grass_entry": Vector3(-41.0, 0.0, -30.0),
+		"grass_exit": Vector3(-29.0, 0.0, -30.0),
+		"grass": Rect2(-41.0, -31.5, 12.0, 3.0),
+		"arrival_aisle_z": AISLE_Z_EB,
+	},
+	{
+		"source_site_id": &"north",
+		"destination_site_id": &"smell",
+		"source_serves": [&"walgroins"],
+		"destination_serves": [&"smell_gas"],
+		"departure_aisle_z": AISLE_Z_WB,
+		"waypoints":
+		[
+			Vector3(-21.0, 0.0, -27.0),
+			Vector3(-25.0, 0.0, -30.0),
+			Vector3(-29.0, 0.0, -30.0),
+			Vector3(-41.0, 0.0, -30.0),
+			Vector3(-43.0, 0.0, -30.0),
+			Vector3(-43.0, 0.0, -22.0),
+		],
+		"grass_entry": Vector3(-29.0, 0.0, -30.0),
+		"grass_exit": Vector3(-41.0, 0.0, -30.0),
+		"grass": Rect2(-41.0, -31.5, 12.0, 3.0),
+	},
+	# Cramped Inn <-> Leaders: past the inn's east stalls, across the lawn under the frontage road bend.
+	{
+		"source_site_id": &"cramped_inn",
+		"destination_site_id": &"frontage",
+		"destination_serves": [&"frontage_retail"],
+		"waypoints":
+		[
+			Vector3(36.0, 0.0, 23.5),  # stay on the aisle past the inn canopy columns
+			Vector3(61.5, 0.0, 23.5),
+			Vector3(61.5, 0.0, 30.5),
+			Vector3(64.5, 0.0, 33.5),
+			Vector3(74.0, 0.0, 33.5),
+		],
+		"grass_entry": Vector3(61.5, 0.0, 30.5),
+		"grass_exit": Vector3(74.0, 0.0, 33.5),
+		"grass": Rect2(62.0, 30.0, 12.0, 5.5),
+	},
+	{
+		"source_site_id": &"frontage",
+		"destination_site_id": &"cramped_inn",
+		"source_serves": [&"frontage_retail"],
+		"waypoints":
+		[
+			Vector3(74.0, 0.0, 33.5),
+			Vector3(64.5, 0.0, 33.5),
+			Vector3(61.5, 0.0, 30.5),
+			Vector3(61.5, 0.0, 21.5),
+		],
+		"grass_entry": Vector3(74.0, 0.0, 33.5),
+		"grass_exit": Vector3(61.5, 0.0, 30.5),
+		"grass": Rect2(62.0, 30.0, 12.0, 5.5),
 	},
 ]
 
 
 static func get_shortcut_links() -> Array[Dictionary]:
 	return SHORTCUT_LINKS
-
-
-static func get_shortcut_links_for_site(site_id: StringName) -> Array[Dictionary]:
-	var result: Array[Dictionary] = []
-	for link in SHORTCUT_LINKS:
-		if link.get("source_site_id", &"") == site_id:
-			result.append(link)
-	return result
 
 
 static func get_shortcut_link(
@@ -339,7 +407,12 @@ static func has_shortcut_link(source_site_id: StringName, destination_site_id: S
 
 
 static func is_in_grass_shortcut(pos: Vector3) -> bool:
-	return pos.x >= 13.0 and pos.x <= 18.0 and pos.z >= 23.0 and pos.z <= 26.5
+	var p := Vector2(pos.x, pos.z)
+	for link in SHORTCUT_LINKS:
+		var grass: Rect2 = link["grass"]
+		if grass.has_point(p):
+			return true
+	return false
 
 
 static func get_shortcut_destination_sites(source_site_id: StringName) -> Array[StringName]:
@@ -352,21 +425,45 @@ static func get_shortcut_destination_sites(source_site_id: StringName) -> Array[
 	return sites
 
 
+## True when the spot belongs to `site_id` and serves one of `serves` (empty = any business).
+static func _spot_matches_link_end(spot: ParkingSpot, site_id: StringName, serves: Array) -> bool:
+	if lot_group(spot) != site_id:
+		return false
+	if serves.is_empty():
+		return true
+	for s in spot.serves:
+		if serves.has(s):
+			return true
+	return false
+
+
+## The authored link a car parked at `from_spot` would take to reach `to_spot`, or {}.
+static func get_shortcut_link_for_spots(from_spot: ParkingSpot, to_spot: ParkingSpot) -> Dictionary:
+	if from_spot == null or to_spot == null:
+		return {}
+	for link in SHORTCUT_LINKS:
+		if (
+			_spot_matches_link_end(from_spot, link["source_site_id"], link.get("source_serves", []))
+			and _spot_matches_link_end(
+				to_spot, link["destination_site_id"], link.get("destination_serves", [])
+			)
+		):
+			return link
+	return {}
+
+
 static func get_shortcut_candidate_spots(
 	from_spot: ParkingSpot, candidate_spots: Array[ParkingSpot]
 ) -> Array[ParkingSpot]:
-	var from_site := lot_group(from_spot)
-	var dest_sites := get_shortcut_destination_sites(from_site)
 	var results: Array[ParkingSpot] = []
-	if dest_sites.is_empty():
+	if from_spot == null:
 		return results
 	for spot in candidate_spots:
 		if spot == null or spot == from_spot:
 			continue
 		if spot.state != ParkingSpot.State.FREE:
 			continue
-		var spot_site := lot_group(spot)
-		if spot_site in dest_sites:
+		if not get_shortcut_link_for_spots(from_spot, spot).is_empty():
 			results.append(spot)
 	return results
 
@@ -995,46 +1092,81 @@ static func frontage_exit_route(spot, radius := 1.5) -> Curve3D:
 	return PathBuilder.build(pts, radius)
 
 
-static func shortcut_route(from_spot, to_spot, radius := 0.8) -> Curve3D:
-	var from_pos := _spot_position(from_spot)
-	var to_pos := _spot_position(to_spot)
-	var from_site := lot_group(from_spot)
-	var to_site := lot_group(to_spot)
-	var link := get_shortcut_link(from_site, to_site)
+## Back away from the shortcut into its departure aisle so the car faces along the route.
+static func shortcut_reverse_route(from_spot: ParkingSpot, to_spot: ParkingSpot) -> Curve3D:
+	var normal := reverse_route(from_spot)
+	var link := get_shortcut_link_for_spots(from_spot, to_spot)
+	if link.is_empty() or normal.point_count < 2:
+		return normal
+	var spot_pos := _spot_position(from_spot)
+	var start := normal.get_point_position(0)
+	var travel_x := signf((link["grass_exit"] - link["grass_entry"]).x)
+	var same_direction := signf(spot_pos.x - start.x) == travel_x
+	var aisle_z: float = link.get("departure_aisle_z", start.z)
+	if same_direction and is_equal_approx(aisle_z, start.z):
+		return normal
+	if not same_direction:
+		start.x = 2.0 * spot_pos.x - start.x
+	start.z = aisle_z
+	var radius := 1.5 if is_frontage(from_spot) else 4.0
+	return PathBuilder.build(
+		PackedVector3Array([start, Vector3(spot_pos.x, 0.0, start.z), spot_pos]), radius
+	)
+
+
+## Aisle a shortcut car drives along before turning into its destination stall.
+static func _shortcut_arrival_aisle_z(link: Dictionary, to_spot: ParkingSpot) -> float:
+	if link.has("arrival_aisle_z"):
+		return link["arrival_aisle_z"]
+	if is_frontage(to_spot):
+		return _frontage_business_params(to_spot)["aisle_z"]
+	var site := south_lot(to_spot)
+	if site != &"":
+		return south_entry_aisle_z(site, to_spot.x)
+	if is_smell(to_spot):
+		return SMELL_AISLE_Z
+	return aisle_z_for_entry(to_spot)
+
+
+static func shortcut_route(from_spot: ParkingSpot, to_spot: ParkingSpot, radius := 0.8) -> Curve3D:
+	var link := get_shortcut_link_for_spots(from_spot, to_spot)
 	if link.is_empty():
 		push_error(
-			"ParkingLot.shortcut_route: no shortcut link between %s and %s" % [from_site, to_site]
+			(
+				"ParkingLot.shortcut_route: no shortcut link between %s and %s"
+				% [lot_group(from_spot), lot_group(to_spot)]
+			)
 		)
 		return Curve3D.new()
 
-	var sx := from_pos.x
-	var from_aisle_z := south_exit_aisle_z(from_site, sx)
-	var sign_val := _south_exit_sign(from_site, sx)
-	var start_pos := Vector3(sx - sign_val * SOUTH_REVERSE_RUN, 0.0, from_aisle_z)
-	var to_aisle_z := south_entry_aisle_z(to_site, to_pos.x)
+	var to_pos := _spot_position(to_spot)
+	var start := shortcut_reverse_route(from_spot, to_spot).get_point_position(0)
+	var approach := Vector3(to_pos.x, 0.0, _shortcut_arrival_aisle_z(link, to_spot))
+	var grass_entry: Vector3 = link["grass_entry"]
+	var grass_exit: Vector3 = link["grass_exit"]
+	var travel := (grass_exit - grass_entry).normalized()
+	var crossed_entry := false
+	var crossed_exit := false
 
-	var pts := PackedVector3Array()
-	pts.append(start_pos)
-
-	if from_site == &"strip_mall" and to_site == &"cramped_inn":
-		if start_pos.x < 11.0:
-			pts.append(Vector3(11.0, 0.0, 24.8))
-		pts.append(Vector3(13.0, 0.0, 24.8))
-		pts.append(Vector3(18.0, 0.0, 24.8))
-		if to_pos.x > 20.0:
-			pts.append(Vector3(20.0, 0.0, to_aisle_z))
-		pts.append(Vector3(to_pos.x, 0.0, to_aisle_z))
-		pts.append(to_pos)
-	elif from_site == &"cramped_inn" and to_site == &"strip_mall":
-		if start_pos.x > 20.0:
-			pts.append(Vector3(20.0, 0.0, 24.8))
-		pts.append(Vector3(18.0, 0.0, 24.8))
-		pts.append(Vector3(13.0, 0.0, 24.8))
-		if to_pos.x < 11.0:
-			pts.append(Vector3(11.0, 0.0, to_aisle_z))
-		pts.append(Vector3(to_pos.x, 0.0, to_aisle_z))
-		pts.append(to_pos)
-
+	var pts := PackedVector3Array([start])
+	for w: Vector3 in link["waypoints"]:
+		# Lot-side waypoints are optional: skip those the car has already passed, and those
+		# beyond the destination stall. Grass waypoints are always driven.
+		var on_grass := crossed_entry and not crossed_exit
+		if w.is_equal_approx(grass_entry):
+			crossed_entry = true
+			on_grass = true
+		if w.is_equal_approx(grass_exit):
+			crossed_exit = true
+			on_grass = true
+		if not on_grass:
+			if not crossed_entry and (w - start).dot(travel) <= 0.0:
+				continue
+			if crossed_exit and (approach - w).dot(travel) <= 0.0:
+				continue
+		pts.append(w)
+	pts.append(approach)
+	pts.append(to_pos)
 	return PathBuilder.build(pts, radius)
 
 

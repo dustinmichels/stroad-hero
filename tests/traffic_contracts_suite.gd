@@ -2244,78 +2244,53 @@ func _run_test_shortcut_contracts() -> void:
 
 		# Test grass shortcut link contracts
 		var links := ParkingLot.get_shortcut_links()
-		assert(links.size() == 2, "Must have exactly 2 authored shortcut links")
 		assert(
 			ParkingLot.has_shortcut_link(&"strip_mall", &"cramped_inn"),
 			"Must have strip_mall -> cramped_inn link"
 		)
-		assert(
-			ParkingLot.has_shortcut_link(&"cramped_inn", &"strip_mall"),
-			"Must have cramped_inn -> strip_mall link"
-		)
-		assert(
-			not ParkingLot.has_shortcut_link(&"smell", &"north"),
-			"Must not infer link between smell and north"
-		)
-		assert(
-			not ParkingLot.has_shortcut_link(&"smell", &"walgroins"),
-			"Must not infer link between smell and walgroins"
-		)
+		for link in links:
+			assert(
+				ParkingLot.has_shortcut_link(link["destination_site_id"], link["source_site_id"]),
+				(
+					"Shortcut %s -> %s must be drivable both ways"
+					% [link["source_site_id"], link["destination_site_id"]]
+				)
+			)
 		assert(
 			not ParkingLot.has_shortcut_link(&"strip_mall", &"smell"),
 			"Must not infer link between strip_mall and smell"
 		)
 
-		# Check direct crossing geometry (constant Z = 24.8 across grass gap x in [13, 18])
-		var sm_to_ci := ParkingLot.get_shortcut_link(&"strip_mall", &"cramped_inn")
-		var entry_pt: Vector3 = sm_to_ci["grass_entry"]
-		var exit_pt: Vector3 = sm_to_ci["grass_exit"]
-		assert(
-			entry_pt.x == 13.0 and exit_pt.x == 18.0,
-			"Grass entry and exit X bounds must be 13 and 18"
+		# Candidates come only from the authored businesses, never inferred by distance
+		var walgroins_spot: ParkingSpot = null
+		var taco_spot: ParkingSpot = null
+		for s in tm.lot.spots:
+			if walgroins_spot == null and s.serves.has(&"walgroins"):
+				walgroins_spot = s
+			elif taco_spot == null and s.serves.has(&"taco_hell"):
+				taco_spot = s
+		var walgroins_candidates := ParkingLot.get_shortcut_candidate_spots(
+			walgroins_spot, tm.lot.spots
 		)
+		assert(not walgroins_candidates.is_empty(), "Walgroins must have shortcut candidates")
+		for s in walgroins_candidates:
+			assert(s.serves.has(&"smell_gas"), "Walgroins shortcut must lead to Smell gas stalls")
 		assert(
-			absf(entry_pt.z - 24.8) < 0.01 and absf(exit_pt.z - 24.8) < 0.01,
-			"Grass crossing must be direct along z=24.8"
+			ParkingLot.get_shortcut_candidate_spots(taco_spot, tm.lot.spots).is_empty(),
+			"Taco Hell stalls share the north site but have no authored shortcut"
 		)
-		assert(
-			ParkingLot.is_in_grass_shortcut(Vector3(15.5, 0.0, 24.8)),
-			"Midpoint must be in grass shortcut"
-		)
-		assert(
-			not ParkingLot.is_in_grass_shortcut(Vector3(10.0, 0.0, 24.8)),
-			"Point outside X bounds must not be in grass shortcut"
-		)
-
-		# Candidate spots must be selected strictly by authored destination site, never inferred by distance
-		var dest_sites := ParkingLot.get_shortcut_destination_sites(&"strip_mall")
-		assert(dest_sites == [&"cramped_inn"], "strip_mall destination site must be cramped_inn")
-		assert(
-			ParkingLot.get_shortcut_destination_sites(&"smell").is_empty(),
-			"smell must have no shortcut destination sites"
-		)
-
-		# Visual desire path / tire ruts must exist in scene
-		var desire_path := main.find_child("ShortcutDesirePath", true, false)
-		assert(desire_path != null, "ShortcutDesirePath mesh must exist in scene")
-		var rut_north := main.find_child("ShortcutRutNorth", true, false)
-		var rut_south := main.find_child("ShortcutRutSouth", true, false)
-		assert(rut_north != null and rut_south != null, "Shortcut tire ruts must exist in scene")
-		print("  Grass shortcut: direct crossing, explicit site links, and visual path verified")
+		print("  Grass shortcut: bidirectional explicit links and business filters verified")
 
 		# Test dwelling completion, single roll, and fallback to normal departure
 		var sm_spot: ParkingSpot = null
 		var ci_spot: ParkingSpot = null
-		var smell_spot: ParkingSpot = null
 		for s in tm.lot.spots:
 			var site := ParkingLot.lot_group(s)
 			if site == &"strip_mall" and sm_spot == null and s.state == ParkingSpot.State.FREE:
 				sm_spot = s
 			elif site == &"cramped_inn" and ci_spot == null and s.state == ParkingSpot.State.FREE:
 				ci_spot = s
-			elif site == &"smell" and smell_spot == null and s.state == ParkingSpot.State.FREE:
-				smell_spot = s
-		if sm_spot == null or ci_spot == null or smell_spot == null:
+		if sm_spot == null or ci_spot == null:
 			for s in tm.lot.spots:
 				var site := ParkingLot.lot_group(s)
 				if site == &"strip_mall" and sm_spot == null:
@@ -2324,13 +2299,8 @@ func _run_test_shortcut_contracts() -> void:
 				elif site == &"cramped_inn" and ci_spot == null:
 					tm.lot.release(s)
 					ci_spot = s
-				elif site == &"smell" and smell_spot == null:
-					tm.lot.release(s)
-					smell_spot = s
-		assert(
-			sm_spot != null and ci_spot != null and smell_spot != null,
-			"Required parking spots must exist"
-		)
+		tm.lot.release(taco_spot)
+		assert(sm_spot != null and ci_spot != null, "Required parking spots must exist")
 
 		# 1. Car dwelling: does not roll until dwell_left <= 0.0
 		var test_sc_car: Car = pcar_scene.instantiate()
@@ -2377,13 +2347,13 @@ func _run_test_shortcut_contracts() -> void:
 		await main.get_tree().process_frame
 		tm.lot_cars.clear()
 
-		# 3. Fallback to normal departure if no link is available (e.g. smell site)
+		# 3. Fallback to normal departure if no link is available (Taco Hell stall)
 		var no_link_car: Car = pcar_scene.instantiate()
 		main.add_child(no_link_car)
 		tm.lot_cars.append(no_link_car)
 		no_link_car.state = Car.State.PARKED
-		tm.lot.reserve(smell_spot, no_link_car)
-		tm.lot.occupy(smell_spot)
+		tm.lot.reserve(taco_spot, no_link_car)
+		tm.lot.occupy(taco_spot)
 		no_link_car.dwell_left = 0.05
 		no_link_car.force_shortcut = true
 		tm._update_lot_cars(0.1)

@@ -183,7 +183,7 @@ const A_COMFORT := 4.0
 const MIN_SPAWN_HEADWAY := 14.0  # meters needed before spawning another car in lane
 const SAFE_FOLLOWING_GAP := 6.0  # meters
 const RISKY_PASS_PROBABILITY := 0.05
-const SHORTCUT_DEPARTURE_PROBABILITY := 0.01
+const SHORTCUT_DEPARTURE_PROBABILITY := 0.25
 const SHORTCUT_DWELL_MIN := 4.0
 const SHORTCUT_DWELL_MAX := 8.0
 const SWERVE_MIN_GAP_AHEAD := 16.0
@@ -649,11 +649,7 @@ func _update_lot_cars(delta: float) -> void:
 			if car.dwell_left <= 0.0:
 				_evaluate_shortcut_departure(car)
 				if can_reverse_out(car):
-					var rev_route: Curve3D = null
-					if lot != null and car.spot != null:
-						rev_route = ParkingLot.reverse_route(car.spot)
-					elif car.spot != null and car.spot.lot != null:
-						rev_route = ParkingLot.reverse_route(car.spot)
+					var rev_route := _reverse_out_route(car)
 					if rev_route != null:
 						car.state = Car.State.REVERSING_OUT
 						car.follow_path(rev_route, true)
@@ -1223,8 +1219,16 @@ func can_reverse_out(car: Car) -> bool:
 				return false
 	if car.spot == null:
 		return true
-	var route := ParkingLot.reverse_route(car.spot)
-	return _reverse_route_clear(car, route)
+	return _reverse_route_clear(car, _reverse_out_route(car))
+
+
+## Back-out route for a parked car; shortcut takers back out facing their shortcut.
+func _reverse_out_route(car: Car) -> Curve3D:
+	if car.spot == null:
+		return null
+	if car.pending_destination_spot != null:
+		return ParkingLot.shortcut_reverse_route(car.spot, car.pending_destination_spot)
+	return ParkingLot.reverse_route(car.spot)
 
 
 ## Checks whether a car's reverse route is clear of conflicting lot car footprints.

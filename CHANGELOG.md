@@ -2,9 +2,10 @@
 
 ## Oct 21, 2026
 
-- **Erratic driving & grass shortcuts**: Cars wander subtly within lanes, reckless drivers attempt tight overtakes, and vehicles occasionally take grass shortcuts between lots.
+- **Erratic driving & grass shortcuts**: Lane wander and reckless overtakes; grass shortcuts now connect Colonial Plaza–Cramped Inn, Smell–Walgroins, and Cramped Inn–Leaders in both directions, with tire ruts and a 25% eligible departure chance (up from 1%).
 - **Profiling & rendering optimizations**: Multi-meshed forest trees (replacing 688 bodies with 36 MultiMeshes), cached traffic blocker candidate sets and vehicle sweeps, throttled environment updates, culled unneeded shadows and 3D labels, and warmed up nighttime lighting shaders. Slashed dusk lights-on freeze from 852ms to 61ms on Compatibility (and 153ms to 38ms on Forward+), halved Compatibility draw calls from ~3,400 to ~1,565, and brought Forward+ night performance to a stable 60 fps.
 - **Cybertruck rebuild**: Replaced box-assembled body with generated faceted meshes (`scripts/generate_cybertruck.gd`): single-ridge wedge profile, inward-leaning greenhouse with flush windshield/side glass, tonneau cover, polygonal arch flares, headlight/taillight markers for lamps and turn signals. Stainless steel is its only finish (never repainted).
+- **Mats running gait**: Sprinting now blends out of the walking pose into longer strides, higher knee lift, stronger arm swing, and a forward lean.
 
 ## Oct 20, 2026
 

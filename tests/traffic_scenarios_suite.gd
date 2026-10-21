@@ -1226,6 +1226,7 @@ func _run_test_grass_shortcut() -> void:
 			"Shortcut link must have valid source and dest sites"
 		)
 		print("GRASS_SHORTCUT_TEST: Running scenario for link %s -> %s" % [source_site, dest_site])
+		var dest_lane: int = ParkingLot.get_site_cfg(dest_site).get("lane_id", 0)
 
 		# 1. Clear lot cars, lane cars, and free spots
 		for c in tm.lot_cars:
@@ -1243,17 +1244,25 @@ func _run_test_grass_shortcut() -> void:
 		for s in tm.lot.spots:
 			tm.lot.release(s)
 
-		# 2. Find an available spot at source_site and dest_site
+		# 2. Find a source/destination stall pair joined by this link
 		var source_spot: ParkingSpot = null
 		var dest_spot: ParkingSpot = null
 		for s in tm.lot.spots:
-			var site := ParkingLot.lot_group(s)
-			if site == source_site and source_spot == null and s.state == ParkingSpot.State.FREE:
-				source_spot = s
-			elif site == dest_site and dest_spot == null and s.state == ParkingSpot.State.FREE:
-				dest_spot = s
+			for d in tm.lot.spots:
+				if ParkingLot.get_shortcut_link_for_spots(s, d) == link:
+					source_spot = s
+					dest_spot = d
+					break
+			if source_spot != null:
+				break
 		assert(source_spot != null, "Source spot must exist for %s" % source_site)
 		assert(dest_spot != null, "Destination spot must exist for %s" % dest_site)
+		# Forced selection uses the first free candidate; exercise this link even when a
+		# source business has several outgoing links.
+		var dest_index: int = tm.lot.spots.find(dest_spot)
+		var first_spot: ParkingSpot = tm.lot.spots[0]
+		tm.lot.spots[0] = dest_spot
+		tm.lot.spots[dest_index] = first_spot
 
 		# 3. Spawn test car parked at source_spot
 		var car: Car = tm.PassengerCarScene.instantiate()
@@ -1299,6 +1308,10 @@ func _run_test_grass_shortcut() -> void:
 		while ticks < max_ticks:
 			ticks += 1
 			tm._update_lot_cars(delta)
+			if car.pending_destination_spot != null and not saw_dest_reserved:
+				assert(car.pending_destination_spot == dest_spot, "Must exercise the selected link")
+				tm.lot.spots[0] = first_spot
+				tm.lot.spots[dest_index] = dest_spot
 			for lane in tm.lanes:
 				tm._update_lane_traffic(lane, delta)
 
@@ -1372,15 +1385,18 @@ func _run_test_grass_shortcut() -> void:
 								)
 								var p_lower := parent_name.to_lower()
 								var is_ground := (
-									col_name == "StaticBody3D"
-									and (
-										p_lower.contains("ground")
-										or p_lower.contains("parking")
-										or p_lower.contains("asphalt")
-										or p_lower.contains("driveway")
-										or p_lower.contains("road")
-										or p_lower.contains("sidewalk")
-										or p_lower.contains("apron")
+									col_name == "Forecourt"
+									or (
+										col_name == "StaticBody3D"
+										and (
+											p_lower.contains("ground")
+											or p_lower.contains("parking")
+											or p_lower.contains("asphalt")
+											or p_lower.contains("driveway")
+											or p_lower.contains("road")
+											or p_lower.contains("sidewalk")
+											or p_lower.contains("apron")
+										)
 									)
 								)
 								assert(
@@ -1441,17 +1457,19 @@ func _run_test_grass_shortcut() -> void:
 			# Stage F: Driving to exit aisle -> reaches WAITING_TO_MERGE
 			if car.state == Car.State.WAITING_TO_MERGE and not saw_waiting_to_merge:
 				saw_waiting_to_merge = true
-				assert(car.merge_target_lane == 3, "merge_target_lane must be 3")
+				assert(
+					car.merge_target_lane == dest_lane, "merge_target_lane must be %d" % dest_lane
+				)
 
 			# Stage G: Gap merge onto stroad
 			if car.state == Car.State.MERGING and not saw_merging:
 				saw_merging = true
 
-			# Stage H: Merged into lane 3 -> cruising
+			# Stage H: Merged into the destination site's curb lane -> cruising
 			if car.state == Car.State.CRUISING and saw_merging and not saw_cruising:
 				saw_cruising = true
-				assert(car.lane_id == 3, "Car must be cruising in lane 3")
-				assert(tm.lanes[3].cars.has(car), "Lane 3 must contain car")
+				assert(car.lane_id == dest_lane, "Car must be cruising in lane %d" % dest_lane)
+				assert(tm.lanes[dest_lane].cars.has(car), "Destination lane must contain car")
 				assert(not tm.lot_cars.has(car), "lot_cars must no longer contain car")
 
 			# Stage I: Normal exit (reaches end of lane and despawns)
@@ -1460,8 +1478,8 @@ func _run_test_grass_shortcut() -> void:
 				and (
 					not is_instance_valid(car)
 					or car.is_queued_for_deletion()
-					or not tm.lanes[3].cars.has(car)
-					or car.lane_distance >= tm.lanes[3].length
+					or not tm.lanes[dest_lane].cars.has(car)
+					or car.lane_distance >= tm.lanes[dest_lane].length
 				)
 			):
 				saw_normal_exit = true
@@ -1526,7 +1544,7 @@ func _run_test_grass_shortcut() -> void:
 		)
 		assert(
 			saw_cruising,
-			"Must have observed lane 3 cruising for link %s -> %s" % [source_site, dest_site]
+			"Must have observed curb lane cruising for link %s -> %s" % [source_site, dest_site]
 		)
 		assert(
 			saw_normal_exit,
@@ -1537,6 +1555,6 @@ func _run_test_grass_shortcut() -> void:
 		)
 
 	print(
-		"GRASS_SHORTCUT_TEST: SUCCESS - Verified both shortcut directions (Strip Mall <-> Cramped Inn), source release, destination reservation/occupancy, grass route traversal, and eventual normal exit!"
+		"GRASS_SHORTCUT_TEST: SUCCESS - Verified every shortcut link: source release, destination reservation/occupancy, grass route traversal, and eventual normal exit!"
 	)
 	main.get_tree().quit(0)

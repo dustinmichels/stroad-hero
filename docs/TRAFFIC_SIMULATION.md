@@ -200,12 +200,16 @@ To create organic traffic friction, a small fraction of drivers exhibit aggressi
 
 Eligible vehicles may bypass road traffic by taking authored shortcuts across grass between neighboring commercial lots:
 
-- **Authored Links:** Shortcuts exist only as explicit, authored site-to-site topology (`SHORTCUT_LINKS` in `traffic/parking_lot.gd`), connecting adjacent parking aisles across validated grass corridors (e.g. Strip Mall `strip_mall` $\leftrightarrow$ Cramped Inn `cramped_inn` at $z = 24.8\text{ m}$, $x \in [13, 18]\text{ m}$).
-- **Corridor Clearance:** Corridors must maintain $>4\text{ m}$ lateral clearance from buildings, curbs, signs, trees, and props, complemented by visual desire paths and tire ruts.
-- **Eligibility & Evaluation:** Upon completing parking dwell (`dwell_left <= 0.0`), an eligible car rolls once (1% chance). Ineligible vehicles (buses, trucks, drive-thru patrons, or cars that already took a shortcut) and failed rolls proceed to normal road exits.
+- **Authored Links:** Shortcuts exist only as explicit, authored site-to-site topology (`SHORTCUT_LINKS` in `traffic/parking_lot.gd`), each drivable both ways:
+  - Strip Mall `strip_mall` $\leftrightarrow$ Cramped Inn `cramped_inn` at $z = 24.8\text{ m}$, $x \in [13, 18]\text{ m}$.
+  - Smell `smell` $\leftrightarrow$ Walgroins (`north` site) at $z = -30\text{ m}$, $x \in [-41, -29]\text{ m}$, north of the trees between the lots. Walgroins drivers only cut over to the gas pumps (`destination_serves`); Taco Hell stalls in the same site have no link.
+  - Cramped Inn $\leftrightarrow$ Leaders (`frontage_retail` stalls of the `frontage` site), past the inn's east stalls and across the lawn under the frontage road bend at $z = 33.5\text{ m}$, $x \in [62, 74]\text{ m}$.
+- **Link Data:** Each link lists `waypoints` from source aisle to destination aisle (lot-side waypoints already behind the car or past the destination stall are skipped), the `grass` rectangle driven at grass speed, optional `source_serves`/`destination_serves` business filters, and optional `departure_aisle_z`/`arrival_aisle_z` overrides to follow aisle traffic.
+- **Corridor Clearance:** Every source/destination stall pair must clear buildings, canopy columns, signs, trees, props, and other stalls; corridors are marked with worn-grass desire paths and tire ruts in `world/parking.tscn`.
+- **Eligibility & Evaluation:** Upon completing parking dwell (`dwell_left <= 0.0`), an eligible car at a linked stall rolls once (`SHORTCUT_DEPARTURE_PROBABILITY`, 25%). Ineligible vehicles (buses, trucks, drive-thru patrons, or cars that already took a shortcut) and failed rolls proceed to normal road exits.
 - **Reservation Lifecycle:**
   1. _Pre-reservation:_ The candidate destination stall is reserved (`ParkingSpot.State.RESERVED`) in `car.pending_destination_spot`.
-  2. _Reverse-out:_ The vehicle reverses out of its stall (`State.REVERSING_OUT`). The source spot remains `OCCUPIED` and the destination remains `RESERVED`.
+  2. _Reverse-out:_ The vehicle reverses out of its stall (`State.REVERSING_OUT`) along `ParkingLot.shortcut_reverse_route()`, backing away from the shortcut into its departure aisle so the car faces along it. The source spot remains `OCCUPIED` and the destination remains `RESERVED`.
   3. _Transition to Shortcut:_ On reverse-out completion, the source spot is released to `FREE`, the destination spot is promoted to `car.spot`, and the vehicle enters `State.SHORTCUT`.
   4. _Grass Traversal:_ Follows the authored spline at reduced grass speed $V_{\text{GRASS}} = 3.5\text{ m/s}$ (compared to $V_{\text{LOT}} = 5.0\text{ m/s}$), yielding to conflicting lot traffic using swept-footprint checks.
   5. _Arrival & Dwell:_ Reaching the destination stall transitions the vehicle to `State.PARKED` with a brief dwell (4.0–8.0 s), setting `has_taken_shortcut = true` to prohibit shortcut chaining.

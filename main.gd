@@ -1,5 +1,6 @@
 class_name Main
 extends Node3D
+const LABEL_FADE_MARGIN_METERS := 12.0
 
 @export var mats_node: Mats = null
 @export var hud_node: HUD = null
@@ -73,6 +74,8 @@ func _ready() -> void:
 		or "--bake" in _user_args
 	):
 		MeshBaker.bake_main_scene(self)
+	get_tree().node_added.connect(_configure_label_fade)
+	_configure_label_fades(self)
 	_wire_composition()
 	_init_world_warmup()
 	if not environment_controller:
@@ -84,6 +87,24 @@ func _ready() -> void:
 		mats.died.connect(_on_player_died)
 	if OS.has_feature("web"):
 		_setup_web_bridge()
+
+
+func _configure_label_fades(node: Node) -> void:
+	_configure_label_fade(node)
+	for child in node.get_children():
+		_configure_label_fades(child)
+
+
+func _configure_label_fade(node: Node) -> void:
+	if node is not Label3D:
+		return
+	var label := node as Label3D
+	if label.visibility_range_end <= 0.0:
+		return
+	label.visibility_range_end_margin = minf(
+		LABEL_FADE_MARGIN_METERS, label.visibility_range_end * 0.3
+	)
+	label.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
 
 
 func _on_player_died(pos: Vector3) -> void:
@@ -137,6 +158,8 @@ func _init_world_warmup() -> void:
 
 
 func _exit_tree() -> void:
+	if get_tree().node_added.is_connected(_configure_label_fade):
+		get_tree().node_added.disconnect(_configure_label_fade)
 	if mats and is_instance_valid(mats):
 		if mats.died.is_connected(_on_player_died):
 			mats.died.disconnect(_on_player_died)

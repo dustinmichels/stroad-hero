@@ -349,3 +349,33 @@ mesh = SubResource("Mesh_ShortcutTireRut")
 cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.5, 0.055, 25.575)
 mesh = SubResource("Mesh_ShortcutTireRut")
+
+[node name="ShortcutDesirePathSmellWalgroins" type="MeshInstance3D" parent="."]
+cast_shadow = 0
+transform = Transform3D(2.3846, 0, 0, 0, 1, 0, 0, 0, 1, -35, 0.052, -30)
+mesh = SubResource("Mesh_ShortcutDesirePath")
+
+[node name="ShortcutRutNorthSmellWalgroins" type="MeshInstance3D" parent="."]
+cast_shadow = 0
+transform = Transform3D(2.3846, 0, 0, 0, 1, 0, 0, 0, 1, -35, 0.055, -30.775)
+mesh = SubResource("Mesh_ShortcutTireRut")
+
+[node name="ShortcutRutSouthSmellWalgroins" type="MeshInstance3D" parent="."]
+cast_shadow = 0
+transform = Transform3D(2.3846, 0, 0, 0, 1, 0, 0, 0, 1, -35, 0.055, -29.225)
+mesh = SubResource("Mesh_ShortcutTireRut")
+
+[node name="ShortcutDesirePathInnLeaders" type="MeshInstance3D" parent="."]
+cast_shadow = 0
+transform = Transform3D(2.3846, 0, 0, 0, 1, 0, 0, 0, 1, 68.2, 0.052, 33.5)
+mesh = SubResource("Mesh_ShortcutDesirePath")
+
+[node name="ShortcutRutNorthInnLeaders" type="MeshInstance3D" parent="."]
+cast_shadow = 0
+transform = Transform3D(2.3846, 0, 0, 0, 1, 0, 0, 0, 1, 68.2, 0.055, 32.725)
+mesh = SubResource("Mesh_ShortcutTireRut")
+
+[node name="ShortcutRutSouthInnLeaders" type="MeshInstance3D" parent="."]
+cast_shadow = 0
+transform = Transform3D(2.3846, 0, 0, 0, 1, 0, 0, 0, 1, 68.2, 0.055, 34.275)
+mesh = SubResource("Mesh_ShortcutTireRut")
