@@ -262,121 +262,68 @@ func _run_test_chainlink_fence() -> void:
 	await main.get_tree().process_frame
 
 	const FenceScript = preload("res://props/chainlink_fence.gd")
-	var fence = main.get_node_or_null("BoundaryFence")
+
+	# 1. Verify boundary fence at edge of earth is removed
 	assert(
-		fence != null and fence is FenceScript,
-		"BoundaryFence must exist in main scene and be ChainlinkFence"
+		main.get_node_or_null("BoundaryFence") == null,
+		"BoundaryFence around edge of earth must no longer exist"
 	)
 
-	# 1. Verify collision boundaries along all 4 edges of the earth
-	var col_north := fence.get_node_or_null("CollisionNorth") as CollisionShape3D
-	var col_south := fence.get_node_or_null("CollisionSouth") as CollisionShape3D
-	var col_east := fence.get_node_or_null("CollisionEast") as CollisionShape3D
-	var col_west := fence.get_node_or_null("CollisionWest") as CollisionShape3D
-	assert(col_north != null, "North collision shape must exist")
-	assert(col_south != null, "South collision shape must exist")
-	assert(col_east != null, "East collision shape must exist")
-	assert(col_west != null, "West collision shape must exist")
+	# 2. Verify forest fences exist at the start of the forest
+	var forest = main.get_node_or_null("Props/Forest")
+	assert(forest != null, "Props/Forest must exist in main scene")
 
-	assert(col_north.shape is BoxShape3D, "North collision must be BoxShape3D")
-	assert(col_south.shape is BoxShape3D, "South collision must be BoxShape3D")
-	assert(col_east.shape is BoxShape3D, "East collision must be BoxShape3D")
-	assert(col_west.shape is BoxShape3D, "West collision must be BoxShape3D")
-
-	# 2. Verify visual components and distance visibility settings
-	assert(fence.visibility_distance == 60.0, "Visibility distance must be 60m")
-	assert(fence.visibility_fade_margin == 15.0, "Fade margin must be 15m")
-
-	# Corner posts count and visibility range
-	var corner_count := 0
-	for child in fence.get_children():
-		if child.name.begins_with("CornerPost"):
-			corner_count += 1
-			var post_mi := child.get_node_or_null("Post") as MeshInstance3D
-			assert(post_mi != null, "Corner post must have Post mesh")
-			assert(
-				post_mi.visibility_range_end == 60.0,
-				"Corner post must have visibility_range_end 60m"
-			)
-	assert(corner_count == 4, "Must have 4 corner posts for the perimeter rectangle")
-
-	# Side chunks: line posts, fabric meshes, and rails
-	var total_line_posts := 0
-	var fabric_count := 0
-	for side_name in ["Side_North", "Side_East", "Side_South", "Side_West"]:
-		var side_node := fence.get_node_or_null(side_name) as Node3D
-		assert(side_node != null, "Side node %s must exist" % side_name)
-		for chunk in side_node.get_children():
-			var fabric := chunk.get_node_or_null("Fabric") as MeshInstance3D
-			assert(fabric != null, "Chunk must have Fabric mesh")
-			assert(fabric.visibility_range_end == 60.0, "Fabric must have visibility_range_end 60m")
-			assert(fabric.material_override is ShaderMaterial, "Fabric must have ShaderMaterial")
-			fabric_count += 1
-
-			var top_rail := chunk.get_node_or_null("TopRail") as MeshInstance3D
-			assert(top_rail != null, "Chunk must have TopRail")
-			assert(
-				top_rail.visibility_range_end == 60.0, "TopRail must have visibility_range_end 60m"
-			)
-
-			var posts_mmi := chunk.get_node_or_null("LinePosts") as MultiMeshInstance3D
-			if posts_mmi and posts_mmi.multimesh:
-				assert(
-					posts_mmi.visibility_range_end == 60.0,
-					"LinePosts must have visibility_range_end 60m"
-				)
-				total_line_posts += posts_mmi.multimesh.instance_count
-
+	var north_fence = forest.get_node_or_null("NorthForestFence")
+	var south_fence = forest.get_node_or_null("SouthForestFence")
 	assert(
-		total_line_posts >= 300,
-		"Total line posts across chunks must be >= 300 (got %d)" % total_line_posts
+		north_fence != null and north_fence is FenceScript,
+		"NorthForestFence must exist and be ChainlinkFence"
 	)
 	assert(
-		fabric_count >= 50,
-		"Perimeter must be chunked into localized sections (got %d chunks)" % fabric_count
+		south_fence != null and south_fence is FenceScript,
+		"SouthForestFence must exist and be ChainlinkFence"
 	)
 
-	# 3. Verify ground terrain extension past fence
-	var ground_mi := main.get_node_or_null("GroundTerrain") as MeshInstance3D
+	# 3. Verify collision shapes and visibility settings on forest fences
 	assert(
-		ground_mi != null and ground_mi.mesh is PlaneMesh, "GroundTerrain must exist with PlaneMesh"
+		north_fence.get_node_or_null("Collision_0") != null,
+		"NorthForestFence must have segment collision"
 	)
-	var ground_plane := ground_mi.mesh as PlaneMesh
-	assert(ground_plane.size.x >= 380.0, "Ground must extend past fence in X (at least 380m)")
-	assert(ground_plane.size.y >= 260.0, "Ground must extend past fence in Z (at least 260m)")
+	assert(
+		south_fence.get_node_or_null("Collision_0") != null,
+		"SouthForestFence must have segment collision"
+	)
+	assert(
+		north_fence.visibility_distance == 60.0, "NorthForestFence visibility distance must be 60m"
+	)
+	assert(
+		south_fence.visibility_distance == 60.0, "SouthForestFence visibility distance must be 60m"
+	)
 
-	# Test physics collision: prove Mats cannot walk off the edge of the earth
-	main.mats.global_position = Vector3(45.0, 0.3, 134.0)
-	main.mats.velocity = Vector3(0.0, 0.0, 10.0)
-	for _step in range(30):
-		main.mats.velocity = Vector3(0.0, 0.0, 10.0)
-		main.mats._physics_process(1.0 / 60.0)
-	assert(main.mats.global_position.z < 134.8, "Fence must block Mats from falling off South edge")
-
-	main.mats.global_position = Vector3(45.0, 0.3, -104.0)
+	# 4. Test physics collision: prove Mats cannot walk through the forest fences
+	# North fence collision test (fence is at z = -60.0 between x = -100 and 150)
+	main.mats.global_position = Vector3(25.0, 0.3, -59.0)
 	main.mats.velocity = Vector3(0.0, 0.0, -10.0)
 	for _step in range(30):
 		main.mats.velocity = Vector3(0.0, 0.0, -10.0)
 		main.mats._physics_process(1.0 / 60.0)
 	assert(
-		main.mats.global_position.z > -104.8, "Fence must block Mats from falling off North edge"
+		main.mats.global_position.z > -60.0,
+		"North forest fence must block Mats from entering forest"
 	)
 
-	main.mats.global_position = Vector3(-134.0, 0.3, 15.0)
-	main.mats.velocity = Vector3(-10.0, 0.0, 0.0)
+	# South fence collision test (fence is at z = 64.0 between x = -100 and 168)
+	main.mats.global_position = Vector3(25.0, 0.3, 63.0)
+	main.mats.velocity = Vector3(0.0, 0.0, 10.0)
 	for _step in range(30):
-		main.mats.velocity = Vector3(-10.0, 0.0, 0.0)
+		main.mats.velocity = Vector3(0.0, 0.0, 10.0)
 		main.mats._physics_process(1.0 / 60.0)
-	assert(main.mats.global_position.x > -134.8, "Fence must block Mats from falling off West edge")
+	assert(
+		main.mats.global_position.z < 64.0,
+		"South forest fence must block Mats from entering forest"
+	)
 
-	main.mats.global_position = Vector3(224.0, 0.3, 15.0)
-	main.mats.velocity = Vector3(10.0, 0.0, 0.0)
-	for _step in range(30):
-		main.mats.velocity = Vector3(10.0, 0.0, 0.0)
-		main.mats._physics_process(1.0 / 60.0)
-	assert(main.mats.global_position.x < 224.8, "Fence must block Mats from falling off East edge")
-
-	# 4. Test standalone reusable section scene
+	# 5. Test standalone reusable section scene
 	var sec_scene := load("res://props/chainlink_fence_section.tscn") as PackedScene
 	assert(sec_scene != null, "props/chainlink_fence_section.tscn must load as PackedScene")
 	var sec_inst = sec_scene.instantiate()

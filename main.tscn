@@ -33,7 +33,6 @@
 [ext_resource type="PackedScene" path="res://buildings/frontage_commercial.tscn" id="30_frontage_commercial"]
 [ext_resource type="PackedScene" path="res://props/billboard_offset.tscn" id="31_billboard_offset"]
 [ext_resource type="PackedScene" path="res://props/powerline.tscn" id="32_powerline"]
-[ext_resource type="PackedScene" path="res://props/chainlink_fence.tscn" id="33_fence"]
 [ext_resource type="ArrayMesh" path="res://props/connector_turn_yellow_line.res" id="34_connector_turn_yellow_line"]
 [ext_resource type="PackedScene" path="res://props/tunnel.tscn" id="35_tunnel"]
 [ext_resource type="Script" path="res://world/environment_controller.gd" id="36_environment_controller"]
@@ -119,8 +118,6 @@ mesh = SubResource("Mesh_Ground")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="GroundTerrain/StaticBody3D" unique_id=1567514051]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 shape = SubResource("Shape_Ground")
-
-[node name="BoundaryFence" parent="." unique_id=317537464 instance=ExtResource("33_fence")]
 
 [node name="Mats" parent="." unique_id=380876934 instance=ExtResource("2_mats")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 13.85)

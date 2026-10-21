@@ -3,7 +3,7 @@
 ## Oct 20, 2026
 
 - **Frontage road & businesses**: Added parallel two-lane frontage road with connector, double-yellow striping, and 3 commercial businesses (Consumer Car Care, Leaders Outdoor, Checkers) (`f380152`).
-- **Procedural forest & chainlink boundary**: Generated perimeter forest with ~690 trees and polyline galvanized chainlink fence enclosing the map (`387b217`).
+- **Procedural forest & boundary fences**: Generated perimeter forest with ~690 trees and chainlink fences along the forest boundary enclosing the playable corridor (`387b217`).
 - **Stroad road extension & tunnel portals**: Extended stroad 50m with concrete highway tunnel portals at $x = -100$ and $x = 150$ for smooth despawning (`bca5feb`).
 - **Traffic speed classes & multi-lane passing**: Added tiered cruising speeds across vehicle classes and passing maneuvers for approaching faster cars (`387b217`).
 - **Mats sprint & stamina system**: Added Shift sprint mechanic with forward lean and floating HUD stamina wheel (`a4eeaf1`).
