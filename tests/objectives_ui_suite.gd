@@ -1306,6 +1306,8 @@ func _run_test_retro_filter() -> void:
 	var effect_rect: ColorRect = retro_filter.get_node_or_null("EffectRect") as ColorRect
 	assert(effect_rect != null, "EffectRect must exist in RetroFilter")
 	assert(not effect_rect.visible, "EffectRect must start disabled (Preset.OFF)")
+	var vp := main.get_viewport()
+	var orig_scale: float = vp.scaling_3d_scale
 
 	# Cycle preset to subtle retro (2x crisp)
 	var p = retro_filter.call("cycle_preset")
@@ -1317,6 +1319,10 @@ func _run_test_retro_filter() -> void:
 	assert(
 		is_equal_approx(mat.get_shader_parameter("pixel_size"), 2.0),
 		"Subtle Retro pixel size must be 2.0 for text readability"
+	)
+	assert(
+		is_equal_approx(vp.scaling_3d_scale, 0.5),
+		"Active preset must render 3D at one sample per block (1 / pixel_size)"
 	)
 
 	# Cycle to Game Boy mode (preset 5)
@@ -1333,5 +1339,9 @@ func _run_test_retro_filter() -> void:
 	p = retro_filter.call("cycle_preset")  # 0: OFF
 	assert(p == 0, "Must wrap back to Preset.OFF")
 	assert(not effect_rect.visible, "EffectRect must be hidden when OFF")
+	assert(
+		is_equal_approx(vp.scaling_3d_scale, orig_scale),
+		"Turning the filter OFF must restore the previous 3D render scale"
+	)
 	print("RETRO_FILTER_TEST: SUCCESS - --test-retro-filter passed cleanly!")
 	main.get_tree().quit(0)
