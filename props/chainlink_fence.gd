@@ -2,7 +2,7 @@
 class_name ChainlinkFence
 extends StaticBody3D
 
-enum Mode { PERIMETER, SINGLE_SECTION }
+enum Mode { PERIMETER, SINGLE_SECTION, POLYLINE }
 
 @export var mode: Mode = Mode.PERIMETER:
 	set(value):
@@ -79,6 +79,12 @@ enum Mode { PERIMETER, SINGLE_SECTION }
 		if is_inside_tree():
 			build_fence()
 
+@export var polyline_points: PackedVector3Array = PackedVector3Array():
+	set(value):
+		polyline_points = value
+		if is_inside_tree():
+			build_fence()
+
 const SHADER_RES_PATH := "res://shaders/chainlink.gdshader"
 
 var _is_built := false
@@ -123,12 +129,15 @@ func build_fence() -> void:
 
 	# Remove existing generated children
 	for child in get_children():
+		remove_child(child)
 		child.queue_free()
 
 	if mode == Mode.PERIMETER:
 		_build_perimeter()
-	else:
+	elif mode == Mode.SINGLE_SECTION:
 		_build_single_section()
+	elif mode == Mode.POLYLINE:
+		_build_polyline()
 
 	_is_built = true
 
@@ -279,6 +288,40 @@ func _build_single_section() -> void:
 	box.size = Vector3(single_section_length, fence_height + 0.8, 0.3)
 	col_shape.shape = box
 	col_shape.position = Vector3(0.0, (fence_height + 0.8) * 0.5, 0.0)
+	add_child(col_shape)
+
+
+func _build_polyline() -> void:
+	if polyline_points.size() < 2:
+		return
+
+	for i in range(polyline_points.size()):
+		_create_corner_post(polyline_points[i], "CornerPost_%d" % i)
+
+	for i in range(polyline_points.size() - 1):
+		var p1 := polyline_points[i]
+		var p2 := polyline_points[i + 1]
+		_build_side(p1, p2, "Seg_%d" % i)
+		_build_segment_collision(p1, p2, "Collision_%d" % i)
+
+
+func _build_segment_collision(p1: Vector3, p2: Vector3, col_name: String) -> void:
+	var diff := p2 - p1
+	var length := diff.length()
+	if length < 0.01:
+		return
+
+	var wall_h := fence_height + 0.8
+	var thickness := 0.4
+	var mid := (p1 + p2) * 0.5 + Vector3(0.0, wall_h * 0.5, 0.0)
+
+	var col_shape := CollisionShape3D.new()
+	col_shape.name = col_name
+	var box := BoxShape3D.new()
+	box.size = Vector3(length, wall_h, thickness)
+	col_shape.shape = box
+	col_shape.position = mid
+	col_shape.rotation.y = -atan2(diff.z, diff.x)
 	add_child(col_shape)
 
 

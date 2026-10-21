@@ -90,10 +90,12 @@ const WHEEL_RADII: Dictionary = {
 	CarType.F150: 0.38,
 }
 
+const SPORTS_SPAWN_CHANCE: float = 0.08
+
 
 static func pick_passenger_car_type(allow_sports: bool = true) -> CarType:
 	var rng := _get_rng()
-	if allow_sports and rng.randf() < 0.05:
+	if allow_sports and rng.randf() < SPORTS_SPAWN_CHANCE:
 		return CarType.SPORTS
 	return REGULAR_PASSENGER_TYPES[rng.randi_range(0, REGULAR_PASSENGER_TYPES.size() - 1)]
 
@@ -142,6 +144,7 @@ static var _gritty_paint_materials: Dictionary = {}
 
 static var _rng: RandomNumberGenerator = null
 static var _paint_materials: Dictionary = {}
+static var _sports_stripe_materials: Dictionary = {}
 
 @export var body_color: Color = Color(0, 0, 0, 0)
 @export var is_gritty: bool = false
@@ -181,6 +184,23 @@ static func get_paint_material(color: Color, gritty: bool = false) -> StandardMa
 			mat.metallic = 0.15
 		cache[color] = mat
 	return cache[color]
+
+
+static func get_sports_stripe_color(car_body_color: Color) -> Color:
+	if car_body_color.get_luminance() > 0.55:
+		return Color(0.10, 0.10, 0.12)
+	return Color(0.96, 0.96, 0.98)
+
+
+static func get_sports_stripe_material(car_body_color: Color) -> StandardMaterial3D:
+	var stripe_col := get_sports_stripe_color(car_body_color)
+	if not _sports_stripe_materials.has(stripe_col):
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = stripe_col
+		mat.roughness = 0.20
+		mat.metallic = 0.25
+		_sports_stripe_materials[stripe_col] = mat
+	return _sports_stripe_materials[stripe_col]
 
 
 static func _get_rng() -> RandomNumberGenerator:
@@ -282,3 +302,11 @@ func _apply_paint_material() -> void:
 		for child in active_model.get_children():
 			if child is MeshInstance3D and child.name in PAINTED_NODE_NAMES:
 				child.material_override = _paint_material
+		if car_type == CarType.SPORTS:
+			var stripe_mat := get_sports_stripe_material(body_color)
+			for child in active_model.get_children():
+				if (
+					child is MeshInstance3D
+					and (child.name == &"Stripe" or child.name.begins_with("Stripe"))
+				):
+					child.material_override = stripe_mat

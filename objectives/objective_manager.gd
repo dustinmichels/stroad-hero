@@ -364,11 +364,19 @@ func refresh_errand_dialogue(errand: MatsErrand, use_generic: bool = false) -> v
 
 func _pick_next() -> MatsErrand:
 	_resolve_dependencies()
-	var mats_z := mats.global_position.z if mats else 9.0
-	var mats_side := signf(mats_z)
-	if is_zero_approx(mats_side):
+	var mats_side: float
+	if mats:
+		if absf(mats.global_position.z) >= 11.0:
+			mats_side = signf(mats.global_position.z)
+		elif "current_side" in mats and mats.current_side != 0:
+			mats_side = float(mats.current_side)
+		else:
+			var mats_z := mats.global_position.z
+			mats_side = signf(mats_z)
+			if is_zero_approx(mats_side):
+				mats_side = 1.0
+	else:
 		mats_side = 1.0
-
 	var candidates: Array[MatsErrand] = []
 	for errand in errands:
 		var target_pos := get_target_position(errand)

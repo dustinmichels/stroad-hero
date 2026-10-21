@@ -14,7 +14,7 @@ func can_park() -> bool:
 
 
 func can_take_errands() -> bool:
-	return false
+	return true
 
 
 func can_use_drive_thru() -> bool:

@@ -24,6 +24,7 @@ radial_segments = 16
 [node name="F150" instance=ExtResource("1_model")]
 
 [node name="ExhaustStackL" type="Node3D" parent="."]
+visible = false
 position = Vector3(-1.1, 2.55, 0.72)
 
 [node name="Pipe" type="MeshInstance3D" parent="ExhaustStackL"]
@@ -35,6 +36,7 @@ position = Vector3(0, -0.08, 0)
 mesh = SubResource("Mesh_CoalStackTip")
 
 [node name="ExhaustStackR" type="Node3D" parent="."]
+visible = false
 position = Vector3(-1.1, 2.55, -0.72)
 
 [node name="Pipe" type="MeshInstance3D" parent="ExhaustStackR"]

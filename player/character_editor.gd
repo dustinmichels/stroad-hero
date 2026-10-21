@@ -29,18 +29,27 @@ const HEADWEAR_NAMES: Array[String] = ["Natural", "Red ball cap", "Beanie"]
 const PREVIEW_TURN_PERIOD := 8.0
 const UNSELECTED_MODULATE := Color(0.7, 0.72, 0.74, 1.0)
 
-@export var player_path: NodePath
-@export var player_node: Mats = null
 @export var target_rig: MatsRig = null
+@export var target_rig_path: NodePath
+@export var player_node: Mats = null
+@export var player_path: NodePath
 @export var row_style: StyleBox
 @export var row_selected_style: StyleBox
 
 @onready var _camera: Camera3D = %PreviewCamera
 @onready var _viewport: SubViewport = %PreviewViewport
-@onready var _player: Mats = player_node if player_node else get_node_or_null(player_path)
 
 var _rig: MatsRig = null
+var _player: Mats = null
 var _preview: MatsRig = null
+
+var preview_rig: MatsRig:
+	get:
+		return _preview
+
+var target_rig_resolved: MatsRig:
+	get:
+		return _rig
 var _was_paused := false
 var _selected_row := 0
 var _headwear_index := 0
@@ -52,12 +61,7 @@ var _preview_turn_time := 0.0
 
 func _ready() -> void:
 	add_to_group("character_editor")
-	if _player == null and is_inside_tree():
-		_player = get_tree().get_first_node_in_group("player") as Mats
-	if target_rig:
-		_rig = target_rig
-	elif _player:
-		_rig = _player.visual
+	_resolve_target_rig()
 	_camera.look_at(Vector3(0.0, 0.72, 0.0))
 	%HeadPrevious.pressed.connect(_on_headwear_step.bind(-1))
 	%HeadNext.pressed.connect(_on_headwear_step.bind(1))
@@ -74,11 +78,57 @@ func _ready() -> void:
 func set_player(p: Mats) -> void:
 	_player = p
 	if p:
-		_rig = p.visual
+		set_target_rig(p.visual)
 
 
 func set_target_rig(r: MatsRig) -> void:
 	_rig = r
+	if _rig and is_instance_valid(_rig):
+		_headwear_index = _rig.headwear
+		_jacket_index = _closest_color(_rig.jacket_color, JACKET_COLORS)
+		_backpack_index = _closest_color(_rig.backpack_color, BACKPACK_COLORS)
+		_shoe_index = _closest_color(_rig.shoe_color, SHOE_COLORS)
+		if visible:
+			_sync_from_rig()
+
+
+func _resolve_target_rig() -> void:
+	if _rig != null and is_instance_valid(_rig):
+		return
+	if target_rig != null and is_instance_valid(target_rig):
+		_rig = target_rig
+		return
+	if target_rig_path and not target_rig_path.is_empty():
+		var node := get_node_or_null(target_rig_path)
+		if node is MatsRig:
+			_rig = node
+			return
+		elif node is Mats:
+			_player = node
+			_rig = node.visual
+			return
+	if player_node != null and is_instance_valid(player_node):
+		_player = player_node
+		_rig = player_node.visual
+		return
+	if player_path and not player_path.is_empty():
+		var node := get_node_or_null(player_path)
+		if node is MatsRig:
+			_rig = node
+			return
+		elif node is Mats:
+			_player = node
+			_rig = node.visual
+			return
+	if is_inside_tree():
+		var rig_in_group := get_tree().get_first_node_in_group("mats_rig") as MatsRig
+		if rig_in_group:
+			_rig = rig_in_group
+			return
+		var player := get_tree().get_first_node_in_group("player") as Mats
+		if player:
+			_player = player
+			_rig = player.visual
 
 
 func _process(delta: float) -> void:
@@ -88,6 +138,7 @@ func _process(delta: float) -> void:
 	var turn_progress := 0.5 - 0.5 * cos(_preview_turn_time * TAU / PREVIEW_TURN_PERIOD)
 	if _preview:
 		_preview.rotation.y = turn_progress * PI
+		_preview.update_idle(delta)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -118,8 +169,9 @@ func open_editor() -> void:
 	_was_paused = get_tree().paused
 	get_tree().paused = true
 	_selected_row = 0
+	_resolve_target_rig()
 	_ensure_preview_instantiated()
-	_sync_from_player()
+	_sync_from_rig()
 	_preview_turn_time = 0.0
 	if _preview:
 		_preview.rotation.y = 0.0
@@ -141,6 +193,10 @@ func _exit_tree() -> void:
 
 
 func _sync_from_player() -> void:
+	_sync_from_rig()
+
+
+func _sync_from_rig() -> void:
 	if _rig:
 		_headwear_index = _rig.headwear
 		_jacket_index = _closest_color(_rig.jacket_color, JACKET_COLORS)
@@ -197,9 +253,9 @@ func _on_shoe_step(direction: int) -> void:
 func _set_headwear(value: int) -> void:
 	_headwear_index = value
 	if _preview:
-		_preview.headwear = value
+		_preview.set_headwear(value)
 	if _rig:
-		_rig.headwear = value
+		_rig.set_headwear(value)
 	elif _player:
 		_player.set_headwear(value)
 	_refresh_selection()
@@ -209,9 +265,9 @@ func _set_jacket_color(index: int) -> void:
 	_jacket_index = index
 	var color: Color = JACKET_COLORS[index]
 	if _preview:
-		_preview.jacket_color = color
+		_preview.set_jacket_color(color)
 	if _rig:
-		_rig.jacket_color = color
+		_rig.set_jacket_color(color)
 	elif _player:
 		_player.set_jacket_color(color)
 	_refresh_selection()
@@ -221,9 +277,9 @@ func _set_backpack_color(index: int) -> void:
 	_backpack_index = index
 	var color: Color = BACKPACK_COLORS[index]
 	if _preview:
-		_preview.backpack_color = color
+		_preview.set_backpack_color(color)
 	if _rig:
-		_rig.backpack_color = color
+		_rig.set_backpack_color(color)
 	elif _player:
 		_player.set_backpack_color(color)
 	_refresh_selection()
@@ -233,9 +289,9 @@ func _set_shoe_color(index: int) -> void:
 	_shoe_index = index
 	var color: Color = SHOE_COLORS[index]
 	if _preview:
-		_preview.shoe_color = color
+		_preview.set_shoe_color(color)
 	if _rig:
-		_rig.shoe_color = color
+		_rig.set_shoe_color(color)
 	elif _player:
 		_player.set_shoe_color(color)
 	_refresh_selection()
@@ -286,5 +342,6 @@ func _ensure_preview_instantiated() -> void:
 	if rig_scene:
 		var instance: MatsRig = rig_scene.instantiate() as MatsRig
 		instance.name = "PreviewMatsRig"
+		instance.process_mode = Node.PROCESS_MODE_ALWAYS
 		%PreviewViewport.add_child(instance)
 		_preview = instance

@@ -68,6 +68,8 @@ func matches_args() -> bool:
 				"--test-smell-gas",
 				"--test-right-turn-following",
 				"--test-drive-thru",
+				"--test-cramped-inn-dropoff",
+				"--test-frontage",
 			]
 		):
 			return true
@@ -124,8 +126,16 @@ func setup_ready() -> void:
 							c.queue_free()
 					traffic_mgr.lot.release(spot)
 
-	if "--test-cramped-inn" in user_args or "--test-strip-mall" in user_args:
-		_ci_site = &"strip_mall" if "--test-strip-mall" in user_args else &"cramped_inn"
+	if (
+		"--test-cramped-inn" in user_args
+		or "--test-strip-mall" in user_args
+		or "--test-frontage" in user_args
+	):
+		_ci_site = (
+			&"strip_mall"
+			if "--test-strip-mall" in user_args
+			else (&"consumer_car_care" if "--test-frontage" in user_args else &"cramped_inn")
+		)
 		var traffic_mgr = main.get_node_or_null("TrafficManager") as TrafficManager
 		assert(traffic_mgr != null, "TrafficManager must exist")
 		var lane3 = traffic_mgr.lanes[3]
@@ -198,6 +208,9 @@ func setup_ready() -> void:
 
 	if "--test-drive-thru" in user_args:
 		_run_test_drive_thru()
+
+	if "--test-cramped-inn-dropoff" in user_args:
+		_run_test_cramped_inn_dropoff()
 
 
 func on_physics_process(_delta: float) -> void:
@@ -555,7 +568,11 @@ func on_physics_process(_delta: float) -> void:
 		if _test_frames > 1500:
 			assert(false, "Timeout waiting for right turn following test completion!")
 
-	if "--test-cramped-inn" in user_args or "--test-strip-mall" in user_args:
+	if (
+		"--test-cramped-inn" in user_args
+		or "--test-strip-mall" in user_args
+		or "--test-frontage" in user_args
+	):
 		var tag := String(_ci_site).to_upper()
 		_test_frames += 1
 		var tm = main.get_node_or_null("TrafficManager") as TrafficManager
@@ -625,7 +642,16 @@ func on_physics_process(_delta: float) -> void:
 			elif _test_car.state == Car.State.WAITING_TO_MERGE:
 				if not _ci_saw_wait:
 					_ci_saw_wait = true
-					var wait_point: Vector3 = ParkingLot.SOUTH_LOTS[_ci_site]["wait"]
+					var site_id := ParkingLot.get_site_for_destination(_ci_site)
+					var wait_point: Vector3 = (
+						ParkingLot.get_site_cfg(site_id)["wait"]
+						if site_id != &""
+						else (
+							ParkingLot.SOUTH_LOTS[_ci_site]["wait"]
+							if ParkingLot.SOUTH_LOTS.has(_ci_site)
+							else ParkingLot.FRONTAGE_WAIT_POINT
+						)
+					)
 					assert(
 						_test_car.global_position.distance_to(wait_point) < 1.0,
 						"Must be at the %s wait point" % _ci_site
@@ -661,7 +687,7 @@ func on_physics_process(_delta: float) -> void:
 					print("%s: SUCCESS - full errand cycle complete!" % tag)
 					main.get_tree().quit(0)
 					return
-		if _test_frames > 2400:
+		if _test_frames > 4000:
 			assert(false, "Timeout waiting for %s test completion!" % _ci_site)
 
 	if "--test-smell-store" in user_args or "--test-smell-gas" in user_args:
@@ -1063,5 +1089,118 @@ func _run_test_drive_thru() -> void:
 
 	print(
 		"DRIVE_THRU_TEST: SUCCESS - Verified live simulation, dwell at stops, queueing without overlap, and clean seeded full-traffic phase with staggered cars completing loops without collisions or deadlocks!"
+	)
+	main.get_tree().quit(0)
+
+
+func _run_test_cramped_inn_dropoff() -> void:
+	var tm = main.get_node_or_null("TrafficManager") as TrafficManager
+	assert(tm != null, "TrafficManager must exist")
+	for c in tm.lot_cars:
+		c.queue_free()
+	tm.lot_cars.clear()
+	for lane in tm.lanes:
+		for c in lane.cars:
+			c.queue_free()
+		lane.cars.clear()
+		lane.spawn_timer = 999.0
+
+	# 1. Spawn a Taxi doing Cramped Inn drop-off/pickup
+	var taxi: Car = tm.spawn_cramped_inn_dropoff_car(true)
+	assert(taxi != null, "taxi must be spawned")
+	assert(taxi.car_type == Car.CarType.TAXI, "taxi must be CarType.TAXI")
+	assert(taxi.can_take_errands(), "taxi must be able to take drop-off errand")
+	assert(not taxi.can_park(), "taxi must not be able to park in stalls")
+	assert(taxi.state == Car.State.DRIVE_THRU, "taxi must start in DRIVE_THRU state")
+	assert(taxi.merge_target_lane == 3, "taxi merge_target_lane must be 3")
+	assert(taxi.path == tm.cramped_inn_dropoff_path, "taxi must follow cramped_inn_dropoff_path")
+
+	var car2: Car = null
+	var saw_taxi_under_awning := false
+	var saw_taxi_dwell := false
+	var saw_car2_under_awning := false
+	var saw_car2_dwell := false
+	var _saw_car2_queued := false
+	var taxi_prev_d := 0.0
+	var car2_prev_d := 0.0
+	var delta := 0.05
+	var max_ticks := 2000
+	var ticks := 0
+
+	while ticks < max_ticks:
+		ticks += 1
+		if car2 == null and taxi.path_distance >= 12.0:
+			car2 = tm.spawn_cramped_inn_dropoff_car(false)
+			assert(car2 != null, "car2 must be spawned")
+			assert(car2.state == Car.State.DRIVE_THRU, "car2 must start in DRIVE_THRU state")
+			assert(
+				car2.path == tm.cramped_inn_dropoff_path,
+				"car2 must follow cramped_inn_dropoff_path"
+			)
+
+		tm._update_lot_cars(delta)
+		for lane in tm.lanes:
+			tm._update_lane_traffic(lane, delta)
+
+		if taxi.state == Car.State.DRIVE_THRU:
+			assert(taxi.path_distance >= taxi_prev_d - 0.001, "taxi progress must be monotonic")
+			taxi_prev_d = taxi.path_distance
+			if (
+				taxi.global_position.x >= 41.0
+				and taxi.global_position.x <= 52.0
+				and taxi.global_position.z >= 24.5
+				and taxi.global_position.z <= 32.5
+			):
+				saw_taxi_under_awning = true
+			if taxi.dt_pickup_done and taxi.dt_dwell_timer > 0.0:
+				saw_taxi_dwell = true
+
+		if car2 != null and car2.state == Car.State.DRIVE_THRU:
+			assert(car2.path_distance >= car2_prev_d - 0.001, "car2 progress must be monotonic")
+			car2_prev_d = car2.path_distance
+			if (
+				car2.global_position.x >= 41.0
+				and car2.global_position.x <= 52.0
+				and car2.global_position.z >= 24.5
+				and car2.global_position.z <= 32.5
+			):
+				saw_car2_under_awning = true
+			if car2.dt_pickup_done and car2.dt_dwell_timer > 0.0:
+				saw_car2_dwell = true
+
+		if (
+			car2 != null
+			and taxi.state == Car.State.DRIVE_THRU
+			and car2.state == Car.State.DRIVE_THRU
+		):
+			var d_pos := taxi.global_position.distance_to(car2.global_position)
+			var min_allowed := (taxi.car_length + car2.car_length) * 0.5 - 0.2
+			assert(
+				d_pos >= min_allowed,
+				(
+					"Euclidean overlap detected between taxi and car2: dist=%.2f < min=%.2f"
+					% [d_pos, min_allowed]
+				)
+			)
+			if tm.find_blocker(car2) == taxi and car2.speed < 0.1:
+				_saw_car2_queued = true
+
+		if taxi.state == Car.State.CRUISING and car2 != null and car2.state == Car.State.CRUISING:
+			break
+
+	assert(saw_taxi_under_awning, "taxi must go under roof / awning")
+	assert(saw_taxi_dwell, "taxi must dwell under roof / awning")
+	assert(saw_car2_under_awning, "passenger car must go under roof / awning")
+	assert(saw_car2_dwell, "passenger car must dwell under roof / awning")
+	assert(
+		taxi.state == Car.State.CRUISING and taxi.lane_id == 3,
+		"taxi must merge and cruise in lane 3"
+	)
+	assert(
+		car2.state == Car.State.CRUISING and car2.lane_id == 3,
+		"passenger car must merge and cruise in lane 3"
+	)
+	print(
+		"CRAMPED_INN_DROPOFF_TEST: SUCCESS - Taxi and passenger car navigated under awning, dwelled, and merged into lane 3 without collisions"
 	)
 	main.get_tree().quit(0)

@@ -160,6 +160,39 @@ bottom_radius = 0.35
 height = 0.3
 radial_segments = 32
 
+[sub_resource type="StandardMaterial3D" id="Mat_SportsStripe"]
+albedo_color = Color(0.96, 0.96, 0.98, 1)
+metallic = 0.25
+roughness = 0.2
+
+[sub_resource type="BoxMesh" id="Mesh_SportsStripeBumperF"]
+material = SubResource("Mat_SportsStripe")
+size = Vector3(0.204, 0.284, 0.38)
+
+[sub_resource type="BoxMesh" id="Mesh_SportsStripeHood"]
+material = SubResource("Mat_SportsStripe")
+size = Vector3(1.604, 0.124, 0.38)
+
+[sub_resource type="BoxMesh" id="Mesh_SportsStripeScoop"]
+material = SubResource("Mat_SportsStripe")
+size = Vector3(0.504, 0.034, 0.38)
+
+[sub_resource type="BoxMesh" id="Mesh_SportsStripeRoof"]
+material = SubResource("Mat_SportsStripe")
+size = Vector3(0.604, 0.064, 0.38)
+
+[sub_resource type="BoxMesh" id="Mesh_SportsStripeSpoiler"]
+material = SubResource("Mat_SportsStripe")
+size = Vector3(0.284, 0.064, 0.38)
+
+[sub_resource type="BoxMesh" id="Mesh_SportsStripeBumperR"]
+material = SubResource("Mat_SportsStripe")
+size = Vector3(0.224, 0.304, 0.38)
+
+[sub_resource type="BoxMesh" id="Mesh_SportsStripeSide"]
+material = SubResource("Mat_SportsStripe")
+size = Vector3(3.8, 0.06, 0.016)
+
 [node name="Sports" type="Node3D" unique_id=399205582]
 
 [node name="FrontSplitter" type="MeshInstance3D" parent="." unique_id=1742798394]
@@ -321,3 +354,35 @@ mesh = SubResource("Mesh_Wheel")
 [node name="Wheel_FrontR" type="MeshInstance3D" parent="." unique_id=1009494844]
 transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1.35, 0.35, -0.95)
 mesh = SubResource("Mesh_Wheel")
+
+[node name="StripeBumperF" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.062, 0.462, 0)
+mesh = SubResource("Mesh_SportsStripeBumperF")
+
+[node name="StripeHood" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.995056, 0.0993197, 0, -0.0993197, 0.995056, 0, 0, 0, 1, 1.2, 0.605, 0)
+mesh = SubResource("Mesh_SportsStripeHood")
+
+[node name="StripeScoop" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.995056, 0.0993197, 0, -0.0993197, 0.995056, 0, 0, 0, 1, 1.2, 0.674, 0)
+mesh = SubResource("Mesh_SportsStripeScoop")
+
+[node name="StripeRoof" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.18, 1.125, 0)
+mesh = SubResource("Mesh_SportsStripeRoof")
+
+[node name="StripeSpoiler" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.82, 0.985, 0)
+mesh = SubResource("Mesh_SportsStripeSpoiler")
+
+[node name="StripeBumperR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.043, 0.483, 0)
+mesh = SubResource("Mesh_SportsStripeBumperR")
+
+[node name="StripeSideL" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.48, 0.934)
+mesh = SubResource("Mesh_SportsStripeSide")
+
+[node name="StripeSideR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.48, -0.934)
+mesh = SubResource("Mesh_SportsStripeSide")

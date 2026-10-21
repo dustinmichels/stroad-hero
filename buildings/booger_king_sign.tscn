@@ -16,11 +16,6 @@ roughness = 0.4
 albedo_color = Color(0.96, 0.96, 0.96, 1)
 roughness = 0.3
 
-[sub_resource type="StandardMaterial3D" id="Mat_BKGoldCrown"]
-albedo_color = Color(0.96, 0.78, 0.14, 1)
-metallic = 0.2
-roughness = 0.4
-
 [sub_resource type="StandardMaterial3D" id="Mat_BKReaderWhite"]
 albedo_color = Color(0.95, 0.95, 0.92, 1)
 roughness = 0.3
@@ -78,17 +73,6 @@ size = Vector3(0.36, 0.32, 0.04)
 material = SubResource("Mat_BKLogoWhite")
 size = Vector3(0.26, 0.14, 0.04)
 
-[sub_resource type="CylinderMesh" id="Mesh_BKCrownBase"]
-material = SubResource("Mat_BKGoldCrown")
-top_radius = 0.95
-bottom_radius = 1.05
-height = 0.45
-radial_segments = 24
-
-[sub_resource type="PrismMesh" id="Mesh_BKCrownPoint"]
-material = SubResource("Mat_BKGoldCrown")
-left_to_right = 0.5
-size = Vector3(0.42, 0.65, 0.12)
 
 [node name="BoogerKingSign" type="Node3D"]
 
@@ -204,36 +188,3 @@ transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 0, 0, 0.225)
 
 [node name="FaceBack" parent="Logo" instance=ExtResource("1_logo")]
 transform = Transform3D(-1.5, 0, 0, 0, 1.5, 0, 0, 0, -1.5, 0, 0, -0.225)
-
-[node name="PaperCrown" type="Node3D" parent="."]
-transform = Transform3D(0.978148, -0.207912, 0, 0.207912, 0.978148, 0, 0, 0, 1, -0.2, 10.5, 0)
-
-[node name="CrownBase" type="MeshInstance3D" parent="PaperCrown"]
-cast_shadow = 0
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.22, 0)
-mesh = SubResource("Mesh_BKCrownBase")
-
-[node name="CrownPoint_0" type="MeshInstance3D" parent="PaperCrown"]
-cast_shadow = 0
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.72, 0.98)
-mesh = SubResource("Mesh_BKCrownPoint")
-
-[node name="CrownPoint_1" type="MeshInstance3D" parent="PaperCrown"]
-cast_shadow = 0
-transform = Transform3D(0.309017, 0, -0.951057, 0, 1, 0, 0.951057, 0, 0.309017, 0.932, 0.72, 0.303)
-mesh = SubResource("Mesh_BKCrownPoint")
-
-[node name="CrownPoint_2" type="MeshInstance3D" parent="PaperCrown"]
-cast_shadow = 0
-transform = Transform3D(-0.809017, 0, -0.587785, 0, 1, 0, 0.587785, 0, -0.809017, 0.576, 0.72, -0.793)
-mesh = SubResource("Mesh_BKCrownPoint")
-
-[node name="CrownPoint_3" type="MeshInstance3D" parent="PaperCrown"]
-cast_shadow = 0
-transform = Transform3D(-0.809017, 0, 0.587785, 0, 1, 0, -0.587785, 0, -0.809017, -0.576, 0.72, -0.793)
-mesh = SubResource("Mesh_BKCrownPoint")
-
-[node name="CrownPoint_4" type="MeshInstance3D" parent="PaperCrown"]
-cast_shadow = 0
-transform = Transform3D(0.309017, 0, 0.951057, 0, 1, 0, -0.951057, 0, 0.309017, -0.932, 0.72, 0.303)
-mesh = SubResource("Mesh_BKCrownPoint")

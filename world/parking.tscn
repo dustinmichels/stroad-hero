@@ -1,0 +1,274 @@
+[gd_scene format=3]
+
+[ext_resource type="Shader" uid="uid://8j2ppnyxf3xo" path="res://shaders/pavement.gdshader" id="1_pavement_shader"]
+
+[sub_resource type="ShaderMaterial" id="Mat_Asphalt"]
+render_priority = 0
+shader = ExtResource("1_pavement_shader")
+shader_parameter/asphalt_base = Color(0.17, 0.18, 0.21, 1)
+shader_parameter/asphalt_worn = Color(0.25, 0.26, 0.29, 1)
+shader_parameter/aggregate_color = Color(0.35, 0.36, 0.39, 1)
+shader_parameter/roughness_base = 0.85
+
+[sub_resource type="StandardMaterial3D" id="Mat_WhiteMarking"]
+albedo_color = Color(0.92, 0.92, 0.94, 1)
+
+[sub_resource type="ShaderMaterial" id="Mat_ParkingAsphalt"]
+render_priority = 0
+shader = ExtResource("1_pavement_shader")
+shader_parameter/asphalt_base = Color(0.17, 0.18, 0.21, 1)
+shader_parameter/asphalt_worn = Color(0.25, 0.26, 0.29, 1)
+shader_parameter/aggregate_color = Color(0.35, 0.36, 0.39, 1)
+shader_parameter/roughness_base = 0.85
+
+[sub_resource type="BoxMesh" id="Mesh_ParkingApron"]
+material = SubResource("Mat_ParkingAsphalt")
+size = Vector3(52, 0.1, 21.3)
+
+[sub_resource type="BoxShape3D" id="Shape_ParkingApron"]
+size = Vector3(52, 0.1, 21.3)
+
+[sub_resource type="BoxMesh" id="Mesh_ParkingStripe"]
+material = SubResource("Mat_WhiteMarking")
+size = Vector3(0.18, 0.12, 4.5)
+
+[sub_resource type="BoxMesh" id="Mesh_TacoParkingApron"]
+material = SubResource("Mat_ParkingAsphalt")
+size = Vector3(25, 0.1, 21.3)
+
+[sub_resource type="BoxShape3D" id="Shape_TacoParkingApron"]
+size = Vector3(25, 0.1, 21.3)
+
+[sub_resource type="BoxMesh" id="Mesh_HamptonParkingLot"]
+material = SubResource("Mat_ParkingAsphalt")
+size = Vector3(44, 0.1, 20)
+
+[sub_resource type="BoxShape3D" id="Shape_HamptonParkingLot"]
+size = Vector3(44, 0.1, 20)
+
+[sub_resource type="BoxMesh" id="Mesh_HamptonDriveway"]
+material = SubResource("Mat_Asphalt")
+size = Vector3(11, 0.1, 5.75)
+
+[sub_resource type="BoxShape3D" id="Shape_HamptonDriveway"]
+size = Vector3(11, 0.1, 5.75)
+
+[sub_resource type="BoxMesh" id="Mesh_DorfParkingApron"]
+material = SubResource("Mat_ParkingAsphalt")
+size = Vector3(44, 0.1, 21.3)
+
+[sub_resource type="BoxShape3D" id="Shape_DorfParkingApron"]
+size = Vector3(44, 0.1, 21.3)
+
+
+[node name="Parking" type="Node3D"]
+
+[node name="ParkingLot" type="MeshInstance3D" parent="." unique_id=781763629]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0.05, -25.35)
+mesh = SubResource("Mesh_ParkingApron")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="ParkingLot" unique_id=307694894]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ParkingLot/StaticBody3D" unique_id=1423394021]
+shape = SubResource("Shape_ParkingApron")
+
+[node name="ParkingStall_N_m20" type="MeshInstance3D" parent="." unique_id=1479897510]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 0.06, -32.5)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_N_m16" type="MeshInstance3D" parent="." unique_id=586201130]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 0.06, -32.5)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_N_m12" type="MeshInstance3D" parent="." unique_id=805609898]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0.06, -32.5)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_N_m8" type="MeshInstance3D" parent="." unique_id=1049907492]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0.06, -32.5)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_N_m4" type="MeshInstance3D" parent="." unique_id=1215385819]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.06, -32.5)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_N_0" type="MeshInstance3D" parent="." unique_id=1849864749]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06, -32.5)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_N_4" type="MeshInstance3D" parent="." unique_id=1969034141]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.06, -32.5)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_N_8" type="MeshInstance3D" parent="." unique_id=334292246]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.06, -32.5)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_N_12" type="MeshInstance3D" parent="." unique_id=549093578]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0.06, -32.5)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_N_16" type="MeshInstance3D" parent="." unique_id=1877989131]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0.06, -32.5)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_Smell_m52" type="MeshInstance3D" parent="." unique_id=300880261]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -52, 0.06, -31)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_Smell_m48" type="MeshInstance3D" parent="." unique_id=519005718]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -48, 0.06, -31)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_Smell_m44" type="MeshInstance3D" parent="." unique_id=236627048]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -44, 0.06, -31)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_S_m20" type="MeshInstance3D" parent="." unique_id=547576093]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 0.06, -18.5)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_S_m16" type="MeshInstance3D" parent="." unique_id=15859819]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 0.06, -18.5)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_S_m12" type="MeshInstance3D" parent="." unique_id=67247322]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0.06, -18.5)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_S_m8" type="MeshInstance3D" parent="." unique_id=793932264]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0.06, -18.5)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_S_m4" type="MeshInstance3D" parent="." unique_id=2001577064]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.06, -18.5)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_S_0" type="MeshInstance3D" parent="." unique_id=1280856670]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06, -18.5)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_S_4" type="MeshInstance3D" parent="." unique_id=1075818285]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.06, -18.5)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="TacoParkingLot" type="MeshInstance3D" parent="." unique_id=331171546]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35.5, 0.05, -25.35)
+mesh = SubResource("Mesh_TacoParkingApron")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="TacoParkingLot" unique_id=742062644]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="TacoParkingLot/StaticBody3D" unique_id=497847747]
+shape = SubResource("Shape_TacoParkingApron")
+
+[node name="ParkingStall_Taco_26" type="MeshInstance3D" parent="." unique_id=931961953]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26, 0.06, -18.5)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_Taco_30" type="MeshInstance3D" parent="." unique_id=935026200]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0.06, -18.5)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_Taco_34" type="MeshInstance3D" parent="." unique_id=469839194]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 34, 0.06, -18.5)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_Taco_38" type="MeshInstance3D" parent="." unique_id=1336281214]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 0.06, -18.5)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_Taco_42" type="MeshInstance3D" parent="." unique_id=1241728689]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 42, 0.06, -18.5)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="HamptonParkingLot" type="MeshInstance3D" parent="." unique_id=374192399]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0.05, 27)
+mesh = SubResource("Mesh_HamptonParkingLot")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="HamptonParkingLot" unique_id=1642031663]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="HamptonParkingLot/StaticBody3D" unique_id=1536157726]
+shape = SubResource("Shape_HamptonParkingLot")
+
+[node name="HamptonDriveway" type="MeshInstance3D" parent="." unique_id=1876846794]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38.5, 0.05, 14.125)
+mesh = SubResource("Mesh_HamptonDriveway")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="HamptonDriveway" unique_id=1212299102]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="HamptonDriveway/StaticBody3D" unique_id=755044849]
+shape = SubResource("Shape_HamptonDriveway")
+
+[node name="ParkingStall_Hampton_20" type="MeshInstance3D" parent="." unique_id=29586043]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0.06, 28)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_Hampton_24" type="MeshInstance3D" parent="." unique_id=507482938]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 0.06, 28)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_Hampton_28" type="MeshInstance3D" parent="." unique_id=1864452090]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 0.06, 28)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_Hampton_32" type="MeshInstance3D" parent="." unique_id=2093465094]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, 0.06, 28)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_Hampton_52" type="MeshInstance3D" parent="." unique_id=698605659]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 52, 0.06, 28)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_Hampton_56" type="MeshInstance3D" parent="." unique_id=2127841369]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 56, 0.06, 28)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_Hampton_60" type="MeshInstance3D" parent="." unique_id=1432532228]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 60, 0.06, 28)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="DorfParkingLot" type="MeshInstance3D" parent="." unique_id=1206825064]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 101, 0.05, -25.35)
+mesh = SubResource("Mesh_DorfParkingApron")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="DorfParkingLot" unique_id=638205392]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DorfParkingLot/StaticBody3D" unique_id=1038735607]
+shape = SubResource("Shape_DorfParkingApron")
+
+[node name="ParkingStall_Dorf_S_49" type="MeshInstance3D" parent="." unique_id=1178704985]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 80, 0.06, -26.5)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_Dorf_S_53" type="MeshInstance3D" parent="." unique_id=1238133007]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 84, 0.06, -26.5)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_Dorf_S_57" type="MeshInstance3D" parent="." unique_id=1907571470]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 88, 0.06, -26.5)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_Dorf_S_61" type="MeshInstance3D" parent="." unique_id=2139682935]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 92, 0.06, -26.5)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_Dorf_S_65" type="MeshInstance3D" parent="." unique_id=1680940991]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 96, 0.06, -26.5)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_Dorf_R_69" type="MeshInstance3D" parent="." unique_id=1745979692]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 100, 0.06, -29.5)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_Dorf_R_73" type="MeshInstance3D" parent="." unique_id=1712270678]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 104, 0.06, -29.5)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_Dorf_R_77" type="MeshInstance3D" parent="." unique_id=885206161]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 108, 0.06, -29.5)
+mesh = SubResource("Mesh_ParkingStripe")
+
+[node name="ParkingStall_Dorf_R_81" type="MeshInstance3D" parent="." unique_id=668550854]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 112, 0.06, -29.5)
+mesh = SubResource("Mesh_ParkingStripe")
+

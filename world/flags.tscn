@@ -1,0 +1,28 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://props/us_flag.tscn" id="1_flag"]
+
+[node name="Flags" type="Node3D"]
+
+[node name="Flag_BoogerKing" parent="." instance=ExtResource("1_flag")]
+transform = Transform3D(0.996195, 0, -0.087156, 0, 1, 0, 0.087156, 0, 0.996195, -25, 0, 17)
+
+[node name="Flag_MotelLobby" parent="." instance=ExtResource("1_flag")]
+transform = Transform3D(0.990268, 0, 0.139173, 0, 1, 0, -0.139173, 0, 0.990268, 16, 0, 17)
+
+[node name="Flag_Walgroins" parent="." instance=ExtResource("1_flag")]
+transform = Transform3D(0.978148, 0, 0.207912, 0, 1, 0, -0.207912, 0, 0.978148, -36, 0, -17)
+
+[node name="Flag_TacoHell" parent="." instance=ExtResource("1_flag")]
+transform = Transform3D(0.990268, 0, -0.139173, 0, 1, 0, 0.139173, 0, 0.990268, 46.5, 0, -18)
+
+[node name="Flag_WestGiant" parent="." instance=ExtResource("1_flag")]
+transform = Transform3D(0.997564, 0, 0.069756, 0, 1, 0, -0.069756, 0, 0.997564, -80, 0, 20)
+flag_size = 2
+
+[node name="Flag_Dorf" parent="." instance=ExtResource("1_flag")]
+transform = Transform3D(0.994522, 0, -0.104528, 0, 1, 0, 0.104528, 0, 0.994522, 74.5, 0, -26)
+flag_size = 4
+
+[node name="Flag_CrampedInnEast" parent="." instance=ExtResource("1_flag")]
+transform = Transform3D(0.99863, 0, 0.052336, 0, 1, 0, -0.052336, 0, 0.99863, 61, 0, 15.85)

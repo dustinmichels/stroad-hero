@@ -230,7 +230,7 @@ Constructed programmatically in `objectives/objective_marker.gd`:
      - `ObjectiveManager._is_mats_dead` flag is set to `true`, pausing distance arrival checks so a ragdolling corpse cannot trigger completion.
      - The active errand remains preserved.
    - When Mats respawns (`respawned` signal):
-     - Rather than resetting to the game start position, Mats respawns on the nearest side of the road to where he died ($z = \pm 13.85$) at the longitudinal death $X$-coordinate.
+     - If Mats died while attempting to cross the stroad, he respawns on his starting side of the roadway ($z = \pm 13.85$) at the longitudinal death $X$-coordinate, requiring him to re-attempt the crossing.
      - `ObjectiveManager._is_mats_dead` resets to `false`.
      - 3D marker and HUD arrow resume guiding Mats to the destination from the new roadside position.
 

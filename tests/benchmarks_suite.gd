@@ -350,13 +350,143 @@ func _run_verify_render_test() -> void:
 	print("VERIFY_RENDER: Beginning full verification of exported browser build...")
 
 	var streetlights := main.get_node_or_null("Props/Streetlights")
-	var is_baked: bool = (streetlights is MultiMeshInstance3D) or ("--bake" in user_args)
+	var is_baked: bool = (
+		(streetlights != null and streetlights.has_node("BakedMultiMesh"))
+		or ("--bake" in user_args)
+	)
 	if not is_baked:
 		var mb = load("res://addons/mesh_baker/mesh_baker.gd")
 		if mb:
 			mb.bake_main_scene(main)
 			is_baked = true
 
+	var road_node := main.get_node_or_null("Road")
+	assert(road_node != null, "Road node must exist in main scene")
+	var baked_road := road_node.get_node_or_null("BakedStaticMesh") as MeshInstance3D
+	assert(
+		baked_road != null and baked_road.mesh != null,
+		"Road/BakedStaticMesh must exist with baked mesh"
+	)
+	var parking_node := main.get_node_or_null("Parking")
+	assert(parking_node != null, "Parking node must exist in main scene")
+	var baked_parking := parking_node.get_node_or_null("BakedStaticMesh") as MeshInstance3D
+	assert(
+		baked_parking != null and baked_parking.mesh != null,
+		"Parking/BakedStaticMesh must exist with baked mesh"
+	)
+
+	# --- Streetlights, Trees, Flags & Bollards Baking ---
+	var baked_streetlights := streetlights.get_node_or_null("BakedMultiMesh") as MultiMeshInstance3D
+	assert(
+		baked_streetlights != null and baked_streetlights.multimesh != null,
+		"Props/Streetlights/BakedMultiMesh must exist with MultiMesh"
+	)
+	assert(
+		baked_streetlights.multimesh.instance_count == 15,
+		"Baked streetlights must have 15 instances"
+	)
+	for child in streetlights.get_children():
+		if child is MultiMeshInstance3D:
+			continue
+		assert(
+			child.get_node_or_null("CollisionShape3D") != null,
+			"Streetlight pole collision shape must remain intact after baking"
+		)
+		assert(
+			child.get_node_or_null("Light") != null,
+			"Streetlight SpotLight3D must remain intact after baking"
+		)
+
+	if main.environment_controller:
+		main.environment_controller.update_streetlights(true)
+		assert(
+			baked_streetlights.multimesh.mesh != null,
+			"Baked streetlights mesh must not be null when lights on"
+		)
+		var has_lit_surface := false
+		for s in range(baked_streetlights.multimesh.mesh.get_surface_count()):
+			var mat = baked_streetlights.multimesh.mesh.surface_get_material(s)
+			if mat is StandardMaterial3D and mat.emission_enabled:
+				has_lit_surface = true
+				break
+		assert(
+			has_lit_surface, "Baked streetlights mesh must have an emissive surface when lights on"
+		)
+		for child in streetlights.get_children():
+			if child is MultiMeshInstance3D:
+				continue
+			var light := child.get_node_or_null("Light") as SpotLight3D
+			assert(
+				light != null and light.visible,
+				"Streetlight SpotLight3D must be visible when lights on"
+			)
+
+		main.environment_controller.update_streetlights(false)
+		var has_lit_surface_off := false
+		for s in range(baked_streetlights.multimesh.mesh.get_surface_count()):
+			var mat = baked_streetlights.multimesh.mesh.surface_get_material(s)
+			if mat is StandardMaterial3D and mat.emission_enabled:
+				has_lit_surface_off = true
+				break
+		assert(
+			not has_lit_surface_off,
+			"Baked streetlights mesh must not have an emissive surface when lights off"
+		)
+		for child in streetlights.get_children():
+			if child is MultiMeshInstance3D:
+				continue
+			var light := child.get_node_or_null("Light") as SpotLight3D
+			assert(
+				light != null and not light.visible,
+				"Streetlight SpotLight3D must be off when lights off"
+			)
+	var trees_node := main.get_node_or_null("Props/Trees") as Node3D
+	assert(trees_node != null, "Props/Trees must exist in main scene")
+	var tree_count := 0
+	for tree in trees_node.get_children():
+		if not (tree is Node3D):
+			continue
+		tree_count += 1
+		var visuals := tree.get_node_or_null("Visuals") as Node3D
+		assert(visuals != null, "Tree %s must have Visuals" % tree.name)
+		assert(
+			visuals.get_child_count() == 1,
+			"Tree %s must have exactly 1 active variant after baking" % tree.name
+		)
+		var active_variant := visuals.get_child(0) as Node3D
+		assert(active_variant.visible, "Tree active variant must be visible")
+	assert(tree_count > 0, "Props/Trees must contain tree instances")
+
+	var flags_node := main.get_node_or_null("Props/Flags") as Node3D
+	assert(flags_node != null, "Props/Flags must exist in main scene")
+	var flag_count := 0
+	for flag in flags_node.get_children():
+		if not (flag is Node3D):
+			continue
+		flag_count += 1
+		var visuals := flag.get_node_or_null("Visuals") as Node3D
+		assert(visuals != null, "Flag %s must have Visuals" % flag.name)
+		assert(
+			visuals.get_child_count() == 1,
+			"Flag %s must have exactly 1 active variant after baking" % flag.name
+		)
+		var active_variant := visuals.get_child(0) as Node3D
+		assert(active_variant.visible, "Flag active variant must be visible")
+		assert(
+			active_variant.has_node("Flag"), "Flag active variant must retain Flag mesh instance"
+		)
+	assert(flag_count > 0, "Props/Flags must contain flag instances")
+
+	var bk_site := main.get_node_or_null("Props/BoogerKingSite") as Node3D
+	assert(bk_site != null, "BoogerKingSite must exist")
+	var bk_bollards := bk_site.get_node_or_null("BakedBollardsMultiMesh") as MultiMeshInstance3D
+	assert(
+		bk_bollards != null and bk_bollards.multimesh != null,
+		"BoogerKingSite must have BakedBollardsMultiMesh"
+	)
+	assert(
+		bk_bollards.multimesh.instance_count > 0, "BoogerKing bollard multimesh must have instances"
+	)
 	# --- 1. Buildings ---
 	print("VERIFY_RENDER [1/7]: Verifying buildings...")
 	var building_paths := [
@@ -525,6 +655,31 @@ func _run_verify_render_test() -> void:
 	print(
 		"  Dorf parking lot & 15 permanent scene-authored cars verified (StaticBody3D models with collision)"
 	)
+	# Verify outer edge display cars vs empty inner layer
+	var raw_main: Node = load("res://main.tscn").instantiate()
+	assert(
+		raw_main.get_node_or_null("Parking/ParkingStall_Dorf_51") == null,
+		"Dorf outer edge parking stall paint must be removed"
+	)
+	assert(
+		raw_main.get_node_or_null("Parking/ParkingStall_Dorf_S_49") != null,
+		"Dorf inner layer parking lines (S) must exist"
+	)
+	assert(
+		raw_main.get_node_or_null("Parking/ParkingStall_Dorf_R_69") != null,
+		"Dorf inner layer parking lines (R) must exist"
+	)
+	raw_main.free()
+	for car_node in dorf_cars:
+		if car_node.name == "TurntableCar" or car_node.name == "RampCar":
+			continue
+		assert(
+			car_node.transform.origin.z >= 20.0,
+			(
+				"Static parked car %s must be on outer edge (z >= 20.0), found at z = %f"
+				% [car_node.name, car_node.transform.origin.z]
+			)
+		)
 
 	# Test Flag_Dorf and flags in main scene
 	var flags_parent := main.get_node_or_null("Props/Flags")
@@ -554,6 +709,19 @@ func _run_verify_render_test() -> void:
 		colossal_flag_plane.size.x >= 9.0 and colossal_flag_plane.size.y >= 4.5,
 		"Colossal flag plane size must be at least 9m x 4.5m"
 	)
+	var dorf_lot_node := main.get_node_or_null("Parking/DorfParkingLot") as MeshInstance3D
+	if dorf_lot_node and dorf_lot_node.mesh is BoxMesh:
+		var lot_box := dorf_lot_node.mesh as BoxMesh
+		var lot_half_x: float = lot_box.size.x * 0.5
+		var lot_min_x: float = dorf_lot_node.global_position.x - lot_half_x
+		var lot_max_x: float = dorf_lot_node.global_position.x + lot_half_x
+		assert(
+			dorf_flag.global_position.x < lot_min_x or dorf_flag.global_position.x > lot_max_x,
+			(
+				"Flag_Dorf must be positioned to the side, outside the Dorf parking lot apron (lot X: [%.1f, %.1f], flag X: %.1f)"
+				% [lot_min_x, lot_max_x, dorf_flag.global_position.x]
+			)
+		)
 	print("  Dorf colossal American flag verified (24m pole, 9.5x5.0m flag)")
 
 	# --- 2. Vehicles ---
@@ -649,6 +817,51 @@ func _run_verify_render_test() -> void:
 		var pmat := PassengerCar.get_paint_material(c)
 		assert(pmat != null, "Sports paint material must generate for color %s" % c)
 		assert(pmat.albedo_color == c, "Sports paint material albedo must match %s" % c)
+
+	for c in PassengerCar.SPORTS_PAINT_PALETTE:
+		var smat := PassengerCar.get_sports_stripe_material(c)
+		assert(smat != null, "Sports stripe material must generate for color %s" % c)
+		var scol := PassengerCar.get_sports_stripe_color(c)
+		assert(smat.albedo_color == scol, "Stripe material albedo must match stripe color")
+		if c.get_luminance() > 0.55:
+			assert(scol == Color(0.10, 0.10, 0.12), "Bright sports cars must have dark stripe")
+		else:
+			assert(scol == Color(0.96, 0.96, 0.98), "Dark sports cars must have white stripe")
+
+	var sports_car: PassengerCar = pcar_scene.instantiate()
+	sports_car.car_type = Car.CarType.SPORTS
+	main.add_child(sports_car)
+	sports_car._apply_visual_type()
+	var sports_model := sports_car._get_node_for_type(Car.CarType.SPORTS)
+	assert(sports_model != null, "Sports car model must exist")
+	var stripe_count := 0
+	for child in sports_model.get_children():
+		if (
+			child is MeshInstance3D
+			and (child.name == &"Stripe" or child.name.begins_with("Stripe"))
+		):
+			stripe_count += 1
+			assert(
+				child.material_override != null,
+				"Stripe node %s must have material_override" % child.name
+			)
+	assert(stripe_count >= 5, "Sports car must have stripe nodes (found %d)" % stripe_count)
+	sports_car.queue_free()
+
+	var sports_spawned := 0
+	const SAMPLE_COUNT := 500
+	for _i in range(SAMPLE_COUNT):
+		if PassengerCar.pick_passenger_car_type(true) == Car.CarType.SPORTS:
+			sports_spawned += 1
+		assert(
+			PassengerCar.pick_passenger_car_type(false) != Car.CarType.SPORTS,
+			"Sports must never spawn when disallowed"
+		)
+	var sports_rate := float(sports_spawned) / float(SAMPLE_COUNT)
+	assert(
+		sports_rate > 0.04 and sports_rate < 0.14,
+		"Sports spawn rate must be approx 8%% (got %.2f)" % sports_rate
+	)
 
 	var vertex_color_surfaces := 0
 	var scene_meshes: Array[MeshInstance3D] = []

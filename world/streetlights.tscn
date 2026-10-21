@@ -1,0 +1,50 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://props/street_lamp.tscn" id="1_lamp"]
+
+[node name="Streetlights" type="Node3D" groups=["streetlights"]]
+
+[node name="Streetlight_m18_9.8" parent="." instance=ExtResource("1_lamp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 0, 12.1)
+
+[node name="Streetlight_18_9.8" parent="." instance=ExtResource("1_lamp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0, 12.1)
+
+[node name="Streetlight_m6_m9.8" parent="." instance=ExtResource("1_lamp")]
+transform = Transform3D(-1, 0, 1.22465e-16, 0, 1, 0, -1.22465e-16, 0, -1, -6, 0, -12.1)
+
+[node name="Streetlight_22_m9.8" parent="." instance=ExtResource("1_lamp")]
+transform = Transform3D(-1, 0, 1.22465e-16, 0, 1, 0, -1.22465e-16, 0, -1, 22, 0, -12.1)
+
+[node name="Streetlight_m50_9.8" parent="." instance=ExtResource("1_lamp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -50, 0, 12.1)
+
+[node name="Streetlight_48_9.8" parent="." instance=ExtResource("1_lamp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48, 0, 12.1)
+
+[node name="Streetlight_m38_m9.8" parent="." instance=ExtResource("1_lamp")]
+transform = Transform3D(-1, 0, 1.22465e-16, 0, 1, 0, -1.22465e-16, 0, -1, -38, 0, -12.1)
+
+[node name="Streetlight_42_m9.8" parent="." instance=ExtResource("1_lamp")]
+transform = Transform3D(-1, 0, 1.22465e-16, 0, 1, 0, -1.22465e-16, 0, -1, 42, 0, -12.1)
+
+[node name="Streetlight_m66_9.8" parent="." instance=ExtResource("1_lamp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -66, 0, 12.1)
+
+[node name="Streetlight_66_9.8" parent="." instance=ExtResource("1_lamp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 76, 0, 12.1)
+
+[node name="Streetlight_m66_m9.8" parent="." instance=ExtResource("1_lamp")]
+transform = Transform3D(-1, 0, 1.22465e-16, 0, 1, 0, -1.22465e-16, 0, -1, -66, 0, -12.1)
+
+[node name="Streetlight_66_m9.8" parent="." instance=ExtResource("1_lamp")]
+transform = Transform3D(-1, 0, 1.22465e-16, 0, 1, 0, -1.22465e-16, 0, -1, 66, 0, -12.1)
+
+[node name="Streetlight_Frontage_88" parent="." instance=ExtResource("1_lamp")]
+transform = Transform3D(-1, 0, 1.22465e-16, 0, 1, 0, -1.22465e-16, 0, -1, 88, 0, 24.2)
+
+[node name="Streetlight_Frontage_120" parent="." instance=ExtResource("1_lamp")]
+transform = Transform3D(-1, 0, 1.22465e-16, 0, 1, 0, -1.22465e-16, 0, -1, 120, 0, 24.2)
+
+[node name="Streetlight_Frontage_150" parent="." instance=ExtResource("1_lamp")]
+transform = Transform3D(-1, 0, 1.22465e-16, 0, 1, 0, -1.22465e-16, 0, -1, 150, 0, 24.2)

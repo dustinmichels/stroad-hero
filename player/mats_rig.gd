@@ -7,19 +7,26 @@ enum PhoneMode { NONE, RINGING, TALKING }
 @export_enum("Hair", "Red ball cap", "Beanie") var headwear: int = Headwear.HAIR:
 	set(value):
 		headwear = clampi(value, Headwear.HAIR, Headwear.BEANIE)
-		set_headwear(headwear)
+		_update_headwear()
 @export var jacket_color := Color(0.96, 0.48, 0.1, 1.0):
 	set(value):
+		if jacket_color == value and _jacket_material:
+			return
 		jacket_color = value
-		set_jacket_color(jacket_color)
+		_update_jacket_materials()
 @export var backpack_color := Color(0.2, 0.55, 0.3, 1.0):
 	set(value):
+		if backpack_color == value and backpack and backpack.material_override:
+			return
 		backpack_color = value
-		set_backpack_color(backpack_color)
+		_update_backpack_material()
 @export var shoe_color := Color(0.8, 0.14, 0.12, 1.0):
 	set(value):
+		if shoe_color == value and left_shoe_upper and left_shoe_upper.material_override:
+			return
 		shoe_color = value
-		set_shoe_color(shoe_color)
+		_update_shoe_material()
+@export var auto_idle := false
 @onready var left_leg: Node3D = $LeftLegPivot
 @onready var right_leg: Node3D = $RightLegPivot
 @onready var left_arm: Node3D = $LeftArmPivot
@@ -81,6 +88,12 @@ const IDLE_ARM_BREATH_Z := 0.02
 const IDLE_ARM_BREATH_X := 0.025
 const IDLE_SWAY_RATE := 0.8
 const IDLE_SWAY_ANGLE := 0.02
+const KNEEL_HIP_HEIGHT := 0.3
+const KNEEL_HIP_ROTATION := 0.0
+const KNEEL_KNEE_ROTATION := PI / 2.0
+const KNEEL_ANKLE_ROTATION := PI / 2.0
+const KNEEL_SHOULDER_ROTATION := -0.60
+const KNEEL_ELBOW_ROTATION := -0.20
 
 const PHONE_BLEND_RATE := 4.0
 const PHONE_TRANS_RATE := 12.0
@@ -93,6 +106,7 @@ const PHONE_RINGING_HEAD := Vector3(deg_to_rad(10.0), deg_to_rad(-8.0), 0.0)
 var _stride_phase := 0.0
 var _squash := 0.0
 var _idle_time := 0.0
+var _pose_tween: Tween = null
 var _jacket_material: StandardMaterial3D = null
 var _jacket_trim_material: StandardMaterial3D = null
 
@@ -122,28 +136,45 @@ func _ready() -> void:
 	set_headwear(headwear)
 
 
+func _process(delta: float) -> void:
+	if auto_idle:
+		update_idle(delta)
+
+
+## Updates idle posture, breathing, and subtle sway for standalone UI previews without physics inputs.
+func update_idle(delta: float) -> void:
+	update_locomotion(delta, Vector2.ZERO, 1.0, 1.0, true, false, 0.0)
+
+
 var hip_y: float:
 	get:
 		return left_leg.position.y if left_leg else 0.6
 
 
-func setup_materials(backpack_color: Color, shoe_color: Color, jacket_color: Color) -> void:
+func setup_materials(
+	p_backpack_color: Color = backpack_color,
+	p_shoe_color: Color = shoe_color,
+	p_jacket_color: Color = jacket_color
+) -> void:
+	if not is_node_ready() or not backpack:
+		return
+
 	var bp_mat := StandardMaterial3D.new()
-	bp_mat.albedo_color = backpack_color
+	bp_mat.albedo_color = p_backpack_color
 	bp_mat.roughness = 0.8
 	backpack.material_override = bp_mat
 
 	var shoe_mat := StandardMaterial3D.new()
-	shoe_mat.albedo_color = shoe_color
+	shoe_mat.albedo_color = p_shoe_color
 	shoe_mat.roughness = 0.75
 	left_shoe_upper.material_override = shoe_mat
 	right_shoe_upper.material_override = shoe_mat
 
 	_jacket_material = StandardMaterial3D.new()
-	_jacket_material.albedo_color = jacket_color
+	_jacket_material.albedo_color = p_jacket_color
 	_jacket_material.roughness = 0.7
 	_jacket_trim_material = StandardMaterial3D.new()
-	_jacket_trim_material.albedo_color = jacket_color.darkened(0.25)
+	_jacket_trim_material.albedo_color = p_jacket_color.darkened(0.25)
 	_jacket_trim_material.roughness = 0.75
 
 	torso.set_surface_override_material(0, _jacket_material)
@@ -157,39 +188,61 @@ func setup_materials(backpack_color: Color, shoe_color: Color, jacket_color: Col
 
 
 func set_headwear(value: int) -> void:
+	headwear = value
+
+
+func _update_headwear() -> void:
 	if not is_node_ready():
 		return
 	if hat:
-		hat.visible = value != Headwear.HAIR
+		hat.visible = headwear != Headwear.HAIR
 	if cap:
-		cap.visible = value == Headwear.HAT
+		cap.visible = headwear == Headwear.HAT
 	if beanie:
-		beanie.visible = value == Headwear.BEANIE
+		beanie.visible = headwear == Headwear.BEANIE
 
 
 func set_jacket_color(color: Color) -> void:
+	jacket_color = color
+
+
+func _update_jacket_materials() -> void:
 	if not is_node_ready():
 		return
 	if _jacket_material:
-		_jacket_material.albedo_color = color
+		_jacket_material.albedo_color = jacket_color
+	else:
+		setup_materials(backpack_color, shoe_color, jacket_color)
 	if _jacket_trim_material:
-		_jacket_trim_material.albedo_color = color.darkened(0.25)
+		_jacket_trim_material.albedo_color = jacket_color.darkened(0.25)
 
 
 func set_backpack_color(color: Color) -> void:
-	if not is_node_ready():
+	backpack_color = color
+
+
+func _update_backpack_material() -> void:
+	if not is_node_ready() or not backpack:
 		return
 	var material := backpack.material_override as StandardMaterial3D
 	if material:
-		material.albedo_color = color
+		material.albedo_color = backpack_color
+	else:
+		setup_materials(backpack_color, shoe_color, jacket_color)
 
 
 func set_shoe_color(color: Color) -> void:
-	if not is_node_ready():
+	shoe_color = color
+
+
+func _update_shoe_material() -> void:
+	if not is_node_ready() or not left_shoe_upper:
 		return
 	var material := left_shoe_upper.material_override as StandardMaterial3D
 	if material:
-		material.albedo_color = color
+		material.albedo_color = shoe_color
+	else:
+		setup_materials(backpack_color, shoe_color, jacket_color)
 
 
 func set_shirt_color(color: Color) -> void:
@@ -246,26 +299,179 @@ func _build_phone() -> void:
 
 func set_limb_pose(hip: float, knee: float, ankle: float, shoulder: float, elbow: float) -> void:
 	for joint: Node3D in [left_leg, right_leg]:
-		joint.rotation.x = hip
+		if joint:
+			joint.rotation = Vector3(hip, 0.0, 0.0)
 	for joint: Node3D in [left_knee, right_knee]:
-		joint.rotation.x = knee
+		if joint:
+			joint.rotation = Vector3(knee, 0.0, 0.0)
 	for joint: Node3D in [left_ankle, right_ankle]:
-		joint.rotation.x = ankle
+		if joint:
+			joint.rotation = Vector3(ankle, 0.0, 0.0)
 	for joint: Node3D in [left_arm, right_arm]:
-		joint.rotation.x = shoulder
+		if joint:
+			joint.rotation = Vector3(shoulder, 0.0, 0.0)
 	for joint: Node3D in [left_elbow, right_elbow]:
-		joint.rotation.x = elbow
+		if joint:
+			joint.rotation = Vector3(elbow, 0.0, 0.0)
 
 
-func reset_pose() -> void:
-	position = Vector3.ZERO
-	rotation = Vector3(0.0, PI, 0.0)
-	scale = Vector3.ONE
-	set_limb_pose(0.0, 0.0, 0.0, 0.0, 0.0)
+func stop_pose_animation() -> void:
+	if _pose_tween and _pose_tween.is_valid():
+		_pose_tween.kill()
+	_pose_tween = null
+
+
+func get_cart_kneel_position() -> Vector3:
+	var hip_offset := left_leg.position.y if left_leg else hip_y
+	return Vector3(0.0, KNEEL_HIP_HEIGHT - hip_offset, 0.03)
+
+
+func apply_cart_kneel_pose() -> void:
+	stop_pose_animation()
+	rotation = Vector3.ZERO
+	position = get_cart_kneel_position()
+	set_limb_pose(
+		KNEEL_HIP_ROTATION,
+		KNEEL_KNEE_ROTATION,
+		KNEEL_ANKLE_ROTATION,
+		KNEEL_SHOULDER_ROTATION,
+		KNEEL_ELBOW_ROTATION
+	)
 	left_arm.rotation.y = 0.0
 	left_arm.rotation.z = 0.0
 	right_arm.rotation.y = 0.0
 	right_arm.rotation.z = 0.0
+	if head:
+		head.rotation = Vector3.ZERO
+
+
+func play_cart_mount_animation(duration: float = 0.32) -> Tween:
+	stop_pose_animation()
+	rotation.y = wrapf(rotation.y, -PI, PI)
+	var target_pos := get_cart_kneel_position()
+	var tween := create_tween().set_parallel(true)
+	_pose_tween = tween
+	(
+		tween
+		. tween_property(self, "rotation", Vector3.ZERO, duration)
+		. set_trans(Tween.TRANS_QUAD)
+		. set_ease(Tween.EASE_IN_OUT)
+	)
+	(
+		tween
+		. tween_property(self, "position", target_pos, duration)
+		. set_trans(Tween.TRANS_QUAD)
+		. set_ease(Tween.EASE_IN_OUT)
+	)
+	for joint: Node3D in [left_leg, right_leg]:
+		(
+			tween
+			. tween_property(joint, "rotation:x", KNEEL_HIP_ROTATION, duration)
+			. set_trans(Tween.TRANS_QUAD)
+			. set_ease(Tween.EASE_IN_OUT)
+		)
+	for joint: Node3D in [left_knee, right_knee]:
+		(
+			tween
+			. tween_property(joint, "rotation:x", KNEEL_KNEE_ROTATION, duration)
+			. set_trans(Tween.TRANS_QUAD)
+			. set_ease(Tween.EASE_IN_OUT)
+		)
+	for joint: Node3D in [left_ankle, right_ankle]:
+		(
+			tween
+			. tween_property(joint, "rotation:x", KNEEL_ANKLE_ROTATION, duration)
+			. set_trans(Tween.TRANS_QUAD)
+			. set_ease(Tween.EASE_IN_OUT)
+		)
+	for joint: Node3D in [left_arm, right_arm]:
+		(
+			tween
+			. tween_property(joint, "rotation:x", KNEEL_SHOULDER_ROTATION, duration)
+			. set_trans(Tween.TRANS_QUAD)
+			. set_ease(Tween.EASE_IN_OUT)
+		)
+		(
+			tween
+			. tween_property(joint, "rotation:y", 0.0, duration)
+			. set_trans(Tween.TRANS_QUAD)
+			. set_ease(Tween.EASE_IN_OUT)
+		)
+		(
+			tween
+			. tween_property(joint, "rotation:z", 0.0, duration)
+			. set_trans(Tween.TRANS_QUAD)
+			. set_ease(Tween.EASE_IN_OUT)
+		)
+	for joint: Node3D in [left_elbow, right_elbow]:
+		(
+			tween
+			. tween_property(joint, "rotation:x", KNEEL_ELBOW_ROTATION, duration)
+			. set_trans(Tween.TRANS_QUAD)
+			. set_ease(Tween.EASE_IN_OUT)
+		)
+	if head:
+		(
+			tween
+			. tween_property(head, "rotation", Vector3.ZERO, duration)
+			. set_trans(Tween.TRANS_QUAD)
+			. set_ease(Tween.EASE_IN_OUT)
+		)
+	tween.chain().tween_callback(apply_cart_kneel_pose)
+	return tween
+
+
+func play_cart_dismount_animation(duration: float = 0.32) -> Tween:
+	stop_pose_animation()
+	var tween := create_tween().set_parallel(true)
+	_pose_tween = tween
+	(
+		tween
+		. tween_property(self, "position", Vector3.ZERO, duration)
+		. set_trans(Tween.TRANS_QUAD)
+		. set_ease(Tween.EASE_IN_OUT)
+	)
+	for joint: Node3D in [
+		left_leg,
+		right_leg,
+		left_knee,
+		right_knee,
+		left_ankle,
+		right_ankle,
+		left_arm,
+		right_arm,
+		left_elbow,
+		right_elbow,
+	]:
+		(
+			tween
+			. tween_property(joint, "rotation:x", 0.0, duration)
+			. set_trans(Tween.TRANS_QUAD)
+			. set_ease(Tween.EASE_IN_OUT)
+		)
+	tween.chain().tween_callback(
+		func() -> void:
+			_pose_tween = null
+			position = Vector3.ZERO
+			set_limb_pose(0.0, 0.0, 0.0, 0.0, 0.0)
+	)
+	return tween
+
+
+func reset_pose() -> void:
+	stop_pose_animation()
+	position = Vector3.ZERO
+	rotation = Vector3(0.0, PI, 0.0)
+	scale = Vector3.ONE
+	set_limb_pose(0.0, 0.0, 0.0, 0.0, 0.0)
+	if left_arm:
+		left_arm.rotation = Vector3.ZERO
+	if right_arm:
+		right_arm.rotation = Vector3.ZERO
+	if left_elbow:
+		left_elbow.rotation = Vector3.ZERO
+	if right_elbow:
+		right_elbow.rotation = Vector3.ZERO
 	if head:
 		head.rotation = Vector3.ZERO
 	_stride_phase = 0.0

@@ -460,6 +460,7 @@ static func bake_wheel(wheel_node: Node3D, scene_root: Node = null) -> Node3D:
 static func bake_car_body(root: Node3D, scene_root: Node = null) -> Node3D:
 	var actual_owner: Node = scene_root if scene_root != null else root
 	var painted_items: Array[Dictionary] = []
+	var stripe_items: Array[Dictionary] = []
 	var trim_by_material: Dictionary = {}
 	var trim_mat_order: Array[Material] = []
 	var canonical_materials: Array[Material] = []
@@ -477,12 +478,18 @@ static func bake_car_body(root: Node3D, scene_root: Node = null) -> Node3D:
 			child.owner = actual_owner
 			continue
 
+		if child_name.begins_with("ExhaustStack"):
+			child.owner = actual_owner
+			for subchild in child.get_children():
+				subchild.owner = actual_owner
+			continue
+
 		if child_name in LIGHT_MARKER_NAMES:
 			light_markers_data.append({"name": child_name, "transform": child.transform})
 		if child is MeshInstance3D and child.mesh:
 			var xform := get_relative_transform(child, root)
 			var is_painted := child_name in PassengerCar.PAINTED_NODE_NAMES
-
+			var is_stripe := child_name == &"Stripe" or child_name.begins_with("Stripe")
 			for s in range(child.mesh.get_surface_count()):
 				var orig_mat := get_surface_material(child, s)
 				var mat := get_canonical_material(orig_mat, canonical_materials)
@@ -494,6 +501,8 @@ static func bake_car_body(root: Node3D, scene_root: Node = null) -> Node3D:
 				}
 				if is_painted:
 					painted_items.append(entry)
+				elif is_stripe:
+					stripe_items.append(entry)
 				else:
 					if not trim_by_material.has(mat):
 						trim_by_material[mat] = []
@@ -524,6 +533,23 @@ static func bake_car_body(root: Node3D, scene_root: Node = null) -> Node3D:
 		body_mi.mesh = body_mesh
 		root.add_child(body_mi)
 		body_mi.owner = actual_owner
+
+	# 2. Baked Stripe (stripe parts merged into 1 mesh, 1 surface)
+	if not stripe_items.is_empty():
+		var stripe_st := SurfaceTool.new()
+		stripe_st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		var stripe_mat: Material = stripe_items[0]["material"]
+		if stripe_mat:
+			stripe_st.set_material(stripe_mat)
+		for item in stripe_items:
+			stripe_st.append_from(item["mesh"], item["surface"], item["transform"])
+		var stripe_mesh := stripe_st.commit()
+
+		var stripe_mi := MeshInstance3D.new()
+		stripe_mi.name = "Stripe"
+		stripe_mi.mesh = stripe_mesh
+		root.add_child(stripe_mi)
+		stripe_mi.owner = actual_owner
 
 	# 2. Baked Trim (all other static body parts grouped by material)
 	if not trim_by_material.is_empty():
@@ -1237,7 +1263,7 @@ static func bake_main_scene(root: Node3D) -> Node3D:
 	if props != null:
 		bake_bollards(props, root)
 		for child in props.get_children():
-			if child.name in [&"Streetlights", &"Trees", &"Flags", &"Powerlines"]:
+			if child.name in [&"Streetlights", &"Trees", &"Flags", &"Powerlines", &"Forest"]:
 				continue
 			if child.name == &"WalgroinsShoppingCarts":
 				for cart in child.get_children():

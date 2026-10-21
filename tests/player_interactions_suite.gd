@@ -15,6 +15,7 @@ var _col_test_lane: int = 0
 var _col_test_initial_spd: int = 0
 var _col_test_wait: int = 0
 var _col_test_car: Car = null
+var _col_test_start_side: Mats.StroadSide = Mats.StroadSide.SOUTH
 
 const COL_LANE_CONFIGS: Array[Dictionary] = [
 	{
@@ -104,6 +105,10 @@ func setup_ready() -> void:
 		_cart_test_cart.global_position = Vector3(9.0, 0.0, -15.0)
 		_cart_test_cart.global_basis = Basis()
 		_cart_test_cart._current_speed = 0.0
+		main.mats.blood_linger_delay = 0.02
+		main.mats.fade_duration = 0.02
+		main.mats.spd_emphasis_duration = 0.02
+		main.mats.respawn_delay = 0.02
 		_cart_test_stage = 0
 		_test_frames = 0
 		_cart_test_setup()
@@ -258,6 +263,43 @@ func on_physics_process(_delta: float) -> void:
 					_cart_test_cart._nearby_mats == null,
 					"Cart nearby mats must be null after rider died and respawned"
 				)
+				assert(
+					vis.left_leg.rotation.is_zero_approx(),
+					"Left leg rotation must be reset after respawn"
+				)
+				assert(
+					vis.right_leg.rotation.is_zero_approx(),
+					"Right leg rotation must be reset after respawn"
+				)
+				assert(
+					vis.left_knee.rotation.is_zero_approx(),
+					"Left knee rotation must be reset after respawn"
+				)
+				assert(
+					vis.right_knee.rotation.is_zero_approx(),
+					"Right knee rotation must be reset after respawn"
+				)
+				assert(
+					vis.left_arm.rotation.is_zero_approx(),
+					"Left arm rotation must be reset after respawn"
+				)
+				assert(
+					vis.right_arm.rotation.is_zero_approx(),
+					"Right arm rotation must be reset after respawn"
+				)
+				assert(
+					vis.left_elbow.rotation.is_zero_approx(),
+					"Left elbow rotation must be reset after respawn"
+				)
+				assert(
+					vis.right_elbow.rotation.is_zero_approx(),
+					"Right elbow rotation must be reset after respawn"
+				)
+				assert(vis.position.is_zero_approx(), "Visual position must be reset after respawn")
+				assert(vis._pose_tween == null, "Visual pose tween must be null after respawn")
+				assert(
+					main.mats._mount_tween == null, "Mats mount tween must be null after respawn"
+				)
 				print("Stage 4 passed! Now testing pushing shopping cart (stages 5-8)...")
 				_cart_test_stage = 5
 				_test_frames = 0
@@ -355,8 +397,64 @@ func on_physics_process(_delta: float) -> void:
 				assert(not main.mats.is_pushing_cart, "Must stop pushing after pressing P again")
 				assert(_cart_test_cart.get_pusher() == null, "Pusher must be null")
 				print("  P to stop pushing toggle verified!")
+				# Start pushing again to test death while pushing
+				_cart_test_cart._unhandled_input(p_ev)
+				assert(main.mats.is_pushing_cart, "Must start pushing before death test")
+				_cart_test_stage = 9
+				_test_frames = 0
+		elif _cart_test_stage == 9:
+			if _test_frames >= 5:
+				assert(main.mats.is_pushing_cart, "Must be pushing cart")
+				assert(_cart_test_cart.get_pusher() == main.mats, "Cart pusher must be mats")
+				main.mats.die()
+				assert(main.mats.is_dead, "Mats must be dead")
+				assert(not main.mats.is_pushing_cart, "is_pushing_cart must be false after death")
+				assert(_cart_test_cart.get_pusher() == null, "Cart pusher must be cleared on death")
+				assert(not vis.visible, "Visual rig must be hidden on death")
+				assert(vis._pose_tween == null, "Visual pose tween must be null on death")
+				assert(
+					vis.left_arm.rotation.is_zero_approx(), "Left arm rotation must reset on death"
+				)
+				assert(
+					vis.right_arm.rotation.is_zero_approx(),
+					"Right arm rotation must reset on death"
+				)
+				assert(vis.position.is_zero_approx(), "Visual position must reset on death")
+				_cart_test_stage = 10
+				_test_frames = 0
+		elif _cart_test_stage == 10:
+			if not main.mats.is_dead and _test_frames > 20:
+				assert(
+					main.mats.is_physics_processing(),
+					"Physics processing must resume after respawn"
+				)
+				assert(not main.mats.is_pushing_cart, "is_pushing_cart must stay false on respawn")
+				assert(
+					_cart_test_cart.get_pusher() == null, "Cart pusher must stay null on respawn"
+				)
+				assert(vis.visible, "Visual rig must be visible after respawn")
+				assert(
+					vis.left_arm.rotation.is_zero_approx(),
+					"Left arm rotation must be reset after respawn"
+				)
+				assert(
+					vis.right_arm.rotation.is_zero_approx(),
+					"Right arm rotation must be reset after respawn"
+				)
+				assert(
+					vis.left_leg.rotation.is_zero_approx(),
+					"Left leg rotation must be reset after respawn"
+				)
+				assert(
+					vis.right_leg.rotation.is_zero_approx(),
+					"Right leg rotation must be reset after respawn"
+				)
+				assert(vis.position.is_zero_approx(), "Visual position must be reset after respawn")
+				assert(vis._pose_tween == null, "Visual pose tween must be null after respawn")
+				assert(main.mats._mount_tween == null, "Mount tween must be null after respawn")
+				print("  Death and respawn while pushing verified!")
 				print(
-					"CART_TEST completed: mount, sit, exit, death, behind-detection, p-to-push, walk-pushing, space-jump-in, and stop-pushing verified!"
+					"CART_TEST completed: mount, sit, exit, death, behind-detection, p-to-push, walk-pushing, space-jump-in, stop-pushing, and death-while-pushing verified!"
 				)
 				main.get_tree().quit(0)
 				return
@@ -607,11 +705,13 @@ func on_physics_process(_delta: float) -> void:
 							% [expected_spd, hud_node.spd_count if hud_node else -1]
 						)
 					)
-					var expected_side_z := -13.85 if cfg["z"] < 0.0 else 13.85
+					var expected_side_z := (
+						-13.85 if _col_test_start_side == Mats.StroadSide.NORTH else 13.85
+					)
 					assert(
 						absf(main.mats.global_position.z - expected_side_z) < 0.15,
 						(
-							"Mats must respawn on nearest side of road: expected z=%.2f, got %.2f"
+							"Mats must respawn on starting side of road: expected z=%.2f, got %.2f"
 							% [expected_side_z, main.mats.global_position.z]
 						)
 					)
@@ -684,6 +784,7 @@ func _setup_col_near_miss_test() -> void:
 func _setup_col_lane_test(idx: int) -> void:
 	_test_frames = 0
 	_col_test_wait = 0
+	_col_test_start_side = main.mats.current_side
 	var cfg: Dictionary = COL_LANE_CONFIGS[idx]
 	var lane_id: int = cfg["lane_id"]
 	var lane_z: float = cfg["z"]

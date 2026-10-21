@@ -14,6 +14,8 @@ func matches_args() -> bool:
 				"--test-deadlock-watchdog",
 				"--test-car-headlights",
 				"--test-car-exhaust",
+				"--test-frontage-contracts",
+				"--test-speed-variation",
 			]
 		):
 			return true
@@ -42,6 +44,121 @@ func setup_ready() -> void:
 	if "--test-car-exhaust" in user_args:
 		_run_test_car_exhaust()
 		return
+	if "--test-frontage-contracts" in user_args:
+		_run_test_frontage_contracts()
+		return
+	if "--test-speed-variation" in user_args:
+		_run_test_speed_variation()
+
+
+func _run_test_frontage_contracts() -> void:
+	var tm = main.get_node_or_null("TrafficManager") as TrafficManager
+	assert(tm != null, "TrafficManager must exist")
+	assert(tm.lot != null, "ParkingLot must exist")
+	for c in tm.lot_cars:
+		c.queue_free()
+	tm.lot_cars.clear()
+	for s in tm.lot.spots:
+		tm.lot.release(s)
+
+	# Verify frontage spots
+	var frontage_spots: Array[ParkingSpot] = []
+	for spot in tm.lot.spots:
+		if ParkingLot.is_frontage(spot):
+			frontage_spots.append(spot)
+	assert(
+		frontage_spots.size() == 13,
+		"Must have exactly 13 frontage spots (found %d)" % frontage_spots.size()
+	)
+
+	# Verify spot properties and routes
+	var retail_count := 0
+	var car_care_count := 0
+	var commercial_count := 0
+	for spot in frontage_spots:
+		assert(spot.site_id == &"frontage", 'Frontage spot site_id must be &"frontage"')
+		assert(ParkingLot.lot_group(spot) == &"frontage", 'lot_group must be &"frontage"')
+		assert(
+			spot.entry_route != null and spot.entry_route.get_baked_length() > 30.0,
+			"Entry route must be valid"
+		)
+		assert(
+			spot.reverse_route != null and spot.reverse_route.get_baked_length() > 4.0,
+			"Reverse route must be valid"
+		)
+		assert(
+			spot.exit_route != null and spot.exit_route.get_baked_length() > 20.0,
+			"Exit route must be valid"
+		)
+		if spot.serves.has(&"frontage_retail"):
+			retail_count += 1
+			assert(
+				spot.serves.has(&"leaders_furniture"),
+				'Retail spot must also serve &"leaders_furniture"'
+			)
+		elif spot.serves.has(&"consumer_car_care"):
+			car_care_count += 1
+			assert(spot.serves.has(&"car_care"), 'Car care spot must also serve &"car_care"')
+		elif spot.serves.has(&"frontage_commercial"):
+			commercial_count += 1
+			assert(spot.serves.has(&"checkers"), 'Commercial spot must also serve &"checkers"')
+
+	assert(retail_count == 6, "Must have 6 Retail spots (found %d)" % retail_count)
+	assert(car_care_count == 5, "Must have 5 Consumer Car Care spots (found %d)" % car_care_count)
+	assert(
+		commercial_count == 2, "Must have 2 Frontage Commercial spots (found %d)" % commercial_count
+	)
+
+	# Verify SITES registry
+	var site_cfg := ParkingLot.get_site_cfg(&"frontage")
+	assert(not site_cfg.is_empty(), 'Site config for &"frontage" must exist')
+	assert(site_cfg.get("lane_id") == 3, "Frontage lane_id must be 3")
+	assert(
+		site_cfg.get("wait") == ParkingLot.FRONTAGE_WAIT_POINT,
+		"Wait point must match FRONTAGE_WAIT_POINT"
+	)
+	assert(
+		site_cfg.get("merge_end") == ParkingLot.FRONTAGE_MERGE_END,
+		"Merge end must match FRONTAGE_MERGE_END"
+	)
+
+	# Verify request_spot and state transitions
+	var car_scene = load("res://cars/passenger_car.tscn")
+	var test_car: Car = car_scene.instantiate()
+	test_car.car_type = Car.CarType.SEDAN
+	tm.add_child(test_car)
+
+	var errand_cc = Errand.new(&"consumer_car_care", 10.0)
+	var spot_cc = tm.lot.request_spot(test_car, errand_cc)
+	assert(spot_cc != null, "Must successfully allocate spot for consumer_car_care")
+	assert(spot_cc.serves.has(&"consumer_car_care"), "Spot must serve consumer_car_care")
+	assert(spot_cc.state == ParkingSpot.State.RESERVED, "Spot must be RESERVED")
+	tm.lot.occupy(spot_cc)
+	assert(spot_cc.state == ParkingSpot.State.OCCUPIED, "Spot must be OCCUPIED")
+	tm.lot.release(spot_cc)
+	assert(spot_cc.state == ParkingSpot.State.FREE, "Spot must be FREE")
+
+	var errand_ret = Errand.new(&"leaders_furniture", 10.0)
+	var spot_ret = tm.lot.request_spot(test_car, errand_ret)
+	assert(spot_ret != null, "Must successfully allocate spot for leaders_furniture")
+	assert(spot_ret.serves.has(&"frontage_retail"), "Spot must serve frontage_retail")
+	tm.lot.release(spot_ret)
+
+	var errand_com = Errand.new(&"checkers", 10.0)
+	var spot_com = tm.lot.request_spot(test_car, errand_com)
+	assert(spot_com != null, "Must successfully allocate spot for checkers")
+	assert(spot_com.serves.has(&"frontage_commercial"), "Spot must serve frontage_commercial")
+	tm.lot.release(spot_com)
+
+	test_car.queue_free()
+
+	# Verify merge path and coordinates
+	assert(ParkingLot.merge_x(3, 70.25) == 70.25, "Merge x for frontage must be 70.25")
+	var m_route = ParkingLot.merge_path(3, 70.25)
+	assert(m_route != null and m_route.get_baked_length() > 5.0, "Merge route must be valid")
+
+	print("TRAFFIC CONTRACTS: Frontage road parking spots and routes verified successfully!")
+	main.get_tree().quit(0)
 
 
 func _run_test_exit_priority() -> void:
@@ -761,7 +878,102 @@ func _run_test_car_exhaust() -> void:
 	assert(taxi.exhaust_particles != null, "Taxi should have exhaust particles")
 	assert(taxi.exhaust_particles.emitting == true, "Taxi should emit smog when cruising")
 
-	# 5. Distribution test: some of the cars get exhaust automatically
+	# 5. Ford F-150 rolling coal smokestacks vs stock exhaust
+	var f150_coal: Car = pcar_scene.instantiate()
+	f150_coal.car_type = Car.CarType.F150
+	f150_coal.has_smokestacks = true
+	main.add_child(f150_coal)
+
+	var f150_stock: Car = pcar_scene.instantiate()
+	f150_stock.car_type = Car.CarType.F150
+	f150_stock.has_smokestacks = false
+	f150_stock.has_exhaust = true
+	main.add_child(f150_stock)
+	await main.get_tree().process_frame
+
+	var f150_coal_model := f150_coal.get_active_model()
+	var stack_l := f150_coal_model.get_node_or_null("ExhaustStackL") as Node3D
+	var stack_r := f150_coal_model.get_node_or_null("ExhaustStackR") as Node3D
+	assert(
+		stack_l != null and stack_l.visible == true,
+		"F-150 with smokestacks must show ExhaustStackL"
+	)
+	assert(
+		stack_r != null and stack_r.visible == true,
+		"F-150 with smokestacks must show ExhaustStackR"
+	)
+	assert(
+		f150_coal._exhaust_emitters.size() == 2,
+		"F-150 with smokestacks must have 2 exhaust emitters"
+	)
+	assert(
+		f150_coal.exhaust_particles.color_ramp == Car._coal_gradient,
+		"F-150 smokestacks should use coal color gradient"
+	)
+	assert(
+		f150_coal.exhaust_particles.scale_amount_curve == Car._coal_scale_curve,
+		"F-150 smokestacks should use coal expansion curve"
+	)
+	assert(
+		f150_coal_model.get_node_or_null("ExhaustPipe") == null,
+		"F-150 with smokestacks should not have under-bumper ExhaustPipe"
+	)
+
+	var f150_stock_model := f150_stock.get_active_model()
+	var stock_stack_l := f150_stock_model.get_node_or_null("ExhaustStackL") as Node3D
+	var stock_stack_r := f150_stock_model.get_node_or_null("ExhaustStackR") as Node3D
+	assert(
+		stock_stack_l == null or stock_stack_l.visible == false,
+		"Stock F-150 must hide ExhaustStackL"
+	)
+	assert(
+		stock_stack_r == null or stock_stack_r.visible == false,
+		"Stock F-150 must hide ExhaustStackR"
+	)
+	assert(
+		f150_stock.exhaust_pipe != null,
+		"Stock F-150 with exhaust must have under-bumper exhaust pipe"
+	)
+	assert(f150_stock.exhaust_pipe.name == "ExhaustPipe", "Stock F-150 pipe must be ExhaustPipe")
+	assert(f150_stock._exhaust_emitters.size() == 1, "Stock F-150 should have 1 exhaust emitter")
+	assert(
+		f150_stock.exhaust_particles.color_ramp == Car._smog_gradient,
+		"Stock F-150 should use normal smog color gradient"
+	)
+
+	# Dynamic toggle check
+	f150_stock.has_smokestacks = true
+	assert(stock_stack_l.visible == true, "Toggling has_smokestacks=true must show smokestacks")
+	assert(
+		f150_stock._exhaust_emitters.size() == 2,
+		"Toggling has_smokestacks=true must create 2 coal emitters"
+	)
+
+	# 6. F-150 natural smokestack distribution: some have them, but not all
+	var f150_samples: Array[Car] = []
+	var f150_stack_count := 0
+	for i in range(40):
+		var fc: Car = pcar_scene.instantiate()
+		fc.car_type = Car.CarType.F150
+		main.add_child(fc)
+		f150_samples.append(fc)
+	await main.get_tree().process_frame
+
+	for fc in f150_samples:
+		if fc.has_smokestacks:
+			f150_stack_count += 1
+	assert(
+		f150_stack_count > 0 and f150_stack_count < 40,
+		"Some F-150s should roll smokestacks, but not all (got %d / 40)" % f150_stack_count
+	)
+	print(
+		(
+			"  F-150 smokestack distribution verified: %d of 40 F-150s rolled smokestacks"
+			% f150_stack_count
+		)
+	)
+
+	# 7. Distribution test: some of the cars get exhaust automatically
 	var sample_cars: Array[Car] = []
 	var exhaust_count := 0
 	for i in range(30):
@@ -786,7 +998,236 @@ func _run_test_car_exhaust() -> void:
 	taxi.queue_free()
 	for c in sample_cars:
 		c.queue_free()
+	f150_coal.queue_free()
+	f150_stock.queue_free()
+	for fc in f150_samples:
+		fc.queue_free()
 
 	print("CAR_EXHAUST_TEST: SUCCESS - --test-car-exhaust passed cleanly!")
+	main.get_tree().quit(0)
+	return
+
+
+func _run_test_speed_variation() -> void:
+	var tm = main.get_node_or_null("TrafficManager") as TrafficManager
+	assert(tm != null, "TrafficManager must exist")
+	await main.get_tree().process_frame
+
+	var pcar_scene = load("res://cars/passenger_car.tscn")
+	var van_scene = load("res://cars/van.tscn")
+	var truck_scene = load("res://cars/truck.tscn")
+	var ship_scene = load("res://cars/shipping_truck.tscn")
+	var bus_scene = load("res://cars/bus.tscn")
+
+	var lane = tm.lanes[1]  # Westbound middle: 21.0 - 27.0 m/s
+
+	# 1. Verify speed calculation hierarchy
+	var shipping_truck: Car = ship_scene.instantiate()
+	var box_truck: Car = truck_scene.instantiate()
+	var bus: Car = bus_scene.instantiate()
+	var van: Car = van_scene.instantiate()
+	var sedan: Car = pcar_scene.instantiate()
+	sedan.car_type = Car.CarType.SEDAN
+	var f150_coal: Car = pcar_scene.instantiate()
+	f150_coal.car_type = Car.CarType.F150
+	f150_coal.has_smokestacks = true
+	var sports: Car = pcar_scene.instantiate()
+	sports.car_type = Car.CarType.SPORTS
+
+	main.add_child(shipping_truck)
+	main.add_child(box_truck)
+	main.add_child(bus)
+	main.add_child(van)
+	main.add_child(sedan)
+	main.add_child(f150_coal)
+	main.add_child(sports)
+
+	var dt_speeds: Array[float] = []
+	var van_speeds: Array[float] = []
+	var car_speeds: Array[float] = []
+	var coal_speeds: Array[float] = []
+	var sports_speeds: Array[float] = []
+
+	for k in range(25):
+		dt_speeds.append(tm.calculate_car_desired_speed(lane, shipping_truck))
+		dt_speeds.append(tm.calculate_car_desired_speed(lane, box_truck))
+		dt_speeds.append(tm.calculate_car_desired_speed(lane, bus))
+		van_speeds.append(tm.calculate_car_desired_speed(lane, van))
+		car_speeds.append(tm.calculate_car_desired_speed(lane, sedan))
+		coal_speeds.append(tm.calculate_car_desired_speed(lane, f150_coal))
+		sports_speeds.append(tm.calculate_car_desired_speed(lane, sports))
+
+	for spd in dt_speeds:
+		assert(
+			spd >= lane.min_speed * 0.77 and spd <= lane.min_speed * 0.89,
+			"Delivery trucks must drive slower (0.78-0.88 min_speed): got %.2f" % spd
+		)
+	for spd in van_speeds:
+		assert(
+			spd >= lane.min_speed * 0.89 and spd <= lane.min_speed * 0.99,
+			(
+				"Prime/Crime van must drive slightly faster than delivery trucks (0.90-0.98 min_speed): got %.2f"
+				% spd
+			)
+		)
+	for spd in car_speeds:
+		assert(
+			spd >= lane.min_speed and spd <= lane.max_speed,
+			"Regular cars must drive at normal lane speeds (min-max): got %.2f" % spd
+		)
+	for spd in coal_speeds:
+		assert(
+			spd >= lane.max_speed * 1.07 and spd <= lane.max_speed * 1.19,
+			(
+				"Rolling-coal trucks must drive faster than normal cars (1.08-1.18 max_speed): got %.2f"
+				% spd
+			)
+		)
+	for spd in sports_speeds:
+		assert(
+			spd >= 28.0 and spd >= lane.max_speed * 1.24,
+			"Race cars must drive fastest: got %.2f" % spd
+		)
+
+	# Strict relative hierarchy: DT max < Van min < Car min < Coal min < Sports min
+	var max_dt := -999.0
+	for s in dt_speeds:
+		max_dt = maxf(max_dt, s)
+	var min_van := 999.0
+	var max_van := -999.0
+	for s in van_speeds:
+		min_van = minf(min_van, s)
+		max_van = maxf(max_van, s)
+	var min_car := 999.0
+	var max_car := -999.0
+	for s in car_speeds:
+		min_car = minf(min_car, s)
+		max_car = maxf(max_car, s)
+	var min_coal := 999.0
+	var max_coal := -999.0
+	for s in coal_speeds:
+		min_coal = minf(min_coal, s)
+		max_coal = maxf(max_coal, s)
+	var min_sports := 999.0
+	for s in sports_speeds:
+		min_sports = minf(min_sports, s)
+
+	assert(
+		max_dt < min_van,
+		"Delivery trucks must be slower than Prime/Crime van: %.2f vs %.2f" % [max_dt, min_van]
+	)
+	assert(
+		max_van < min_car,
+		"Prime/Crime van must be slower than normal cars: %.2f vs %.2f" % [max_van, min_car]
+	)
+	assert(
+		max_car < min_coal,
+		"Rolling coal must be faster than normal cars: %.2f vs %.2f" % [max_car, min_coal]
+	)
+	assert(
+		max_coal < min_sports,
+		"Race cars must be faster than rolling coal: %.2f vs %.2f" % [max_coal, min_sports]
+	)
+	print(
+		(
+			"  Speed hierarchy verified: Delivery Trucks (%.1f) < Crime Van (%.1f) < Normal Cars (%.1f) < Rolling Coal (%.1f) < Race Cars (%.1f)"
+			% [max_dt, min_van, min_car, min_coal, min_sports]
+		)
+	)
+
+	# 2. Passing / Lane Changing Verification
+	# Clear cars from lane 1 and lane 2
+	for c in lane.cars:
+		if is_instance_valid(c):
+			c.queue_free()
+	lane.cars.clear()
+	var lane2 = tm.lanes[2]
+	for c in lane2.cars:
+		if is_instance_valid(c):
+			c.queue_free()
+	lane2.cars.clear()
+	tm._pending_transfers.clear()
+
+	# Scenario A: Follower is faster than lead car -> must initiate lane switch to pass
+	var lead_car: Car = pcar_scene.instantiate()
+	main.add_child(lead_car)
+	lead_car.setup(
+		lane.id, lane.z, lane.direction, lane.start_x, lane.length, 14.0, Car.CarType.SEDAN
+	)
+	lead_car.lane_distance = 40.0
+	lead_car.speed = 14.0
+	lead_car.desired_speed = 14.0
+	lead_car.lane_speed = 14.0
+	lane.cars.append(lead_car)
+
+	var fast_follower: Car = pcar_scene.instantiate()
+	main.add_child(fast_follower)
+	fast_follower.setup(
+		lane.id, lane.z, lane.direction, lane.start_x, lane.length, 26.0, Car.CarType.SEDAN
+	)
+	fast_follower.lane_distance = 25.0
+	fast_follower.speed = 26.0
+	fast_follower.desired_speed = 26.0
+	fast_follower.lane_speed = 26.0
+	fast_follower.lane_change_cooldown = 0.0
+	lane.cars.append(fast_follower)
+
+	tm._update_lane_traffic(lane, 0.016)
+
+	assert(
+		fast_follower.is_changing_lanes == true,
+		"Faster car behind slower lead car must switch lanes to pass"
+	)
+	assert(
+		fast_follower.turn_signal != Car.TurnSignal.NONE, "Passing car must activate turn signal"
+	)
+	print(
+		"  Lane change pass verified: faster follower initiated lane change to pass slower lead car"
+	)
+
+	# Scenario B: Follower is slower than lead car -> must NOT initiate lane switch
+	lane.cars.clear()
+	lane2.cars.clear()
+	tm._pending_transfers.clear()
+
+	lead_car.lane_distance = 40.0
+	lead_car.speed = 26.0
+	lead_car.desired_speed = 26.0
+	lead_car.lane_speed = 26.0
+	lane.cars.append(lead_car)
+
+	var slow_follower: Car = pcar_scene.instantiate()
+	main.add_child(slow_follower)
+	slow_follower.setup(
+		lane.id, lane.z, lane.direction, lane.start_x, lane.length, 20.0, Car.CarType.SEDAN
+	)
+	slow_follower.lane_distance = 25.0
+	slow_follower.speed = 20.0
+	slow_follower.desired_speed = 20.0
+	slow_follower.lane_speed = 20.0
+	slow_follower.lane_change_cooldown = 0.0
+	lane.cars.append(slow_follower)
+
+	tm._update_lane_traffic(lane, 0.016)
+
+	assert(
+		slow_follower.is_changing_lanes == false,
+		"Follower not going faster than lead car must NOT switch lanes"
+	)
+	print("  No lane switch verified: slower follower stays in lane behind faster lead car")
+
+	# Cleanup
+	shipping_truck.queue_free()
+	box_truck.queue_free()
+	bus.queue_free()
+	van.queue_free()
+	sedan.queue_free()
+	f150_coal.queue_free()
+	sports.queue_free()
+	lead_car.queue_free()
+	fast_follower.queue_free()
+	slow_follower.queue_free()
+
+	print("SPEED_VARIATION_TEST: SUCCESS - --test-speed-variation passed cleanly!")
 	main.get_tree().quit(0)
 	return

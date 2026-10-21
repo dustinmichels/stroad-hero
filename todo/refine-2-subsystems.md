@@ -139,8 +139,9 @@ This document breaks down the subsystem-level extractions for traffic data/geome
 
 - [x] Move mesh instance references (`Torso`, `Backpack`, `Face`, `Cap`, etc.) and material duplication/override logic to `mats_rig.gd`.
 - [x] Expose customization setters (`set_shirt_color`, `set_pants_color`, etc.) directly on `mats_rig.gd`.
-- [ ] Update `mats.gd` to forward initial configuration to its rig, and update `ui/character_editor.gd` to target the rig directly.
-- [ ] Enable standalone instantiation of `mats_rig` (or `$Visual` scene) for isolated UI previews without physics overhead.
+- [x] Update mats.gd to forward initial configuration to its rig, and update ui/character_editor.gd to target the rig directly.
+- [x] Enable standalone instantiation of `mats_rig` (or `$Visual` scene) for isolated UI previews without physics overhead.
+  - **Handoff note:** `mats_rig.tscn` can be instantiated standalone as a pure `Node3D` without physics overhead. It supports isolated instance materials via `setup_materials()` and individual property setters, optional `auto_idle` or manual `update_idle(delta)` for natural breathing and posture animation, and is lazy-instantiated and rotated directly in `CharacterEditor` as `PreviewMatsRig`. Verified via `--test-character-editor`.
 
 **Acceptance:** Palette customization functions properly in-game and in the character editor. Material overrides are isolated to each character instance without cross-contamination.
 
@@ -152,9 +153,9 @@ This document breaks down the subsystem-level extractions for traffic data/geome
 
 **Plan:**
 
-- [ ] Add pose methods to `mats_rig.gd` for kneeling poses and mount/dismount joint tweens (e.g. `play_cart_mount_animation(duration)`, `play_cart_dismount_animation(duration)`).
-- [ ] Let `mats.gd` orchestrate physical cart attachment, positioning, and timing, while delegating joint transformations to the rig.
-- [ ] Ensure death and respawn events cleanly reset rig pose without leaving dangling tweens or residual joint offsets.
+- [x] Add pose methods to `mats_rig.gd` for kneeling poses and mount/dismount joint tweens (e.g. `play_cart_mount_animation(duration)`, `play_cart_dismount_animation(duration)`).
+- [x] Let `mats.gd` orchestrate physical cart attachment, positioning, and timing, while delegating joint transformations to the rig.
+- [x] Ensure death and respawn events cleanly reset rig pose without leaving dangling tweens or residual joint offsets.
 
 **Acceptance:** Cart mounting, pushing, riding, dismounting, and dying while pushing/riding behave smoothly without joint snapping or broken state.
 
@@ -170,10 +171,10 @@ This document breaks down the subsystem-level extractions for traffic data/geome
 
 **Plan:**
 
-- [ ] Create `world/road.tscn` containing the `Road` subtree exactly as authored in `main.tscn`.
-- [ ] Ensure `Road` retains its root node name (`Road`) and transform at the `main.tscn` boundary.
-- [ ] Instance `world/road.tscn` in `main.tscn` as node `Road`.
-- [ ] Verify `MeshBaker.bake_main_scene()` detects `Road/PavementDetails` and builds `BakedRoadMesh` without changes to baker paths.
+- [x] Create `world/road.tscn` containing the `Road` subtree exactly as authored in `main.tscn`.
+- [x] Ensure `Road` retains its root node name (`Road`) and transform at the `main.tscn` boundary.
+- [x] Instance `world/road.tscn` in `main.tscn` as node `Road`.
+- [x] Verify `MeshBaker.bake_main_scene()` detects `Road/PavementDetails` and builds `BakedRoadMesh` without changes to baker paths.
 
 **Acceptance:** Road geometry, collisions, markings, and baked road output in `main.tscn` are visually and mechanically identical to the inline version.
 
@@ -185,10 +186,10 @@ This document breaks down the subsystem-level extractions for traffic data/geome
 
 **Plan:**
 
-- [ ] Create `world/parking.tscn` containing the `Parking` subtree from `main.tscn`.
-- [ ] Preserve exact stall positions and coordinates used by `traffic/parking_lot.gd` and `TrafficManager`.
-- [ ] Instance `world/parking.tscn` in `main.tscn` as node `Parking`.
-- [ ] Verify `MeshBaker.bake_main_scene()` finds `Parking` and successfully executes `bake_static_scene(parking, root)`.
+- [x] Create `world/parking.tscn` containing the `Parking` subtree from `main.tscn`.
+- [x] Preserve exact stall positions and coordinates used by `traffic/parking_lot.gd` and `TrafficManager`.
+- [x] Instance `world/parking.tscn` in `main.tscn` as node `Parking`.
+- [x] Verify `MeshBaker.bake_main_scene()` finds `Parking` and successfully executes `bake_static_scene(parking, root)`.
 
 **Acceptance:** Parking stall detection, car parking maneuvers, and static parking mesh baking continue working seamlessly.
 
@@ -200,10 +201,10 @@ This document breaks down the subsystem-level extractions for traffic data/geome
 
 **Plan:**
 
-- [ ] Extract repetitive visual prop groups (e.g., `Props/Streetlights`, `Props/Trees`, `Props/Flags`) into dedicated scene instances if layout isolation is beneficial.
-- [ ] Keep destination site containers and their `Anchor` nodes discoverable under `Props/` for `ObjectiveManager` anchor registration.
-- [ ] Verify `MeshBaker` streetlight instancing, tree baking, flag baking, and bollard baking routines run cleanly against the extracted structure.
-- [ ] Retain environment presentation controller hooks for streetlight day/night toggles.
+- [x] Extract repetitive visual prop groups (e.g., `Props/Streetlights`, `Props/Trees`, `Props/Flags`) into dedicated scene instances if layout isolation is beneficial.
+- [x] Keep destination site containers and their `Anchor` nodes discoverable under `Props/` for `ObjectiveManager` anchor registration.
+- [x] Verify `MeshBaker` streetlight instancing, tree baking, flag baking, and bollard baking routines run cleanly against the extracted structure.
+- [x] Retain environment presentation controller hooks for streetlight day/night toggles.
 
 **Acceptance:** Objectives resolve all target anchors cleanly. MeshBaker correctly bakes props, trees, and flags. Day/night transitions still toggle streetlight luminaires.
 

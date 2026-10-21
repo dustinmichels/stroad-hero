@@ -93,7 +93,7 @@ func _wire_composition() -> void:
 		if hud:
 			hud.set_player(mats)
 		if character_editor:
-			character_editor.set_player(mats)
+			character_editor.set_target_rig(mats.visual)
 		if camera_3d and camera_3d is FollowCamera:
 			(camera_3d as FollowCamera).set_target(mats)
 	if camera_3d and hud:

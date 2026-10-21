@@ -45,6 +45,8 @@ func _exit_tree() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if _rider and _rider.has_method("update_stroad_side"):
+		_rider.update_stroad_side()
 	if _pusher != null:
 		return
 	if _nearby_mats != null and _rider == null:

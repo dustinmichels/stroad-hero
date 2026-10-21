@@ -16,6 +16,7 @@ func matches_args() -> bool:
 				"--test-objectives",
 				"--test-start-screen",
 				"--test-startup",
+				"--test-character-editor",
 			]
 		):
 			return true
@@ -49,6 +50,9 @@ func setup_ready() -> void:
 	if "--test-startup" in user_args:
 		_run_test_startup()
 		return
+	if "--test-character-editor" in user_args:
+		_run_test_character_editor()
+		return
 
 
 func _run_test_day_weather() -> void:
@@ -63,19 +67,39 @@ func _run_test_day_weather() -> void:
 	assert(GameState.get_time_string() == "3:30 PM", "15.5 should format as 3:30 PM")
 	assert(GameState.get_period_name() == "AFTERNOON", "15.5 should be AFTERNOON")
 	assert(GameState.are_lights_on() == false, "Lights should be off at 3:30 PM")
-
+	var streetlights: Node3D = main.get_node_or_null("Props/Streetlights")
+	assert(streetlights != null, "Props/Streetlights must exist")
+	var lamp0: Node3D = streetlights.get_child(0) as Node3D
+	var spot0: SpotLight3D = lamp0.get_node_or_null("Light") as SpotLight3D
+	var lamp_mesh0: MeshInstance3D = lamp0.get_node_or_null("Lamp") as MeshInstance3D
+	assert(spot0 != null and not spot0.visible, "Streetlight SpotLight3D must be off at 3:30 PM")
+	if lamp_mesh0:
+		assert(
+			lamp_mesh0.material_override == null,
+			"Streetlight luminaire material override must be null at 3:30 PM"
+		)
 	# 3. Evening / Dusk progression
 	GameState.set_time_hours(18.5)
 	assert(GameState.get_time_string() == "6:30 PM", "18.5 should format as 6:30 PM")
 	assert(GameState.are_lights_on() == true, "Lights should be on at 6:30 PM")
 	assert(GameState.time_of_day == GameState.TimeOfDay.EVENING, "18.5 should be EVENING")
-
+	assert(spot0 != null and spot0.visible, "Streetlight SpotLight3D must be on at 6:30 PM")
+	if lamp_mesh0:
+		assert(
+			lamp_mesh0.material_override != null,
+			"Streetlight luminaire material override must be active at 6:30 PM"
+		)
+		var mat: StandardMaterial3D = lamp_mesh0.material_override as StandardMaterial3D
+		assert(
+			mat != null and mat.emission_enabled,
+			"Streetlight luminaire material must be emissive at 6:30 PM"
+		)
 	# 4. Night progression
 	GameState.set_time_hours(20.5)
 	assert(GameState.get_time_string() == "8:30 PM", "20.5 should format as 8:30 PM")
 	assert(GameState.are_lights_on() == true, "Lights should be on at night")
 	assert(GameState.time_of_day == GameState.TimeOfDay.NIGHT, "20.5 should be NIGHT")
-
+	assert(spot0 != null and spot0.visible, "Streetlight SpotLight3D must be on at night")
 	# 5. Day rollover / loop
 	GameState.current_day = 1
 	GameState.set_time_hours(20.9)
@@ -85,7 +109,15 @@ func _run_test_day_weather() -> void:
 		GameState.current_time_hours >= 15.5 and GameState.current_time_hours < 16.0,
 		"Time should wrap back to 3:30 PM"
 	)
-
+	assert(
+		spot0 != null and not spot0.visible,
+		"Streetlight SpotLight3D must turn off when looping back to day"
+	)
+	if lamp_mesh0:
+		assert(
+			lamp_mesh0.material_override == null,
+			"Streetlight luminaire material override must clear when looping back to day"
+		)
 	# 6. Cardinal direction calculation
 	assert(
 		GameState.get_cardinal_direction_name(Vector3(0, 0, -1)) == "N", "World -Z must be North"
@@ -859,27 +891,80 @@ func _run_test_objectives() -> void:
 		)
 	)
 
-	# Verify get_respawn_position calculation across north/south sides and clamping
-	var south_pos := main.mats.get_respawn_position(Vector3(30.0, 0.0, 5.0))
+	# Verify stroad side tracking, starting-side respawn on stroad death, and offroad respawn
 	assert(
-		absf(south_pos.z - 13.85) < 0.01 and absf(south_pos.x - 30.0) < 0.01,
-		"Positive z must respawn on south roadside"
+		main.mats.current_side == Mats.StroadSide.NORTH,
+		"Mats must be on North side after respawning on north roadside"
 	)
-	var north_pos := main.mats.get_respawn_position(Vector3(-10.0, 0.0, -8.0))
+
+	# Crossing death: if trying to cross from South, dying on North half of road (z = -8.0) respawns on starting side (South)
+	var south_start_death := main.mats.get_respawn_position(
+		Vector3(30.0, 0.0, -8.0), Mats.StroadSide.SOUTH
+	)
 	assert(
-		absf(north_pos.z - (-13.85)) < 0.01 and absf(north_pos.x - (-10.0)) < 0.01,
-		"Negative z must respawn on north roadside"
+		absf(south_start_death.z - 13.85) < 0.01 and absf(south_start_death.x - 30.0) < 0.01,
+		"Death on stroad when crossing from South must respawn on South roadside"
 	)
-	var clamped_west := main.mats.get_respawn_position(Vector3(-120.0, 0.0, 5.0))
+
+	# Crossing death: if trying to cross from North, dying on South half of road (z = 5.0) respawns on starting side (North)
+	var north_start_death := main.mats.get_respawn_position(
+		Vector3(-10.0, 0.0, 5.0), Mats.StroadSide.NORTH
+	)
+	assert(
+		absf(north_start_death.z - (-13.85)) < 0.01 and absf(north_start_death.x - (-10.0)) < 0.01,
+		"Death on stroad when crossing from North must respawn on North roadside"
+	)
+
+	# Offroad roadside deaths (not on the stroad):
+	var south_offroad := main.mats.get_respawn_position(Vector3(30.0, 0.0, 20.0))
+	assert(
+		absf(south_offroad.z - 13.85) < 0.01, "South roadside death must respawn on South roadside"
+	)
+	var north_offroad := main.mats.get_respawn_position(Vector3(-10.0, 0.0, -20.0))
+	assert(
+		absf(north_offroad.z - (-13.85)) < 0.01,
+		"North roadside death must respawn on North roadside"
+	)
+
+	var clamped_west := main.mats.get_respawn_position(Vector3(-120.0, 0.0, 20.0))
 	assert(
 		absf(clamped_west.x - Mats.MIN_RESPAWN_X) < 0.01,
 		"Extreme west x must clamp to MIN_RESPAWN_X"
 	)
-	var clamped_east := main.mats.get_respawn_position(Vector3(160.0, 0.0, -5.0))
+	var clamped_east := main.mats.get_respawn_position(Vector3(160.0, 0.0, -20.0))
 	assert(
 		absf(clamped_east.x - Mats.MAX_RESPAWN_X) < 0.01,
 		"Extreme east x must clamp to MAX_RESPAWN_X"
 	)
+
+	# Verify crossing detection and crossing count increment
+	assert(main.mats.crossings_count == 0, "Initial crossings count must be 0")
+	# Enter stroad from North side
+	main.mats.global_position = Vector3(0.0, 0.3, -5.0)
+	main.mats.update_stroad_side()
+	assert(main.mats.is_crossing, "Mats must be in crossing state while on stroad")
+	assert(
+		main.mats.crossing_start_side == Mats.StroadSide.NORTH, "Crossing start side must be NORTH"
+	)
+	assert(
+		main.mats.current_side == Mats.StroadSide.NORTH,
+		"Current side must remain NORTH while crossing"
+	)
+
+	# Dying on stroad during crossing attempt must return to starting side (North)
+	var mid_cross_respawn := main.mats.get_respawn_position()
+	assert(
+		absf(mid_cross_respawn.z - (-13.85)) < 0.01,
+		"Mid-crossing death must respawn on starting side (North)"
+	)
+
+	# Successfully reach South side
+	main.mats.global_position = Vector3(0.0, 0.3, 13.85)
+	main.mats.update_stroad_side()
+	assert(not main.mats.is_crossing, "Crossing must complete upon reaching South roadside")
+	assert(main.mats.current_side == Mats.StroadSide.SOUTH, "Current side must now be SOUTH")
+	assert(main.mats.crossings_count == 1, "Crossings count must increment to 1")
+	assert(main.mats.crossings_achieved == 1, "crossings_achieved alias must be 1")
 
 	# Wait until Mats is completely out of death sequence
 	while main.mats.is_dead:
@@ -897,7 +982,7 @@ func _run_test_objectives() -> void:
 
 	# Simulate animation frames for phone lowering blend
 	for _i in range(15):
-		main.mats._visual.update_phone_pose(0.1)
+		main.mats.visual.update_phone_pose(0.1)
 	assert(main.mats.phone_blend == 0.0, "Phone blend must return to 0 after call dismissal")
 	assert(not main.mats.phone.visible, "Phone mesh must hide cleanly after lowering")
 
@@ -1061,4 +1146,108 @@ func _run_test_startup() -> void:
 	assert(obj_mgr.current_errand != null, "First errand must be assigned")
 
 	print("STARTUP_TEST: SUCCESS - --test-startup passed cleanly!")
+	main.get_tree().quit(0)
+
+
+func _run_test_character_editor() -> void:
+	await main.get_tree().process_frame
+
+	# 1. Test standalone instantiation of MatsRig
+	var rig_scene: PackedScene = load("res://player/mats_rig.tscn")
+	assert(rig_scene != null, "mats_rig.tscn must exist and load")
+	var standalone_rig1: MatsRig = rig_scene.instantiate() as MatsRig
+	assert(standalone_rig1 != null, "mats_rig must instantiate as MatsRig")
+	assert(
+		not ((standalone_rig1 as Object) is CharacterBody3D),
+		"mats_rig must not be a CharacterBody3D"
+	)
+	assert(
+		not ((standalone_rig1 as Object) is CollisionObject3D),
+		"mats_rig must have no physics overhead"
+	)
+
+	main.add_child(standalone_rig1)
+	await main.get_tree().process_frame
+
+	# Test isolated material customization
+	var standalone_rig2: MatsRig = rig_scene.instantiate() as MatsRig
+	main.add_child(standalone_rig2)
+	await main.get_tree().process_frame
+
+	standalone_rig1.set_jacket_color(Color.RED)
+	standalone_rig1.set_backpack_color(Color.BLUE)
+	standalone_rig1.set_shoe_color(Color.GREEN)
+	standalone_rig1.set_headwear(MatsRig.Headwear.BEANIE)
+
+	standalone_rig2.set_jacket_color(Color.YELLOW)
+	standalone_rig2.set_backpack_color(Color(0.8, 0.2, 0.8, 1.0))
+	standalone_rig2.set_shoe_color(Color.BLACK)
+	standalone_rig2.set_headwear(MatsRig.Headwear.HAT)
+
+	# Verify material isolation
+	var rig1_jacket_mat := (
+		standalone_rig1.torso.get_surface_override_material(0) as StandardMaterial3D
+	)
+	var rig2_jacket_mat := (
+		standalone_rig2.torso.get_surface_override_material(0) as StandardMaterial3D
+	)
+	assert(rig1_jacket_mat != null and rig2_jacket_mat != null, "Jacket materials must exist")
+	assert(rig1_jacket_mat != rig2_jacket_mat, "Material instances must be isolated across rigs")
+	assert(rig1_jacket_mat.albedo_color == Color.RED, "Rig 1 jacket color must match")
+	assert(rig2_jacket_mat.albedo_color == Color.YELLOW, "Rig 2 jacket color must match")
+
+	# Test update_idle on standalone rig
+	var prev_idle_rot: Vector3 = standalone_rig1.right_arm.rotation
+	standalone_rig1.update_idle(0.5)
+	assert(
+		standalone_rig1.right_arm.rotation != prev_idle_rot, "update_idle must animate limb posture"
+	)
+
+	standalone_rig1.queue_free()
+	standalone_rig2.queue_free()
+
+	# 2. Test CharacterEditor integration
+	var editor: CharacterEditor = main.character_editor
+	if editor == null:
+		editor = main.get_node_or_null("CharacterEditor") as CharacterEditor
+	assert(editor != null, "CharacterEditor must exist in main scene")
+
+	# Target rig resolution
+	assert(editor.target_rig_resolved != null, "CharacterEditor must resolve target rig")
+	assert(editor.target_rig_resolved is MatsRig, "Target rig must be MatsRig")
+
+	# Open editor
+	editor.open_editor()
+	assert(editor.visible, "Editor must be visible when opened")
+	assert(editor.preview_rig != null, "Preview rig must be instantiated on open")
+	assert(editor.preview_rig is MatsRig, "Preview must be an instance of MatsRig")
+	assert(
+		not ((editor.preview_rig as Object) is CharacterBody3D),
+		"Preview must not have physics overhead"
+	)
+
+	# Verify preview sync from player rig
+	var player_rig: MatsRig = main.mats.visual
+	assert(
+		editor._headwear_index == player_rig.headwear, "Editor headwear must sync with player rig"
+	)
+
+	# Test customization steps
+	var orig_jacket := editor._jacket_index
+	editor._on_jacket_step(1)
+	assert(editor._jacket_index != orig_jacket, "Stepping jacket must update index")
+	var new_color: Color = CharacterEditor.JACKET_COLORS[editor._jacket_index]
+	assert(player_rig.jacket_color == new_color, "Player rig jacket color must update")
+	assert(editor.preview_rig.jacket_color == new_color, "Preview rig jacket color must update")
+
+	# Test rotation over time
+	var orig_preview_yaw: float = editor.preview_rig.rotation.y
+	editor._process(1.0)
+	assert(editor.preview_rig.rotation.y != orig_preview_yaw, "Preview rig must rotate over time")
+
+	# Close editor
+	editor.close_editor()
+	assert(not editor.visible, "Editor must be hidden when closed")
+
+	print("CHARACTER_EDITOR_TEST: SUCCESS - --test-character-editor passed cleanly!")
 	main.get_tree().quit(0)

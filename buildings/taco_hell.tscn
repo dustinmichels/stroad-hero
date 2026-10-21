@@ -423,17 +423,9 @@ size = Vector3(0.48, 0.04, 0.12)
 material = SubResource("Mat_TacoDriveThruLine")
 size = Vector3(0.28, 0.04, 1.4)
 
-[sub_resource type="BoxMesh" id="Mesh_TacoArrowBarb"]
+[sub_resource type="PrismMesh" id="Mesh_TacoArrowPavementHead"]
 material = SubResource("Mat_TacoDriveThruLine")
-size = Vector3(0.16, 0.04, 0.65)
-
-[sub_resource type="BoxMesh" id="Mesh_TacoArrowRearStem"]
-material = SubResource("Mat_TacoDriveThruLine")
-size = Vector3(1.4, 0.04, 0.28)
-
-[sub_resource type="BoxMesh" id="Mesh_TacoArrowRearBarb"]
-material = SubResource("Mat_TacoDriveThruLine")
-size = Vector3(0.65, 0.04, 0.16)
+size = Vector3(0.75, 0.7, 0.04)
 
 [sub_resource type="BoxMesh" id="Mesh_TacoMenuBase"]
 material = SubResource("Mat_TacoConcretePad")
@@ -1184,45 +1176,35 @@ mesh = SubResource("Mesh_TacoHazardHash")
 [node name="ArrowApproach" type="Node3D" parent="DriveThru/Striping"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.0, 0.11, 4.5)
 
+[node name="Head" type="MeshInstance3D" parent="DriveThru/Striping/ArrowApproach"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, -0.6)
+mesh = SubResource("Mesh_TacoArrowPavementHead")
+
 [node name="Stem" type="MeshInstance3D" parent="DriveThru/Striping/ArrowApproach"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.45)
 mesh = SubResource("Mesh_TacoArrowStem")
-
-[node name="BarbL" type="MeshInstance3D" parent="DriveThru/Striping/ArrowApproach"]
-transform = Transform3D(0.866025, 0, -0.5, 0, 1, 0, 0.5, 0, 0.866025, -0.22, 0, -0.45)
-mesh = SubResource("Mesh_TacoArrowBarb")
-
-[node name="BarbR" type="MeshInstance3D" parent="DriveThru/Striping/ArrowApproach"]
-transform = Transform3D(0.866025, 0, 0.5, 0, 1, 0, -0.5, 0, 0.866025, 0.22, 0, -0.45)
-mesh = SubResource("Mesh_TacoArrowBarb")
 
 [node name="ArrowRear" type="Node3D" parent="DriveThru/Striping"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.11, -9.0)
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 0.0, 0.11, -9.0)
+
+[node name="Head" type="MeshInstance3D" parent="DriveThru/Striping/ArrowRear"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, -0.6)
+mesh = SubResource("Mesh_TacoArrowPavementHead")
 
 [node name="Stem" type="MeshInstance3D" parent="DriveThru/Striping/ArrowRear"]
-mesh = SubResource("Mesh_TacoArrowRearStem")
-
-[node name="BarbL" type="MeshInstance3D" parent="DriveThru/Striping/ArrowRear"]
-transform = Transform3D(0.866025, 0, 0.5, 0, 1, 0, -0.5, 0, 0.866025, 0.45, 0, -0.22)
-mesh = SubResource("Mesh_TacoArrowRearBarb")
-
-[node name="BarbR" type="MeshInstance3D" parent="DriveThru/Striping/ArrowRear"]
-transform = Transform3D(0.866025, 0, -0.5, 0, 1, 0, 0.5, 0, 0.866025, 0.45, 0, 0.22)
-mesh = SubResource("Mesh_TacoArrowRearBarb")
-
-[node name="ArrowExit" type="Node3D" parent="DriveThru/Striping"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.0, 0.11, 4.5)
-
-[node name="Stem" type="MeshInstance3D" parent="DriveThru/Striping/ArrowExit"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.45)
 mesh = SubResource("Mesh_TacoArrowStem")
 
-[node name="BarbL" type="MeshInstance3D" parent="DriveThru/Striping/ArrowExit"]
-transform = Transform3D(0.866025, 0, 0.5, 0, 1, 0, -0.5, 0, 0.866025, -0.22, 0, 0.45)
-mesh = SubResource("Mesh_TacoArrowBarb")
+[node name="ArrowExit" type="Node3D" parent="DriveThru/Striping"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 12.0, 0.11, 4.5)
 
-[node name="BarbR" type="MeshInstance3D" parent="DriveThru/Striping/ArrowExit"]
-transform = Transform3D(0.866025, 0, -0.5, 0, 1, 0, 0.5, 0, 0.866025, 0.22, 0, 0.45)
-mesh = SubResource("Mesh_TacoArrowBarb")
+[node name="Head" type="MeshInstance3D" parent="DriveThru/Striping/ArrowExit"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, -0.6)
+mesh = SubResource("Mesh_TacoArrowPavementHead")
 
+[node name="Stem" type="MeshInstance3D" parent="DriveThru/Striping/ArrowExit"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.45)
+mesh = SubResource("Mesh_TacoArrowStem")
 [node name="PavementDriveThru" type="Label3D" parent="DriveThru/Striping"]
 visibility_range_end = 45.0
 cast_shadow = 0

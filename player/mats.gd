@@ -9,7 +9,9 @@ signal stamina_changed(current: float, max_val: float)
 signal sprint_started
 signal sprint_stopped
 signal stamina_depleted
-
+signal side_changed(new_side: StroadSide)
+signal stroad_crossed(new_side: StroadSide, total_crossings: int)
+signal crossings_changed(count: int)
 @export var walk_speed := 5.5
 @export var sprint_speed := 8.5
 @export var max_stamina := 100.0
@@ -33,9 +35,10 @@ signal stamina_depleted
 ## Seconds to pause at death position before respawning (legacy/fallback without HUD).
 @export var respawn_delay := 1.25
 
+enum StroadSide { NONE = 0, NORTH = -1, SOUTH = 1 }
+const Side = StroadSide
 enum Headwear { HAIR, HAT, BEANIE }
 enum PhoneMode { NONE, RINGING, TALKING }
-
 @export_enum("Hair", "Red ball cap", "Beanie") var headwear: int = Headwear.HAIR:
 	set(value):
 		headwear = clampi(value, Headwear.HAIR, Headwear.BEANIE)
@@ -84,7 +87,27 @@ const ROADSIDE_Z: float = 13.85
 ## Min/max X bounds along the playable stroad corridor to keep respawns clear of tunnel abutments.
 const MIN_RESPAWN_X: float = -95.0
 const MAX_RESPAWN_X: float = 145.0
+## Half-width of the stroad travel roadway in meters (lanes span z = -11.25 to +11.25).
+const STROAD_HALF_WIDTH: float = 11.25
+@export var stroad_boundary_z: float = 11.25
 
+var current_side: StroadSide = StroadSide.SOUTH
+var crossing_start_side: StroadSide = StroadSide.SOUTH
+var is_crossing: bool = false
+var crossings_count: int = 0
+
+## Aliases for external access to stroad side and crossing count.
+var stroad_side: StroadSide:
+	get:
+		return current_side
+
+var current_stroad_side: StroadSide:
+	get:
+		return current_side
+
+var crossings_achieved: int:
+	get:
+		return crossings_count
 var _spawn_transform: Transform3D
 var _last_death_position := Vector3.ZERO
 var _has_death_position := false
@@ -138,6 +161,9 @@ func _ready() -> void:
 	set_collision_mask_value(3, true)
 	floor_snap_length = step_height + 0.05
 	_spawn_transform = global_transform
+	current_side = StroadSide.NORTH if _spawn_transform.origin.z < 0.0 else StroadSide.SOUTH
+	crossing_start_side = current_side
+	is_crossing = false
 	if not preview_mode:
 		add_to_group("player")
 	_visual.setup_materials(backpack_color, shoe_color, jacket_color)
@@ -189,6 +215,8 @@ func _physics_process(delta: float) -> void:
 
 	if is_pushing_cart:
 		_update_pushing_cart(delta)
+
+	update_stroad_side()
 
 	_animate(delta, false, target_yaw)
 
@@ -580,9 +608,9 @@ func die() -> void:
 	if _collision_shape:
 		_collision_shape.set_deferred("disabled", true)
 	died.emit(global_position)
-
-	_visual.visible = false
-
+	if _visual:
+		_visual.reset_pose()
+		_visual.visible = false
 	var tree := get_tree()
 	if not tree:
 		return
@@ -630,9 +658,13 @@ func respawn() -> void:
 	global_transform = target_transform
 	reset_physics_interpolation()
 	_step_offset = 0.0
-	_visual.reset_pose()
-	_visual.visible = true
-	end_phone_call()
+	_is_dead = false
+	is_crossing = false
+	current_side = StroadSide.NORTH if target_transform.origin.z < 0.0 else StroadSide.SOUTH
+	crossing_start_side = current_side
+	if _visual:
+		_visual.reset_pose()
+		_visual.visible = true
 	if _visual:
 		_visual.hide_phone()
 	if _collision_shape:
@@ -645,18 +677,84 @@ func respawn() -> void:
 	stamina_changed.emit(stamina, max_stamina)
 
 
-## Calculates the respawn position at the nearest roadside sidewalk to where Mats died.
-func get_respawn_position(death_pos: Vector3 = Vector3.INF) -> Vector3:
+## Determines which side of the stroad Mats should respawn on.
+## If died while trying to cross, respawns on the starting side (not the closest side).
+func get_respawn_side(pos: Vector3, starting_side: StroadSide = StroadSide.NONE) -> StroadSide:
+	if starting_side != StroadSide.NONE:
+		return starting_side
+	if is_crossing:
+		return crossing_start_side
+	return StroadSide.SOUTH if pos.z >= 0.0 else StroadSide.NORTH
+
+
+## Calculates the respawn position on the starting roadside sidewalk if Mats died while trying to cross.
+func get_respawn_position(
+	death_pos: Vector3 = Vector3.INF, starting_side: StroadSide = StroadSide.NONE
+) -> Vector3:
 	var pos := death_pos
 	if is_inf(pos.x):
 		pos = _last_death_position if _has_death_position else _spawn_transform.origin
 	var roadside_z := (
 		absf(_spawn_transform.origin.z) if absf(_spawn_transform.origin.z) > 1.0 else ROADSIDE_Z
 	)
-	var side_z := -roadside_z if pos.z < 0.0 else roadside_z
+	var respawn_side := get_respawn_side(pos, starting_side)
+	var side_z := -roadside_z if respawn_side == StroadSide.NORTH else roadside_z
 	var side_x := clampf(pos.x, MIN_RESPAWN_X, MAX_RESPAWN_X)
 	var side_y := _spawn_transform.origin.y
 	return Vector3(side_x, side_y, side_z)
+
+
+## Updates stroad side tracking, crossing state, and completed crossing counts based on current Z position.
+func update_stroad_side() -> void:
+	if _is_dead:
+		return
+	var z := global_position.z
+	var boundary := stroad_boundary_z
+
+	if current_side == StroadSide.SOUTH:
+		if z <= -boundary:
+			# Successfully crossed to North side!
+			current_side = StroadSide.NORTH
+			crossing_start_side = StroadSide.NORTH
+			if is_crossing:
+				is_crossing = false
+				crossings_count += 1
+				stroad_crossed.emit(StroadSide.NORTH, crossings_count)
+				crossings_changed.emit(crossings_count)
+			side_changed.emit(StroadSide.NORTH)
+		elif z < boundary:
+			# Entered the stroad from South side
+			is_crossing = true
+			crossing_start_side = StroadSide.SOUTH
+		else:
+			# Safely on South side (outside road crossing zone)
+			is_crossing = false
+			crossing_start_side = StroadSide.SOUTH
+	else:
+		if z >= boundary:
+			# Successfully crossed to South side!
+			current_side = StroadSide.SOUTH
+			crossing_start_side = StroadSide.SOUTH
+			if is_crossing:
+				is_crossing = false
+				crossings_count += 1
+				stroad_crossed.emit(StroadSide.SOUTH, crossings_count)
+				crossings_changed.emit(crossings_count)
+			side_changed.emit(StroadSide.SOUTH)
+		elif z > -boundary:
+			# Entered the stroad from North side
+			is_crossing = true
+			crossing_start_side = StroadSide.NORTH
+		else:
+			# Safely on North side (outside road crossing zone)
+			is_crossing = false
+			crossing_start_side = StroadSide.NORTH
+
+
+func set_stroad_side(side: StroadSide) -> void:
+	current_side = side
+	crossing_start_side = side
+	is_crossing = false
 
 
 func set_phone_state(mode: PhoneMode) -> void:

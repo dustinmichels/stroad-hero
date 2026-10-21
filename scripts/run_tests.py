@@ -19,6 +19,8 @@ INNER_TESTS = [
     "--test-find-blocker",
     "--test-priority-arbitration",
     "--test-exit-priority",
+    "--test-frontage-contracts",
+    "--test-speed-variation",
 ]
 
 EXTENDED_TESTS = [
@@ -34,9 +36,11 @@ EXTENDED_TESTS = [
     "--test-drive-thru",
     "--test-lifecycle",
     "--test-cramped-inn",
+    "--test-cramped-inn-dropoff",
     "--test-strip-mall",
     "--test-smell-store",
     "--test-smell-gas",
+    "--test-frontage",
     "--test-objective-manager",
     "--test-mats-cart",
     "--test-mats-collision",
@@ -48,6 +52,8 @@ EXTENDED_TESTS = [
     "--test-chainlink-fence",
     "--test-stroad-tunnels",
     "--test-foliage-wind",
+    "--test-character-editor",
+    "--test-objectives-editor",
 ]
 BENCHMARKS = [
     "--bench-physics",

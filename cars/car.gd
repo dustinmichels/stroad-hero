@@ -170,7 +170,12 @@ func start_lane_change(target_id: int, target_z: float) -> void:
 	lane_id = target_id
 	is_changing_lanes = true
 	lane_change_progress = 0.0
-	lane_change_duration = randf_range(0.75, 1.0)
+	if car_type == CarType.SPORTS:
+		lane_change_duration = randf_range(0.6, 0.8)
+	elif car_type == CarType.SHIPPING_TRUCK or car_type == CarType.BUS:
+		lane_change_duration = randf_range(1.2, 1.5)
+	else:
+		lane_change_duration = randf_range(0.8, 1.1)
 	lane_change_from_z = current_lateral_z if absf(current_lateral_z) > 0.001 else lane_z
 	lane_change_to_z = target_z
 	var is_right: bool = (
@@ -217,12 +222,26 @@ var _active_wheels: Array[Node3D] = []
 			_apply_exhaust_visibility()
 			_update_exhaust()
 
+@export var has_smokestacks: bool = false:
+	set(value):
+		has_smokestacks = value
+		_smokestacks_explicitly_set = true
+		if _exhaust_initialized:
+			_apply_smokestacks_visibility()
+			_setup_exhaust()
+
+var has_coal_stacks: bool:
+	get:
+		return has_smokestacks
+	set(value):
+		self.has_smokestacks = value
+
+var _smokestacks_explicitly_set: bool = false
 var _exhaust_explicitly_set: bool = false
 var _exhaust_initialized: bool = false
 var exhaust_pipe: Node3D = null
 var exhaust_particles: CPUParticles3D = null
 var _exhaust_emitters: Array[CPUParticles3D] = []
-
 static var _exhaust_mesh: CylinderMesh = null
 static var _exhaust_mat: StandardMaterial3D = null
 static var _smog_quad_mesh: QuadMesh = null
@@ -768,9 +787,17 @@ func _roll_exhaust() -> bool:
 
 
 func _setup_exhaust() -> void:
-	if not _exhaust_explicitly_set:
-		has_exhaust = _roll_exhaust()
+	if not _smokestacks_explicitly_set:
+		if car_type == CarType.F150:
+			has_smokestacks = randf() < 0.30
+		else:
+			has_smokestacks = false
 
+	if not _exhaust_explicitly_set:
+		if car_type == CarType.F150 and has_smokestacks:
+			has_exhaust = true
+		else:
+			has_exhaust = _roll_exhaust()
 	_exhaust_initialized = true
 	_init_exhaust_resources()
 	_exhaust_emitters.clear()
@@ -794,13 +821,19 @@ func _setup_exhaust() -> void:
 			car_model.remove_child(child)
 			child.free()
 
-	# Check for pre-existing modeled exhausts (e.g. Taxi, Sports)
+	# Apply smokestack visibility (e.g. for F150 rolling coal stacks)
+	_apply_smokestacks_visibility()
+
+	# Check for pre-existing modeled exhausts (e.g. Taxi, Sports, or F150 with smokestacks enabled)
 	var existing_exhausts: Array[Node3D] = []
 	for child in car_model.get_children():
 		if child is Node3D and (child.name == "Exhaust" or child.name.begins_with("Exhaust")):
 			if child.name != "ExhaustPipe" and not child.name.begins_with("ExhaustSmog"):
-				existing_exhausts.append(child)
-
+				if child.name.begins_with("ExhaustStack"):
+					if has_smokestacks:
+						existing_exhausts.append(child)
+				else:
+					existing_exhausts.append(child)
 	if not existing_exhausts.is_empty():
 		exhaust_pipe = existing_exhausts[0]
 		var count := existing_exhausts.size()
@@ -885,103 +918,108 @@ func _create_smog_emitter(parent: Node3D, node_name: String, local_pos: Vector3)
 	var emitter_mat: StandardMaterial3D = _smog_material
 	var use_coal_curve := false
 
-	match car_type:
-		CarType.F150:
-			base_amount = randi_range(34, 44)
-			base_lifetime = randf_range(1.6, 2.1)
-			vel_min = 1.3
-			vel_max = 2.4
-			scale_min = 0.95
-			scale_max = 1.85
-			tint = Color(0.12, 0.105, 0.09, randf_range(0.85, 0.95))
-			emitter_mat = _smog_material
-			use_coal_curve = true
-		CarType.TRUCK, CarType.SHIPPING_TRUCK, CarType.BUS:
-			# Heavy commercial diesel
-			base_amount = randi_range(20, 28)
-			base_lifetime = randf_range(1.15, 1.45)
-			vel_min = 0.8
-			vel_max = 1.6
-			scale_min = randf_range(0.75, 0.90)
-			scale_max = randf_range(1.30, 1.60)
-			var tone := randf_range(0.66, 0.78)
-			tint = Color(tone, tone * 0.98, tone * 0.96, randf_range(0.85, 1.05))
-			emitter_mat = _smog_material if randf() > 0.3 else _smog_material_alt
-		CarType.PICKUP, CarType.VAN:
-			# Utility workhorses
-			base_amount = randi_range(15, 22)
-			base_lifetime = randf_range(1.00, 1.25)
-			vel_min = 0.7
-			vel_max = 1.5
-			scale_min = randf_range(0.65, 0.78)
-			scale_max = randf_range(1.15, 1.45)
-			var tone := randf_range(0.80, 0.90)
-			tint = Color(tone, tone * 0.99, tone * 0.97, randf_range(0.75, 0.95))
-			emitter_mat = _smog_material if randf() > 0.4 else _smog_material_alt
-		CarType.SPORTS:
-			# Sports cars: rapid exhaust jets, wispy plume, brisk dissipation
-			base_amount = randi_range(10, 15)
-			base_lifetime = randf_range(0.75, 0.95)
-			vel_min = 1.3
-			vel_max = 2.2
-			scale_min = randf_range(0.45, 0.58)
-			scale_max = randf_range(0.85, 1.10)
-			tint = Color(0.94, 0.96, 1.0, randf_range(0.48, 0.62))
-			emitter_mat = _smog_material_alt
-		_:
-			# Passenger cars (Sedan, SUV, Taxi, Hatchback, Minivan, Jeep)
-			# Rolled personality for rich visual diversity
-			var tier := randf()
-			if tier < 0.25:
-				# Clean / modern vehicle: faint wispy vapor
-				base_amount = randi_range(10, 14)
-				base_lifetime = randf_range(0.85, 1.05)
-				vel_min = 0.7
-				vel_max = 1.4
-				scale_min = randf_range(0.45, 0.58)
-				scale_max = randf_range(0.80, 1.05)
-				tint = Color(
-					randf_range(0.92, 0.97),
-					randf_range(0.93, 0.98),
-					randf_range(0.96, 1.0),
-					randf_range(0.35, 0.50)
-				)
-				emitter_mat = _smog_material_alt
-			elif tier < 0.80:
-				# Standard commuter: classic soft gray-white billowing plume
-				base_amount = randi_range(14, 20)
-				base_lifetime = randf_range(0.95, 1.20)
-				vel_min = 0.7
-				vel_max = 1.5
-				scale_min = randf_range(0.58, 0.72)
-				scale_max = randf_range(1.05, 1.30)
-				var tone := randf_range(0.86, 0.94)
-				tint = Color(tone, tone, tone * 1.02, randf_range(0.60, 0.80))
-				emitter_mat = _smog_material if randf() > 0.4 else _smog_material_alt
-			else:
-				# High-mileage beater / smoker: puffier, heavier plume
-				base_amount = randi_range(18, 25)
-				base_lifetime = randf_range(1.15, 1.40)
+	var is_coal := car_type == CarType.F150 and has_smokestacks
+
+	if is_coal:
+		base_amount = randi_range(34, 44)
+		base_lifetime = randf_range(1.6, 2.1)
+		vel_min = 1.3
+		vel_max = 2.4
+		scale_min = 0.95
+		scale_max = 1.85
+		tint = Color(0.12, 0.105, 0.09, randf_range(0.85, 0.95))
+		emitter_mat = _smog_material
+		use_coal_curve = true
+	else:
+		match car_type:
+			CarType.TRUCK, CarType.SHIPPING_TRUCK, CarType.BUS:
+				# Heavy commercial diesel
+				base_amount = randi_range(20, 28)
+				base_lifetime = randf_range(1.15, 1.45)
 				vel_min = 0.8
 				vel_max = 1.6
-				scale_min = randf_range(0.70, 0.85)
+				scale_min = randf_range(0.75, 0.90)
 				scale_max = randf_range(1.30, 1.60)
-				tint = Color(
-					randf_range(0.74, 0.84),
-					randf_range(0.72, 0.81),
-					randf_range(0.68, 0.77),
-					randf_range(0.85, 1.05)
-				)
-				emitter_mat = _smog_material
+				var tone := randf_range(0.66, 0.78)
+				tint = Color(tone, tone * 0.98, tone * 0.96, randf_range(0.85, 1.05))
+				emitter_mat = _smog_material if randf() > 0.3 else _smog_material_alt
+			CarType.PICKUP, CarType.VAN, CarType.F150:
+				# Utility workhorses
+				base_amount = randi_range(15, 22)
+				base_lifetime = randf_range(1.00, 1.25)
+				vel_min = 0.7
+				vel_max = 1.5
+				scale_min = randf_range(0.65, 0.78)
+				scale_max = randf_range(1.15, 1.45)
+				var tone := randf_range(0.80, 0.90)
+				tint = Color(tone, tone * 0.99, tone * 0.97, randf_range(0.75, 0.95))
+				emitter_mat = _smog_material if randf() > 0.4 else _smog_material_alt
+			CarType.SPORTS:
+				# Sports cars: rapid exhaust jets, wispy plume, brisk dissipation
+				base_amount = randi_range(10, 15)
+				base_lifetime = randf_range(0.75, 0.95)
+				vel_min = 1.3
+				vel_max = 2.2
+				scale_min = randf_range(0.45, 0.58)
+				scale_max = randf_range(0.85, 1.10)
+				tint = Color(0.94, 0.96, 1.0, randf_range(0.48, 0.62))
+				emitter_mat = _smog_material_alt
+			_:
+				# Passenger cars (Sedan, SUV, Taxi, Hatchback, Minivan, Jeep)
+				# Rolled personality for rich visual diversity
+				var tier := randf()
+				if tier < 0.25:
+					# Clean / modern vehicle: faint wispy vapor
+					base_amount = randi_range(10, 14)
+					base_lifetime = randf_range(0.85, 1.05)
+					vel_min = 0.7
+					vel_max = 1.4
+					scale_min = randf_range(0.45, 0.58)
+					scale_max = randf_range(0.80, 1.05)
+					tint = Color(
+						randf_range(0.92, 0.97),
+						randf_range(0.93, 0.98),
+						randf_range(0.96, 1.0),
+						randf_range(0.35, 0.50)
+					)
+					emitter_mat = _smog_material_alt
+				elif tier < 0.80:
+					# Standard commuter: classic soft gray-white billowing plume
+					base_amount = randi_range(14, 20)
+					base_lifetime = randf_range(0.95, 1.20)
+					vel_min = 0.7
+					vel_max = 1.5
+					scale_min = randf_range(0.58, 0.72)
+					scale_max = randf_range(1.05, 1.30)
+					var tone := randf_range(0.86, 0.94)
+					tint = Color(tone, tone, tone * 1.02, randf_range(0.60, 0.80))
+					emitter_mat = _smog_material if randf() > 0.4 else _smog_material_alt
+				else:
+					# High-mileage beater / smoker: puffier, heavier plume
+					base_amount = randi_range(18, 25)
+					base_lifetime = randf_range(1.15, 1.40)
+					vel_min = 0.8
+					vel_max = 1.6
+					scale_min = randf_range(0.70, 0.85)
+					scale_max = randf_range(1.30, 1.60)
+					tint = Color(
+						randf_range(0.74, 0.84),
+						randf_range(0.72, 0.81),
+						randf_range(0.68, 0.77),
+						randf_range(0.85, 1.05)
+					)
+					emitter_mat = _smog_material
 	emitter.material_override = emitter_mat
-	emitter.color_ramp = _coal_gradient if car_type == CarType.F150 else _smog_gradient
-	emitter.scale_amount_curve = _coal_scale_curve if use_coal_curve else _smog_scale_curve
+	emitter.color_ramp = _coal_gradient if is_coal else _smog_gradient
+	emitter.scale_amount_curve = (
+		_coal_scale_curve if (is_coal or use_coal_curve) else _smog_scale_curve
+	)
 	emitter.amount = base_amount
 	emitter.lifetime = base_lifetime
 	emitter.lifetime_randomness = randf_range(0.35, 0.50)
 	emitter.color = tint
 
-	if car_type == CarType.F150:
+	if is_coal:
 		emitter.direction = Vector3(-0.65, 1.0, 0.0).normalized()
 		emitter.spread = randf_range(30.0, 38.0)
 	elif car_type == CarType.SPORTS:
@@ -1004,7 +1042,7 @@ func _create_smog_emitter(parent: Node3D, node_name: String, local_pos: Vector3)
 	emitter.tangential_accel_min = randf_range(-0.45, -0.15)
 	emitter.tangential_accel_max = randf_range(0.15, 0.45)
 
-	if car_type == CarType.F150:
+	if is_coal:
 		emitter.gravity = Vector3(0.0, randf_range(0.85, 1.25), 0.0)
 	else:
 		emitter.gravity = Vector3(0.0, randf_range(0.38, 0.65), 0.0)
@@ -1016,6 +1054,15 @@ func _create_smog_emitter(parent: Node3D, node_name: String, local_pos: Vector3)
 	emitter.emitting = false
 	parent.add_child(emitter)
 	return emitter
+
+
+func _apply_smokestacks_visibility() -> void:
+	var car_model := get_active_model()
+	if not car_model:
+		return
+	for child in car_model.get_children():
+		if child is Node3D and child.name.begins_with("ExhaustStack"):
+			child.visible = has_smokestacks
 
 
 func _apply_exhaust_visibility() -> void:
@@ -1151,7 +1198,10 @@ func advance_simulation(delta: float) -> void:
 			current_lateral_z = lane_change_to_z
 			lane_z = lane_change_to_z
 			set_turn_signal(TurnSignal.NONE)
-			lane_change_cooldown = randf_range(1.5, 3.0)
+			if car_type == CarType.SPORTS or (car_type == CarType.F150 and has_smokestacks):
+				lane_change_cooldown = randf_range(1.0, 2.0)
+			else:
+				lane_change_cooldown = randf_range(2.0, 3.5)
 	else:
 		current_lateral_z = lane_z
 

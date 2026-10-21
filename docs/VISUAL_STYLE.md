@@ -20,7 +20,7 @@ This document catalogs the current visual style and 3D assets of **Stroad Hero**
 | `01_gameplay_perspective.png`            | **Default Gameplay View:** Mats on the south sidewalk with HUD ("SPD: 0 / Senseless Pedestrian Deaths"), active stroad traffic, double yellow lines, and the Walgroins / Taco Hell commercial strip across the 4-lane roadway. |
 | `02_stroad_corridor_birds_eye.png`       | **Aerial Corridor View:** Elevated overview of the entire 4-lane stroad corridor, showing the shared commercial parking lot, sidewalk curb cuts, procedural grass shader, and roadside trees.                                  |
 | `03_pedestrian_hostile_street_level.png` | **Pedestrian Peril (Street Level):** Dramatic eye-level perspective looking across the 4 asphalt lanes, showing the massive commercial pylon signs, lack of pedestrian crosswalks, and oncoming vehicle traffic.               |
-| `04_south_side_booger_king_and_inn.png`  | **South Side Commercial Strip:** Booger King drive-thru lane, ordering menu board, green "OPEN" window sign, waving American flag, and the giant crowned Booger King burger pylon sign.                                        |
+| `04_south_side_booger_king_and_inn.png`  | **South Side Commercial Strip:** Booger King drive-thru lane, ordering menu board, green "OPEN" window sign, waving American flag, and the giant Booger King burger pylon sign.                                                |
 | `05_north_side_errands_parking_lot.png`  | **North Side Shared Lot:** Active errand vehicles turning into the lot across the sidewalk driveway apron, marked parking stalls, and storefront facades.                                                                      |
 | `06_character_customizer.png`            | **Character Customizer UI:** In-game pause menu showing the customization options (hair/hat, backpack colors) and the 3D rotating preview of Mats.                                                                             |
 
@@ -62,7 +62,7 @@ This document catalogs the current visual style and 3D assets of **Stroad Hero**
   - Neon purple/pink roofline accent trim, bold _"OPEN"_ signage, and drive-thru order and pick-up windows.
 - **`asset_building_booger_king.png`** — **Booger King**:
   - Modern fast-food architecture with stacked stone base, wood slat parapet tower, and horizontal red racing stripe.
-  - Hamburger bun logo with parody text, rooftop HVAC units, and giant crowned roadside pylon sign (_"HOME OF THE BOOGER / 99¢ SNOT FRIES / DRIVE THRU"_).
+  - Hamburger bun logo with parody text, rooftop HVAC units, and giant roadside pylon sign (_"HOME OF THE BOOGER / 99¢ SNOT FRIES / DRIVE THRU"_).
 - **`asset_building_cramped_inn.png`** — **Cramped Inn**:
   - Three-story hotel structure (parody of Hampton Inn) with beige stucco exterior, multi-window grid, vehicle drop-off porte-cochere canopy, and neon cursive hotel branding.
 - **`asset_building_dorf_dealership.png`** — **Dorf Dealership**:

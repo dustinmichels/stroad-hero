@@ -40,6 +40,33 @@ const ROWS := [
 		"serves": &"smell_gas",
 		"site": &"smell"
 	},  # Smell gas row, nose -Z
+	{
+		"z": 38.0,
+		"x0": 79.25,
+		"count": 6,
+		"spacing": 3.5,
+		"nose": 1.0,
+		"serves": &"frontage_retail",
+		"site": &"frontage",
+	},  # Frontage Retail (Leaders), nose +Z
+	{
+		"z": 41.0,
+		"x0": 107.75,
+		"count": 5,
+		"spacing": 3.5,
+		"nose": 1.0,
+		"serves": &"consumer_car_care",
+		"site": &"frontage",
+	},  # Consumer Car Care, nose +Z
+	{
+		"z": 38.0,
+		"x0": 142.0,
+		"count": 2,
+		"spacing": 3.0,
+		"nose": 1.0,
+		"serves": &"frontage_commercial",
+		"site": &"frontage",
+	},  # Frontage Commercial (Checkers), nose +Z
 ]
 const ENTRANCES: Dictionary[StringName, Vector3] = {
 	&"walgroins": Vector3(-3, 0, -36),
@@ -48,6 +75,13 @@ const ENTRANCES: Dictionary[StringName, Vector3] = {
 	&"strip_mall": Vector3(-5, 0, 33.7),
 	&"smell_store": Vector3(-48.0, 0, -34.0),
 	&"smell_gas": Vector3(-59.0, 0, -25.2),
+	&"frontage_retail": Vector3(88.0, 0.0, 43.0),
+	&"leaders_furniture": Vector3(88.0, 0.0, 43.0),
+	&"leaders_outdoor": Vector3(88.0, 0.0, 43.0),
+	&"consumer_car_care": Vector3(123.2, 0.0, 45.0),
+	&"car_care": Vector3(123.2, 0.0, 45.0),
+	&"frontage_commercial": Vector3(147.5, 0.0, 43.5),
+	&"checkers": Vector3(147.5, 0.0, 43.5),
 }
 const TURN_IN_START := Vector3(17.0, 0.0, -9.375)
 const ENTRY_X := 13.0
@@ -60,8 +94,8 @@ const AISLE_WB_Z := AISLE_Z_WB
 const AISLE_EB_Z := AISLE_Z_EB
 const POACH_PENALTY := 1000.0
 const JITTER := 5.0
-const V_LOT := 4.5
-const V_PARK := 1.5
+const V_LOT := 7.0
+const V_PARK := 2.6
 
 const BK_TURN_IN_START := Vector3(-45.0, 0.0, 9.375)
 const BK_WAIT_POINT := Vector3(-40.5, 0.0, 13.375)
@@ -75,6 +109,14 @@ const CI_ENTRY_X := 38.0
 const CI_EXIT_X := 42.0
 const CI_WAIT_POINT := Vector3(42.0, 0.0, 13.375)
 const CI_MERGE_END := Vector3(46.0, 0.0, 9.375)
+const CI_DROPOFF_STOP_DIST := 27.0
+const FRONTAGE_TURN_IN_START := Vector3(61.75, 0.0, 9.375)
+const FRONTAGE_ENTRY_X := 65.75
+const FRONTAGE_EXIT_X := 70.25
+const FRONTAGE_WAIT_POINT := Vector3(70.25, 0.0, 13.375)
+const FRONTAGE_MERGE_END := Vector3(74.25, 0.0, 9.375)
+const FRONTAGE_AISLE_EB := 29.75
+const FRONTAGE_AISLE_WB := 26.25
 const SM_TURN_IN_START := Vector3(-11.0, 0.0, 9.375)
 const SM_ENTRY_X := -7.0
 const SM_EXIT_X := -3.0
@@ -194,6 +236,41 @@ const SITES: Dictionary[StringName, Dictionary] = {
 		"order_dist": BK_DT_ORDER_DIST,
 		"pickup_dist": BK_DT_PICKUP_DIST,
 	},
+	&"cramped_inn_dropoff":
+	{
+		"kind": ParkingSite.Kind.DRIVE_THRU,
+		"served_destinations":
+		[&"cramped_inn_dropoff", &"cramped_inn_pickup", &"cramped_inn_dropoff_pickup"],
+		"lane_id": 3,
+		"turn_in": CI_TURN_IN_START,
+		"entry_x": CI_ENTRY_X,
+		"exit_x": CI_EXIT_X,
+		"wait": CI_WAIT_POINT,
+		"merge_end": CI_MERGE_END,
+		"order_dist": -1.0,
+		"pickup_dist": CI_DROPOFF_STOP_DIST,
+	},
+	&"frontage":
+	{
+		"kind": ParkingSite.Kind.PARKING_LOT,
+		"served_destinations":
+		[
+			&"frontage_retail",
+			&"leaders_furniture",
+			&"leaders_outdoor",
+			&"consumer_car_care",
+			&"car_care",
+			&"frontage_commercial",
+			&"checkers",
+		],
+		"lane_id": 3,
+		"turn_in": FRONTAGE_TURN_IN_START,
+		"entry_x": FRONTAGE_ENTRY_X,
+		"exit_x": FRONTAGE_EXIT_X,
+		"wait": FRONTAGE_WAIT_POINT,
+		"merge_end": FRONTAGE_MERGE_END,
+		"reverse_run": SOUTH_REVERSE_RUN,
+	},
 }
 
 
@@ -276,6 +353,12 @@ static func merge_x(lane_id: int, x: float) -> float:
 static func drive_thru_route(dest: StringName, radius: float = 4.0) -> Curve3D:
 	if dest == &"booger_king":
 		return booger_king_drive_thru_route(radius)
+	elif (
+		dest == &"cramped_inn_dropoff"
+		or dest == &"cramped_inn_pickup"
+		or dest == &"cramped_inn_dropoff_pickup"
+	):
+		return cramped_inn_dropoff_route(2.5)
 	return taco_hell_drive_thru_route(radius)
 
 
@@ -303,6 +386,42 @@ static func is_smell(spot) -> bool:
 	return false
 
 
+static func is_frontage(spot) -> bool:
+	if spot is ParkingSpot:
+		if spot.site_id == &"frontage":
+			return true
+		for s in spot.serves:
+			if (
+				s == &"frontage_retail"
+				or s == &"consumer_car_care"
+				or s == &"frontage_commercial"
+				or s == &"leaders_furniture"
+				or s == &"leaders_outdoor"
+				or s == &"car_care"
+				or s == &"checkers"
+			):
+				return true
+	return false
+
+
+static func _frontage_business_params(spot) -> Dictionary:
+	if spot is ParkingSpot:
+		for s in spot.serves:
+			if s == &"frontage_retail" or s == &"leaders_furniture" or s == &"leaders_outdoor":
+				return {"driveway_x": 88.0, "aisle_z": 33.5}
+			elif s == &"consumer_car_care" or s == &"car_care":
+				return {"driveway_x": 120.0, "aisle_z": 36.5}
+			elif s == &"frontage_commercial" or s == &"checkers":
+				return {"driveway_x": 150.0, "aisle_z": 33.5}
+	var sx := _spot_position(spot).x
+	if sx < 102.0:
+		return {"driveway_x": 88.0, "aisle_z": 33.5}
+	elif sx < 137.0:
+		return {"driveway_x": 120.0, "aisle_z": 36.5}
+	else:
+		return {"driveway_x": 150.0, "aisle_z": 33.5}
+
+
 static func lot_group(spot) -> StringName:
 	if spot is ParkingSpot:
 		if spot.site_id != &"":
@@ -310,6 +429,8 @@ static func lot_group(spot) -> StringName:
 		var s_lot := south_lot(spot)
 		if s_lot != &"":
 			return s_lot
+		if is_frontage(spot):
+			return &"frontage"
 		if is_smell(spot):
 			return &"smell"
 	return &"north"
@@ -429,8 +550,10 @@ static func exit_sign(spot) -> float:
 
 
 static func entry_route(spot, radius := 4.0) -> Curve3D:
-	if spot is ParkingSpot and radius == 4.0 and spot.entry_route != null:
+	if spot is ParkingSpot and spot.entry_route != null:
 		return spot.entry_route
+	if is_frontage(spot):
+		return frontage_entry_route(spot, 1.5)
 	var site := south_lot(spot)
 	if site != &"":
 		return south_entry_route(site, spot, radius)
@@ -506,8 +629,10 @@ static func smell_entry_route(spot, radius := 4.0) -> Curve3D:
 
 
 static func reverse_route(spot, radius := 4.0) -> Curve3D:
-	if spot is ParkingSpot and radius == 4.0 and spot.reverse_route != null:
+	if spot is ParkingSpot and spot.reverse_route != null:
 		return spot.reverse_route
+	if is_frontage(spot):
+		return frontage_reverse_route(spot, 1.5)
 	var site := south_lot(spot)
 	if site != &"":
 		return south_reverse_route(site, spot, radius)
@@ -577,8 +702,10 @@ static func smell_reverse_route(spot, radius := 4.0) -> Curve3D:
 
 
 static func exit_route(spot, radius := 4.0) -> Curve3D:
-	if spot is ParkingSpot and radius == 4.0 and spot.exit_route != null:
+	if spot is ParkingSpot and spot.exit_route != null:
 		return spot.exit_route
+	if is_frontage(spot):
+		return frontage_exit_route(spot, 1.5)
 	var site := south_lot(spot)
 	if site != &"":
 		return south_exit_route(site, spot, radius)
@@ -645,6 +772,10 @@ static func south_merge_route(site: StringName, radius := 4.0) -> Curve3D:
 	return site_merge_route(site, radius)
 
 
+static func frontage_merge_route(radius := 4.0) -> Curve3D:
+	return site_merge_route(&"frontage", radius)
+
+
 static func merge_route(radius := 4.0) -> Curve3D:
 	return site_merge_route(&"north", radius)
 
@@ -687,6 +818,86 @@ static func booger_king_merge_route(radius := 4.0) -> Curve3D:
 	return site_merge_route(&"booger_king", radius)
 
 
+static func cramped_inn_dropoff_route(radius := 2.5) -> Curve3D:
+	var pts := PackedVector3Array(
+		[
+			CI_TURN_IN_START,
+			Vector3(CI_ENTRY_X, 0.0, 13.375),
+			Vector3(CI_ENTRY_X, 0.0, 28.5),
+			Vector3(48.0, 0.0, 28.5),
+			Vector3(48.0, 0.0, 22.5),
+			Vector3(CI_EXIT_X, 0.0, 22.5),
+			CI_WAIT_POINT,
+		]
+	)
+	return PathBuilder.build(pts, radius)
+
+
+static func frontage_entry_route(spot, radius := 1.5) -> Curve3D:
+	if spot is ParkingSpot and spot.entry_route != null:
+		return spot.entry_route
+	var spot_pos := _spot_position(spot)
+	var sx := spot_pos.x
+	var params := _frontage_business_params(spot)
+	var dw_x: float = params["driveway_x"]
+	var aisle_z: float = params["aisle_z"]
+	var pts := PackedVector3Array(
+		[
+			FRONTAGE_TURN_IN_START,
+			Vector3(FRONTAGE_ENTRY_X, 0.0, 13.375),
+			Vector3(FRONTAGE_ENTRY_X, 0.0, 22.0),
+			Vector3(FRONTAGE_ENTRY_X, 0.0, FRONTAGE_AISLE_EB),
+			Vector3(dw_x, 0.0, FRONTAGE_AISLE_EB),
+			Vector3(dw_x, 0.0, aisle_z),
+			Vector3(sx, 0.0, aisle_z),
+			spot_pos,
+		]
+	)
+	return PathBuilder.build(pts, radius)
+
+
+static func frontage_reverse_route(spot, radius := 1.5) -> Curve3D:
+	if spot is ParkingSpot and spot.reverse_route != null:
+		return spot.reverse_route
+	var spot_pos := _spot_position(spot)
+	var sx := spot_pos.x
+	var params := _frontage_business_params(spot)
+	var dw_x: float = params["driveway_x"]
+	var aisle_z: float = params["aisle_z"]
+	var sign_val := 1.0 if sx < dw_x else -1.0
+	var pts := PackedVector3Array(
+		[
+			Vector3(sx - sign_val * 3.0, 0.0, aisle_z),
+			Vector3(sx, 0.0, aisle_z),
+			spot_pos,
+		]
+	)
+	return PathBuilder.build(pts, radius)
+
+
+static func frontage_exit_route(spot, radius := 1.5) -> Curve3D:
+	if spot is ParkingSpot and spot.exit_route != null:
+		return spot.exit_route
+	var spot_pos := _spot_position(spot)
+	var sx := spot_pos.x
+	var params := _frontage_business_params(spot)
+	var dw_x: float = params["driveway_x"]
+	var aisle_z: float = params["aisle_z"]
+	var sign_val := 1.0 if sx < dw_x else -1.0
+	var pts := PackedVector3Array(
+		[
+			Vector3(sx - sign_val * 3.0, 0.0, aisle_z),
+			Vector3(dw_x, 0.0, aisle_z),
+			Vector3(dw_x, 0.0, FRONTAGE_AISLE_WB),
+			Vector3(74.0, 0.0, FRONTAGE_AISLE_WB),
+			Vector3(FRONTAGE_EXIT_X, 0.0, FRONTAGE_AISLE_WB),
+			Vector3(FRONTAGE_EXIT_X, 0.0, 22.0),
+			FRONTAGE_WAIT_POINT,
+		]
+	)
+	return PathBuilder.build(pts, radius)
+
+
 func _init() -> void:
 	_build_spots()
 
@@ -704,7 +915,6 @@ func _build_spots() -> void:
 		var x0: float = row["x0"]
 		var count: int = row["count"]
 		var nose: float = row["nose"]
-		var serves_name: StringName = row["serves"]
 		var site_name: StringName = row.get("site", &"north")
 		var rot_y: float = PI / 2.0 if nose < 0.0 else -PI / 2.0
 		var spot_basis := Basis(Vector3.UP, rot_y)
@@ -716,7 +926,20 @@ func _build_spots() -> void:
 			spot.id = next_id
 			next_id += 1
 			spot.transform = Transform3D(spot_basis, Vector3(x, 0.05, z))
-			var serves_arr: Array[StringName] = [serves_name]
+			var serves_arr: Array[StringName] = []
+			if row["serves"] is Array:
+				for s in row["serves"]:
+					serves_arr.append(StringName(s))
+			else:
+				var s_name: StringName = row["serves"]
+				serves_arr.append(s_name)
+				if s_name == &"frontage_retail":
+					serves_arr.append(&"leaders_furniture")
+					serves_arr.append(&"leaders_outdoor")
+				elif s_name == &"consumer_car_care":
+					serves_arr.append(&"car_care")
+				elif s_name == &"frontage_commercial":
+					serves_arr.append(&"checkers")
 			spot.serves = serves_arr
 			spot.site_id = site_name
 			spot.lot = self
