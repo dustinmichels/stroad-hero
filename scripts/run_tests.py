@@ -55,6 +55,7 @@ EXTENDED_TESTS = [
     "--test-foliage-wind",
     "--test-character-editor",
     "--test-objectives-editor",
+    "--test-retro-filter",
     "--test-lane-wander",
     "--test-grass-shortcut",
 ]

@@ -42,6 +42,7 @@
 [ext_resource type="PackedScene" path="res://world/streetlights.tscn" id="40_streetlights"]
 [ext_resource type="PackedScene" path="res://world/trees.tscn" id="41_trees"]
 [ext_resource type="PackedScene" path="res://world/flags.tscn" id="42_flags"]
+[ext_resource type="PackedScene" path="res://ui/retro_filter.tscn" id="43_retro_filter"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.35, 0.55, 0.85, 1)
@@ -122,6 +123,7 @@ shape = SubResource("Shape_Ground")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 13.85)
 
 [node name="HUD" parent="." unique_id=1584422048 instance=ExtResource("5_hud")]
+[node name="RetroFilter" parent="." unique_id=381928471 instance=ExtResource("43_retro_filter")]
 
 [node name="CharacterEditor" parent="." unique_id=2055998514 instance=ExtResource("10_editor")]
 player_path = NodePath("../Mats")

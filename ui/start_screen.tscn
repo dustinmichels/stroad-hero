@@ -975,6 +975,52 @@ theme_override_fonts/font = ExtResource("4_body")
 theme_override_font_sizes/font_size = 21
 text = "Controls Screen"
 
+[node name="ColStyle" type="HBoxContainer" parent="RootControl/Pane/Margin/Content/ControlsPage/FullControlsCard/FullControlsContent/Grid"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="KeyStyle" type="PanelContainer" parent="RootControl/Pane/Margin/Content/ControlsPage/FullControlsCard/FullControlsContent/Grid/ColStyle"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleKey")
+
+[node name="KeyLabel" type="Label" parent="RootControl/Pane/Margin/Content/ControlsPage/FullControlsCard/FullControlsContent/Grid/ColStyle/KeyStyle"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.96, 0.98, 1)
+theme_override_fonts/font = ExtResource("3_heading")
+theme_override_font_sizes/font_size = 17
+text = "F1"
+
+[node name="DescLabel" type="Label" parent="RootControl/Pane/Margin/Content/ControlsPage/FullControlsCard/FullControlsContent/Grid/ColStyle"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.88, 0.92, 1)
+theme_override_fonts/font = ExtResource("4_body")
+theme_override_font_sizes/font_size = 21
+text = "Retro Style"
+
+[node name="ColScale" type="HBoxContainer" parent="RootControl/Pane/Margin/Content/ControlsPage/FullControlsCard/FullControlsContent/Grid"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="KeyScale" type="PanelContainer" parent="RootControl/Pane/Margin/Content/ControlsPage/FullControlsCard/FullControlsContent/Grid/ColScale"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleKey")
+
+[node name="KeyLabel" type="Label" parent="RootControl/Pane/Margin/Content/ControlsPage/FullControlsCard/FullControlsContent/Grid/ColScale/KeyScale"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.96, 0.98, 1)
+theme_override_fonts/font = ExtResource("3_heading")
+theme_override_font_sizes/font_size = 17
+text = "F2 / G"
+
+[node name="DescLabel" type="Label" parent="RootControl/Pane/Margin/Content/ControlsPage/FullControlsCard/FullControlsContent/Grid/ColScale"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.88, 0.92, 1)
+theme_override_fonts/font = ExtResource("4_body")
+theme_override_font_sizes/font_size = 21
+text = "Render Scale"
+
 [node name="ErrandNote" type="Label" parent="RootControl/Pane/Margin/Content/ControlsPage/FullControlsCard/FullControlsContent"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.72, 0.78, 0.86, 1)

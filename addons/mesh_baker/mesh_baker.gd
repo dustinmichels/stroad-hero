@@ -473,6 +473,12 @@ static func bake_car_body(root: Node3D, scene_root: Node = null) -> Node3D:
 		if child_name.begins_with("Wheel") and child is Node3D:
 			wheels_to_bake.append(child)
 			continue
+		if child_name in [&"SirenRed", &"SirenBlue"]:
+			child.owner = actual_owner
+			for lens in child.find_children("*", "", true, false):
+				lens.owner = actual_owner
+			continue
+
 
 		if child_name in [&"HeadlightL", &"HeadlightR"]:
 			child.owner = actual_owner
@@ -670,6 +676,12 @@ static func bake_vehicle_model(model: Node3D, scene_root: Node = null) -> Node3D
 		if child_name.begins_with("Wheel") and child is Node3D:
 			wheels_to_bake.append(child)
 			continue
+		if child_name in [&"SirenRed", &"SirenBlue"]:
+			child.owner = actual_owner
+			for lens in child.find_children("*", "", true, false):
+				lens.owner = actual_owner
+			continue
+
 
 		if child_name in [&"HeadlightL", &"HeadlightR"]:
 			child.owner = actual_owner

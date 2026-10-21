@@ -6,6 +6,7 @@
 - **Profiling & rendering optimizations**: Multi-meshed forest trees (replacing 688 bodies with 36 MultiMeshes), cached traffic blocker candidate sets and vehicle sweeps, throttled environment updates, culled unneeded shadows and 3D labels, and warmed up nighttime lighting shaders. Slashed dusk lights-on freeze from 852ms to 61ms on Compatibility (and 153ms to 38ms on Forward+), halved Compatibility draw calls from ~3,400 to ~1,565, and brought Forward+ night performance to a stable 60 fps.
 - **Cybertruck rebuild**: Replaced box-assembled body with generated faceted meshes (`scripts/generate_cybertruck.gd`): single-ridge wedge profile, inward-leaning greenhouse with flush windshield/side glass, tonneau cover, polygonal arch flares, headlight/taillight markers for lamps and turn signals. Stainless steel is its only finish (never repainted).
 - **Mats running gait**: Sprinting now blends out of the walking pose into longer strides, higher knee lift, stronger arm swing, and a forward lean.
+- **Retro visual style filter**: Added real-time post-process pixelation, ordered $4\times4$ Bayer dithering, soft silhouette edge inking, and quantized retro palettes (`shaders/pixel_art.gdshader`, `ui/retro_filter.tscn`). Toggleable and cycleable live via `F1`, led by a subtle high-def 2x preset tuned for readable 3D storefront text and signs, followed by 16-Bit, Chunky, 8-Bit, Game Boy, Amber CRT, and CGA modes.
 
 ## Oct 20, 2026
 

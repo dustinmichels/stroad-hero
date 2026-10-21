@@ -13,6 +13,7 @@ const PASSENGER_TYPES: Array[CarType] = [
 	CarType.JEEP,
 	CarType.F150,
 	CarType.CYBERTRUCK,
+	CarType.POLICE_SUV,
 ]
 
 const BODY_SCENE_PATHS: Dictionary = {
@@ -25,6 +26,7 @@ const BODY_SCENE_PATHS: Dictionary = {
 	CarType.JEEP: "res://cars/bodies/jeep.tscn",
 	CarType.F150: "res://cars/bodies/f150.tscn",
 	CarType.CYBERTRUCK: "res://cars/bodies/cybertruck.tscn",
+	CarType.POLICE_SUV: "res://cars/bodies/police_suv.tscn",
 }
 
 static var _body_scenes: Dictionary = {}
@@ -55,6 +57,7 @@ const BODY_NODE_PATHS: Dictionary = {
 	CarType.JEEP: ^"Jeep",
 	CarType.F150: ^"F150",
 	CarType.CYBERTRUCK: ^"Cybertruck",
+	CarType.POLICE_SUV: ^"PoliceSUV",
 }
 
 const PAINT_PALETTE: Array[Color] = [
@@ -86,6 +89,7 @@ const REGULAR_PASSENGER_TYPES: Array[CarType] = [
 	CarType.JEEP,
 	CarType.F150,
 	CarType.CYBERTRUCK,
+	CarType.POLICE_SUV,
 ]
 
 const DEFAULT_WHEEL_RADIUS := 0.35
@@ -282,8 +286,8 @@ func set_gritty(val: bool) -> void:
 
 
 func _apply_paint_material() -> void:
-	if car_type == CarType.CYBERTRUCK:
-		# Stainless steel only: the body scene's own material is the sole finish.
+	if car_type in [CarType.CYBERTRUCK, CarType.POLICE_SUV]:
+		# Preserve stainless steel and police livery from their body scenes.
 		return
 	if car_type == CarType.SPORTS:
 		if not SPORTS_PAINT_PALETTE.has(body_color):

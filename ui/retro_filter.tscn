@@ -1,0 +1,30 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://ui/retro_filter.gd" id="1_filter"]
+[ext_resource type="Shader" path="res://shaders/pixel_art.gdshader" id="2_shader"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_retro"]
+shader = ExtResource("2_shader")
+shader_parameter/enabled = false
+shader_parameter/pixel_size = 4.0
+shader_parameter/color_depth = 16.0
+shader_parameter/dither_strength = 0.35
+shader_parameter/enable_outlines = true
+shader_parameter/outline_threshold = 0.18
+shader_parameter/outline_color = Color(0.05, 0.06, 0.09, 1)
+shader_parameter/palette_mode = 0
+
+[node name="RetroFilter" type="CanvasLayer"]
+process_mode = 3
+layer = 1
+script = ExtResource("1_filter")
+
+[node name="EffectRect" type="ColorRect" parent="."]
+visible = false
+material = SubResource("ShaderMaterial_retro")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2

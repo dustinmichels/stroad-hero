@@ -18,6 +18,7 @@ func matches_args() -> bool:
 				"--test-startup",
 				"--test-character-editor",
 				"--test-objectives-editor",
+				"--test-retro-filter",
 			]
 		):
 			return true
@@ -56,6 +57,9 @@ func setup_ready() -> void:
 		return
 	if "--test-objectives-editor" in user_args:
 		_run_test_objectives_editor()
+		return
+	if "--test-retro-filter" in user_args:
+		_run_test_retro_filter()
 		return
 
 
@@ -1258,7 +1262,6 @@ func _run_test_character_editor() -> void:
 func _run_test_objectives_editor() -> void:
 	await main.get_tree().process_frame
 	var dock_script = load("res://addons/objectives_editor/objectives_editor_dock.gd")
-	assert(dock_script != null, "ObjectivesEditorDock script must exist")
 	var dock = dock_script.new()
 	assert(dock != null, "ObjectivesEditorDock must instantiate")
 	main.add_child(dock)
@@ -1290,4 +1293,45 @@ func _run_test_objectives_editor() -> void:
 
 	dock.queue_free()
 	print("OBJECTIVES_EDITOR_TEST: SUCCESS - --test-objectives-editor passed cleanly!")
+	main.get_tree().quit(0)
+
+
+func _run_test_retro_filter() -> void:
+	await main.get_tree().process_frame
+	var retro_filter: CanvasLayer = main.retro_filter
+	if retro_filter == null:
+		retro_filter = main.get_node_or_null("RetroFilter") as CanvasLayer
+	assert(retro_filter != null, "RetroFilter must exist in main scene")
+
+	var effect_rect: ColorRect = retro_filter.get_node_or_null("EffectRect") as ColorRect
+	assert(effect_rect != null, "EffectRect must exist in RetroFilter")
+	assert(not effect_rect.visible, "EffectRect must start disabled (Preset.OFF)")
+
+	# Cycle preset to subtle retro (2x crisp)
+	var p = retro_filter.call("cycle_preset")
+	assert(p == 1, "First cycle must switch to Subtle Retro (1)")
+	assert(effect_rect.visible, "EffectRect must be visible when preset is active")
+	var mat: ShaderMaterial = effect_rect.material as ShaderMaterial
+	assert(mat != null, "EffectRect must have a ShaderMaterial")
+	assert(mat.get_shader_parameter("enabled") == true, "Shader must be enabled")
+	assert(
+		is_equal_approx(mat.get_shader_parameter("pixel_size"), 2.0),
+		"Subtle Retro pixel size must be 2.0 for text readability"
+	)
+
+	# Cycle to Game Boy mode (preset 5)
+	retro_filter.call("cycle_preset")  # 2: 16-Bit Retro
+	retro_filter.call("cycle_preset")  # 3: Chunky
+	retro_filter.call("cycle_preset")  # 4: 8-Bit Arcade
+	p = retro_filter.call("cycle_preset")  # 5: Game Boy
+	assert(p == 5, "Must reach Game Boy mode")
+	assert(mat.get_shader_parameter("palette_mode") == 1, "Game Boy palette mode must be 1")
+
+	# Cycle through remaining presets back to OFF
+	retro_filter.call("cycle_preset")  # 6: Amber CRT
+	retro_filter.call("cycle_preset")  # 7: CGA Cyber
+	p = retro_filter.call("cycle_preset")  # 0: OFF
+	assert(p == 0, "Must wrap back to Preset.OFF")
+	assert(not effect_rect.visible, "EffectRect must be hidden when OFF")
+	print("RETRO_FILTER_TEST: SUCCESS - --test-retro-filter passed cleanly!")
 	main.get_tree().quit(0)

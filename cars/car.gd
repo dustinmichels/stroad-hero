@@ -15,7 +15,8 @@ enum CarType {
 	SHIPPING_TRUCK,
 	JEEP,
 	F150,
-	CYBERTRUCK
+	CYBERTRUCK,
+	POLICE_SUV
 }
 
 enum Motion { LANE, PATH }
@@ -45,6 +46,7 @@ const PARKING_CAR_TYPES: Array[CarType] = [
 	CarType.JEEP,
 	CarType.F150,
 	CarType.CYBERTRUCK,
+	CarType.POLICE_SUV,
 ]
 
 
@@ -1348,6 +1350,11 @@ func _update_dimensions() -> void:
 			car_width = 2.0
 			shape_size = Vector3(4.5, 1.7, 2.0)
 			shape_y = 0.85
+		CarType.POLICE_SUV:
+			car_length = 5.0
+			car_width = 2.1
+			shape_size = Vector3(5.0, 2.0, 2.1)
+			shape_y = 1.0
 		CarType.TAXI:
 			car_length = 4.2
 			car_width = 1.9

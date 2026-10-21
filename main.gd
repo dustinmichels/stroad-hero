@@ -1,5 +1,6 @@
 class_name Main
 extends Node3D
+const RetroFilterScript = preload("res://ui/retro_filter.gd")
 const LABEL_FADE_MARGIN_METERS := 12.0
 
 @export var mats_node: Mats = null
@@ -12,6 +13,7 @@ const LABEL_FADE_MARGIN_METERS := 12.0
 @export var camera_node: Camera3D = null
 @export var props_container: Node3D = null
 @export var environment_controller_node: EnvironmentController = null
+@export var retro_filter_node: CanvasLayer = null
 @onready var mats: Mats = mats_node if mats_node else get_node_or_null("Mats") as Mats
 @onready var hud: HUD = hud_node if hud_node else get_node_or_null("HUD") as HUD
 @onready var objective_manager: ObjectiveManager = (
@@ -28,6 +30,9 @@ const LABEL_FADE_MARGIN_METERS := 12.0
 @onready var character_editor: CharacterEditor = (
 	character_editor_node if character_editor_node else get_node_or_null("CharacterEditor")
 	as CharacterEditor
+)
+@onready var retro_filter: CanvasLayer = (
+	retro_filter_node if retro_filter_node else get_node_or_null("RetroFilter") as CanvasLayer
 )
 @onready var drive_thru: TacoHellDriveThru = (
 	drive_thru_node if drive_thru_node else get_node_or_null("Props/TacoHell/DriveThru")
