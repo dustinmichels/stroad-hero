@@ -200,6 +200,13 @@ func _run_test_powerlines() -> void:
 
 		var col := pole.get_node_or_null("CollisionShape3D") as CollisionShape3D
 		assert(col != null, "Powerline %d must have a CollisionShape3D" % i)
+		assert(
+			absf(pole.global_position.z - (-13.85)) < 0.05,
+			(
+				"Powerline pole %s must be centered in sidewalk (z=-13.85), got z=%.3f"
+				% [pole.name, pole.global_position.z]
+			)
+		)
 
 		var wire_mi := pole.get_node_or_null("WireMesh") as MeshInstance3D
 		assert(wire_mi != null, "Powerline %d must have a WireMesh" % i)
@@ -231,6 +238,20 @@ func _run_test_powerlines() -> void:
 		"Transformer must be visible when enabled"
 	)
 	standalone.queue_free()
+
+	# Physics collision: verify pole obstructs pedestrian Mats walking down the middle of the sidewalk
+	main.mats.global_position = Vector3(4.0, 0.245, -13.85)
+	main.mats.velocity = Vector3(10.0, 0.0, 0.0)
+	for _step in range(30):
+		main.mats.velocity = Vector3(10.0, 0.0, 0.0)
+		main.mats._physics_process(1.0 / 60.0)
+	assert(
+		main.mats.global_position.x < 5.8,
+		(
+			"Electricity pole in middle of sidewalk must physically block Mats (got x=%.2f)"
+			% main.mats.global_position.x
+		)
+	)
 
 	print("POWERLINES_TEST: SUCCESS - --test-powerlines passed cleanly!")
 	main.get_tree().quit(0)

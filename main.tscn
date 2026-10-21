@@ -218,31 +218,31 @@ transform = Transform3D(-0.34202, 0, 0.939693, 0, 1, 0, -0.939693, 0, -0.34202, 
 [node name="Powerlines" type="Node3D" parent="Props" unique_id=856942670]
 
 [node name="Powerline_m85" parent="Props/Powerlines" unique_id=1630704023 instance=ExtResource("32_powerline")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -85, 0, -12.425)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -85, 0, -13.85)
 
 [node name="Powerline_m54" parent="Props/Powerlines" unique_id=279026478 instance=ExtResource("32_powerline")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -54.5, 0, -12.425)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -54.5, 0, -13.85)
 has_transformer = true
 
-[node name="Powerline_m22" parent="Props/Powerlines" unique_id=592198176 instance=ExtResource("32_powerline")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, 0, -12.425)
+[node name="Powerline_m18" parent="Props/Powerlines" unique_id=592198176 instance=ExtResource("32_powerline")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 0, -13.85)
 
 [node name="Powerline_6" parent="Props/Powerlines" unique_id=113946106 instance=ExtResource("32_powerline")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, -12.425)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, -13.85)
 has_transformer = true
 
 [node name="Powerline_36" parent="Props/Powerlines" unique_id=1960349585 instance=ExtResource("32_powerline")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, 0, -12.425)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, 0, -13.85)
 
 [node name="Powerline_70" parent="Props/Powerlines" unique_id=799970098 instance=ExtResource("32_powerline")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 70, 0, -12.425)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 70, 0, -13.85)
 
 [node name="Powerline_107" parent="Props/Powerlines" unique_id=1433348325 instance=ExtResource("32_powerline")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 107, 0, -12.425)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 107, 0, -13.85)
 has_transformer = true
 
 [node name="Powerline_144" parent="Props/Powerlines" unique_id=1481779184 instance=ExtResource("32_powerline")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 144, 0, -12.425)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 144, 0, -13.85)
 
 [node name="TunnelWest" parent="Props" instance=ExtResource("35_tunnel")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -100, 0, 0)

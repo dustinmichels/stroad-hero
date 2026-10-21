@@ -26,7 +26,9 @@ Godot 4.7 project (GDScript). The user usually has the Godot editor open while y
 
 - When wrapping up a task, consider adding it to CHANGELOG.md
 - No need to add minor changes
-- If adding, re-write today's entry as needed to ensure it compactly reflects signifigant changes from today.
+- If adding, re-write today's entry as needed to ensure it compactly reflects signifigant changes from today
+- The changelog should contain no more then ~10, short bullet points with the most important changes for a given day
+- They can reference commits
 
 ## Testing policy
 
