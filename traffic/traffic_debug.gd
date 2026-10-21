@@ -101,6 +101,8 @@ func _create_spot_label(spot: ParkingSpot) -> void:
 	label.font_size = 24
 	label.outline_size = 4
 	label.outline_modulate = Color.BLACK
+	label.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	label.visibility_range_end = 50.0
 	var pos := spot.transform.origin
 	pos.y = 0.5
 	label.position = pos
@@ -178,6 +180,8 @@ func _update_car_labels() -> void:
 			label.font_size = 20
 			label.outline_size = 3
 			label.outline_modulate = Color.BLACK
+			label.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			label.visibility_range_end = 50.0
 			add_child(label)
 			_car_labels[cid] = label
 

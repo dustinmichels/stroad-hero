@@ -21,6 +21,7 @@ INNER_TESTS = [
     "--test-exit-priority",
     "--test-frontage-contracts",
     "--test-speed-variation",
+    "--test-shortcut-contracts",
 ]
 
 EXTENDED_TESTS = [
@@ -54,15 +55,22 @@ EXTENDED_TESTS = [
     "--test-foliage-wind",
     "--test-character-editor",
     "--test-objectives-editor",
+    "--test-lane-wander",
+    "--test-grass-shortcut",
 ]
 BENCHMARKS = [
     "--bench-physics",
     "--bench-physics-walk",
+    "--bench-gameplay",
+    "--bench-gameplay-compat",
 ]
-
+# Benchmarks that open a window for realtime graphical capture
+WINDOWED_TESTS = {
+    "--bench-gameplay",
+    "--bench-gameplay-compat",
+}
 DEFAULT_TIMEOUT = 120
 FAILURE_MARKERS = (b"SCRIPT ERROR:", b"Assertion failed", b"CrashHandlerException")
-
 
 
 
@@ -74,18 +82,28 @@ def stop_process(proc: subprocess.Popen) -> None:
 
 
 def run_single_test(
-    test_flag: str, timeout: int = DEFAULT_TIMEOUT, runtime_args: list[str] | None = None
+    test_flag: str,
+    timeout: int = DEFAULT_TIMEOUT,
+    runtime_args: list[str] | None = None,
+    fixed_fps: int | None = None,
 ):
     cmd = [
         GODOT_BIN,
-        "--headless",
+    ]
+    if test_flag not in WINDOWED_TESTS and not test_flag.startswith("--bench-gameplay"):
+        cmd.append("--headless")
+    if test_flag == "--bench-gameplay-compat":
+        cmd.extend(["--rendering-method", "gl_compatibility", "--force-web-shadows"])
+    if fixed_fps is not None:
+        cmd.extend(["--fixed-fps", str(fixed_fps)])
+    cmd.extend([
         "--path",
         ".",
         TEST_SCENE,
         "--",
         test_flag,
         *(runtime_args or []),
-    ]
+    ])
     started = time.monotonic()
     proc = None
     selector = selectors.DefaultSelector()
@@ -154,9 +172,31 @@ def main():
     ]
     args = [arg for arg in args if arg not in runtime_args]
 
+    fixed_fps: int | None = None
+    cleaned_args: list[str] = []
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg == "--cpu":
+            fixed_fps = 60
+            i += 1
+        elif arg.startswith("--fixed-fps="):
+            fixed_fps = int(arg.split("=", 1)[1])
+            i += 1
+        elif arg == "--fixed-fps":
+            if i + 1 < len(args) and args[i + 1].isdigit():
+                fixed_fps = int(args[i + 1])
+                i += 2
+            else:
+                fixed_fps = 60
+                i += 1
+        else:
+            cleaned_args.append(arg)
+            i += 1
+    args = cleaned_args
     timeout = int(os.environ.get("TEST_TIMEOUT", DEFAULT_TIMEOUT))
     all_tests = INNER_TESTS + EXTENDED_TESTS
-    all_flags = set(all_tests + BENCHMARKS)
+    all_flags = set(all_tests + BENCHMARKS) | WINDOWED_TESTS
 
     if "--help" in args or "-h" in args:
         print("Usage: mise run test [OPTIONS | TEST_FLAGS...]")
@@ -164,7 +204,8 @@ def main():
         print("  mise run test                  Run the lean inner suite")
         print("  mise run test --extended       Run inner and extended tests")
         print("  mise run test --list           List tests and benchmarks")
-        print("  mise run bench                 Run manual benchmarks")
+        print("  mise run bench                 Run manual benchmarks (gameplay benchmarks open a window)")
+        print("  mise run test --fixed-fps 60   Run in fixed-FPS CPU mode (frames run back-to-back)")
         print("  mise run test -- <test-flag>   Run specific test flags")
         sys.exit(0)
 
@@ -176,8 +217,8 @@ def main():
         ):
             print(f"{heading}:")
             for flag in flags:
-                print(f"  {flag}")
-            print()
+                note = " (opens a window)" if flag in WINDOWED_TESTS else ""
+                print(f"  {flag}{note}")
         sys.exit(0)
 
     if "--extended" in args:
@@ -208,13 +249,17 @@ def main():
     )
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
         futures = {
-            pool.submit(run_single_test, flag, timeout, runtime_args): flag
+            pool.submit(run_single_test, flag, timeout, runtime_args, fixed_fps): flag
             for flag in tests_to_run
         }
         for future in as_completed(futures):
             test_flag, status, duration, output = future.result()
             if status == "PASS":
                 print(f"[{status:7s}] {test_flag:30s} ({duration:.2f}s)")
+                if test_flag in BENCHMARKS or test_flag in WINDOWED_TESTS:
+                    lines = [l for l in output.strip().splitlines() if l.strip()]
+                    for l in lines:
+                        print(f"    {l}")
             else:
                 failures += 1
                 print(f"[{status:7s}] {test_flag:30s} ({duration:.2f}s)")

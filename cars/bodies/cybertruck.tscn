@@ -1,0 +1,184 @@
+[gd_scene format=3]
+
+[ext_resource type="ArrayMesh" path="res://cars/bodies/cybertruck_body.tres" id="1_body"]
+[ext_resource type="ArrayMesh" path="res://cars/bodies/cybertruck_glass.tres" id="2_glass"]
+[ext_resource type="ArrayMesh" path="res://cars/bodies/cybertruck_trim.tres" id="3_trim"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_StainlessSteel"]
+albedo_color = Color(0.88, 0.89, 0.91, 1)
+metallic = 0.85
+roughness = 0.18
+
+[sub_resource type="StandardMaterial3D" id="Mat_DarkTrim"]
+albedo_color = Color(0.12, 0.13, 0.15, 1)
+roughness = 0.80
+
+[sub_resource type="StandardMaterial3D" id="Mat_CarWindow"]
+albedo_color = Color(0.08, 0.10, 0.14, 1)
+metallic = 0.35
+roughness = 0.08
+
+[sub_resource type="StandardMaterial3D" id="Mat_LightBarFront"]
+albedo_color = Color(0.98, 0.99, 1.0, 1)
+roughness = 0.15
+emission_enabled = true
+emission = Color(0.98, 0.99, 1.0, 1)
+emission_energy_multiplier = 3.5
+
+[sub_resource type="StandardMaterial3D" id="Mat_LightBarRear"]
+albedo_color = Color(0.95, 0.10, 0.08, 1)
+roughness = 0.20
+emission_enabled = true
+emission = Color(0.95, 0.10, 0.08, 1)
+emission_energy_multiplier = 2.5
+
+[sub_resource type="StandardMaterial3D" id="Mat_WheelRubber"]
+albedo_color = Color(0.11, 0.11, 0.12, 1)
+roughness = 0.92
+
+[sub_resource type="StandardMaterial3D" id="Mat_WheelAero"]
+albedo_color = Color(0.14, 0.15, 0.16, 1)
+metallic = 0.40
+roughness = 0.50
+
+[sub_resource type="StandardMaterial3D" id="Mat_WheelCenter"]
+albedo_color = Color(0.22, 0.23, 0.25, 1)
+metallic = 0.60
+roughness = 0.35
+
+[sub_resource type="BoxMesh" id="Mesh_FrontLightBar"]
+material = SubResource("Mat_LightBarFront")
+size = Vector3(0.03, 0.035, 1.90)
+
+[sub_resource type="BoxMesh" id="Mesh_RearLightBar"]
+material = SubResource("Mat_LightBarRear")
+size = Vector3(0.03, 0.04, 1.90)
+
+
+[sub_resource type="BoxMesh" id="Mesh_Headlight"]
+size = Vector3(0.02, 0.03, 0.24)
+
+[sub_resource type="BoxMesh" id="Mesh_Taillight"]
+material = SubResource("Mat_LightBarRear")
+size = Vector3(0.02, 0.035, 0.26)
+
+[sub_resource type="CylinderMesh" id="Mesh_WheelTire"]
+material = SubResource("Mat_WheelRubber")
+top_radius = 0.40
+bottom_radius = 0.40
+height = 0.30
+radial_segments = 32
+
+[sub_resource type="CylinderMesh" id="Mesh_WheelAero"]
+material = SubResource("Mat_WheelAero")
+top_radius = 0.28
+bottom_radius = 0.28
+height = 0.02
+radial_segments = 12
+
+[sub_resource type="CylinderMesh" id="Mesh_WheelCenter"]
+material = SubResource("Mat_WheelCenter")
+top_radius = 0.08
+bottom_radius = 0.08
+height = 0.025
+radial_segments = 16
+
+[node name="Cybertruck" type="Node3D"]
+
+[node name="Body" type="MeshInstance3D" parent="."]
+material_override = SubResource("Mat_StainlessSteel")
+mesh = ExtResource("1_body")
+
+[node name="Glass" type="MeshInstance3D" parent="."]
+material_override = SubResource("Mat_CarWindow")
+mesh = ExtResource("2_glass")
+
+[node name="Trim" type="MeshInstance3D" parent="."]
+material_override = SubResource("Mat_DarkTrim")
+mesh = ExtResource("3_trim")
+
+[node name="FrontLightBar" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.705, 0.975, 0)
+cast_shadow = 0
+mesh = SubResource("Mesh_FrontLightBar")
+
+[node name="RearLightBar" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.705, 1.13, 0)
+cast_shadow = 0
+mesh = SubResource("Mesh_RearLightBar")
+
+[node name="HeadlightL" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.71, 0.935, 0.74)
+cast_shadow = 0
+mesh = SubResource("Mesh_Headlight")
+
+[node name="HeadlightR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.71, 0.935, -0.74)
+cast_shadow = 0
+mesh = SubResource("Mesh_Headlight")
+
+[node name="TaillightL" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.71, 1.09, 0.76)
+cast_shadow = 0
+mesh = SubResource("Mesh_Taillight")
+
+[node name="TaillightR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.71, 1.09, -0.76)
+cast_shadow = 0
+mesh = SubResource("Mesh_Taillight")
+
+[node name="Wheel_FrontL" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1.75, 0.40, 0.86)
+mesh = SubResource("Mesh_WheelTire")
+
+[node name="AeroCover" type="MeshInstance3D" parent="Wheel_FrontL"]
+cast_shadow = 0
+position = Vector3(0, -0.16, 0)
+mesh = SubResource("Mesh_WheelAero")
+
+[node name="CenterCap" type="MeshInstance3D" parent="Wheel_FrontL"]
+cast_shadow = 0
+position = Vector3(0, -0.175, 0)
+mesh = SubResource("Mesh_WheelCenter")
+
+[node name="Wheel_FrontR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1.75, 0.40, -0.86)
+mesh = SubResource("Mesh_WheelTire")
+
+[node name="AeroCover" type="MeshInstance3D" parent="Wheel_FrontR"]
+cast_shadow = 0
+position = Vector3(0, 0.16, 0)
+mesh = SubResource("Mesh_WheelAero")
+
+[node name="CenterCap" type="MeshInstance3D" parent="Wheel_FrontR"]
+cast_shadow = 0
+position = Vector3(0, 0.175, 0)
+mesh = SubResource("Mesh_WheelCenter")
+
+[node name="Wheel_RearL" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -1.85, 0.40, 0.86)
+mesh = SubResource("Mesh_WheelTire")
+
+[node name="AeroCover" type="MeshInstance3D" parent="Wheel_RearL"]
+cast_shadow = 0
+position = Vector3(0, -0.16, 0)
+mesh = SubResource("Mesh_WheelAero")
+
+[node name="CenterCap" type="MeshInstance3D" parent="Wheel_RearL"]
+cast_shadow = 0
+position = Vector3(0, -0.175, 0)
+mesh = SubResource("Mesh_WheelCenter")
+
+[node name="Wheel_RearR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -1.85, 0.40, -0.86)
+mesh = SubResource("Mesh_WheelTire")
+
+[node name="AeroCover" type="MeshInstance3D" parent="Wheel_RearR"]
+cast_shadow = 0
+position = Vector3(0, 0.16, 0)
+mesh = SubResource("Mesh_WheelAero")
+
+[node name="CenterCap" type="MeshInstance3D" parent="Wheel_RearR"]
+cast_shadow = 0
+position = Vector3(0, 0.175, 0)
+mesh = SubResource("Mesh_WheelCenter")

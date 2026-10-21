@@ -38,3 +38,10 @@ When running throwaway scripts via `-s /tmp/script.gd`:
 
 - **Scratch files go to `/tmp`**: Never create temporary `.gd`, `.tscn`, or test output files inside the repository; Godot scans and creates `.uid` import artifacts for any file under `res://`.
 - **Run `mise run fmt`**: Automatically formats GDScript (`gdformat`) and documentation markdown (`oxfmt`).
+
+---
+
+## 5. Profiling Godot 4 and GDScript
+
+- **Built-in GDScript Profiler (`-d --profiling`)**: Running `<godot> -d --profiling` prints per-function GDScript timings about once a second to stdout. This is effective for identifying script hotspots and physics/process function costs in headless or windowed runs.
+- **macOS `sample <pid>` Limitations**: Running macOS `sample <pid>` on the official Godot binary is useless because the official release binary is stripped of debug symbols.

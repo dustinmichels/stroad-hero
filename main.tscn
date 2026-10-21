@@ -8,7 +8,6 @@
 [ext_resource type="PackedScene" path="res://buildings/taco_hell.tscn" id="6_taco"]
 [ext_resource type="PackedScene" path="res://buildings/walgroins.tscn" id="7_walgroins"]
 [ext_resource type="PackedScene" path="res://props/street_lamp.tscn" id="8_lamp"]
-[ext_resource type="PackedScene" path="res://props/tree.tscn" id="9_tree"]
 [ext_resource type="PackedScene" path="res://player/character_editor.tscn" id="10_editor"]
 [ext_resource type="Shader" uid="uid://cclkbm6kjist4" path="res://shaders/grass.gdshader" id="11_grass"]
 [ext_resource type="PackedScene" path="res://buildings/booger_king_site.tscn" id="12_booger_king_site"]

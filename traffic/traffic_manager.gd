@@ -147,7 +147,11 @@ var lane3_merge_paths: Array[Curve3D] = []
 var _physics_tick_count: int = 0
 var _watchdog_ignores: Dictionary[int, Dictionary] = {}  # int (car_instance_id) -> Dictionary { "target_id": int, "timer": float }
 var _sweep_cache: Dictionary[int, Dictionary] = {}  # car instance id -> _car_sweep() result
+var _reach_cache: Dictionary[int, float] = {}  # car instance id -> max reach
 var _pending_transfers: Array[Dictionary] = []
+const MAX_ACTIVE_HEADLAMPS: int = 12
+var profile_find_blocker: bool = false
+var _was_lights_on: bool = false
 
 var stats: Dictionary = {
 	"cars_spawned": 0,
@@ -178,10 +182,27 @@ const V_TURN := 6.5
 const A_COMFORT := 4.0
 const MIN_SPAWN_HEADWAY := 14.0  # meters needed before spawning another car in lane
 const SAFE_FOLLOWING_GAP := 6.0  # meters
+const RISKY_PASS_PROBABILITY := 0.05
+const SHORTCUT_DEPARTURE_PROBABILITY := 0.01
+const SHORTCUT_DWELL_MIN := 4.0
+const SHORTCUT_DWELL_MAX := 8.0
+const SWERVE_MIN_GAP_AHEAD := 16.0
+const SWERVE_RISKY_MIN_GAP_AHEAD := 7.5
+const SWERVE_LEAD_MARGIN := 6.0
+const SWERVE_RISKY_LEAD_MARGIN := 2.0
+const SWERVE_MIN_GAP_BEHIND_BASE := 9.0
+const SWERVE_RISKY_MIN_GAP_BEHIND_BASE := 4.5
+const SWERVE_MIN_GAP_BEHIND_SPEED_FACTOR := 0.8
+const SWERVE_RISKY_MIN_GAP_BEHIND_SPEED_FACTOR := 0.4
+const SWERVE_CLOSING_SPEED_FACTOR := 2.5
+const SWERVE_RISKY_CLOSING_SPEED_FACTOR := 1.2
+const SWERVE_CLOSING_SPEED_BASE := 8.0
+const SWERVE_RISKY_CLOSING_SPEED_BASE := 4.0
 const BRAKE_ACCELERATION := 25.0
 const MOTOR_ACCELERATION := 18.0
 const V_LOT := 7.0
 const V_PARK := 2.6
+const V_GRASS := 4.0
 const T_MERGE_GAP := 3.0
 const V_DRIVE_THRU := 4.0
 const DECISION_D_BK := 15.0
@@ -238,6 +259,14 @@ func _ready() -> void:
 		_spawn_initial_traffic_staged()
 	else:
 		populate_immediately()
+	if GameState.instance:
+		GameState.instance.time_of_day_changed.connect(_on_time_of_day_changed)
+	for arg in OS.get_cmdline_user_args():
+		if arg == "--profile-traffic" or arg == "--profile-blocker":
+			profile_find_blocker = true
+	for arg in OS.get_cmdline_args():
+		if arg == "--profile-traffic" or arg == "--profile-blocker":
+			profile_find_blocker = true
 
 
 static func _is_test_mode() -> bool:
@@ -346,10 +375,10 @@ func _seed_parked_car_at(spot: ParkingSpot, custom_dwell: float = -1.0) -> void:
 	car.desired_speed = 0.0
 	add_child(car)
 	car.lane_id = -1
+	car.motion = Car.Motion.PATH
 	var site_cfg := ParkingLot.get_site_cfg(site_id)
 	car.merge_target_lane = site_cfg.get("lane_id", 0)
 	car.state = Car.State.PARKED
-	car.transform = spot.transform
 	car.global_transform = spot.transform
 	car.reset_physics_interpolation()
 	lot.reserve(spot, car)
@@ -410,8 +439,9 @@ func _physics_process(delta: float) -> void:
 		_update_lane_spawning(lane, delta)
 	_apply_pending_lane_transfers()
 	_update_lot_cars(delta)
-
 	_physics_tick_count += 1
+	if _physics_tick_count % 6 == 0:
+		_update_headlamp_lod()
 	if _physics_tick_count % 60 == 0 and lot != null:
 		var free_count := 0
 		var reserved_count := 0
@@ -430,8 +460,42 @@ func _physics_process(delta: float) -> void:
 		stats["leaked"] = max(stats["leaked"], lot.check_invariants())
 
 
+func _evaluate_shortcut_departure(car: Car) -> void:
+	if car.shortcut_evaluated:
+		return
+	car.shortcut_evaluated = true
+	if not car.is_eligible_for_shortcut() or car.spot == null:
+		return
+	var roll: bool = (
+		car.force_shortcut or (not _is_test_mode() and randf() < SHORTCUT_DEPARTURE_PROBABILITY)
+	)
+	if not roll:
+		return
+	var parking_lot: ParkingLot = (
+		lot if lot != null else (car.spot.lot if car.spot != null else null)
+	)
+	if parking_lot == null:
+		return
+	var candidates := ParkingLot.get_shortcut_candidate_spots(car.spot, parking_lot.spots)
+	if candidates.is_empty():
+		return
+	var target_spot: ParkingSpot = (
+		candidates[0] if car.force_shortcut else candidates[randi() % candidates.size()]
+	)
+	parking_lot.reserve_destination(target_spot, car)
+	car.has_taken_shortcut = true
+
+
 func _update_lot_cars(delta: float) -> void:
-	_sweep_cache.clear()
+	_reach_cache.clear()
+	if _physics_tick_count % 60 == 0:
+		var dead_cids: Array[int] = []
+		for cid in _sweep_cache:
+			if instance_from_id(cid) == null:
+				dead_cids.append(cid)
+		for cid in dead_cids:
+			_sweep_cache.erase(cid)
+	var candidates := _build_blocker_candidates()
 	var expired_ignores: Array[int] = []
 	for cid in _watchdog_ignores.keys():
 		_watchdog_ignores[cid]["timer"] -= delta
@@ -456,7 +520,7 @@ func _update_lot_cars(delta: float) -> void:
 					and car.global_position.z >= 12.5
 				):
 					car.set_turn_signal(Car.TurnSignal.NONE)
-			var yielding := _update_car_yielding(car, delta)
+			var yielding := _update_car_yielding(car, delta, candidates)
 			var target_speed := 0.0 if yielding else V_LOT
 			if not yielding and car.path != null:
 				var length := car.path.get_baked_length()
@@ -499,7 +563,7 @@ func _update_lot_cars(delta: float) -> void:
 					or (car.merge_target_lane == 3 and car.global_position.z >= 12.5)
 				):
 					car.set_turn_signal(Car.TurnSignal.NONE)
-			var yielding := _update_car_yielding(car, delta)
+			var yielding := _update_car_yielding(car, delta, candidates)
 			var dest: StringName = car.errand.destination if car.errand != null else &""
 			var site_id := (
 				ParkingLot.get_site_for_destination(dest)
@@ -583,6 +647,7 @@ func _update_lot_cars(delta: float) -> void:
 			car.blocked_time = 0.0
 			car.dwell_left -= delta
 			if car.dwell_left <= 0.0:
+				_evaluate_shortcut_departure(car)
 				if can_reverse_out(car):
 					var rev_route: Curve3D = null
 					if lot != null and car.spot != null:
@@ -600,7 +665,7 @@ func _update_lot_cars(delta: float) -> void:
 						)
 			surviving_cars.append(car)
 		elif car.state == Car.State.REVERSING_OUT:
-			var yielding := _update_car_yielding(car, delta)
+			var yielding := _update_car_yielding(car, delta, candidates)
 			var target_speed := 0.0 if yielding else -V_PARK
 			car.desired_speed = target_speed
 			var accel: float = (
@@ -618,28 +683,133 @@ func _update_lot_cars(delta: float) -> void:
 				car.desired_speed = 0.0
 				car.current_blocker = null
 				car.blocked_time = 0.0
-				var exit_path: Curve3D = null
-				if lot != null and car.spot != null:
-					exit_path = ParkingLot.exit_route(car.spot)
-				elif car.spot != null and car.spot.lot != null:
-					exit_path = ParkingLot.exit_route(car.spot)
-				if car.spot != null:
-					if lot != null:
-						lot.release(car.spot)
-					elif car.spot.lot != null:
-						car.spot.lot.release(car.spot)
-					car.spot = null
-				if exit_path != null:
-					car.state = Car.State.TO_EXIT
-					car.follow_path(exit_path)
-					car.desired_speed = V_LOT
+				if car.pending_destination_spot != null:
+					var source_spot: ParkingSpot = car.spot
+					var dest_spot: ParkingSpot = car.pending_destination_spot
+					var sc_route: Curve3D = (
+						ParkingLot.shortcut_route(source_spot, dest_spot)
+						if source_spot != null
+						else null
+					)
+					if sc_route != null and sc_route.point_count >= 2:
+						car.pending_destination_spot = null
+						var parking_lot: ParkingLot = (
+							lot
+							if lot != null
+							else (source_spot.lot if source_spot != null else null)
+						)
+						if source_spot != null:
+							if parking_lot != null:
+								parking_lot.release(source_spot)
+							elif source_spot.lot != null:
+								source_spot.lot.release(source_spot)
+							car.spot = null
+						car.spot = dest_spot
+						car.state = Car.State.SHORTCUT
+						car.follow_path(sc_route)
+						car.desired_speed = V_LOT
+					else:
+						# Shortcut cancelled or route unavailable: release pending destination reservation
+						var dest_lot: ParkingLot = (
+							dest_spot.lot if dest_spot != null and dest_spot.lot != null else lot
+						)
+						if dest_spot != null:
+							if dest_lot != null:
+								dest_lot.release(dest_spot)
+							else:
+								dest_spot.state = ParkingSpot.State.FREE
+								dest_spot.car = null
+						car.pending_destination_spot = null
+						var exit_path: Curve3D = null
+						if lot != null and source_spot != null:
+							exit_path = ParkingLot.exit_route(source_spot)
+						elif source_spot != null and source_spot.lot != null:
+							exit_path = ParkingLot.exit_route(source_spot)
+						if source_spot != null:
+							if lot != null:
+								lot.release(source_spot)
+							elif source_spot.lot != null:
+								source_spot.lot.release(source_spot)
+							car.spot = null
+						if exit_path != null:
+							car.state = Car.State.TO_EXIT
+							car.follow_path(exit_path)
+							car.desired_speed = V_LOT
+						else:
+							push_error("TrafficManager: Missing exit route on cancelled shortcut")
 				else:
-					push_error("TrafficManager: Missing exit route for reversing car")
+					var exit_path: Curve3D = null
+					if lot != null and car.spot != null:
+						exit_path = ParkingLot.exit_route(car.spot)
+					elif car.spot != null and car.spot.lot != null:
+						exit_path = ParkingLot.exit_route(car.spot)
+					if car.spot != null:
+						if lot != null:
+							lot.release(car.spot)
+						elif car.spot.lot != null:
+							car.spot.lot.release(car.spot)
+						car.spot = null
+					if exit_path != null:
+						car.state = Car.State.TO_EXIT
+						car.follow_path(exit_path)
+						car.desired_speed = V_LOT
+					else:
+						push_error("TrafficManager: Missing exit route for reversing car")
 				car.update_presentation()
 				car._update_blocker_layer()
 			surviving_cars.append(car)
+		elif car.state == Car.State.SHORTCUT:
+			var yielding := _update_car_yielding(car, delta, candidates)
+			var base_speed := (
+				V_GRASS if ParkingLot.is_in_grass_shortcut(car.global_position) else V_LOT
+			)
+			var target_speed := 0.0 if yielding else base_speed
+			if not yielding and car.path != null:
+				var length := car.path.get_baked_length()
+				var remaining := maxf(0.0, length - car.path_distance)
+				var smooth_target := sqrt(2.0 * A_COMFORT * remaining)
+				target_speed = minf(target_speed, smooth_target)
+			car.desired_speed = target_speed
+			var accel: float = (
+				BRAKE_ACCELERATION if car.speed > target_speed else MOTOR_ACCELERATION
+			)
+			car.speed = move_toward(car.speed, target_speed, accel * delta)
+			var arrived := car.advance_path(delta)
+			if (
+				arrived
+				or (
+					car.path != null
+					and car.path.get_baked_length() - car.path_distance <= 0.02
+					and car.speed <= Car.STOP_SPEED
+				)
+			):
+				car.speed = 0.0
+				car.desired_speed = 0.0
+				car.current_blocker = null
+				car.blocked_time = 0.0
+				if car.spot != null:
+					var parking_lot: ParkingLot = (
+						lot if lot != null else (car.spot.lot if car.spot != null else null)
+					)
+					if parking_lot != null:
+						parking_lot.occupy(car.spot)
+					elif car.spot.lot != null:
+						car.spot.lot.occupy(car.spot)
+					car.global_transform = car.spot.transform
+					var dest_site := ParkingLot.lot_group(car.spot)
+					var site_cfg := ParkingLot.get_site_cfg(dest_site)
+					car.merge_target_lane = site_cfg.get("lane_id", 0)
+				car.state = Car.State.PARKED
+				car.lane_id = -1
+				car.dwell_left = randf_range(SHORTCUT_DWELL_MIN, SHORTCUT_DWELL_MAX)
+				car.has_taken_shortcut = true
+				car.shortcut_evaluated = true
+				car.update_presentation()
+				car.reset_physics_interpolation()
+				car._update_blocker_layer()
+			surviving_cars.append(car)
 		elif car.state == Car.State.TO_EXIT:
-			var yielding := _update_car_yielding(car, delta)
+			var yielding := _update_car_yielding(car, delta, candidates)
 			var target_speed := 0.0 if yielding else V_LOT
 			if not yielding and car.path != null:
 				var length := car.path.get_baked_length()
@@ -732,6 +902,8 @@ func _update_lot_cars(delta: float) -> void:
 				car.errand = null
 				car.lane_change_cooldown = 4.0
 				car.state = Car.State.CRUISING
+				car.has_taken_shortcut = false
+				car.shortcut_evaluated = false
 				car.path = null
 				car.current_blocker = null
 				car.blocked_time = 0.0
@@ -760,9 +932,12 @@ func _is_ignoring(car: Car, other: Car) -> bool:
 	return false
 
 
-func find_blocker(car: Car) -> Car:
+func find_blocker(car: Car, candidates: Array[Car] = []) -> Car:
+	if not profile_find_blocker:
+		return _find_blocker_impl(car, candidates)
+
 	var t0 := Time.get_ticks_usec()
-	var result := _find_blocker_impl(car)
+	var result := _find_blocker_impl(car, candidates)
 	var elapsed := Time.get_ticks_usec() - t0
 	stats["find_blocker_calls"] += 1
 	stats["find_blocker_usec_total"] += elapsed
@@ -771,58 +946,79 @@ func find_blocker(car: Car) -> Car:
 	return result
 
 
-func _find_blocker_impl(car: Car) -> Car:
-	if car == null or not is_instance_valid(car):
-		return null
-
+func _build_blocker_candidates() -> Array[Car]:
 	var candidates: Array[Car] = []
+	var seen: Dictionary = {}
 	for other in lot_cars:
-		if is_instance_valid(other) and other != car:
-			if other.state == Car.State.PARKED:
-				continue
+		if is_instance_valid(other) and other.state != Car.State.PARKED:
+			seen[other.get_instance_id()] = true
 			candidates.append(other)
 	for lane in lanes:
 		if lane != null:
 			for ghost in lane.cars:
-				if is_instance_valid(ghost) and ghost != car and ghost.motion == Car.Motion.PATH:
-					if not candidates.has(ghost):
+				if is_instance_valid(ghost) and ghost.motion == Car.Motion.PATH:
+					var id := ghost.get_instance_id()
+					if not seen.has(id):
+						seen[id] = true
 						candidates.append(ghost)
+	return candidates
 
-	var mine := _car_sweep(car)
-	var my_reach: float = mine["reach"]
+
+func _get_car_reach(c: Car) -> float:
+	var cid := c.get_instance_id()
+	if _reach_cache.has(cid):
+		return _reach_cache[cid]
+	var look := CarSweep.lookahead(c)
+	var horizon := look + SWEEP_INTENT_EXTRA
+	if c.state == Car.State.REVERSING_OUT and c.path != null:
+		horizon = maxf(horizon, c.path_distance)
+	var r := horizon + c.car_length
+	_reach_cache[cid] = r
+	return r
+
+
+func _find_blocker_impl(car: Car, candidates: Array[Car] = []) -> Car:
+	if car == null or not is_instance_valid(car):
+		return null
+
+	var candidate_list := candidates
+	if candidate_list.is_empty():
+		candidate_list = _build_blocker_candidates()
 	var my_pos := car.global_position
+	var my_reach := _get_car_reach(car)
+	var mine: Dictionary = {}
 	var closest_blocker: Car = null
 	var min_dist: float = INF
-	for other in candidates:
-		stats["candidates_checked"] += 1
-		if _is_ignoring(car, other):
+	for other in candidate_list:
+		if other == car or not is_instance_valid(other):
 			continue
-		# Fast spatial partition / rejection: lookahead cannot exceed MAX_LOOKAHEAD + car_length
-		# Avoids calling _car_sweep(other) for cars far across the map (e.g. opposite lots/drive-throughs)
+		if other.state == Car.State.PARKED:
+			continue
+		# Fast spatial partition / rejection: opposite sides of stroad
 		var other_pos := other.global_position
-		# Cars on opposite sides of the stroad (|z| > 5.0) can never conflict in lots/drive-throughs
 		if (my_pos.z * other_pos.z < 0.0) and (absf(my_pos.z) > 4.0 or absf(other_pos.z) > 4.0):
 			continue
-		var other_look := _lookahead(other)
-		var other_max_reach := other_look + SWEEP_INTENT_EXTRA + other.car_length
-		if other.state == Car.State.REVERSING_OUT and other.path != null:
-			other_max_reach = maxf(other_max_reach, other.path_distance + other.car_length)
-		if my_pos.distance_to(other_pos) > (my_reach + other_max_reach):
+		if profile_find_blocker:
+			stats["candidates_checked"] += 1
+		if _is_ignoring(car, other):
 			continue
+		var reach := my_reach + _get_car_reach(other)
+		if my_pos.distance_squared_to(other_pos) > reach * reach:
+			continue
+		if profile_find_blocker:
+			stats["reach_passed"] += 1
+		if mine.is_empty():
+			mine = _car_sweep(car)
 		var theirs := _car_sweep(other)
-		var reach: float = my_reach + theirs["reach"]
-		if my_pos.distance_to(other_pos) > reach:
-			continue
-		stats["reach_passed"] += 1
+		if profile_find_blocker:
+			stats["conflicts_evaluated"] += 1
 		var dist := _conflict_distance(car, mine, other, theirs)
-		stats["conflicts_evaluated"] += 1
 		if dist < min_dist:
 			min_dist = dist
 			closest_blocker = other
 	return closest_blocker
 
 
-## Braking lookahead (meters of travel) a car scans along its route.
 func _lookahead(car: Car) -> float:
 	return CarSweep.lookahead(car)
 
@@ -870,6 +1066,7 @@ func _yields_in_lot(car: Car) -> bool:
 		or car.state == Car.State.TO_EXIT
 		or car.state == Car.State.REVERSING_OUT
 		or car.state == Car.State.DRIVE_THRU
+		or car.state == Car.State.SHORTCUT
 	)
 
 
@@ -877,6 +1074,8 @@ func _yields_in_lot(car: Car) -> bool:
 func _lot_priority(s: Car.State) -> int:
 	match s:
 		Car.State.TO_SPOT:
+			return 3
+		Car.State.SHORTCUT:
 			return 3
 		Car.State.TO_EXIT:
 			return 2
@@ -921,8 +1120,8 @@ func _conflict_distance(car: Car, mine: Dictionary, other: Car, theirs: Dictiona
 	return INF if _has_lot_priority(car, other, c.x, c.y) else c.x
 
 
-func _update_car_yielding(car: Car, delta: float) -> bool:
-	var b := find_blocker(car)
+func _update_car_yielding(car: Car, delta: float, candidates: Array[Car] = []) -> bool:
+	var b := find_blocker(car, candidates)
 	if b != null:
 		if car.current_blocker == b:
 			car.blocked_time += delta
@@ -1528,7 +1727,7 @@ func _is_lane_obstacle(car: Car) -> bool:
 
 
 func _is_turning_in_apron(car: Car, lane: Lane) -> bool:
-	if car.state != Car.State.TO_SPOT:
+	if car.state != Car.State.TO_SPOT and car.state != Car.State.DRIVE_THRU:
 		return false
 	if lane.id == 0 and car.global_position.z > -13.2:
 		return true
@@ -1540,12 +1739,15 @@ func _is_turning_in_apron(car: Car, lane: Lane) -> bool:
 func _update_lane_traffic(lane: Lane, delta: float) -> void:
 	# Register any overlapping PATH cars from lot_cars
 	for car in lot_cars:
-		if is_instance_valid(car) and car.motion == Car.Motion.PATH and car.lane_id == lane.id:
+		if (
+			is_instance_valid(car)
+			and car.motion == Car.Motion.PATH
+			and (car.lane_id == lane.id or car.merge_target_lane == lane.id)
+		):
 			if _is_lane_obstacle(car):
 				var in_apron: bool = lane.overlaps(car) or _is_turning_in_apron(car, lane)
 				if in_apron and not lane.cars.has(car):
 					lane.cars.append(car)
-
 	# Clean up despawned / invalid cars and PATH cars that no longer overlap
 	var valid_cars: Array[Car] = []
 	for car in lane.cars:
@@ -1661,6 +1863,33 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 							following_target = car.desired_speed
 							break
 
+				# If blocked, roll at most once for a reckless driver and attempt a risky pass
+				if not swerved and car.is_reckless():
+					var attempts_risky: bool = (
+						car.force_risky_pass or (randf() < RISKY_PASS_PROBABILITY)
+					)
+					if attempts_risky:
+						for target_lane_id in candidate_lane_ids:
+							if target_lane_id >= 0 and target_lane_id < lanes.size():
+								var target_lane := lanes[target_lane_id]
+								if _can_swerve_to_lane(
+									car, target_lane, lead_gap, lead_car.lane_speed, true
+								):
+									swerved = true
+									car.start_lane_change(target_lane_id, target_lane.z, true)
+									var target_lane_spd := calculate_car_desired_speed(
+										target_lane, car
+									)
+									car.desired_speed = maxf(car.desired_speed, target_lane_spd)
+									_pending_transfers.append(
+										{"car": car, "target_lane": target_lane}
+									)
+									following_target = car.desired_speed
+									break
+
+				if not swerved:
+					car.reset_lane_change_cooldown()
+
 		var target_speed: float = maxf(0.0, minf(car.desired_speed, following_target))
 		if car.state == Car.State.APPROACHING:
 			if car.turn_signal != Car.TurnSignal.RIGHT:
@@ -1673,6 +1902,8 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 		var motor_accel := MOTOR_ACCELERATION
 		if car.car_type == Car.CarType.SPORTS:
 			motor_accel = 28.0
+		elif car.car_type == Car.CarType.CYBERTRUCK:
+			motor_accel = 26.0
 		elif car.car_type == Car.CarType.F150 and car.has_smokestacks:
 			motor_accel = 22.0
 		elif (
@@ -1804,12 +2035,78 @@ func calculate_car_desired_speed(lane: Lane, car: Car) -> float:
 		return randf_range(lerpf(lane.min_speed, lane.max_speed, 0.15), lane.max_speed)
 
 
+func _is_in_turn_in_zone(check_lane: Lane, distance: float) -> bool:
+	if check_lane == null or (check_lane.id != 0 and check_lane.id != 3):
+		return false
+	for site in ParkingLot.SITES.values():
+		if site.get("lane_id", -1) == check_lane.id and site.has("turn_in"):
+			var turn_pos: Vector3 = site["turn_in"]
+			var turn_dist := check_lane.distance_at(turn_pos.x)
+			if distance >= turn_dist - 25.0 and distance <= turn_dist + 10.0:
+				return true
+	return false
+
+
+## Evaluates whether car can swerve to target_lane.
+## When risk_mode is true, tighter gap thresholds are permitted for reckless drivers
+## while keeping normal drivers on the safe-gap path.
 func _can_swerve_to_lane(
-	car: Car, target_lane: Lane, current_lead_gap: float, lead_car_speed: float = 0.0
+	car: Car,
+	target_lane: Lane,
+	current_lead_gap: float,
+	lead_car_speed: float = 0.0,
+	risk_mode: bool = false
 ) -> bool:
-	if car.lane_distance < 15.0 or car.lane_distance > target_lane.length - 25.0:
+	if car == null or target_lane == null:
 		return false
 
+	# 1. Large-vehicle initiators are never allowed to swerve
+	if (
+		car.car_type == Car.CarType.BUS
+		or car.car_type == Car.CarType.SHIPPING_TRUCK
+		or car.car_type == Car.CarType.TRUCK
+	):
+		return false
+
+	# 2. Reject wrong-direction/oncoming lanes
+	if target_lane.direction * car.direction <= 0.0:
+		return false
+	if car.lane_id >= 0 and car.lane_id < lanes.size() and lanes[car.lane_id] != null:
+		if target_lane.direction * lanes[car.lane_id].direction <= 0.0:
+			return false
+
+	# 3. Reject lane ends
+	if car.lane_distance < 15.0 or car.lane_distance > target_lane.length - 25.0:
+		return false
+	if car.lane_id >= 0 and car.lane_id < lanes.size() and lanes[car.lane_id] != null:
+		if car.lane_distance > lanes[car.lane_id].length - 25.0:
+			return false
+
+	# 4. Reject turn-in zones
+	if car.state == Car.State.APPROACHING:
+		return false
+	if _is_in_turn_in_zone(target_lane, car.lane_distance):
+		return false
+	if car.lane_id >= 0 and car.lane_id < lanes.size() and lanes[car.lane_id] != null:
+		if _is_in_turn_in_zone(lanes[car.lane_id], car.lane_distance):
+			return false
+
+	# 5. Reject existing overlap
+	if current_lead_gap <= 0.0 or car.is_changing_lanes:
+		return false
+	if car.lane_id >= 0 and car.lane_id < lanes.size() and lanes[car.lane_id] != null:
+		var current_lane: Lane = lanes[car.lane_id]
+		for cur_car in current_lane.cars:
+			if cur_car == null or not is_instance_valid(cur_car) or cur_car == car:
+				continue
+			if (
+				absf(cur_car.lane_distance - car.lane_distance)
+				< 0.5 * (cur_car.car_length + car.car_length)
+			):
+				return false
+			if cur_car.is_changing_lanes and absf(cur_car.lane_distance - car.lane_distance) < 25.0:
+				return false
+	# 6. Reject nearby simultaneous transfers
 	for transfer in _pending_transfers:
 		if transfer.get("target_lane") == target_lane:
 			var other: Car = transfer.get("car")
@@ -1817,17 +2114,80 @@ func _can_swerve_to_lane(
 				continue
 			if absf(other.lane_distance - car.lane_distance) < 25.0:
 				return false
+		var other_target = transfer.get("target_lane")
+		if car.lane_id >= 0 and car.lane_id < lanes.size() and other_target == lanes[car.lane_id]:
+			var other: Car = transfer.get("car")
+			if other != null and is_instance_valid(other) and other != car:
+				if absf(other.lane_distance - car.lane_distance) < 25.0:
+					return false
+
+	var car_fp: PackedVector2Array = []
+	var car_fp_computed := false
 
 	for other in target_lane.cars:
 		if other == null or not is_instance_valid(other) or other == car:
 			continue
+
+		# Existing physical/bounding overlap rejection
+		var center_dist := car.global_position.distance_to(other.global_position)
+		if center_dist < (car.car_length + other.car_length) * 0.5:
+			if not car_fp_computed:
+				car_fp = CarSweep.footprint(
+					car.global_position,
+					car.get_heading(),
+					car.car_length * 0.5,
+					car.car_width * 0.5
+				)
+				car_fp_computed = true
+			var other_fp := CarSweep.footprint(
+				other.global_position,
+				other.get_heading(),
+				other.car_length * 0.5,
+				other.car_width * 0.5
+			)
+			if CarSweep.footprints_overlap(car_fp, other_fp):
+				return false
+
+		# Existing longitudinal overlap rejection in target lane
+		if (
+			absf(other.lane_distance - car.lane_distance)
+			< 0.5 * (other.car_length + car.car_length)
+		):
+			return false
+
 		if other.motion == Car.Motion.PATH:
-			if car.global_position.distance_to(other.global_position) < 18.0:
+			if center_dist < 18.0:
 				return false
 			continue
 
+		# Reject approaching cars in turn-in zones in target lane
+		if (
+			(
+				other.state == Car.State.APPROACHING
+				or _is_in_turn_in_zone(target_lane, other.lane_distance)
+			)
+			and absf(other.lane_distance - car.lane_distance) < 25.0
+		):
+			return false
 		if other.is_changing_lanes and absf(other.lane_distance - car.lane_distance) < 25.0:
 			return false
+
+		var min_gap_ahead := SWERVE_RISKY_MIN_GAP_AHEAD if risk_mode else SWERVE_MIN_GAP_AHEAD
+		var lead_margin := SWERVE_RISKY_LEAD_MARGIN if risk_mode else SWERVE_LEAD_MARGIN
+		var min_gap_behind_base := (
+			SWERVE_RISKY_MIN_GAP_BEHIND_BASE if risk_mode else SWERVE_MIN_GAP_BEHIND_BASE
+		)
+		var speed_behind_factor := (
+			SWERVE_RISKY_MIN_GAP_BEHIND_SPEED_FACTOR
+			if risk_mode
+			else SWERVE_MIN_GAP_BEHIND_SPEED_FACTOR
+		)
+		var closing_factor := (
+			SWERVE_RISKY_CLOSING_SPEED_FACTOR if risk_mode else SWERVE_CLOSING_SPEED_FACTOR
+		)
+		var closing_base := (
+			SWERVE_RISKY_CLOSING_SPEED_BASE if risk_mode else SWERVE_CLOSING_SPEED_BASE
+		)
 
 		if other.lane_distance >= car.lane_distance:
 			var gap_ahead := (
@@ -1835,9 +2195,12 @@ func _can_swerve_to_lane(
 				- car.lane_distance
 				- (0.5 * (other.car_length + car.car_length))
 			)
-			if gap_ahead < 16.0:
+			if gap_ahead < min_gap_ahead:
 				return false
-			if other.lane_speed <= lead_car_speed + 1.0 and gap_ahead < current_lead_gap + 6.0:
+			if (
+				other.lane_speed <= lead_car_speed + 1.0
+				and gap_ahead < current_lead_gap + lead_margin
+			):
 				return false
 		else:
 			var gap_behind := (
@@ -1845,12 +2208,14 @@ func _can_swerve_to_lane(
 				- other.lane_distance
 				- (0.5 * (car.car_length + other.car_length))
 			)
-			var safe_behind := maxf(9.0, 4.0 + other.speed * 0.8)
+			var safe_behind := maxf(min_gap_behind_base, 4.0 + other.speed * speed_behind_factor)
 			if gap_behind < safe_behind:
 				return false
-			if other.speed > car.speed + 1.0 and gap_behind < (other.speed - car.speed) * 2.5 + 8.0:
+			if (
+				other.speed > car.speed + 1.0
+				and gap_behind < (other.speed - car.speed) * closing_factor + closing_base
+			):
 				return false
-
 	return true
 
 
@@ -1864,6 +2229,11 @@ func _apply_pending_lane_transfers() -> void:
 
 
 func _exit_tree() -> void:
+	if (
+		GameState.instance
+		and GameState.instance.time_of_day_changed.is_connected(_on_time_of_day_changed)
+	):
+		GameState.instance.time_of_day_changed.disconnect(_on_time_of_day_changed)
 	var counted := {}
 	var active_errands := 0
 	var state_counts := {}
@@ -1891,5 +2261,80 @@ func _exit_tree() -> void:
 	if lot != null:
 		stats["leaked"] = max(stats["leaked"], lot.check_invariants())
 		stats["spots_total"] = lot.spots.size()
+	stats["sweep_hits"] = CarSweep.sweep_hits
+	stats["sweep_reused"] = CarSweep.sweep_reused
+	stats["sweep_allocs"] = CarSweep.sweep_allocs
 	print("TRAFFIC STATS: %s" % JSON.stringify(stats))
 	print("STATE COUNTS: %s" % JSON.stringify(state_counts))
+
+
+func _on_time_of_day_changed(_mode: GameState.TimeOfDay) -> void:
+	_update_headlamp_lod()
+
+
+func update_headlamp_lod() -> void:
+	_update_headlamp_lod()
+
+
+func _reset_all_headlamp_lod() -> void:
+	for lane in lanes:
+		if lane == null:
+			continue
+		for car in lane.cars:
+			if is_instance_valid(car):
+				car.set_headlamp_lod_active(true)
+	for car in lot_cars:
+		if is_instance_valid(car):
+			car.set_headlamp_lod_active(true)
+
+
+func _update_headlamp_lod() -> void:
+	var lights_on := GameState.are_lights_on()
+	if not lights_on:
+		if _was_lights_on:
+			_was_lights_on = false
+			_reset_all_headlamp_lod()
+		return
+	_was_lights_on = true
+
+	var cam := get_viewport().get_camera_3d() if get_viewport() else null
+	if cam == null and get_parent() != null:
+		cam = get_parent().get_node_or_null("Camera3D") as Camera3D
+	if cam == null:
+		return
+
+	var cam_pos := cam.global_position
+
+	var candidates: Array[Car] = []
+	var seen: Dictionary = {}
+	for lane in lanes:
+		if lane == null:
+			continue
+		for car in lane.cars:
+			if is_instance_valid(car) and not seen.has(car):
+				seen[car] = true
+				if car.headlamp != null and car.state != Car.State.PARKED:
+					candidates.append(car)
+	for car in lot_cars:
+		if is_instance_valid(car) and not seen.has(car):
+			seen[car] = true
+			if car.headlamp != null and car.state != Car.State.PARKED:
+				candidates.append(car)
+
+	if candidates.size() <= MAX_ACTIVE_HEADLAMPS:
+		for car in candidates:
+			car.set_headlamp_lod_active(true)
+		return
+
+	var car_dists: Array = []
+	car_dists.resize(candidates.size())
+	for i in range(candidates.size()):
+		var car: Car = candidates[i]
+		car_dists[i] = [car.global_position.distance_squared_to(cam_pos), car]
+
+	car_dists.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0])
+
+	for i in range(car_dists.size()):
+		var active: bool = i < MAX_ACTIVE_HEADLAMPS
+		var car: Car = car_dists[i][1]
+		car.set_headlamp_lod_active(active)

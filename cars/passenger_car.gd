@@ -12,6 +12,7 @@ const PASSENGER_TYPES: Array[CarType] = [
 	CarType.SPORTS,
 	CarType.JEEP,
 	CarType.F150,
+	CarType.CYBERTRUCK,
 ]
 
 const BODY_SCENE_PATHS: Dictionary = {
@@ -23,6 +24,7 @@ const BODY_SCENE_PATHS: Dictionary = {
 	CarType.SPORTS: "res://cars/bodies/sports.tscn",
 	CarType.JEEP: "res://cars/bodies/jeep.tscn",
 	CarType.F150: "res://cars/bodies/f150.tscn",
+	CarType.CYBERTRUCK: "res://cars/bodies/cybertruck.tscn",
 }
 
 static var _body_scenes: Dictionary = {}
@@ -52,6 +54,7 @@ const BODY_NODE_PATHS: Dictionary = {
 	CarType.SPORTS: ^"Sports",
 	CarType.JEEP: ^"Jeep",
 	CarType.F150: ^"F150",
+	CarType.CYBERTRUCK: ^"Cybertruck",
 }
 
 const PAINT_PALETTE: Array[Color] = [
@@ -82,12 +85,14 @@ const REGULAR_PASSENGER_TYPES: Array[CarType] = [
 	CarType.MINIVAN,
 	CarType.JEEP,
 	CarType.F150,
+	CarType.CYBERTRUCK,
 ]
 
 const DEFAULT_WHEEL_RADIUS := 0.35
 const WHEEL_RADII: Dictionary = {
 	CarType.JEEP: 0.4,
 	CarType.F150: 0.38,
+	CarType.CYBERTRUCK: 0.40,
 }
 
 const SPORTS_SPAWN_CHANCE: float = 0.08
@@ -277,6 +282,9 @@ func set_gritty(val: bool) -> void:
 
 
 func _apply_paint_material() -> void:
+	if car_type == CarType.CYBERTRUCK:
+		# Stainless steel only: the body scene's own material is the sole finish.
+		return
 	if car_type == CarType.SPORTS:
 		if not SPORTS_PAINT_PALETTE.has(body_color):
 			var rng := _get_rng()

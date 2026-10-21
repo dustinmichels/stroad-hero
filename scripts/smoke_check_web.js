@@ -65,6 +65,21 @@ function findChromeBinary() {
 
   throw new Error("No Chrome/Chromium executable found. Set CHROME_BIN environment variable.");
 }
+function calculateStats(intervals) {
+  if (!intervals || intervals.length === 0) {
+    return { count: 0, avg: 0, p50: 0, p95: 0, p99: 0, max: 0 };
+  }
+  const samples = intervals.length > 2 ? intervals.slice(1) : intervals;
+  const sorted = [...samples].sort((a, b) => a - b);
+  const sum = sorted.reduce((acc, v) => acc + v, 0);
+  const avg = sum / sorted.length;
+  const p50 = sorted[Math.floor(sorted.length * 0.50)];
+  const p95 = sorted[Math.floor(sorted.length * 0.95)];
+  const p99 = sorted[Math.floor(sorted.length * 0.99)];
+  const max = sorted[sorted.length - 1];
+  return { count: sorted.length, avg, p50, p95, p99, max };
+}
+
 
 function startStaticServer(directory) {
   return new Promise((resolve, reject) => {
@@ -101,7 +116,8 @@ function startStaticServer(directory) {
   });
 }
 
-async function runSmokeCheck(targetUrl, timeoutSec = 30) {
+async function runSmokeCheck(targetUrl, timeoutSec = 45, options = {}) {
+  const { samplePerf = true, sampleDurationSec = 3 } = options;
   const chromeBin = findChromeBinary();
   console.log(`Using Chrome binary: ${chromeBin}`);
   console.log(`Testing target URL:  ${targetUrl}`);
@@ -163,6 +179,32 @@ async function runSmokeCheck(targetUrl, timeoutSec = 30) {
     const fatalErrors = [];
     const allLogs = [];
     let isGodotReady = false;
+    let nextCommandId = 10;
+    const pendingCommands = new Map();
+
+    const sendCommand = (method, params = {}) => {
+      return new Promise((resolve, reject) => {
+        const id = nextCommandId++;
+        pendingCommands.set(id, { resolve, reject });
+        ws.send(JSON.stringify({ id, method, params }));
+      });
+    };
+
+    const evaluate = async (expression) => {
+      const res = await sendCommand("Runtime.evaluate", {
+        expression,
+        awaitPromise: true,
+        returnByValue: true,
+      });
+      if (res?.exceptionDetails) {
+        const desc =
+          res.exceptionDetails.text +
+          " " +
+          (res.exceptionDetails.exception?.description || "");
+        throw new Error("Evaluation error: " + desc);
+      }
+      return res?.result?.value;
+    };
 
     const checkTextForErrors = (text) => {
       if (
@@ -174,49 +216,10 @@ async function runSmokeCheck(targetUrl, timeoutSec = 30) {
       }
     };
 
-    await new Promise((resolve, reject) => {
-      let timer = null;
-
-      ws.onmessage = (event) => {
-        try {
-          const msg = JSON.parse(event.data);
-          if (msg.method === "Runtime.consoleAPICalled") {
-            const text = msg.params.args.map((a) => a.value ?? a.description ?? "").join(" ");
-            allLogs.push(`[${msg.params.type}] ${text}`);
-            console.log(`[browser:${msg.params.type}] ${text}`);
-            checkTextForErrors(text);
-
-            if (text.includes("[Startup] Godot ready")) {
-              isGodotReady = true;
-              if (!targetUrl.includes("arg=")) {
-                setTimeout(resolve, 1500);
-              }
-            }
-            if (text.includes("BENCHMARK_RESULT:")) {
-              setTimeout(resolve, 500);
-            }
-          } else if (msg.method === "Runtime.exceptionThrown") {
-            const desc =
-              msg.params.exceptionDetails.text +
-              " " +
-              (msg.params.exceptionDetails.exception?.description || "");
-            allLogs.push(`[exception] ${desc}`);
-            console.error(`[browser:exception] ${desc}`);
-            checkTextForErrors(desc);
-          }
-        } catch (e) {
-          console.error("Error parsing DevTools message:", e);
-        }
-      };
-
-      ws.onerror = (e) => reject(new Error("WebSocket error: " + e.message));
-
-      // Enable domains and navigate
-      ws.send(JSON.stringify({ id: 1, method: "Runtime.enable" }));
-      ws.send(JSON.stringify({ id: 2, method: "Page.enable" }));
-      ws.send(JSON.stringify({ id: 3, method: "Page.navigate", params: { url: targetUrl } }));
-
-      timer = setTimeout(() => {
+    let readyResolver = null;
+    const readyPromise = new Promise((resolve, reject) => {
+      readyResolver = resolve;
+      setTimeout(() => {
         if (!isGodotReady) {
           reject(new Error(`Timeout after ${timeoutSec}s waiting for [Startup] Godot ready.`));
         } else {
@@ -225,11 +228,121 @@ async function runSmokeCheck(targetUrl, timeoutSec = 30) {
       }, timeoutSec * 1000);
     });
 
+    ws.onmessage = (event) => {
+      try {
+        const msg = JSON.parse(event.data);
+        if (msg.id && pendingCommands.has(msg.id)) {
+          const { resolve, reject } = pendingCommands.get(msg.id);
+          pendingCommands.delete(msg.id);
+          if (msg.error) {
+            reject(new Error(msg.error.message || JSON.stringify(msg.error)));
+          } else {
+            resolve(msg.result);
+          }
+          return;
+        }
+
+        if (msg.method === "Runtime.consoleAPICalled") {
+          const text = msg.params.args.map((a) => a.value ?? a.description ?? "").join(" ");
+          allLogs.push(`[${msg.params.type}] ${text}`);
+          console.log(`[browser:${msg.params.type}] ${text}`);
+          checkTextForErrors(text);
+
+          if (text.includes("[Startup] Godot ready")) {
+            isGodotReady = true;
+            if (readyResolver) readyResolver();
+          }
+        } else if (msg.method === "Runtime.exceptionThrown") {
+          const desc =
+            msg.params.exceptionDetails.text +
+            " " +
+            (msg.params.exceptionDetails.exception?.description || "");
+          allLogs.push(`[exception] ${desc}`);
+          console.error(`[browser:exception] ${desc}`);
+          checkTextForErrors(desc);
+        }
+      } catch (e) {
+        console.error("Error parsing DevTools message:", e);
+      }
+    };
+
+    ws.onerror = (e) => {
+      console.error("WebSocket error:", e.message);
+    };
+
+    // Enable domains and navigate
+    await sendCommand("Runtime.enable");
+    await sendCommand("Page.enable");
+    await sendCommand("Page.navigate", { url: targetUrl });
+
+    await readyPromise;
+
+    // Performance measurement if requested
+    let dayStats = null;
+    let nightStats = null;
+    if (samplePerf) {
+      console.log("\nStarting performance measurement (requestAnimationFrame intervals)...");
+      try {
+        // Dismiss start screen if active
+        await evaluate("if (window.godotStartGame) { window.godotStartGame(); }");
+        await new Promise((r) => setTimeout(r, 600));
+
+        const durationMs = Math.round(sampleDurationSec * 1000);
+        const rafScript = `(function(durationMs) {
+          return new Promise((resolve) => {
+            const intervals = [];
+            let last = performance.now();
+            const start = performance.now();
+            function frame(now) {
+              intervals.push(now - last);
+              last = now;
+              if (performance.now() - start < durationMs) {
+                requestAnimationFrame(frame);
+              } else {
+                resolve(intervals);
+              }
+            }
+            requestAnimationFrame(frame);
+          });
+        })(${durationMs})`;
+
+        // Day phase
+        console.log(`Sampling Day phase (${sampleDurationSec}s)...`);
+        await evaluate("if (window.godotSetTimeHours) { window.godotSetTimeHours(15.5); }");
+        await new Promise((r) => setTimeout(r, 500));
+        const dayIntervals = await evaluate(rafScript);
+        dayStats = calculateStats(dayIntervals);
+
+        // Night phase
+        console.log(`Sampling Night phase (${sampleDurationSec}s)...`);
+        await evaluate("if (window.godotSetTimeHours) { window.godotSetTimeHours(20.25); }");
+        await new Promise((r) => setTimeout(r, 1000));
+        const nightIntervals = await evaluate(rafScript);
+        nightStats = calculateStats(nightIntervals);
+      } catch (err) {
+        console.warn("Warning during rAF performance sampling:", err.message);
+      }
+    } else {
+      await new Promise((r) => setTimeout(r, 1500));
+    }
+
     ws.close();
 
     console.log("\n=== Smoke Check Results ===");
     console.log(`Godot ready: ${isGodotReady ? "YES" : "NO"}`);
     console.log(`Fatal errors found: ${fatalErrors.length}`);
+
+    if (dayStats && nightStats) {
+      console.log("\n=== Web Frame Intervals (requestAnimationFrame) ===");
+      console.log(
+        `Day:   avg: ${dayStats.avg.toFixed(2)} ms (${(dayStats.avg > 0 ? 1000 / dayStats.avg : 0).toFixed(1)} fps) | ` +
+        `p50: ${dayStats.p50.toFixed(2)} ms | p95: ${dayStats.p95.toFixed(2)} ms | max: ${dayStats.max.toFixed(2)} ms (${dayStats.count} frames)`
+      );
+      console.log(
+        `Night: avg: ${nightStats.avg.toFixed(2)} ms (${(nightStats.avg > 0 ? 1000 / nightStats.avg : 0).toFixed(1)} fps) | ` +
+        `p50: ${nightStats.p50.toFixed(2)} ms | p95: ${nightStats.p95.toFixed(2)} ms | max: ${nightStats.max.toFixed(2)} ms (${nightStats.count} frames)`
+      );
+    }
 
     if (fatalErrors.length > 0) {
       console.error("\nFAIL: Detected fatal resource errors:");
@@ -253,11 +366,19 @@ async function runSmokeCheck(targetUrl, timeoutSec = 30) {
 async function main() {
   const args = process.argv.slice(2);
   let target = "build/web";
-  let timeoutSec = 30;
+  let timeoutSec = 50;
+  let sampleDurationSec = 3;
+  let samplePerf = true;
   let godotArgs = [];
   for (let i = 0; i < args.length; i++) {
     if (args[i] === "--timeout" && args[i + 1]) {
       timeoutSec = parseInt(args[++i], 10);
+    } else if (args[i] === "--sample-duration" && args[i + 1]) {
+      sampleDurationSec = parseFloat(args[++i]);
+    } else if (args[i] === "--no-sample") {
+      samplePerf = false;
+    } else if (args[i] === "--sample") {
+      samplePerf = true;
     } else if (args[i] === "--url" && args[i + 1]) {
       target = args[++i];
     } else if (args[i] === "--arg" && args[i + 1]) {
@@ -267,6 +388,9 @@ async function main() {
     }
   }
 
+  if (godotArgs.length > 0 && !args.includes("--sample")) {
+    samplePerf = false;
+  }
   let serverInfo = null;
   try {
     let testUrl = target;
@@ -287,7 +411,7 @@ async function main() {
       testUrl = `${testUrl}${sep}${params}`;
     }
 
-    await runSmokeCheck(testUrl, timeoutSec);
+    await runSmokeCheck(testUrl, timeoutSec, { samplePerf, sampleDurationSec });
   } finally {
     if (serverInfo?.server) {
       serverInfo.server.close();

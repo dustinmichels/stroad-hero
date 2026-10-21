@@ -14,7 +14,8 @@ enum CarType {
 	VAN,
 	SHIPPING_TRUCK,
 	JEEP,
-	F150
+	F150,
+	CYBERTRUCK
 }
 
 enum Motion { LANE, PATH }
@@ -28,7 +29,8 @@ enum State {
 	TO_EXIT,
 	WAITING_TO_MERGE,
 	MERGING,
-	DRIVE_THRU
+	DRIVE_THRU,
+	SHORTCUT
 }
 
 enum TurnSignal { NONE, LEFT, RIGHT }
@@ -42,6 +44,7 @@ const PARKING_CAR_TYPES: Array[CarType] = [
 	CarType.SPORTS,
 	CarType.JEEP,
 	CarType.F150,
+	CarType.CYBERTRUCK,
 ]
 
 
@@ -81,10 +84,15 @@ var sweep_rev: int = 0:
 @export var state: State = State.CRUISING:
 	set(value):
 		if state != value:
+			var prev_state := state
 			state = value
 			sweep_rev += 1
 			_update_headlamps()
 			_update_exhaust()
+			if state == State.APPROACHING:
+				_center_for_approach()
+			elif state == State.CRUISING and prev_state != State.CRUISING:
+				_init_lane_wander()
 
 
 func get_state_name() -> String:
@@ -107,6 +115,8 @@ func get_state_name() -> String:
 			return "MERGING"
 		State.DRIVE_THRU:
 			return "DRIVE_THRU"
+		State.SHORTCUT:
+			return "SHORTCUT"
 	return "UNKNOWN"
 
 
@@ -143,10 +153,20 @@ var car_width: float = 2.0:
 			car_width = value
 			sweep_rev += 1
 var direction: float = 1.0  # +1.0 for Eastbound (+X), -1.0 for Westbound (-X)
-var lane_z: float = 0.0
+var lane_z: float = 0.0:
+	set(value):
+		lane_z = value
+		if not is_changing_lanes:
+			current_lateral_z = lane_z + lane_wander_offset
 var lane_length: float = 140.0
 var start_x: float = -70.0
 var spot: ParkingSpot = null
+var pending_destination_spot: ParkingSpot = null
+var pending_spot: ParkingSpot:
+	get:
+		return pending_destination_spot
+	set(value):
+		pending_destination_spot = value
 var dwell_left: float = 0.0
 var merge_wait_time: float = 0.0
 var errand: Errand = null
@@ -157,6 +177,36 @@ var merge_target_lane: int = 0
 var dt_order_done: bool = false
 var dt_pickup_done: bool = false
 var dt_dwell_timer: float = 0.0
+const LANE_WIDTH: float = 3.75
+const SIDE_CLEARANCE: float = 0.20
+const WANDER_INTERVAL_MIN: float = 2.5
+const WANDER_INTERVAL_MAX: float = 7.0
+const WANDER_TRANSITION_MIN: float = 1.5
+const WANDER_TRANSITION_MAX: float = 4.0
+const RECKLESS_DRIVER_PROBABILITY: float = 0.015
+const RECKLESS_RISK_THRESHOLD: float = 0.8
+
+var risk_tolerance: float = 0.0
+var force_risky_pass: bool = false
+var force_shortcut: bool = false
+var has_taken_shortcut: bool = false
+var shortcut_evaluated: bool = false
+const RISK_COMMIT_DURATION: float = 1.0
+
+var risk_commit_timer: float = 0.0
+var _risk_commit_active: bool = false
+var risk_commit_active: bool:
+	get:
+		return _risk_commit_active
+	set(val):
+		_risk_commit_active = val
+		if val:
+			risk_commit_timer = (
+				RISK_COMMIT_DURATION if risk_commit_timer <= 0.0 else risk_commit_timer
+			)
+		else:
+			risk_commit_timer = 0.0
+
 var is_changing_lanes: bool = false
 var lane_change_progress: float = 0.0
 var lane_change_duration: float = 0.8
@@ -164,20 +214,127 @@ var lane_change_from_z: float = 0.0
 var lane_change_to_z: float = 0.0
 var current_lateral_z: float = 0.0
 var lane_change_cooldown: float = 0.0
+var lane_change_target_lane_z: float = 0.0
+
+var lane_wander_target: float = 0.0
+var lane_wander_offset: float = 0.0
+var lane_wander_timer: float = 0.0
+var lane_wander_start_offset: float = 0.0
+var lane_wander_duration: float = 0.0
+var lane_wander_elapsed: float = 0.0
 
 
-func start_lane_change(target_id: int, target_z: float) -> void:
+func get_max_lane_wander_offset() -> float:
+	var lane_half_width := LANE_WIDTH * 0.5
+	return maxf(0.0, lane_half_width - (car_width * 0.5) - SIDE_CLEARANCE)
+
+
+func is_reckless() -> bool:
+	if car_type == CarType.BUS or car_type == CarType.SHIPPING_TRUCK or car_type == CarType.TRUCK:
+		return false
+	if errand != null and (errand.is_drive_thru() or errand.is_dropoff()):
+		return false
+	return risk_tolerance >= RECKLESS_RISK_THRESHOLD
+
+
+func is_eligible_for_shortcut() -> bool:
+	if car_type == CarType.BUS or car_type == CarType.SHIPPING_TRUCK or car_type == CarType.TRUCK:
+		return false
+	if errand != null and (errand.is_drive_thru() or errand.is_dropoff()):
+		return false
+	if has_taken_shortcut or pending_destination_spot != null:
+		return false
+	return true
+
+
+func _init_risk_tolerance() -> void:
+	if car_type == CarType.BUS or car_type == CarType.SHIPPING_TRUCK or car_type == CarType.TRUCK:
+		risk_tolerance = 0.0
+		return
+	if TrafficManager._is_test_mode():
+		risk_tolerance = 0.0
+		return
+	if randf() < RECKLESS_DRIVER_PROBABILITY:
+		risk_tolerance = randf_range(RECKLESS_RISK_THRESHOLD, 1.0)
+	else:
+		risk_tolerance = randf_range(0.0, 0.3)
+
+
+func _init_lane_wander() -> void:
+	lane_wander_offset = 0.0
+	lane_wander_start_offset = 0.0
+	lane_wander_elapsed = 0.0
+	if TrafficManager._is_test_mode():
+		lane_wander_target = 0.0
+		lane_wander_timer = 999.0
+		lane_wander_duration = 1.0
+		return
+	var max_offset := get_max_lane_wander_offset()
+	lane_wander_target = randf_range(-max_offset, max_offset) if max_offset > 0.0 else 0.0
+	lane_wander_timer = randf_range(WANDER_INTERVAL_MIN, WANDER_INTERVAL_MAX)
+	lane_wander_duration = randf_range(WANDER_TRANSITION_MIN, WANDER_TRANSITION_MAX)
+
+
+func _center_for_approach() -> void:
+	lane_wander_target = 0.0
+	lane_wander_start_offset = lane_wander_offset
+	lane_wander_elapsed = 0.0
+	lane_wander_duration = clampf(absf(lane_wander_offset) / 0.5, 0.4, 1.2)
+	lane_wander_timer = 999.0
+
+
+func _advance_lane_wander(delta: float) -> void:
+	var max_offset := get_max_lane_wander_offset()
+	if state != State.APPROACHING:
+		lane_wander_timer -= delta
+		if lane_wander_timer <= 0.0:
+			lane_wander_target = randf_range(-max_offset, max_offset) if max_offset > 0.0 else 0.0
+			lane_wander_timer = randf_range(WANDER_INTERVAL_MIN, WANDER_INTERVAL_MAX)
+			lane_wander_duration = randf_range(WANDER_TRANSITION_MIN, WANDER_TRANSITION_MAX)
+			lane_wander_start_offset = lane_wander_offset
+			lane_wander_elapsed = 0.0
+
+	lane_wander_elapsed += delta
+	var t := clampf(lane_wander_elapsed / maxf(0.001, lane_wander_duration), 0.0, 1.0)
+	var smooth_t := t * t * (3.0 - 2.0 * t)
+	var eff_target := (
+		0.0 if state == State.APPROACHING else clampf(lane_wander_target, -max_offset, max_offset)
+	)
+	lane_wander_offset = clampf(
+		lerpf(lane_wander_start_offset, eff_target, smooth_t), -max_offset, max_offset
+	)
+	current_lateral_z = lane_z + lane_wander_offset
+
+
+func start_risk_commit(duration: float = RISK_COMMIT_DURATION) -> void:
+	risk_commit_timer = duration
+	_risk_commit_active = duration > 0.0
+
+
+func reset_lane_change_cooldown() -> void:
+	if car_type == CarType.SPORTS or (car_type == CarType.F150 and has_smokestacks):
+		lane_change_cooldown = randf_range(1.0, 2.0)
+	else:
+		lane_change_cooldown = randf_range(2.0, 3.5)
+
+
+func start_lane_change(target_id: int, target_z: float, is_risky: bool = false) -> void:
 	lane_id = target_id
 	is_changing_lanes = true
 	lane_change_progress = 0.0
-	if car_type == CarType.SPORTS:
+	if is_risky:
+		start_risk_commit()
+	if car_type == CarType.SPORTS or car_type == CarType.CYBERTRUCK:
 		lane_change_duration = randf_range(0.6, 0.8)
 	elif car_type == CarType.SHIPPING_TRUCK or car_type == CarType.BUS:
 		lane_change_duration = randf_range(1.2, 1.5)
 	else:
 		lane_change_duration = randf_range(0.8, 1.1)
-	lane_change_from_z = current_lateral_z if absf(current_lateral_z) > 0.001 else lane_z
-	lane_change_to_z = target_z
+	lane_change_from_z = current_lateral_z
+	lane_change_target_lane_z = target_z
+	var max_offset := get_max_lane_wander_offset()
+	lane_wander_target = randf_range(-max_offset, max_offset) if max_offset > 0.0 else 0.0
+	lane_change_to_z = target_z + lane_wander_target
 	var is_right: bool = (
 		(target_z > lane_change_from_z) if (direction > 0.0) else (target_z < lane_change_from_z)
 	)
@@ -187,6 +344,7 @@ func start_lane_change(target_id: int, target_z: float) -> void:
 var turn_signal: TurnSignal = TurnSignal.NONE
 const SIGNAL_BLINK_INTERVAL := 0.35
 var _signal_blink_timer: float = 0.0
+var _signal_blink_is_on: int = -1
 var _signals_initialized: bool = false
 var _active_right_signals: Array[MeshInstance3D] = []
 var _active_left_signals: Array[MeshInstance3D] = []
@@ -195,6 +353,9 @@ var headlamp: SpotLight3D = null
 var _headlamps_initialized: bool = false
 var _headlight_meshes: Array[MeshInstance3D] = []
 var _headlamps_on: int = -1
+var _headlamp_delay_active: bool = false
+var headlamp_lod_active: bool = true
+static var stagger_headlamps: bool = true
 
 static var _headlight_mat_on: StandardMaterial3D = null
 static var _headlight_mat_off: StandardMaterial3D = null
@@ -372,6 +533,8 @@ func setup(
 	current_lateral_z = p_lane_z
 	is_changing_lanes = false
 	lane_change_progress = 0.0
+	_risk_commit_active = false
+	risk_commit_timer = 0.0
 	lane_change_cooldown = randf_range(1.0, 3.0)
 	direction = p_dir
 	start_x = p_start_x
@@ -381,8 +544,15 @@ func setup(
 	desired_speed = p_speed
 	lane_speed = p_speed
 	car_type = p_type
+	turn_signal = TurnSignal.NONE
 
+	force_shortcut = false
+	has_taken_shortcut = false
+	shortcut_evaluated = false
+	pending_destination_spot = null
 	_apply_visual_type()
+	_init_lane_wander()
+	_init_risk_tolerance()
 	update_presentation()
 	_update_blocker_layer()
 	reset_physics_interpolation()
@@ -396,6 +566,9 @@ func teleport(target_transform: Transform3D) -> void:
 func follow_path(curve: Curve3D, from_end := false) -> void:
 	motion = Motion.PATH
 	path = curve
+	lane_wander_offset = 0.0
+	lane_wander_target = 0.0
+	current_lateral_z = lane_z
 	if from_end and curve != null:
 		path_distance = curve.get_baked_length()
 	else:
@@ -429,6 +602,7 @@ func _collect_active_parts() -> void:
 	_active_wheels.clear()
 	_active_right_signals.clear()
 	_active_left_signals.clear()
+	_signal_blink_is_on = -1
 	var active_node := get_active_model()
 	if active_node:
 		for child in active_node.get_children():
@@ -445,6 +619,7 @@ func set_turn_signal(sig: TurnSignal) -> void:
 	if turn_signal != sig:
 		turn_signal = sig
 		_signal_blink_timer = 0.0
+		_signal_blink_is_on = -1
 		_update_signals(0.0)
 
 
@@ -512,7 +687,7 @@ func _create_signal_mesh(
 	return sig
 
 
-func _init_headlight_resources() -> void:
+static func _init_headlight_resources() -> void:
 	if _headlight_mat_off != null:
 		return
 
@@ -529,6 +704,34 @@ func _init_headlight_resources() -> void:
 	_headlight_mat_on.emission_enabled = true
 	_headlight_mat_on.emission = Color(1.0, 0.98, 0.85, 1.0)
 	_headlight_mat_on.emission_energy_multiplier = 2.5
+
+
+static func get_headlight_mat_on() -> StandardMaterial3D:
+	_init_headlight_resources()
+	return _headlight_mat_on
+
+
+static func get_headlight_mat_off() -> StandardMaterial3D:
+	_init_headlight_resources()
+	return _headlight_mat_off
+
+
+func set_headlights_override(on: bool, include_spotlight: bool = true) -> void:
+	_headlamp_delay_active = false
+	_headlamps_on = 1 if on else 0
+	_init_headlight_resources()
+	if headlamp:
+		headlamp.visible = on if include_spotlight else false
+	var mat := _headlight_mat_on if on else _headlight_mat_off
+	for mesh in _headlight_meshes:
+		if is_instance_valid(mesh):
+			mesh.material_override = mat
+
+
+func restore_headlamps() -> void:
+	_headlamp_delay_active = false
+	_headlamps_on = -1
+	_update_headlamps(true)
 
 
 func _setup_headlamps() -> void:
@@ -580,7 +783,10 @@ func _create_headlamp(parent: Node, node_name: String, base_pos: Vector3) -> Spo
 	light.spot_angle_attenuation = 1.1
 	light.spot_attenuation = 1.0
 	light.shadow_enabled = false
-	light.visible = _should_headlamp_be_on()
+	light.distance_fade_enabled = true
+	light.distance_fade_begin = 35.0
+	light.distance_fade_length = 10.0
+	light.visible = _should_headlamp_be_on() and headlamp_lod_active
 	parent.add_child(light)
 	return light
 
@@ -590,26 +796,60 @@ func _should_headlamp_be_on() -> bool:
 
 
 func _update_headlamps(force: bool = false) -> void:
+	if not force and _headlamp_delay_active and state != State.PARKED:
+		return
 	var on := _should_headlamp_be_on()
 	var on_int := 1 if on else 0
 	if not force and _headlamps_on == on_int:
 		return
+	_headlamp_delay_active = false
 	_headlamps_on = on_int
+	if not on:
+		headlamp_lod_active = true
 	if headlamp:
-		headlamp.visible = on
+		headlamp.visible = on and headlamp_lod_active
 	var mat := _headlight_mat_on if on else _headlight_mat_off
 	for mesh in _headlight_meshes:
 		if is_instance_valid(mesh):
 			mesh.material_override = mat
 
 
-func _on_time_of_day_changed(_mode: GameState.TimeOfDay) -> void:
+func set_headlamp_lod_active(active: bool) -> void:
+	if headlamp_lod_active == active:
+		return
+	headlamp_lod_active = active
+	if headlamp:
+		headlamp.visible = (
+			_should_headlamp_be_on() and not _headlamp_delay_active and headlamp_lod_active
+		)
+
+
+func _on_headlamp_delay_timeout() -> void:
+	if not is_instance_valid(self) or not is_inside_tree():
+		return
+	_headlamp_delay_active = false
 	_update_headlamps()
+
+
+func _on_time_of_day_changed(_mode: GameState.TimeOfDay) -> void:
+	var desired := _should_headlamp_be_on()
+	var current := _headlamps_on == 1
+	if desired == current:
+		_headlamp_delay_active = false
+		return
+	if not desired or not is_inside_tree() or not stagger_headlamps:
+		_headlamp_delay_active = false
+		_update_headlamps()
+		return
+	_headlamp_delay_active = true
+	var delay := randf_range(0.05, 1.2)
+	get_tree().create_timer(delay).timeout.connect(_on_headlamp_delay_timeout)
 
 
 func _update_signals(delta: float) -> void:
 	if turn_signal == TurnSignal.NONE:
 		_signal_blink_timer = 0.0
+		_signal_blink_is_on = -1
 		for s in _active_right_signals:
 			s.visible = false
 		for s in _active_left_signals:
@@ -619,18 +859,23 @@ func _update_signals(delta: float) -> void:
 	_signal_blink_timer += delta
 	var blink_cycle := fmod(_signal_blink_timer, SIGNAL_BLINK_INTERVAL * 2.0)
 	var is_on := blink_cycle < SIGNAL_BLINK_INTERVAL
-	var target_mat := _signal_mat_on if is_on else _signal_mat_off
+	var on_int := 1 if is_on else 0
 
+	if on_int != _signal_blink_is_on:
+		_signal_blink_is_on = on_int
+		var target_mat := _signal_mat_on if is_on else _signal_mat_off
+		for s in _active_right_signals:
+			s.material_override = target_mat
+		for s in _active_left_signals:
+			s.material_override = target_mat
 	if turn_signal == TurnSignal.RIGHT:
 		for s in _active_right_signals:
 			s.visible = true
-			s.material_override = target_mat
 		for s in _active_left_signals:
 			s.visible = false
 	elif turn_signal == TurnSignal.LEFT:
 		for s in _active_left_signals:
 			s.visible = true
-			s.material_override = target_mat
 		for s in _active_right_signals:
 			s.visible = false
 
@@ -774,6 +1019,8 @@ static func _init_exhaust_resources() -> void:
 
 func _roll_exhaust() -> bool:
 	match car_type:
+		CarType.CYBERTRUCK:
+			return false
 		CarType.PICKUP, CarType.F150, CarType.TRUCK, CarType.VAN, CarType.SHIPPING_TRUCK:
 			return randf() < 0.50
 		CarType.BUS:
@@ -796,6 +1043,8 @@ func _setup_exhaust() -> void:
 	if not _exhaust_explicitly_set:
 		if car_type == CarType.F150 and has_smokestacks:
 			has_exhaust = true
+		elif car_type == CarType.CYBERTRUCK:
+			has_exhaust = false
 		else:
 			has_exhaust = _roll_exhaust()
 	_exhaust_initialized = true
@@ -821,6 +1070,9 @@ func _setup_exhaust() -> void:
 			car_model.remove_child(child)
 			child.free()
 
+	if car_type == CarType.CYBERTRUCK:
+		has_exhaust = false
+		return
 	# Apply smokestack visibility (e.g. for F150 rolling coal stacks)
 	_apply_smokestacks_visibility()
 
@@ -1151,6 +1403,11 @@ func _update_dimensions() -> void:
 			car_width = 2.2
 			shape_size = Vector3(5.3, 1.85, 2.2)
 			shape_y = 0.9
+		CarType.CYBERTRUCK:
+			car_length = 5.5
+			car_width = 2.2
+			shape_size = Vector3(5.4, 1.8, 2.2)
+			shape_y = 0.9
 		_:
 			car_length = 4.5
 			car_width = 2.0
@@ -1187,6 +1444,10 @@ func get_heading() -> Vector3:
 func advance_simulation(delta: float) -> void:
 	if lane_change_cooldown > 0.0:
 		lane_change_cooldown = maxf(0.0, lane_change_cooldown - delta)
+	if _risk_commit_active:
+		risk_commit_timer = maxf(0.0, risk_commit_timer - delta)
+		if risk_commit_timer <= 0.0:
+			_risk_commit_active = false
 
 	if is_changing_lanes:
 		lane_change_progress += delta / maxf(0.001, lane_change_duration)
@@ -1195,15 +1456,19 @@ func advance_simulation(delta: float) -> void:
 		current_lateral_z = lerpf(lane_change_from_z, lane_change_to_z, smooth_t)
 		if t >= 1.0:
 			is_changing_lanes = false
+			_risk_commit_active = false
+			risk_commit_timer = 0.0
+			lane_wander_offset = lane_wander_target
+			lane_z = lane_change_target_lane_z
 			current_lateral_z = lane_change_to_z
-			lane_z = lane_change_to_z
+			lane_wander_start_offset = lane_wander_offset
+			lane_wander_elapsed = 0.0
+			lane_wander_timer = randf_range(WANDER_INTERVAL_MIN, WANDER_INTERVAL_MAX)
+			lane_wander_duration = randf_range(WANDER_TRANSITION_MIN, WANDER_TRANSITION_MAX)
 			set_turn_signal(TurnSignal.NONE)
-			if car_type == CarType.SPORTS or (car_type == CarType.F150 and has_smokestacks):
-				lane_change_cooldown = randf_range(1.0, 2.0)
-			else:
-				lane_change_cooldown = randf_range(2.0, 3.5)
+			reset_lane_change_cooldown()
 	else:
-		current_lateral_z = lane_z
+		_advance_lane_wander(delta)
 
 	lane_distance += speed * delta
 	update_presentation()
@@ -1260,27 +1525,37 @@ func update_presentation() -> void:
 			reset_physics_interpolation()
 		return
 	var current_x := start_x + (direction * lane_distance)
-	var z_pos := current_lateral_z if is_changing_lanes else lane_z
+	var z_pos := current_lateral_z
 	if is_inside_tree():
 		global_position = Vector3(current_x, 0.05, z_pos)
 	else:
 		position = Vector3(current_x, 0.05, z_pos)
 
+	var dz_dt := 0.0
 	if is_changing_lanes:
 		var t := clampf(lane_change_progress, 0.0, 1.0)
-		var dz_dt := (
+		dz_dt = (
 			(lane_change_to_z - lane_change_from_z)
 			* (6.0 * t * (1.0 - t))
 			/ maxf(0.001, lane_change_duration)
 		)
-		var dx_dt := speed * direction
-		if absf(dx_dt) > 0.01:
-			rotation.y = atan2(-dz_dt, dx_dt)
-		else:
-			rotation.y = 0.0 if direction > 0.0 else PI
+	elif lane_wander_elapsed < lane_wander_duration and lane_wander_duration > 0.001:
+		var t := clampf(lane_wander_elapsed / lane_wander_duration, 0.0, 1.0)
+		var max_offset := get_max_lane_wander_offset()
+		var eff_target := (
+			0.0
+			if state == State.APPROACHING
+			else clampf(lane_wander_target, -max_offset, max_offset)
+		)
+		dz_dt = (
+			(eff_target - lane_wander_start_offset) * (6.0 * t * (1.0 - t)) / lane_wander_duration
+		)
+
+	var dx_dt := speed * direction
+	if absf(dx_dt) > 0.01:
+		rotation.y = atan2(-dz_dt, dx_dt)
 	else:
 		rotation.y = 0.0 if direction > 0.0 else PI
-
 	wheel_rotation = fmod(-lane_distance / wheel_radius, TAU)
 	_update_wheels()
 
@@ -1309,16 +1584,52 @@ func _check_hit(body: Node3D) -> void:
 		body.die()
 
 
+func _release_spot_reference(s: ParkingSpot) -> void:
+	if s == null:
+		return
+	if s.lot != null:
+		s.lot.release(s)
+	else:
+		if s.car == self:
+			s.car = null
+		s.state = ParkingSpot.State.FREE
+
+
+func release_parking_reservations() -> void:
+	if spot != null:
+		var s := spot
+		spot = null
+		_release_spot_reference(s)
+	if pending_destination_spot != null:
+		var s := pending_destination_spot
+		pending_destination_spot = null
+		_release_spot_reference(s)
+
+
+func cancel_shortcut() -> void:
+	if pending_destination_spot != null:
+		var s := pending_destination_spot
+		pending_destination_spot = null
+		_release_spot_reference(s)
+	if state == State.SHORTCUT:
+		release_parking_reservations()
+
+
+func cancel_reservations() -> void:
+	release_parking_reservations()
+
+
+func despawn() -> void:
+	release_parking_reservations()
+	queue_free()
+
+
+func _exit_tree() -> void:
+	release_parking_reservations()
+
+
 func _on_tree_exiting() -> void:
 	if GameState.instance:
 		if GameState.instance.time_of_day_changed.is_connected(_on_time_of_day_changed):
 			GameState.instance.time_of_day_changed.disconnect(_on_time_of_day_changed)
-
-	if spot != null:
-		if spot.lot != null:
-			spot.lot.release(spot)
-		else:
-			if spot.car == self:
-				spot.car = null
-			spot.state = ParkingSpot.State.FREE
-			spot = null
+	release_parking_reservations()

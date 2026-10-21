@@ -6,9 +6,11 @@ extends Node3D
 ## woodland cover (slash pine, southern live oak, sabal palm, and mixed hardwoods).
 ## Each tree is an interactive collidable StreetTree with wind sway and collision rustle.
 
-const TREE_SCENE: PackedScene = preload("res://props/tree.tscn")
 const FENCE_SCENE: PackedScene = preload("res://props/chainlink_fence.tscn")
+const BLEND_TREE1: PackedScene = preload("res://props/tree1.blend")
+const BLEND_TREE2: PackedScene = preload("res://props/tree2.blend")
 
+static var _variant_parts_cache: Dictionary = {}
 @export var fence_enabled: bool = true:
 	set(value):
 		fence_enabled = value
@@ -51,6 +53,24 @@ const FENCE_SCENE: PackedScene = preload("res://props/chainlink_fence.tscn")
 		if is_inside_tree():
 			build_forest()
 
+@export var forest_visibility_range_end: float = 160.0:
+	set(value):
+		forest_visibility_range_end = value
+		if is_inside_tree():
+			build_forest()
+
+@export var forest_visibility_range_end_margin: float = 25.0:
+	set(value):
+		forest_visibility_range_end_margin = value
+		if is_inside_tree():
+			build_forest()
+
+@export var shadow_tree_distance: float = 40.0:
+	set(value):
+		shadow_tree_distance = value
+		if is_inside_tree():
+			build_forest()
+
 ## Exclusion bounding boxes [x_min, x_max, z_min, z_max] for all structures,
 ## roads, parking lots, driveways, signs, and tunnel corridors.
 const EXCLUSION_ZONES = [
@@ -89,6 +109,8 @@ const EXCLUSION_ZONES = [
 
 
 func _ready() -> void:
+	if not Engine.is_editor_hint():
+		StreetTree._ensure_wind_connected()
 	build_forest()
 
 
@@ -109,7 +131,15 @@ func build_forest() -> void:
 
 	var nx := int(ceil((bounds_max.x - bounds_min.x) / grid_spacing))
 	var nz := int(ceil((bounds_max.y - bounds_min.y) / grid_spacing))
-	var tree_index := 0
+	var groups: Dictionary = {
+		"West_Near": {},
+		"West_Far": {},
+		"East_Near": {},
+		"East_Far": {},
+	}
+	for g: String in groups:
+		for t in StreetTree.TreeType.values():
+			groups[g][t] = [] as Array[Transform3D]
 
 	for ix in range(nx):
 		for iz in range(nz):
@@ -182,14 +212,273 @@ func build_forest() -> void:
 				base_scale = rng.randf_range(0.85, 1.15)
 				height_ratio = rng.randf_range(0.95, 1.10)
 
-			var tree := TREE_SCENE.instantiate() as StreetTree
-			tree.name = "ForestTree_%d" % tree_index
-			tree_index += 1
-			tree.tree_type = tree_type
-			tree.position = Vector3(x, 0.0, z)
-			tree.rotation.y = rng.randf_range(0.0, TAU)
-			tree.scale = Vector3(base_scale, base_scale * height_ratio, base_scale)
-			add_child(tree)
+			var rot_y := rng.randf_range(0.0, TAU)
+			var scale_vec := Vector3(base_scale, base_scale * height_ratio, base_scale)
+			var tree_xform := Transform3D(
+				Basis(Vector3.UP, rot_y).scaled(scale_vec), Vector3(x, 0.0, z)
+			)
+
+			var s_x := "West" if x < 45.0 else "East"
+			var dx_box := maxf(0.0, maxf(-100.0 - x, x - 168.0))
+			var dz_box := maxf(0.0, maxf(-60.0 - z, z - 64.0))
+			var dist := sqrt(dx_box * dx_box + dz_box * dz_box)
+			var s_dist := "Near" if dist <= shadow_tree_distance else "Far"
+			var gname := "%s_%s" % [s_x, s_dist]
+
+			groups[gname][tree_type].append(tree_xform)
+
+	_build_multimeshes(groups)
+
+
+func _build_multimeshes(groups: Dictionary) -> void:
+	var parts := _get_variant_mesh_parts()
+	var mm_container := Node3D.new()
+	mm_container.name = "TreeMultiMeshes"
+	add_child(mm_container)
+
+	for gname: String in groups:
+		var is_near: bool = gname.ends_with("_Near")
+		var variant_transforms: Dictionary = groups[gname]
+		for tree_type in variant_transforms:
+			var xforms: Array = variant_transforms[tree_type]
+			if xforms.is_empty():
+				continue
+			var count: int = xforms.size()
+			var v_parts: Array = parts[tree_type]
+			for part_idx in range(v_parts.size()):
+				var part: Dictionary = v_parts[part_idx]
+				var mmi := MultiMeshInstance3D.new()
+				mmi.name = (
+					"TreeMultiMesh_%s_%s_%d"
+					% [gname, StreetTree.TreeType.keys()[tree_type], part_idx]
+				)
+				if forest_visibility_range_end > 0.0:
+					mmi.visibility_range_end = forest_visibility_range_end
+					mmi.visibility_range_end_margin = forest_visibility_range_end_margin
+					mmi.visibility_range_fade_mode = (GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF)
+				mmi.cast_shadow = (
+					GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+					if is_near
+					else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+				)
+				var mm := MultiMesh.new()
+				mm.transform_format = MultiMesh.TRANSFORM_3D
+				mm.mesh = part.mesh
+				mm.instance_count = count
+				for i in range(count):
+					var instance_xform: Transform3D = (
+						(xforms[i] as Transform3D) * (part.xform as Transform3D)
+					)
+					mm.set_instance_transform(i, instance_xform)
+				mmi.multimesh = mm
+				mm_container.add_child(mmi)
+
+
+static func _get_variant_mesh_parts() -> Dictionary:
+	if not _variant_parts_cache.is_empty():
+		return _variant_parts_cache
+
+	var trunk_mat := StandardMaterial3D.new()
+	trunk_mat.albedo_color = Color(0.35, 0.25, 0.18, 1.0)
+	trunk_mat.roughness = 0.95
+
+	var leaves_std := StandardMaterial3D.new()
+	leaves_std.albedo_color = Color(0.22, 0.42, 0.18, 1.0)
+	leaves_std.roughness = 0.9
+
+	var leaves_tall := StandardMaterial3D.new()
+	leaves_tall.albedo_color = Color(0.18, 0.38, 0.16, 1.0)
+	leaves_tall.roughness = 0.9
+
+	var leaves_broad := StandardMaterial3D.new()
+	leaves_broad.albedo_color = Color(0.25, 0.44, 0.19, 1.0)
+	leaves_broad.roughness = 0.9
+
+	var leaves_clustered := StandardMaterial3D.new()
+	leaves_clustered.albedo_color = Color(0.2, 0.4, 0.17, 1.0)
+	leaves_clustered.roughness = 0.9
+
+	var leaves_compact := StandardMaterial3D.new()
+	leaves_compact.albedo_color = Color(0.24, 0.45, 0.21, 1.0)
+	leaves_compact.roughness = 0.9
+
+	var m_trunk_std := CylinderMesh.new()
+	m_trunk_std.material = trunk_mat
+	m_trunk_std.radial_segments = 10
+	m_trunk_std.rings = 1
+	m_trunk_std.top_radius = 0.25
+	m_trunk_std.bottom_radius = 0.3
+	m_trunk_std.height = 2.0
+
+	var m_foliage_std := SphereMesh.new()
+	m_foliage_std.material = leaves_std
+	m_foliage_std.radial_segments = 16
+	m_foliage_std.rings = 8
+	m_foliage_std.radius = 1.4
+	m_foliage_std.height = 2.5
+
+	var m_trunk_tall := CylinderMesh.new()
+	m_trunk_tall.material = trunk_mat
+	m_trunk_tall.radial_segments = 10
+	m_trunk_tall.rings = 1
+	m_trunk_tall.top_radius = 0.22
+	m_trunk_tall.bottom_radius = 0.28
+	m_trunk_tall.height = 2.6
+
+	var m_foliage_tall := SphereMesh.new()
+	m_foliage_tall.material = leaves_tall
+	m_foliage_tall.radial_segments = 16
+	m_foliage_tall.rings = 8
+	m_foliage_tall.radius = 1.25
+	m_foliage_tall.height = 3.2
+
+	var m_trunk_broad := CylinderMesh.new()
+	m_trunk_broad.material = trunk_mat
+	m_trunk_broad.radial_segments = 10
+	m_trunk_broad.rings = 1
+	m_trunk_broad.top_radius = 0.28
+	m_trunk_broad.bottom_radius = 0.35
+	m_trunk_broad.height = 1.8
+
+	var m_foliage_broad := SphereMesh.new()
+	m_foliage_broad.material = leaves_broad
+	m_foliage_broad.radial_segments = 16
+	m_foliage_broad.rings = 8
+	m_foliage_broad.radius = 1.8
+	m_foliage_broad.height = 2.2
+
+	var m_trunk_clustered := CylinderMesh.new()
+	m_trunk_clustered.material = trunk_mat
+	m_trunk_clustered.radial_segments = 10
+	m_trunk_clustered.rings = 1
+	m_trunk_clustered.top_radius = 0.25
+	m_trunk_clustered.bottom_radius = 0.32
+	m_trunk_clustered.height = 2.0
+
+	var m_foliage_clustered_main := SphereMesh.new()
+	m_foliage_clustered_main.material = leaves_clustered
+	m_foliage_clustered_main.radial_segments = 16
+	m_foliage_clustered_main.rings = 8
+	m_foliage_clustered_main.radius = 1.3
+	m_foliage_clustered_main.height = 2.3
+
+	var m_foliage_clustered_side := SphereMesh.new()
+	m_foliage_clustered_side.material = leaves_clustered
+	m_foliage_clustered_side.radial_segments = 16
+	m_foliage_clustered_side.rings = 8
+	m_foliage_clustered_side.radius = 1.05
+	m_foliage_clustered_side.height = 1.9
+	var m_trunk_compact := CylinderMesh.new()
+	m_trunk_compact.material = trunk_mat
+	m_trunk_compact.radial_segments = 10
+	m_trunk_compact.rings = 1
+	m_trunk_compact.top_radius = 0.2
+	m_trunk_compact.bottom_radius = 0.25
+	m_trunk_compact.height = 1.6
+
+	var m_foliage_compact := SphereMesh.new()
+	m_foliage_compact.material = leaves_compact
+	m_foliage_compact.radial_segments = 16
+	m_foliage_compact.rings = 8
+	m_foliage_compact.radius = 1.15
+	m_foliage_compact.height = 2.0
+
+	var t1: Node = BLEND_TREE1.instantiate()
+	var t2: Node = BLEND_TREE2.instantiate()
+
+	var oak_foliage_mesh := (t1.get_node("Foliage") as MeshInstance3D).mesh.duplicate() as ArrayMesh
+	var oak_mats := StreetTree._get_or_create_live_oak_materials()
+	for s in range(mini(oak_mats.size(), oak_foliage_mesh.get_surface_count())):
+		oak_foliage_mesh.surface_set_material(s, oak_mats[s])
+
+	_variant_parts_cache = {
+		StreetTree.TreeType.STANDARD:
+		[
+			{"mesh": m_trunk_std, "xform": Transform3D(Basis.IDENTITY, Vector3(0.0, 1.0, 0.0))},
+			{"mesh": m_foliage_std, "xform": Transform3D(Basis.IDENTITY, Vector3(0.0, 2.8, 0.0))},
+		],
+		StreetTree.TreeType.TALL:
+		[
+			{"mesh": m_trunk_tall, "xform": Transform3D(Basis.IDENTITY, Vector3(0.0, 1.3, 0.0))},
+			{"mesh": m_foliage_tall, "xform": Transform3D(Basis.IDENTITY, Vector3(0.0, 3.6, 0.0))},
+		],
+		StreetTree.TreeType.BROAD:
+		[
+			{
+				"mesh": m_trunk_broad,
+				"xform":
+				Transform3D(
+					Basis.from_scale(Vector3(1.0, 1.15, 1.0)), Vector3(0.0, 0.9 * 1.15, 0.0)
+				)
+			},
+			{
+				"mesh": m_foliage_broad,
+				"xform":
+				Transform3D(
+					Basis.from_scale(Vector3(1.0, 1.15, 1.0)), Vector3(0.0, 2.6 * 1.15, 0.0)
+				)
+			},
+		],
+		StreetTree.TreeType.CLUSTERED:
+		[
+			{
+				"mesh": m_trunk_clustered,
+				"xform": Transform3D(Basis.IDENTITY, Vector3(0.0, 1.0, 0.0))
+			},
+			{
+				"mesh": m_foliage_clustered_main,
+				"xform": Transform3D(Basis.IDENTITY, Vector3(0.0, 2.8, -0.2))
+			},
+			{
+				"mesh": m_foliage_clustered_side,
+				"xform": Transform3D(Basis.IDENTITY, Vector3(0.5, 2.5, 0.3))
+			},
+		],
+		StreetTree.TreeType.COMPACT:
+		[
+			{
+				"mesh": m_trunk_compact,
+				"xform":
+				Transform3D(
+					Basis.from_scale(Vector3(1.0, 1.25, 1.0)), Vector3(0.0, 0.8 * 1.25, 0.0)
+				)
+			},
+			{
+				"mesh": m_foliage_compact,
+				"xform":
+				Transform3D(
+					Basis.from_scale(Vector3(1.0, 1.25, 1.0)), Vector3(0.0, 2.3 * 1.25, 0.0)
+				)
+			},
+		],
+		StreetTree.TreeType.PALM:
+		[
+			{"mesh": (t2.get_node("Trunk") as MeshInstance3D).mesh, "xform": Transform3D.IDENTITY},
+			{
+				"mesh": (t2.get_node("FoliageGreen") as MeshInstance3D).mesh,
+				"xform": Transform3D.IDENTITY
+			},
+			{
+				"mesh": (t2.get_node("FoliageDead") as MeshInstance3D).mesh,
+				"xform": Transform3D.IDENTITY
+			},
+			{
+				"mesh": (t2.get_node("Crown") as MeshInstance3D).mesh,
+				"xform":
+				Transform3D(Basis.from_scale(Vector3(1.0, 0.72, 1.0)), Vector3(0.05, 7.18, 0.02))
+			},
+		],
+		StreetTree.TreeType.LIVE_OAK:
+		[
+			{"mesh": (t1.get_node("Trunk") as MeshInstance3D).mesh, "xform": Transform3D.IDENTITY},
+			{"mesh": (t1.get_node("Mulch") as MeshInstance3D).mesh, "xform": Transform3D.IDENTITY},
+			{"mesh": oak_foliage_mesh, "xform": Transform3D.IDENTITY},
+		],
+	}
+
+	t1.free()
+	t2.free()
+	return _variant_parts_cache
 
 
 func _build_fence() -> void:

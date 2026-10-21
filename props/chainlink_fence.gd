@@ -223,6 +223,7 @@ func _build_side(p1: Vector3, p2: Vector3, side_name: String) -> void:
 		fabric_instance.name = "Fabric"
 		fabric_instance.mesh = fabric_mesh
 		fabric_instance.material_override = _chainlink_mat
+		fabric_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		_apply_visibility(fabric_instance)
 		chunk_node.add_child(fabric_instance)
 
@@ -278,6 +279,7 @@ func _build_single_section() -> void:
 	fabric_instance.name = "Fabric"
 	fabric_instance.mesh = fabric_mesh
 	fabric_instance.material_override = _chainlink_mat
+	fabric_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_apply_visibility(fabric_instance)
 	add_child(fabric_instance)
 

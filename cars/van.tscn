@@ -382,9 +382,11 @@ transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1.6, 0.35, 1.0)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="AeroCap" type="MeshInstance3D" parent="Visuals/Van/Wheel_FrontL"]
+cast_shadow = 0
 mesh = SubResource("Mesh_WheelAeroCap")
 
 [node name="CyanRing" type="MeshInstance3D" parent="Visuals/Van/Wheel_FrontL"]
+cast_shadow = 0
 mesh = SubResource("Mesh_WheelCyanAccent")
 
 [node name="Wheel_FrontR" type="MeshInstance3D" parent="Visuals/Van"]
@@ -392,9 +394,11 @@ transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 1.6, 0.35, -1.0)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="AeroCap" type="MeshInstance3D" parent="Visuals/Van/Wheel_FrontR"]
+cast_shadow = 0
 mesh = SubResource("Mesh_WheelAeroCap")
 
 [node name="CyanRing" type="MeshInstance3D" parent="Visuals/Van/Wheel_FrontR"]
+cast_shadow = 0
 mesh = SubResource("Mesh_WheelCyanAccent")
 
 [node name="Wheel_RearL" type="MeshInstance3D" parent="Visuals/Van"]
@@ -402,9 +406,11 @@ transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -1.6, 0.35, 1.0)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="AeroCap" type="MeshInstance3D" parent="Visuals/Van/Wheel_RearL"]
+cast_shadow = 0
 mesh = SubResource("Mesh_WheelAeroCap")
 
 [node name="CyanRing" type="MeshInstance3D" parent="Visuals/Van/Wheel_RearL"]
+cast_shadow = 0
 mesh = SubResource("Mesh_WheelCyanAccent")
 
 [node name="Wheel_RearR" type="MeshInstance3D" parent="Visuals/Van"]
@@ -412,7 +418,9 @@ transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -1.6, 0.35, -1.0)
 mesh = SubResource("Mesh_Wheel")
 
 [node name="AeroCap" type="MeshInstance3D" parent="Visuals/Van/Wheel_RearR"]
+cast_shadow = 0
 mesh = SubResource("Mesh_WheelAeroCap")
 
 [node name="CyanRing" type="MeshInstance3D" parent="Visuals/Van/Wheel_RearR"]
+cast_shadow = 0
 mesh = SubResource("Mesh_WheelCyanAccent")

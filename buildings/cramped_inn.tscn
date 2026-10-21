@@ -606,6 +606,7 @@ mesh = SubResource("Mesh_Window")
 
 [node name="FrontLogo" type="Label3D" parent="Building"]
 cast_shadow = 0
+visibility_range_end = 80.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.7, 12.4, 8.28)
 pixel_size = 0.014
 modulate = Color(0.48, 0.05, 0.09, 1)
@@ -669,6 +670,7 @@ transform = Transform3D(0.9659258, 0.1830127, 0.1830127, 0, 0.70710677, -0.70710
 flag_size = 3
 [node name="CanopyClearance" type="Label3D" parent="Building"]
 cast_shadow = 0
+visibility_range_end = 50.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.5, 4.42, 15.53)
 pixel_size = 0.01
 modulate = Color(0.3, 0.22, 0.17, 1)
@@ -757,6 +759,7 @@ mesh = SubResource("Mesh_SignHexNavy")
 
 [node name="NameCrampedFront" type="Label3D" parent="RoadsideSign"]
 cast_shadow = 0
+visibility_range_end = 80.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.05, 8.82, 0.29)
 pixel_size = 0.012
 modulate = Color(1, 1, 1, 1)
@@ -768,6 +771,7 @@ outline_size = 8
 
 [node name="NameInnFront" type="Label3D" parent="RoadsideSign"]
 cast_shadow = 0
+visibility_range_end = 80.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 8.02, 0.29)
 pixel_size = 0.012
 modulate = Color(1, 1, 1, 1)
@@ -779,6 +783,7 @@ outline_size = 8
 
 [node name="NameCrampedBack" type="Label3D" parent="RoadsideSign"]
 cast_shadow = 0
+visibility_range_end = 80.0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0.05, 8.82, -0.29)
 pixel_size = 0.012
 modulate = Color(1, 1, 1, 1)
@@ -790,6 +795,7 @@ outline_size = 8
 
 [node name="NameInnBack" type="Label3D" parent="RoadsideSign"]
 cast_shadow = 0
+visibility_range_end = 80.0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -0.35, 8.02, -0.29)
 pixel_size = 0.012
 modulate = Color(1, 1, 1, 1)

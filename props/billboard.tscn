@@ -586,6 +586,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.95, 0.74)
 mesh = SubResource("Mesh_LamarPlate")
 
 [node name="Label" type="Label3D" parent="Structure/OffsetGroup/LamarPlate"]
+cast_shadow = 0
+visibility_range_end = 40.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.015)
 render_priority = 3
 text = "LAMAR"
@@ -618,6 +620,7 @@ mesh = SubResource("Mesh_Portrait")
 [node name="Headline" type="Label3D" parent="FrontSide/Labels"]
 render_priority = 1
 cast_shadow = 0
+visibility_range_end = 120.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.85, 0.04)
 pixel_size = 0.007
 modulate = Color(1, 1, 1, 1)
@@ -629,6 +632,7 @@ outline_size = 12
 [node name="Tagline" type="Label3D" parent="FrontSide/Labels"]
 render_priority = 1
 cast_shadow = 0
+visibility_range_end = 100.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.05, 0.04)
 pixel_size = 0.0075
 modulate = Color(1, 0.88, 0.15, 1)
@@ -640,6 +644,7 @@ outline_size = 14
 [node name="Contact" type="Label3D" parent="FrontSide/Labels"]
 render_priority = 2
 cast_shadow = 0
+visibility_range_end = 100.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.18, 0.04)
 pixel_size = 0.007
 modulate = Color(1, 1, 1, 1)
@@ -651,6 +656,7 @@ outline_size = 12
 [node name="Disclaimer" type="Label3D" parent="FrontSide/Labels"]
 render_priority = 1
 cast_shadow = 0
+visibility_range_end = 80.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.45, 0.04)
 pixel_size = 0.0065
 modulate = Color(0.9, 0.92, 0.95, 1)
@@ -830,6 +836,7 @@ mesh = SubResource("Mesh_Portrait")
 [node name="Headline" type="Label3D" parent="BackSide/Labels"]
 render_priority = 1
 cast_shadow = 0
+visibility_range_end = 120.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.85, 0.04)
 pixel_size = 0.007
 modulate = Color(1, 1, 1, 1)
@@ -841,6 +848,7 @@ outline_size = 12
 [node name="Tagline" type="Label3D" parent="BackSide/Labels"]
 render_priority = 1
 cast_shadow = 0
+visibility_range_end = 100.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.05, 0.04)
 pixel_size = 0.0075
 modulate = Color(1, 0.88, 0.15, 1)
@@ -852,6 +860,7 @@ outline_size = 14
 [node name="Contact" type="Label3D" parent="BackSide/Labels"]
 render_priority = 2
 cast_shadow = 0
+visibility_range_end = 100.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.18, 0.04)
 pixel_size = 0.007
 modulate = Color(1, 1, 1, 1)
@@ -863,6 +872,7 @@ outline_size = 12
 [node name="Disclaimer" type="Label3D" parent="BackSide/Labels"]
 render_priority = 1
 cast_shadow = 0
+visibility_range_end = 80.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.45, 0.04)
 pixel_size = 0.0065
 modulate = Color(0.9, 0.92, 0.95, 1)

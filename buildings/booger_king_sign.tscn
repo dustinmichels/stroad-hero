@@ -106,15 +106,18 @@ mesh = SubResource("Mesh_BKPylonDriveThruBox")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.05, 4.4, 0.25)
 
 [node name="Head" type="MeshInstance3D" parent="DriveThruArrowFront"]
+cast_shadow = 0
 transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0)
 mesh = SubResource("Mesh_ArrowHead")
 
 [node name="Shaft" type="MeshInstance3D" parent="DriveThruArrowFront"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.29, 0, 0)
 mesh = SubResource("Mesh_ArrowShaft")
 
 [node name="DriveThruLabelFront" type="Label3D" parent="."]
 cast_shadow = 0
+visibility_range_end = 60.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 4.4, 0.25)
 pixel_size = 0.009
 modulate = Color(1, 1, 1, 1)
@@ -127,15 +130,18 @@ outline_size = 6
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -1.05, 4.4, -0.25)
 
 [node name="Head" type="MeshInstance3D" parent="DriveThruArrowBack"]
+cast_shadow = 0
 transform = Transform3D(0, 1, 0, -1, 0, 0, 0, 0, 1, 0, 0, 0)
 mesh = SubResource("Mesh_ArrowHead")
 
 [node name="Shaft" type="MeshInstance3D" parent="DriveThruArrowBack"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.29, 0, 0)
 mesh = SubResource("Mesh_ArrowShaft")
 
 [node name="DriveThruLabelBack" type="Label3D" parent="."]
 cast_shadow = 0
+visibility_range_end = 60.0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0.35, 4.4, -0.25)
 pixel_size = 0.009
 modulate = Color(1, 1, 1, 1)
@@ -154,6 +160,7 @@ mesh = SubResource("Mesh_BKPylonReaderFace")
 
 [node name="ReaderTextFront" type="Label3D" parent="."]
 cast_shadow = 0
+visibility_range_end = 60.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.7, 0.26)
 pixel_size = 0.01
 modulate = Color(0.1, 0.1, 0.1, 1)
@@ -164,6 +171,7 @@ font_size = 28
 outline_size = 6
 [node name="ReaderTextBack" type="Label3D" parent="."]
 cast_shadow = 0
+visibility_range_end = 60.0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 5.7, -0.26)
 pixel_size = 0.01
 modulate = Color(0.1, 0.1, 0.1, 1)

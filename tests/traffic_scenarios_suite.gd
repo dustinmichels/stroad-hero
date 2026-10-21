@@ -70,6 +70,7 @@ func matches_args() -> bool:
 				"--test-drive-thru",
 				"--test-cramped-inn-dropoff",
 				"--test-frontage",
+				"--test-grass-shortcut",
 			]
 		):
 			return true
@@ -211,6 +212,8 @@ func setup_ready() -> void:
 
 	if "--test-cramped-inn-dropoff" in user_args:
 		_run_test_cramped_inn_dropoff()
+	if "--test-grass-shortcut" in user_args:
+		_run_test_grass_shortcut()
 
 
 func on_physics_process(_delta: float) -> void:
@@ -219,7 +222,8 @@ func on_physics_process(_delta: float) -> void:
 		var tm = main.get_node_or_null("TrafficManager") as TrafficManager
 		var lane0 = tm.lanes[0]
 		if _gap_test_stage == 0:
-			lane0.spawn_timer = 999.0
+			for l in tm.lanes:
+				l.spawn_timer = 999.0
 			var to_remove: Array[Car] = []
 			for c in lane0.cars:
 				if is_instance_valid(c) and c != _test_car:
@@ -996,9 +1000,8 @@ func _run_test_drive_thru() -> void:
 	var p3_taco2: Car = null
 	var p3_bk2: Car = null
 
-	var full_cap := 3000
+	var full_cap := 4500
 	var finished_all := false
-
 	for t in range(full_cap):
 		if t >= 220 and p3_taco2 == null and tm.can_spawn_drive_thru(&"taco_hell_drive_thru"):
 			p3_taco2 = tm.spawn_drive_thru_car(&"taco_hell_drive_thru")
@@ -1202,5 +1205,338 @@ func _run_test_cramped_inn_dropoff() -> void:
 	)
 	print(
 		"CRAMPED_INN_DROPOFF_TEST: SUCCESS - Taxi and passenger car navigated under awning, dwelled, and merged into lane 3 without collisions"
+	)
+	main.get_tree().quit(0)
+
+
+func _run_test_grass_shortcut() -> void:
+	seed(42)
+	var tm = main.get_node_or_null("TrafficManager") as TrafficManager
+	assert(tm != null, "TrafficManager must exist")
+	assert(tm.lot != null, "ParkingLot must exist")
+
+	var links := ParkingLot.get_shortcut_links()
+	assert(links.size() >= 2, "Must have accepted shortcut links in both directions")
+
+	for link in links:
+		var source_site: StringName = link.get("source_site_id", &"")
+		var dest_site: StringName = link.get("destination_site_id", &"")
+		assert(
+			source_site != &"" and dest_site != &"",
+			"Shortcut link must have valid source and dest sites"
+		)
+		print("GRASS_SHORTCUT_TEST: Running scenario for link %s -> %s" % [source_site, dest_site])
+
+		# 1. Clear lot cars, lane cars, and free spots
+		for c in tm.lot_cars:
+			if is_instance_valid(c):
+				c.queue_free()
+		tm.lot_cars.clear()
+
+		for lane in tm.lanes:
+			for c in lane.cars:
+				if is_instance_valid(c):
+					c.queue_free()
+			lane.cars.clear()
+			lane.spawn_timer = 9999.0
+
+		for s in tm.lot.spots:
+			tm.lot.release(s)
+
+		# 2. Find an available spot at source_site and dest_site
+		var source_spot: ParkingSpot = null
+		var dest_spot: ParkingSpot = null
+		for s in tm.lot.spots:
+			var site := ParkingLot.lot_group(s)
+			if site == source_site and source_spot == null and s.state == ParkingSpot.State.FREE:
+				source_spot = s
+			elif site == dest_site and dest_spot == null and s.state == ParkingSpot.State.FREE:
+				dest_spot = s
+		assert(source_spot != null, "Source spot must exist for %s" % source_site)
+		assert(dest_spot != null, "Destination spot must exist for %s" % dest_site)
+
+		# 3. Spawn test car parked at source_spot
+		var car: Car = tm.PassengerCarScene.instantiate()
+		tm.add_child(car)
+		car.setup(0, 0.0, 1.0, 0.0, 100.0, 10.0, Car.CarType.SEDAN)
+		car.state = Car.State.PARKED
+		tm.lot.reserve(source_spot, car)
+		tm.lot.occupy(source_spot)
+		car.global_transform = source_spot.transform
+		car.reset_physics_interpolation()
+		tm.lot_cars.append(car)
+
+		# Force traits and maneuver outcomes through normal fields
+		car.force_shortcut = true
+		car.shortcut_evaluated = false
+		car.dwell_left = 0.1
+
+		assert(tm.lot.check_invariants() == 0, "Initial invariant check must pass")
+		assert(car.state == Car.State.PARKED, "Car must start PARKED")
+		assert(car.spot == source_spot, "Car must be assigned source_spot")
+		assert(source_spot.state == ParkingSpot.State.OCCUPIED, "source_spot must be OCCUPIED")
+		assert(car.pending_destination_spot == null, "pending_destination_spot must start null")
+
+		# 4. Simulation loop
+		var delta := 0.05
+		var max_ticks := 3000
+		var ticks := 0
+		var saw_dest_reserved := false
+		var saw_source_released := false
+		var saw_shortcut_active := false
+		var saw_grass_speed_drop := false
+		var saw_dest_arrival := false
+		var saw_dest_occupied := false
+		var saw_dest_reverse := false
+		var saw_dest_released := false
+		var saw_to_exit := false
+		var saw_waiting_to_merge := false
+		var saw_merging := false
+		var saw_cruising := false
+		var saw_normal_exit := false
+		var observed_dest_spot: ParkingSpot = null
+
+		while ticks < max_ticks:
+			ticks += 1
+			tm._update_lot_cars(delta)
+			for lane in tm.lanes:
+				tm._update_lane_traffic(lane, delta)
+
+			# Stage A: Dwell finishes and destination spot is reserved before movement while source remains occupied
+			if (
+				car.state == Car.State.REVERSING_OUT
+				and not saw_dest_reserved
+				and not saw_source_released
+			):
+				assert(
+					car.pending_destination_spot != null,
+					"Destination spot must be reserved during reverse-out"
+				)
+				assert(
+					car.pending_destination_spot.state == ParkingSpot.State.RESERVED,
+					"Destination spot must be RESERVED"
+				)
+				assert(
+					car.spot == source_spot, "Source spot must remain assigned during reverse-out"
+				)
+				assert(
+					source_spot.state == ParkingSpot.State.OCCUPIED,
+					"Source spot must remain OCCUPIED"
+				)
+				assert(tm.lot.check_invariants() == 0, "No leaks during reverse-out")
+				observed_dest_spot = car.pending_destination_spot
+				saw_dest_reserved = true
+
+			# Stage B: Reverse-out completes -> source spot released, destination promoted to car.spot, enter SHORTCUT
+			if car.state == Car.State.SHORTCUT:
+				if not saw_source_released:
+					saw_source_released = true
+					assert(
+						source_spot.state == ParkingSpot.State.FREE,
+						"Source spot must be released to FREE"
+					)
+					assert(source_spot.car == null, "Source spot car reference must be cleared")
+					assert(
+						car.pending_destination_spot == null,
+						"pending_destination_spot must be cleared"
+					)
+					assert(car.spot == observed_dest_spot, "car.spot must hold destination spot")
+					assert(
+						car.spot.state == ParkingSpot.State.RESERVED,
+						"Destination spot remains RESERVED until arrival"
+					)
+					assert(car.path != null, "Car must have shortcut path")
+					assert(tm.lot.check_invariants() == 0, "No leaks after reverse-out completion")
+				saw_shortcut_active = true
+
+				if ParkingLot.is_in_grass_shortcut(car.global_position):
+					if car.desired_speed <= TrafficManager.V_GRASS + 0.1:
+						saw_grass_speed_drop = true
+					# Verify car clears all scenery colliders (buildings, trees, props) during grass traversal
+					var space_state := car.get_world_3d().direct_space_state
+					var query := PhysicsShapeQueryParameters3D.new()
+					var col_shape := car.get_node_or_null("CollisionShape3D") as CollisionShape3D
+					if col_shape != null and col_shape.shape != null:
+						query.shape = col_shape.shape
+						query.transform = car.global_transform * col_shape.transform
+						query.collision_mask = 1
+						var hits := space_state.intersect_shape(query, 8)
+						for hit in hits:
+							var collider = hit.get("collider")
+							if collider != null and is_instance_valid(collider):
+								var col_name: String = str(collider.name)
+								var parent_name: String = (
+									str(collider.get_parent().name)
+									if collider.get_parent() != null
+									else ""
+								)
+								var p_lower := parent_name.to_lower()
+								var is_ground := (
+									col_name == "StaticBody3D"
+									and (
+										p_lower.contains("ground")
+										or p_lower.contains("parking")
+										or p_lower.contains("asphalt")
+										or p_lower.contains("driveway")
+										or p_lower.contains("road")
+										or p_lower.contains("sidewalk")
+										or p_lower.contains("apron")
+									)
+								)
+								assert(
+									is_ground,
+									(
+										"Car in grass shortcut must clear scenery (intersected %s in %s at pos %s)"
+										% [col_name, parent_name, str(car.global_position)]
+									)
+								)
+			# Stage C: Arrival at destination spot -> occupied, parked, dwell starts
+			if car.state == Car.State.PARKED and saw_shortcut_active and not saw_dest_arrival:
+				saw_dest_arrival = true
+				assert(car.spot == observed_dest_spot, "Car must be assigned destination spot")
+				assert(
+					observed_dest_spot.state == ParkingSpot.State.OCCUPIED,
+					"Destination spot must become OCCUPIED on arrival"
+				)
+				assert(observed_dest_spot.car == car, "Destination spot car must be car")
+				assert(car.has_taken_shortcut, "has_taken_shortcut must be true")
+				assert(car.lane_id == -1, "Parked car lane_id must be -1")
+				assert(tm.lot.check_invariants() == 0, "No leaks on destination arrival")
+				saw_dest_occupied = true
+				# Force destination dwell to finish promptly through normal field
+				car.dwell_left = 0.1
+
+			# Stage D: Destination dwell finishes -> reverse out from destination stall without chaining
+			if saw_dest_arrival and car.state == Car.State.REVERSING_OUT and not saw_dest_reverse:
+				saw_dest_reverse = true
+				assert(car.has_taken_shortcut, "has_taken_shortcut must prevent chaining")
+				assert(
+					car.pending_destination_spot == null,
+					"Must not reserve another shortcut destination"
+				)
+				assert(
+					car.spot == observed_dest_spot, "Destination spot assigned during reverse-out"
+				)
+				assert(
+					observed_dest_spot.state == ParkingSpot.State.OCCUPIED,
+					"Destination spot OCCUPIED during reverse-out"
+				)
+
+			# Stage E: Reversing out of destination stall finishes -> destination released, enter TO_EXIT
+			if car.state == Car.State.TO_EXIT and not saw_to_exit:
+				saw_to_exit = true
+				saw_dest_released = true
+				assert(car.spot == null, "car.spot must be null after reverse-out")
+				assert(
+					observed_dest_spot.state == ParkingSpot.State.FREE,
+					"Destination spot must be released to FREE"
+				)
+				assert(
+					observed_dest_spot.car == null, "Destination spot car reference must be cleared"
+				)
+				for s in tm.lot.spots:
+					assert(s.car != car, "Car must not be assigned to any stall in lot")
+				assert(tm.lot.check_invariants() == 0, "No leaks after destination reverse-out")
+
+			# Stage F: Driving to exit aisle -> reaches WAITING_TO_MERGE
+			if car.state == Car.State.WAITING_TO_MERGE and not saw_waiting_to_merge:
+				saw_waiting_to_merge = true
+				assert(car.merge_target_lane == 3, "merge_target_lane must be 3")
+
+			# Stage G: Gap merge onto stroad
+			if car.state == Car.State.MERGING and not saw_merging:
+				saw_merging = true
+
+			# Stage H: Merged into lane 3 -> cruising
+			if car.state == Car.State.CRUISING and saw_merging and not saw_cruising:
+				saw_cruising = true
+				assert(car.lane_id == 3, "Car must be cruising in lane 3")
+				assert(tm.lanes[3].cars.has(car), "Lane 3 must contain car")
+				assert(not tm.lot_cars.has(car), "lot_cars must no longer contain car")
+
+			# Stage I: Normal exit (reaches end of lane and despawns)
+			if (
+				saw_cruising
+				and (
+					not is_instance_valid(car)
+					or car.is_queued_for_deletion()
+					or not tm.lanes[3].cars.has(car)
+					or car.lane_distance >= tm.lanes[3].length
+				)
+			):
+				saw_normal_exit = true
+				break
+
+		assert(
+			saw_dest_reserved,
+			(
+				"Must have observed destination reservation before movement for link %s -> %s"
+				% [source_site, dest_site]
+			)
+		)
+		assert(
+			saw_source_released,
+			"Must have observed source spot release for link %s -> %s" % [source_site, dest_site]
+		)
+		assert(
+			saw_shortcut_active,
+			(
+				"Must have observed shortcut route traversal for link %s -> %s"
+				% [source_site, dest_site]
+			)
+		)
+		assert(
+			saw_grass_speed_drop,
+			(
+				"Must have observed grass speed in grass corridor for link %s -> %s"
+				% [source_site, dest_site]
+			)
+		)
+		assert(
+			saw_dest_arrival and saw_dest_occupied,
+			(
+				"Must have observed destination arrival and occupancy for link %s -> %s"
+				% [source_site, dest_site]
+			)
+		)
+		assert(
+			saw_dest_reverse,
+			(
+				"Must have observed destination reverse-out for link %s -> %s"
+				% [source_site, dest_site]
+			)
+		)
+		assert(
+			saw_dest_released,
+			(
+				"Must have observed destination spot release for link %s -> %s"
+				% [source_site, dest_site]
+			)
+		)
+		assert(
+			saw_to_exit,
+			"Must have observed travel to exit for link %s -> %s" % [source_site, dest_site]
+		)
+		assert(
+			saw_waiting_to_merge,
+			"Must have observed sidewalk wait for link %s -> %s" % [source_site, dest_site]
+		)
+		assert(
+			saw_merging, "Must have observed gap merge for link %s -> %s" % [source_site, dest_site]
+		)
+		assert(
+			saw_cruising,
+			"Must have observed lane 3 cruising for link %s -> %s" % [source_site, dest_site]
+		)
+		assert(
+			saw_normal_exit,
+			(
+				"Must have observed eventual normal exit / despawn for link %s -> %s"
+				% [source_site, dest_site]
+			)
+		)
+
+	print(
+		"GRASS_SHORTCUT_TEST: SUCCESS - Verified both shortcut directions (Strip Mall <-> Cramped Inn), source release, destination reservation/occupancy, grass route traversal, and eventual normal exit!"
 	)
 	main.get_tree().quit(0)

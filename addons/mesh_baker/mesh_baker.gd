@@ -987,6 +987,9 @@ static func bake_trees(container: Node3D, actual_owner: Node) -> void:
 			6:
 				active_name = "LiveOak"
 		var active_node := visuals.get_node_or_null(active_name) as Node3D
+		if active_node == null and tree.has_method("_apply_tree_type"):
+			tree._apply_tree_type()
+			active_node = visuals.get_node_or_null(active_name) as Node3D
 		if active_node == null:
 			continue
 		active_node.scale.y = height_scale

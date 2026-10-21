@@ -1,5 +1,11 @@
 # Changelog
 
+## Oct 21, 2026
+
+- **Erratic driving & grass shortcuts**: Cars wander subtly within lanes, reckless drivers attempt tight overtakes, and vehicles occasionally take grass shortcuts between lots.
+- **Profiling & rendering optimizations**: Multi-meshed forest trees (replacing 688 bodies with 36 MultiMeshes), cached traffic blocker candidate sets and vehicle sweeps, throttled environment updates, culled unneeded shadows and 3D labels, and warmed up nighttime lighting shaders. Slashed dusk lights-on freeze from 852ms to 61ms on Compatibility (and 153ms to 38ms on Forward+), halved Compatibility draw calls from ~3,400 to ~1,565, and brought Forward+ night performance to a stable 60 fps.
+- **Cybertruck rebuild**: Replaced box-assembled body with generated faceted meshes (`scripts/generate_cybertruck.gd`): single-ridge wedge profile, inward-leaning greenhouse with flush windshield/side glass, tonneau cover, polygonal arch flares, headlight/taillight markers for lamps and turn signals. Stainless steel is its only finish (never repainted).
+
 ## Oct 20, 2026
 
 - **Frontage road & businesses**: Added parallel two-lane frontage road with connector, double-yellow striping, and 3 commercial businesses (Consumer Car Care, Leaders Outdoor, Checkers) (`f380152`).
@@ -9,6 +15,7 @@
 - **Mats sprint & stamina system**: Added Shift sprint mechanic with forward lean and floating HUD stamina wheel (`a4eeaf1`).
 - **Respawn & crossing counter**: Track active stroad side; respawn on starting sidewalk on death and track successful crossings (`e10aa63`).
 - **Ford F-150 & sports car polish**: Added rolling coal smokestacks, racing stripes, and corrected F-150 hitbox/materials (`4007d80`).
+- **Cybertruck car model**: Added electric pickup with stainless steel exoskeleton, triangular wedge roofline, full-width front/rear LED light bars, polygonal wheel arches, and EV zero-emissions behavior based on `@samples/cars/cybertruck/`.
 - **Day & weather progression**: Accelerated day cycle from 3:30 PM to 9:00 PM with sky/lighting shifts, wind simulation, and top-right HUD compass/weather widget (`f380152`).
 - **Environment & conflict architecture**: Extracted `EnvironmentController`, `WorldWarmup`, and `CarSweep` out of monolithic managers (`387b217`).
 - **Visual & shader upgrades**: Added foliage wind flutter, neglected sidewalk weathering, billowing exhaust plumes, and colossal Dorf American flag (`6f1a0e8`, `4007d80`).

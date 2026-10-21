@@ -224,6 +224,7 @@ func _build_signage() -> void:
 	label.position = Vector3(0.12, CLEARANCE_HEIGHT + 0.8, 0.0)
 	label.rotation.y = deg_to_rad(90.0)
 	label.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	label.visibility_range_end = 80.0
 	sign_group.add_child(label)
 
 

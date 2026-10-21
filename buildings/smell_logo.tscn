@@ -51,85 +51,106 @@ size = Vector3(0.46, 0.1, 0.06)
 [node name="SmellLogo" type="Node3D"]
 
 [node name="RibOutline0" type="MeshInstance3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(0.43837, 0.89879, 0, -0.89879, 0.43837, 0, 0, 0, 1, 0.39547, -0.25712, 0)
 mesh = SubResource("Mesh_RibRed")
 
 [node name="Rib0" type="MeshInstance3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(0.43837, 0.89879, 0, -0.89879, 0.43837, 0, 0, 0, 1, 0.41345, -0.24835, 0.04)
 mesh = SubResource("Mesh_RibYellow")
 
 [node name="RibOutline1" type="MeshInstance3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(0.66913, 0.74314, 0, -0.74314, 0.66913, 0, 0, 0, 1, 0.32698, -0.15558, 0)
 mesh = SubResource("Mesh_RibRed")
 
 [node name="Rib1" type="MeshInstance3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(0.66913, 0.74314, 0, -0.74314, 0.66913, 0, 0, 0, 1, 0.34185, -0.1422, 0.04)
 mesh = SubResource("Mesh_RibYellow")
 
 [node name="RibOutline2" type="MeshInstance3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(0.84805, 0.52992, 0, -0.52992, 0.84805, 0, 0, 0, 1, 0.23316, -0.07686, 0)
 mesh = SubResource("Mesh_RibRed")
 
 [node name="Rib2" type="MeshInstance3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(0.84805, 0.52992, 0, -0.52992, 0.84805, 0, 0, 0, 1, 0.24376, -0.0599, 0.04)
 mesh = SubResource("Mesh_RibYellow")
 
 [node name="RibOutline3" type="MeshInstance3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(0.96126, 0.27564, 0, -0.27564, 0.96126, 0, 0, 0, 1, 0.12128, -0.02704, 0)
 mesh = SubResource("Mesh_RibRed")
 
 [node name="Rib3" type="MeshInstance3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(0.96126, 0.27564, 0, -0.27564, 0.96126, 0, 0, 0, 1, 0.12679, -0.00782, 0.04)
 mesh = SubResource("Mesh_RibYellow")
 
 [node name="RibOutline4" type="MeshInstance3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.01, 0)
 mesh = SubResource("Mesh_RibRed")
 
 [node name="Rib4" type="MeshInstance3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 0.04)
 mesh = SubResource("Mesh_RibYellow")
 
 [node name="RibOutline5" type="MeshInstance3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(0.96126, -0.27564, 0, 0.27564, 0.96126, 0, 0, 0, 1, -0.12128, -0.02704, 0)
 mesh = SubResource("Mesh_RibRed")
 
 [node name="Rib5" type="MeshInstance3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(0.96126, -0.27564, 0, 0.27564, 0.96126, 0, 0, 0, 1, -0.12679, -0.00782, 0.04)
 mesh = SubResource("Mesh_RibYellow")
 
 [node name="RibOutline6" type="MeshInstance3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(0.84805, -0.52992, 0, 0.52992, 0.84805, 0, 0, 0, 1, -0.23316, -0.07686, 0)
 mesh = SubResource("Mesh_RibRed")
 
 [node name="Rib6" type="MeshInstance3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(0.84805, -0.52992, 0, 0.52992, 0.84805, 0, 0, 0, 1, -0.24376, -0.0599, 0.04)
 mesh = SubResource("Mesh_RibYellow")
 
 [node name="RibOutline7" type="MeshInstance3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(0.66913, -0.74314, 0, 0.74314, 0.66913, 0, 0, 0, 1, -0.32698, -0.15558, 0)
 mesh = SubResource("Mesh_RibRed")
 
 [node name="Rib7" type="MeshInstance3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(0.66913, -0.74314, 0, 0.74314, 0.66913, 0, 0, 0, 1, -0.34185, -0.1422, 0.04)
 mesh = SubResource("Mesh_RibYellow")
 
 [node name="RibOutline8" type="MeshInstance3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(0.43837, -0.89879, 0, 0.89879, 0.43837, 0, 0, 0, 1, -0.39547, -0.25712, 0)
 mesh = SubResource("Mesh_RibRed")
 
 [node name="Rib8" type="MeshInstance3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(0.43837, -0.89879, 0, 0.89879, 0.43837, 0, 0, 0, 1, -0.41345, -0.24835, 0.04)
 mesh = SubResource("Mesh_RibYellow")
 
 [node name="FootRed" type="MeshInstance3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.52, 0)
 mesh = SubResource("Mesh_Box0")
 
 [node name="FootYellow" type="MeshInstance3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0.06)
 mesh = SubResource("Mesh_Box1")
 
 [node name="StinkLines" type="MeshInstance3D" parent="."]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.955, 0.045)
 mesh = SubResource("Mesh_StinkQuad")

@@ -497,6 +497,7 @@ outline_size = 0
 
 [node name="NeonOpen" type="Label3D" parent="Storefronts/Store_USAVape"]
 cast_shadow = 0
+visibility_range_end = 40.0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 2.4, 2.1, -0.07)
 pixel_size = 0.009
 text = "OPEN"
@@ -537,6 +538,7 @@ surface_material_override/0 = SubResource("Mat_SignUSAVape")
 
 [node name="LabelTitle" type="Label3D" parent="Storefronts/Store_USAVape/Sign"]
 cast_shadow = 0
+visibility_range_end = 70.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0.16)
 pixel_size = 0.0135
 text = "USA VAPE"
@@ -545,6 +547,7 @@ outline_size = 0
 
 [node name="LabelSub" type="Label3D" parent="Storefronts/Store_USAVape/Sign"]
 cast_shadow = 0
+visibility_range_end = 50.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.28, 0.16)
 pixel_size = 0.0055
 text = "E-CIGS • KRATOM • HOOKAH"
@@ -585,6 +588,7 @@ outline_size = 0
 
 [node name="NeonOpen" type="Label3D" parent="Storefronts/Store_FreedomTattoo"]
 cast_shadow = 0
+visibility_range_end = 40.0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 2.4, 2.1, -0.07)
 pixel_size = 0.009
 text = "OPEN"
@@ -625,6 +629,7 @@ surface_material_override/0 = SubResource("Mat_SignFreedomTattoo")
 
 [node name="LabelTitle" type="Label3D" parent="Storefronts/Store_FreedomTattoo/Sign"]
 cast_shadow = 0
+visibility_range_end = 70.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0.16)
 pixel_size = 0.009
 text = "FREEDOM TATTOO"
@@ -633,6 +638,7 @@ outline_size = 0
 
 [node name="LabelSub" type="Label3D" parent="Storefronts/Store_FreedomTattoo/Sign"]
 cast_shadow = 0
+visibility_range_end = 50.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.28, 0.16)
 pixel_size = 0.0055
 text = "BODY PIERCING & INK"
@@ -673,6 +679,7 @@ outline_size = 0
 
 [node name="NeonOpen" type="Label3D" parent="Storefronts/Store_Abominos"]
 cast_shadow = 0
+visibility_range_end = 40.0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 2.4, 2.1, -0.07)
 pixel_size = 0.009
 text = "OPEN"
@@ -736,6 +743,7 @@ outline_size = 0
 
 [node name="NeonOpen" type="Label3D" parent="Storefronts/Store_StarNails"]
 cast_shadow = 0
+visibility_range_end = 40.0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 2.4, 2.1, -0.07)
 pixel_size = 0.009
 text = "OPEN"
@@ -776,6 +784,7 @@ surface_material_override/0 = SubResource("Mat_SignNails")
 
 [node name="LabelTitle" type="Label3D" parent="Storefronts/Store_StarNails/Sign"]
 cast_shadow = 0
+visibility_range_end = 70.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0.16)
 pixel_size = 0.009
 text = "STAR NAILS & SPA"
@@ -785,6 +794,7 @@ outline_size = 0
 
 [node name="LabelSub" type="Label3D" parent="Storefronts/Store_StarNails/Sign"]
 cast_shadow = 0
+visibility_range_end = 50.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.28, 0.16)
 pixel_size = 0.0055
 text = "MANICURE • PEDICURE • WAXING"
@@ -1038,6 +1048,7 @@ mesh = SubResource("Mesh_PylonHeader")
 
 [node name="HeaderLabelF" type="Label3D" parent="RoadsideSign/PlazaHeader"]
 cast_shadow = 0
+visibility_range_end = 80.0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -0.2)
 pixel_size = 0.009
 text = "COLONIAL PLAZA"
@@ -1046,6 +1057,7 @@ outline_size = 0
 
 [node name="HeaderLabelB" type="Label3D" parent="RoadsideSign/PlazaHeader"]
 cast_shadow = 0
+visibility_range_end = 80.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.2)
 pixel_size = 0.009
 text = "COLONIAL PLAZA"
@@ -1059,6 +1071,7 @@ surface_material_override/0 = SubResource("Mat_SignUSAVape")
 
 [node name="LabelF" type="Label3D" parent="RoadsideSign/Panel_Abominos"]
 cast_shadow = 0
+visibility_range_end = 70.0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -0.21)
 pixel_size = 0.0085
 text = "abominos pizza"
@@ -1067,6 +1080,7 @@ outline_size = 0
 
 [node name="LabelB" type="Label3D" parent="RoadsideSign/Panel_Abominos"]
 cast_shadow = 0
+visibility_range_end = 70.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.21)
 pixel_size = 0.0085
 text = "abominos pizza"
@@ -1079,6 +1093,7 @@ mesh = SubResource("Mesh_PylonTenant")
 
 [node name="LabelF" type="Label3D" parent="RoadsideSign/Panel_USAVape"]
 cast_shadow = 0
+visibility_range_end = 70.0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -0.21)
 pixel_size = 0.008
 text = "USA VAPE"
@@ -1088,6 +1103,7 @@ outline_size = 0
 
 [node name="LabelB" type="Label3D" parent="RoadsideSign/Panel_USAVape"]
 cast_shadow = 0
+visibility_range_end = 70.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.21)
 pixel_size = 0.008
 text = "USA VAPE"
@@ -1102,6 +1118,7 @@ surface_material_override/0 = SubResource("Mat_SignFreedomTattoo")
 
 [node name="LabelF" type="Label3D" parent="RoadsideSign/Panel_FreedomTattoo"]
 cast_shadow = 0
+visibility_range_end = 70.0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -0.21)
 pixel_size = 0.0075
 text = "FREEDOM TATTOO"
@@ -1111,6 +1128,7 @@ outline_size = 0
 
 [node name="LabelB" type="Label3D" parent="RoadsideSign/Panel_FreedomTattoo"]
 cast_shadow = 0
+visibility_range_end = 70.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.21)
 pixel_size = 0.0075
 text = "FREEDOM TATTOO"
@@ -1125,6 +1143,7 @@ surface_material_override/0 = SubResource("Mat_SignNails")
 
 [node name="LabelF" type="Label3D" parent="RoadsideSign/Panel_StarNails"]
 cast_shadow = 0
+visibility_range_end = 70.0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -0.21)
 pixel_size = 0.0075
 text = "STAR NAILS & SPA"
@@ -1134,6 +1153,7 @@ outline_size = 0
 
 [node name="LabelB" type="Label3D" parent="RoadsideSign/Panel_StarNails"]
 cast_shadow = 0
+visibility_range_end = 70.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.21)
 pixel_size = 0.0075
 text = "STAR NAILS & SPA"

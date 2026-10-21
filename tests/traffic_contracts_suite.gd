@@ -16,6 +16,9 @@ func matches_args() -> bool:
 				"--test-car-exhaust",
 				"--test-frontage-contracts",
 				"--test-speed-variation",
+				"--test-lane-wander",
+				"--test-shortcut-contracts",
+				"--test-grass-shortcuts",
 			]
 		):
 			return true
@@ -47,8 +50,12 @@ func setup_ready() -> void:
 	if "--test-frontage-contracts" in user_args:
 		_run_test_frontage_contracts()
 		return
-	if "--test-speed-variation" in user_args:
+	if "--test-speed-variation" in user_args or "--test-lane-wander" in user_args:
 		_run_test_speed_variation()
+		return
+	if "--test-shortcut-contracts" in user_args or "--test-grass-shortcuts" in user_args:
+		_run_test_shortcut_contracts()
+		return
 
 
 func _run_test_frontage_contracts() -> void:
@@ -750,8 +757,13 @@ func _run_test_car_headlights() -> void:
 			"Truck headlight mesh should be off during the day"
 		)
 
-	# 2. Night: moving cars turn headlights on
+	# 2. Night: moving cars turn headlights on (staggered switch-over)
 	GameState.set_time_of_day(GameState.TimeOfDay.NIGHT)
+	var deadline := Time.get_ticks_msec() + 1500
+	while Time.get_ticks_msec() < deadline:
+		if pcar.headlamp.visible and truck.headlamp.visible:
+			break
+		await main.get_tree().process_frame
 	assert(pcar.headlamp.visible == true, "Passenger car headlamp should be on at night")
 	assert(truck.headlamp.visible == true, "Truck headlamp should be on at night")
 	for m in pcar._headlight_meshes:
@@ -791,6 +803,67 @@ func _run_test_car_headlights() -> void:
 			"Passenger car headlight mesh should be off when returning to day"
 		)
 
+	# 5. Headlamp LOD: when >12 cars exist at night, only the closest 12 keep SpotLight3D active,
+	# while distant cars keep emissive lens material.
+	GameState.set_time_of_day(GameState.TimeOfDay.NIGHT)
+	var tm: TrafficManager = main.get_node_or_null("TrafficManager") as TrafficManager
+	if tm:
+		var cam := main.get_node_or_null("Camera3D") as Camera3D
+		if cam:
+			cam.global_position = Vector3(0.0, 10.0, 0.0)
+		for lane in tm.lanes:
+			for c in lane.cars:
+				c.queue_free()
+			lane.cars.clear()
+		for c in tm.lot_cars:
+			c.queue_free()
+		tm.lot_cars.clear()
+
+		var test_cars: Array[Car] = []
+		for i in range(16):
+			var c: Car = pcar_scene.instantiate()
+			c.car_type = Car.CarType.SEDAN
+			c.state = Car.State.CRUISING
+			main.add_child(c)
+			c.global_position = Vector3(float((i + 1) * 10), 0.0, 0.0)
+			tm.lot_cars.append(c)
+			test_cars.append(c)
+		for c in test_cars:
+			c.stagger_headlamps = false
+			c._update_headlamps(true)
+		tm.update_headlamp_lod()
+
+		var active_spots := 0
+		var emissive_active := 0
+		for c in test_cars:
+			if c.headlamp != null and c.headlamp.visible:
+				active_spots += 1
+			for m in c._headlight_meshes:
+				var mat := m.material_override as StandardMaterial3D
+				if mat != null and mat.emission_enabled:
+					emissive_active += 1
+					break
+		assert(
+			active_spots == TrafficManager.MAX_ACTIVE_HEADLAMPS,
+			"Exactly MAX_ACTIVE_HEADLAMPS spotlights should be active (got %d)" % active_spots
+		)
+		assert(
+			emissive_active == 16,
+			"All 16 cars must retain emissive lens material at night (got %d)" % emissive_active
+		)
+		for i in range(12):
+			assert(
+				test_cars[i].headlamp.visible == true,
+				"Car %d (closest) should have active spotlight" % i
+			)
+		for i in range(12, 16):
+			assert(
+				test_cars[i].headlamp.visible == false,
+				"Car %d (distant) should have inactive spotlight" % i
+			)
+		for c in test_cars:
+			tm.lot_cars.erase(c)
+			c.queue_free()
 	# Restore state
 	GameState.set_time_of_day(orig_tod)
 	pcar.queue_free()
@@ -966,6 +1039,23 @@ func _run_test_car_exhaust() -> void:
 		f150_stack_count > 0 and f150_stack_count < 40,
 		"Some F-150s should roll smokestacks, but not all (got %d / 40)" % f150_stack_count
 	)
+
+	# 7. Cybertruck EV zero emissions: never rolls exhaust or smokestacks
+	var cybertruck: Car = pcar_scene.instantiate()
+	cybertruck.car_type = Car.CarType.CYBERTRUCK
+	main.add_child(cybertruck)
+	await main.get_tree().process_frame
+
+	assert(cybertruck.has_exhaust == false, "Cybertruck EV must never have exhaust")
+	assert(cybertruck.exhaust_pipe == null, "Cybertruck EV must not have exhaust pipe")
+	assert(cybertruck.exhaust_particles == null, "Cybertruck EV must not have exhaust particles")
+	assert(cybertruck._exhaust_emitters.is_empty(), "Cybertruck EV must have 0 exhaust emitters")
+	var cyber_model := cybertruck.get_active_model()
+	assert(cyber_model != null, "Cybertruck active model must exist")
+	assert(cyber_model.name == "Cybertruck", "Cybertruck model root must be named Cybertruck")
+	var cyber_lightbar := cyber_model.get_node_or_null("FrontLightBar")
+	assert(cyber_lightbar != null, "Cybertruck must have FrontLightBar")
+	cybertruck.queue_free()
 	print(
 		(
 			"  F-150 smokestack distribution verified: %d of 40 F-150s rolled smokestacks"
@@ -1033,6 +1123,8 @@ func _run_test_speed_variation() -> void:
 	f150_coal.has_smokestacks = true
 	var sports: Car = pcar_scene.instantiate()
 	sports.car_type = Car.CarType.SPORTS
+	var hatchback: Car = pcar_scene.instantiate()
+	hatchback.car_type = Car.CarType.HATCHBACK
 
 	main.add_child(shipping_truck)
 	main.add_child(box_truck)
@@ -1041,6 +1133,7 @@ func _run_test_speed_variation() -> void:
 	main.add_child(sedan)
 	main.add_child(f150_coal)
 	main.add_child(sports)
+	main.add_child(hatchback)
 
 	var dt_speeds: Array[float] = []
 	var van_speeds: Array[float] = []
@@ -1216,6 +1309,854 @@ func _run_test_speed_variation() -> void:
 	)
 	print("  No lane switch verified: slower follower stays in lane behind faster lead car")
 
+	# Scenario C: Follower begins with nonzero wander offset -> pass initiates from current_lateral_z and remains continuous
+	lane.cars.clear()
+	lane2.cars.clear()
+	tm._pending_transfers.clear()
+
+	lead_car.lane_distance = 45.0
+	lead_car.speed = 14.0
+	lead_car.desired_speed = 14.0
+	lead_car.lane_speed = 14.0
+	lead_car.is_changing_lanes = false
+	lead_car.lane_wander_offset = 0.0
+	lead_car.lane_wander_start_offset = 0.0
+	lead_car.lane_wander_target = 0.0
+	lead_car.current_lateral_z = lane.z
+	lead_car.update_presentation()
+	lane.cars.append(lead_car)
+
+	fast_follower.lane_distance = 25.0
+	fast_follower.lane_id = lane.id
+	fast_follower.lane_z = lane.z
+	fast_follower.speed = 26.0
+	fast_follower.desired_speed = 26.0
+	fast_follower.lane_speed = 26.0
+	fast_follower.lane_change_cooldown = 0.0
+	fast_follower.is_changing_lanes = false
+	var follower_initial_offset := 0.55
+	fast_follower.lane_wander_offset = follower_initial_offset
+	fast_follower.lane_wander_start_offset = follower_initial_offset
+	fast_follower.lane_wander_target = follower_initial_offset
+	fast_follower.current_lateral_z = lane.z + follower_initial_offset
+	fast_follower.update_presentation()
+	lane.cars.append(fast_follower)
+
+	tm._update_lane_traffic(lane, 0.016)
+
+	assert(
+		fast_follower.is_changing_lanes == true, "Follower with nonzero offset must initiate pass"
+	)
+	assert(
+		absf(fast_follower.lane_change_from_z - (lane.z + follower_initial_offset)) < 0.001,
+		(
+			"Lane change must start from current_lateral_z (lane.z + offset), got %.3f vs %.3f"
+			% [fast_follower.lane_change_from_z, lane.z + follower_initial_offset]
+		)
+	)
+	tm._apply_pending_lane_transfers()
+
+	var prev_follower_z := fast_follower.current_lateral_z
+	var pass_completed := false
+	for step in range(120):
+		tm._update_lane_traffic(lane, 0.016)
+		tm._update_lane_traffic(lane2, 0.016)
+		tm._apply_pending_lane_transfers()
+		var step_delta_z := absf(fast_follower.current_lateral_z - prev_follower_z)
+		assert(
+			step_delta_z < 0.15,
+			"Step lateral discontinuity detected during pass: step delta = %.4f" % step_delta_z
+		)
+		prev_follower_z = fast_follower.current_lateral_z
+		if not fast_follower.is_changing_lanes:
+			pass_completed = true
+			break
+
+	assert(pass_completed, "Lane change must complete cleanly within reasonable frame count")
+	assert(
+		(
+			absf(
+				(
+					fast_follower.current_lateral_z
+					- (fast_follower.lane_z + fast_follower.lane_wander_offset)
+				)
+			)
+			< 0.001
+		),
+		"Finished lateral z must match new lane_z plus bounded wander offset"
+	)
+	print("  Lane change continuity verified: follower with nonzero offset transitions smoothly")
+
+	# Scenario D: Both cars begin with nonzero wander offsets -> passing remains continuous and lead car is overtaken
+	lane.cars.clear()
+	lane2.cars.clear()
+	tm._pending_transfers.clear()
+
+	lead_car.lane_distance = 45.0
+	lead_car.speed = 14.0
+	lead_car.desired_speed = 14.0
+	lead_car.lane_speed = 14.0
+	lead_car.is_changing_lanes = false
+	var lead_offset := -0.50
+	lead_car.lane_wander_offset = lead_offset
+	lead_car.lane_wander_start_offset = lead_offset
+	lead_car.lane_wander_target = lead_offset
+	lead_car.current_lateral_z = lane.z + lead_offset
+	lead_car.update_presentation()
+	lane.cars.append(lead_car)
+
+	fast_follower.lane_distance = 25.0
+	fast_follower.speed = 26.0
+	fast_follower.desired_speed = 26.0
+	fast_follower.lane_speed = 26.0
+	fast_follower.lane_change_cooldown = 0.0
+	fast_follower.is_changing_lanes = false
+	fast_follower.lane_id = lane.id
+	fast_follower.lane_z = lane.z
+	var follower_offset := 0.40
+	fast_follower.lane_wander_offset = follower_offset
+	fast_follower.lane_wander_start_offset = follower_offset
+	fast_follower.lane_wander_target = follower_offset
+	fast_follower.current_lateral_z = lane.z + follower_offset
+	fast_follower.update_presentation()
+	lane.cars.append(fast_follower)
+
+	tm._update_lane_traffic(lane, 0.016)
+	assert(fast_follower.is_changing_lanes == true, "Follower must initiate pass")
+	assert(
+		absf(fast_follower.lane_change_from_z - (lane.z + follower_offset)) < 0.001,
+		"Lane change must originate at follower's current_lateral_z"
+	)
+	tm._apply_pending_lane_transfers()
+
+	var prev_lead_z := lead_car.current_lateral_z
+	prev_follower_z = fast_follower.current_lateral_z
+	var overtaken := false
+	for step in range(250):
+		tm._update_lane_traffic(lane, 0.016)
+		tm._update_lane_traffic(lane2, 0.016)
+		tm._apply_pending_lane_transfers()
+
+		var follower_delta := absf(fast_follower.current_lateral_z - prev_follower_z)
+		var lead_delta := absf(lead_car.current_lateral_z - prev_lead_z)
+		assert(follower_delta < 0.15, "Follower lateral jump detected: %.4f" % follower_delta)
+		assert(lead_delta < 0.15, "Lead car lateral jump detected: %.4f" % lead_delta)
+		prev_follower_z = fast_follower.current_lateral_z
+		prev_lead_z = lead_car.current_lateral_z
+
+		if fast_follower.lane_distance > lead_car.lane_distance + 5.0:
+			overtaken = true
+			break
+
+	assert(overtaken, "Faster follower must overtake lead car without interruption")
+	assert(lead_car.lane_id == lane.id, "Lead car must remain in its lane")
+	print(
+		"  Lane change continuity verified: both cars with nonzero offsets remain continuous through pass"
+	)
+
+	# Scenario E: Lead car begins with nonzero wander offset, follower begins with zero offset -> passing remains continuous
+	lane.cars.clear()
+	lane2.cars.clear()
+	tm._pending_transfers.clear()
+
+	lead_car.lane_id = lane.id
+	lead_car.lane_z = lane.z
+	lead_car.lane_distance = 45.0
+	lead_car.speed = 14.0
+	lead_car.desired_speed = 14.0
+	lead_car.lane_speed = 14.0
+	lead_car.is_changing_lanes = false
+	var lead_offset_e := 0.60
+	lead_car.lane_wander_offset = lead_offset_e
+	lead_car.lane_wander_start_offset = lead_offset_e
+	lead_car.lane_wander_target = lead_offset_e
+	lead_car.current_lateral_z = lane.z + lead_offset_e
+	lead_car.update_presentation()
+	lane.cars.append(lead_car)
+
+	fast_follower.lane_id = lane.id
+	fast_follower.lane_z = lane.z
+	fast_follower.lane_distance = 25.0
+	fast_follower.speed = 26.0
+	fast_follower.desired_speed = 26.0
+	fast_follower.lane_speed = 26.0
+	fast_follower.lane_change_cooldown = 0.0
+	fast_follower.is_changing_lanes = false
+	fast_follower.lane_wander_offset = 0.0
+	fast_follower.lane_wander_start_offset = 0.0
+	fast_follower.lane_wander_target = 0.0
+	fast_follower.current_lateral_z = lane.z
+	fast_follower.update_presentation()
+	lane.cars.append(fast_follower)
+
+	tm._update_lane_traffic(lane, 0.016)
+	assert(
+		fast_follower.is_changing_lanes == true,
+		"Follower must initiate pass when lead car has offset"
+	)
+	assert(
+		absf(fast_follower.lane_change_from_z - lane.z) < 0.001,
+		"Lane change must originate at follower's current_lateral_z (lane center)"
+	)
+	tm._apply_pending_lane_transfers()
+
+	prev_lead_z = lead_car.current_lateral_z
+	prev_follower_z = fast_follower.current_lateral_z
+	overtaken = false
+	for step in range(250):
+		tm._update_lane_traffic(lane, 0.016)
+		tm._update_lane_traffic(lane2, 0.016)
+		tm._apply_pending_lane_transfers()
+
+		var follower_delta := absf(fast_follower.current_lateral_z - prev_follower_z)
+		var lead_delta := absf(lead_car.current_lateral_z - prev_lead_z)
+		assert(follower_delta < 0.15, "Follower lateral jump detected: %.4f" % follower_delta)
+		assert(lead_delta < 0.15, "Lead car lateral jump detected: %.4f" % lead_delta)
+		prev_follower_z = fast_follower.current_lateral_z
+		prev_lead_z = lead_car.current_lateral_z
+
+		if fast_follower.lane_distance > lead_car.lane_distance + 5.0:
+			overtaken = true
+			break
+
+	assert(overtaken, "Faster follower must overtake offset lead car without interruption")
+	assert(lead_car.lane_id == lane.id, "Lead car must remain in its lane")
+	print(
+		"  Lane change continuity verified: lead car with nonzero offset remains continuous through pass"
+	)
+
+	# Scenario F: Follower in lane 2 with negative wander offset passes slower lead car into lane 1
+	lane.cars.clear()
+	lane2.cars.clear()
+	tm._pending_transfers.clear()
+
+	lead_car.lane_id = lane2.id
+	lead_car.lane_z = lane2.z
+	lead_car.lane_distance = 45.0
+	lead_car.speed = 14.0
+	lead_car.desired_speed = 14.0
+	lead_car.lane_speed = 14.0
+	lead_car.is_changing_lanes = false
+	lead_car.lane_wander_offset = 0.0
+	lead_car.lane_wander_start_offset = 0.0
+	lead_car.lane_wander_target = 0.0
+	lead_car.current_lateral_z = lane2.z
+	lead_car.update_presentation()
+	lane2.cars.append(lead_car)
+
+	fast_follower.lane_id = lane2.id
+	fast_follower.lane_z = lane2.z
+	fast_follower.lane_distance = 25.0
+	fast_follower.speed = 26.0
+	fast_follower.desired_speed = 26.0
+	fast_follower.lane_speed = 26.0
+	fast_follower.lane_change_cooldown = 0.0
+	fast_follower.is_changing_lanes = false
+	var follower_offset_f := -0.50
+	fast_follower.lane_wander_offset = follower_offset_f
+	fast_follower.lane_wander_start_offset = follower_offset_f
+	fast_follower.lane_wander_target = follower_offset_f
+	fast_follower.current_lateral_z = lane2.z + follower_offset_f
+	fast_follower.update_presentation()
+	lane2.cars.append(fast_follower)
+
+	tm._update_lane_traffic(lane2, 0.016)
+	assert(
+		fast_follower.is_changing_lanes == true,
+		"Follower with negative offset in lane 2 must initiate pass"
+	)
+	assert(
+		absf(fast_follower.lane_change_from_z - (lane2.z + follower_offset_f)) < 0.001,
+		(
+			"Lane change must start from follower's current_lateral_z (lane2.z + offset), got %.3f vs %.3f"
+			% [fast_follower.lane_change_from_z, lane2.z + follower_offset_f]
+		)
+	)
+	tm._apply_pending_lane_transfers()
+
+	prev_follower_z = fast_follower.current_lateral_z
+	pass_completed = false
+	for step in range(120):
+		tm._update_lane_traffic(lane, 0.016)
+		tm._update_lane_traffic(lane2, 0.016)
+		tm._apply_pending_lane_transfers()
+		var step_delta_z := absf(fast_follower.current_lateral_z - prev_follower_z)
+		assert(
+			step_delta_z < 0.15,
+			(
+				"Step lateral discontinuity detected during pass from lane 2: delta = %.4f"
+				% step_delta_z
+			)
+		)
+		prev_follower_z = fast_follower.current_lateral_z
+		if not fast_follower.is_changing_lanes:
+			pass_completed = true
+			break
+
+	assert(pass_completed, "Lane change from lane 2 must complete cleanly")
+	assert(fast_follower.lane_id == lane.id, "Follower must now be in lane 1")
+	assert(
+		(
+			absf(
+				(
+					fast_follower.current_lateral_z
+					- (fast_follower.lane_z + fast_follower.lane_wander_offset)
+				)
+			)
+			< 0.001
+		),
+		"Finished lateral z must match new lane_z plus bounded wander offset"
+	)
+	print(
+		"  Lane change continuity verified: follower with negative offset in lane 2 transitions smoothly to lane 1"
+	)
+
+	# 3. Lane wander bounds verification: sedans, sports cars, buses, and shipping trucks never cross a lane boundary from wander alone
+	var test_vehicles: Array[Dictionary] = [
+		{"name": "Sedan", "car": sedan, "expected_width": 1.9, "expected_max_offset": 0.725},
+		{"name": "Sports", "car": sports, "expected_width": 1.9, "expected_max_offset": 0.725},
+		{
+			"name": "Hatchback",
+			"car": hatchback,
+			"expected_width": 1.8,
+			"expected_max_offset": 0.775
+		},
+		{"name": "Bus", "car": bus, "expected_width": 2.4, "expected_max_offset": 0.475},
+		{
+			"name": "ShippingTruck",
+			"car": shipping_truck,
+			"expected_width": 2.5,
+			"expected_max_offset": 0.425
+		},
+	]
+
+	var lane_half_w := Car.LANE_WIDTH * 0.5  # 1.875
+	for v in test_vehicles:
+		var c: Car = v["car"]
+		var v_name: String = v["name"]
+		c.setup(lane.id, lane.z, lane.direction, lane.start_x, lane.length, 20.0, c.car_type)
+
+		assert(
+			absf(c.car_width - v["expected_width"]) < 0.01,
+			(
+				"%s car_width mismatch: expected %.2f got %.2f"
+				% [v_name, v["expected_width"], c.car_width]
+			)
+		)
+		var max_offset := c.get_max_lane_wander_offset()
+		assert(
+			absf(max_offset - v["expected_max_offset"]) < 0.01,
+			(
+				"%s max_offset mismatch: expected %.3f got %.3f"
+				% [v_name, v["expected_max_offset"], max_offset]
+			)
+		)
+		assert(
+			max_offset + (c.car_width * 0.5) <= lane_half_w - Car.SIDE_CLEARANCE + 0.001,
+			"%s max offset + half width must respect SIDE_CLEARANCE" % v_name
+		)
+
+		# Simulate 40 seconds of cruising wander across multiple wander cycles
+		for step in range(400):
+			c.advance_simulation(0.1)
+			var half_w: float = c.car_width * 0.5
+			var lateral_min: float = c.current_lateral_z - half_w
+			var lateral_max: float = c.current_lateral_z + half_w
+			var lane_min: float = c.lane_z - lane_half_w
+			var lane_max: float = c.lane_z + lane_half_w
+
+			assert(
+				lateral_min >= lane_min + Car.SIDE_CLEARANCE - 0.001,
+				(
+					"%s left edge crossed lane boundary during wander: %.3f < %.3f"
+					% [v_name, lateral_min, lane_min]
+				)
+			)
+			assert(
+				lateral_max <= lane_max - Car.SIDE_CLEARANCE + 0.001,
+				(
+					"%s right edge crossed lane boundary during wander: %.3f > %.3f"
+					% [v_name, lateral_max, lane_max]
+				)
+			)
+
+			var xf := c.global_transform
+			var half_l: float = c.car_length * 0.5
+			for sx in [-1.0, 1.0]:
+				for sz in [-1.0, 1.0]:
+					var corner_world := xf * Vector3(sx * half_l, 0.0, sz * half_w)
+					assert(
+						corner_world.z >= lane_min - 0.01 and corner_world.z <= lane_max + 0.01,
+						(
+							"%s oriented corner crossed lane boundary during wander: corner.z=%.3f, lane=[%.3f, %.3f]"
+							% [v_name, corner_world.z, lane_min, lane_max]
+						)
+					)
+
+		# Explicitly verify clamping with extreme target offsets
+		c.lane_wander_start_offset = c.lane_wander_offset
+		c.lane_wander_target = 999.0
+		c.lane_wander_timer = 999.0
+		c.lane_wander_duration = 1.0
+		c.lane_wander_elapsed = 0.0
+		for step in range(25):
+			c.advance_simulation(0.05)
+		assert(
+			c.lane_wander_offset <= max_offset + 0.001,
+			(
+				"%s failed to clamp positive extreme wander offset: %.3f > %.3f"
+				% [v_name, c.lane_wander_offset, max_offset]
+			)
+		)
+
+		c.lane_wander_start_offset = c.lane_wander_offset
+		c.lane_wander_target = -999.0
+		c.lane_wander_timer = 999.0
+		c.lane_wander_duration = 1.0
+		c.lane_wander_elapsed = 0.0
+		for step in range(25):
+			c.advance_simulation(0.05)
+		assert(
+			c.lane_wander_offset >= -max_offset - 0.001,
+			(
+				"%s failed to clamp negative extreme wander offset: %.3f < %.3f"
+				% [v_name, c.lane_wander_offset, -max_offset]
+			)
+		)
+
+	print(
+		"  Lane wander bounds verified: sedans, sports cars, buses, and shipping trucks never cross a lane boundary from wander alone"
+	)
+
+	# Verify stable risk_tolerance sampled at Car.setup()
+	var test_sedan: Car = pcar_scene.instantiate()
+	main.add_child(test_sedan)
+	test_sedan.setup(
+		lane.id, lane.z, lane.direction, lane.start_x, lane.length, 20.0, Car.CarType.SEDAN
+	)
+	assert(
+		test_sedan.risk_tolerance >= 0.0 and test_sedan.risk_tolerance <= 1.0,
+		"risk_tolerance must be sampled in [0, 1]"
+	)
+	var initial_risk := test_sedan.risk_tolerance
+	for i in range(10):
+		test_sedan.advance_simulation(0.1)
+	assert(
+		test_sedan.risk_tolerance == initial_risk,
+		"risk_tolerance must remain stable across simulation steps"
+	)
+
+	var test_bus: Car = bus_scene.instantiate()
+	main.add_child(test_bus)
+	test_bus.setup(
+		lane.id, lane.z, lane.direction, lane.start_x, lane.length, 14.0, Car.CarType.BUS
+	)
+	assert(test_bus.risk_tolerance == 0.0, "Buses must never have risk tolerance")
+	assert(not test_bus.is_reckless(), "Buses must never be reckless")
+
+	test_sedan.risk_tolerance = 1.0
+	assert(test_sedan.is_reckless(), "Forced risk_tolerance=1.0 on sedan must be reckless")
+	test_sedan.risk_tolerance = 0.0
+	assert(not test_sedan.is_reckless(), "risk_tolerance=0.0 must not be reckless")
+
+	# Verify risk_commit_active window
+	assert(not test_sedan.risk_commit_active, "risk_commit_active must be false by default")
+	test_sedan.start_risk_commit(0.5)
+	assert(test_sedan.risk_commit_active, "start_risk_commit must activate window")
+	test_sedan.advance_simulation(0.3)
+	assert(
+		test_sedan.risk_commit_active, "risk_commit_active must remain true before duration expires"
+	)
+	test_sedan.advance_simulation(0.3)
+	assert(not test_sedan.risk_commit_active, "risk_commit_active must expire after duration")
+
+	test_sedan.risk_commit_active = true
+	assert(test_sedan.risk_commit_active, "Setter must activate risk_commit_active")
+	test_sedan.risk_commit_active = false
+	assert(not test_sedan.risk_commit_active, "Setter must clear risk_commit_active")
+
+	test_sedan.start_lane_change(lane.id, lane.z + 3.75, true)
+	assert(
+		test_sedan.risk_commit_active,
+		"start_lane_change with is_risky must activate risk_commit_active"
+	)
+	for i in range(30):
+		test_sedan.advance_simulation(0.1)
+	assert(not test_sedan.is_changing_lanes, "Lane change should be complete")
+	assert(not test_sedan.risk_commit_active, "Completed lane change must clear risk_commit_active")
+
+	# Verify blocked driver evaluating a pass resets lane_change_cooldown
+	lane.cars.clear()
+	lane2.cars.clear()
+	tm._pending_transfers.clear()
+
+	var blocked_reckless: Car = pcar_scene.instantiate()
+	main.add_child(blocked_reckless)
+	blocked_reckless.setup(
+		lane.id, lane.z, lane.direction, lane.start_x, lane.length, 26.0, Car.CarType.SEDAN
+	)
+	blocked_reckless.lane_distance = 25.0
+	blocked_reckless.speed = 26.0
+	blocked_reckless.desired_speed = 26.0
+	blocked_reckless.lane_speed = 26.0
+	blocked_reckless.risk_tolerance = 1.0
+	blocked_reckless.lane_change_cooldown = 0.0
+	lane.cars.append(blocked_reckless)
+
+	var blocker_lead: Car = pcar_scene.instantiate()
+	main.add_child(blocker_lead)
+	blocker_lead.setup(
+		lane.id, lane.z, lane.direction, lane.start_x, lane.length, 14.0, Car.CarType.SEDAN
+	)
+	blocker_lead.lane_distance = 32.0
+	blocker_lead.speed = 14.0
+	blocker_lead.desired_speed = 14.0
+	blocker_lead.lane_speed = 14.0
+	lane.cars.append(blocker_lead)
+
+	var target_blocker: Car = pcar_scene.instantiate()
+	main.add_child(target_blocker)
+	target_blocker.setup(
+		lane2.id, lane2.z, lane2.direction, lane2.start_x, lane2.length, 26.0, Car.CarType.SEDAN
+	)
+	target_blocker.lane_distance = 25.0
+	lane2.cars.append(target_blocker)
+
+	tm._update_lane_traffic(lane, 0.016)
+
+	assert(
+		not blocked_reckless.is_changing_lanes,
+		"Blocked car must not change lanes when target lane is blocked"
+	)
+	assert(
+		blocked_reckless.lane_change_cooldown > 0.0,
+		"Blocked driver must reset lane_change_cooldown after evaluating pass"
+	)
+	print(
+		"  Reckless driver pass evaluation cooldown verified: blocked reckless driver reuses lane_change_cooldown"
+	)
+
+	# Verify explicit risk mode vs normal mode on _can_swerve_to_lane()
+	var swerve_car: Car = pcar_scene.instantiate()
+	main.add_child(swerve_car)
+	swerve_car.setup(
+		lane.id, lane.z, lane.direction, lane.start_x, lane.length, 25.0, Car.CarType.SEDAN
+	)
+	swerve_car.lane_distance = 40.0
+	swerve_car.speed = 25.0
+
+	var target_car: Car = pcar_scene.instantiate()
+	main.add_child(target_car)
+	target_car.setup(
+		lane2.id, lane2.z, lane2.direction, lane2.start_x, lane2.length, 25.0, Car.CarType.SEDAN
+	)
+	# Put target_car ahead by 12.0m net gap (less than normal 16m threshold, but >= risky 7.5m threshold)
+	# gap_ahead = other.dist - car.dist - 0.5*(other.len + car.len)
+	# 12.0 = other.dist - 40.0 - 4.5 => other.dist = 56.5
+	target_car.lane_distance = 56.5
+	target_car.speed = 25.0
+	target_car.lane_speed = 25.0
+	lane2.cars.clear()
+	lane2.cars.append(target_car)
+
+	assert(
+		not tm._can_swerve_to_lane(swerve_car, lane2, 5.0, 20.0, false),
+		"Normal mode must reject marginal forward gap (< 16m)"
+	)
+	assert(
+		tm._can_swerve_to_lane(swerve_car, lane2, 5.0, 20.0, true),
+		"Risk mode must accept marginal forward gap (>= 7.5m)"
+	)
+	print(
+		"  Explicit risk mode verified: normal checks remain strict, risk mode allows marginal gap"
+	)
+
+	# Verify rear gap threshold reduction in risk mode
+	# swerve_car at 40.0, target_car behind at 20.0
+	# gap_behind = 40.0 - 20.0 - 4.5 = 15.5m
+	# At speed 20.0: normal safe_behind = max(9.0, 4.0 + 20*0.8) = 20.0m (> 15.5m -> reject)
+	# Risky safe_behind = max(4.5, 4.0 + 20*0.4) = 12.0m (< 15.5m -> accept)
+	target_car.lane_distance = 20.0
+	target_car.speed = 20.0
+	target_car.lane_speed = 20.0
+	assert(
+		not tm._can_swerve_to_lane(swerve_car, lane2, 5.0, 20.0, false),
+		"Normal mode must reject marginal rear gap"
+	)
+	assert(
+		tm._can_swerve_to_lane(swerve_car, lane2, 5.0, 20.0, true),
+		"Risk mode must accept marginal rear gap"
+	)
+
+	# Verify gaps below risky thresholds are rejected by both modes
+	target_car.lane_distance = 33.0  # gap_behind = 40 - 33 - 4.5 = 2.5m (< 4.5m)
+	assert(
+		not tm._can_swerve_to_lane(swerve_car, lane2, 5.0, 20.0, false),
+		"Normal mode must reject sub-marginal rear gap"
+	)
+	assert(
+		not tm._can_swerve_to_lane(swerve_car, lane2, 5.0, 20.0, true),
+		"Risk mode must reject sub-marginal rear gap"
+	)
+
+	# Verify non-gap constraints are NOT reduced: target car changing lanes nearby rejects both
+	target_car.lane_distance = 56.5
+	target_car.is_changing_lanes = true
+	assert(
+		not tm._can_swerve_to_lane(swerve_car, lane2, 5.0, 20.0, false),
+		"Normal mode must reject when target car is changing lanes"
+	)
+	assert(
+		not tm._can_swerve_to_lane(swerve_car, lane2, 5.0, 20.0, true),
+		"Risk mode must also reject when target car is changing lanes"
+	)
+	target_car.is_changing_lanes = false
+
+	# Verify unconditional rejection of existing overlap (lead gap <= 0 or longitudinal overlap)
+	assert(
+		not tm._can_swerve_to_lane(swerve_car, lane2, 0.0, 20.0, false),
+		"Normal mode must reject zero lead gap"
+	)
+	assert(
+		not tm._can_swerve_to_lane(swerve_car, lane2, 0.0, 20.0, true),
+		"Risk mode must reject zero lead gap"
+	)
+	target_car.lane_distance = 42.0  # Overlapping swerve_car (at 40.0, length 4.5m)
+	assert(
+		not tm._can_swerve_to_lane(swerve_car, lane2, 5.0, 20.0, false),
+		"Normal mode must reject existing target lane overlap"
+	)
+	assert(
+		not tm._can_swerve_to_lane(swerve_car, lane2, 5.0, 20.0, true),
+		"Risk mode must reject existing target lane overlap"
+	)
+	target_car.lane_distance = 56.5
+
+	# Verify unconditional rejection of wrong-direction/oncoming lanes
+	# swerve_car is westbound (direction -1.0), so direction +1.0 is oncoming
+	lane2.direction = 1.0
+	assert(
+		not tm._can_swerve_to_lane(swerve_car, lane2, 5.0, 20.0, false),
+		"Normal mode must reject oncoming lane"
+	)
+	assert(
+		not tm._can_swerve_to_lane(swerve_car, lane2, 5.0, 20.0, true),
+		"Risk mode must reject oncoming lane"
+	)
+	lane2.direction = -1.0
+	# Verify unconditional rejection of lane ends
+	swerve_car.lane_distance = 10.0
+	assert(
+		not tm._can_swerve_to_lane(swerve_car, lane2, 5.0, 20.0, false),
+		"Normal mode must reject start of lane"
+	)
+	assert(
+		not tm._can_swerve_to_lane(swerve_car, lane2, 5.0, 20.0, true),
+		"Risk mode must reject start of lane"
+	)
+	swerve_car.lane_distance = lane2.length - 10.0
+	assert(
+		not tm._can_swerve_to_lane(swerve_car, lane2, 5.0, 20.0, false),
+		"Normal mode must reject end of lane"
+	)
+	assert(
+		not tm._can_swerve_to_lane(swerve_car, lane2, 5.0, 20.0, true),
+		"Risk mode must reject end of lane"
+	)
+	swerve_car.lane_distance = 40.0
+
+	# Verify unconditional rejection of turn-in zones
+	swerve_car.state = Car.State.APPROACHING
+	assert(
+		not tm._can_swerve_to_lane(swerve_car, lane2, 5.0, 20.0, false),
+		"Normal mode must reject initiator approaching turn-in"
+	)
+	assert(
+		not tm._can_swerve_to_lane(swerve_car, lane2, 5.0, 20.0, true),
+		"Risk mode must reject initiator approaching turn-in"
+	)
+	swerve_car.state = Car.State.CRUISING
+	target_car.state = Car.State.APPROACHING
+	assert(
+		not tm._can_swerve_to_lane(swerve_car, lane2, 5.0, 20.0, false),
+		"Normal mode must reject target approaching turn-in"
+	)
+	assert(
+		not tm._can_swerve_to_lane(swerve_car, lane2, 5.0, 20.0, true),
+		"Risk mode must reject target approaching turn-in"
+	)
+	target_car.state = Car.State.CRUISING
+
+	# Verify unconditional rejection of nearby simultaneous transfers
+	var transfer_dummy: Car = pcar_scene.instantiate()
+	main.add_child(transfer_dummy)
+	transfer_dummy.setup(
+		lane.id, lane.z, lane.direction, lane.start_x, lane.length, 25.0, Car.CarType.SEDAN
+	)
+	transfer_dummy.lane_distance = 45.0
+	tm._pending_transfers.append({"car": transfer_dummy, "target_lane": lane2})
+	assert(
+		not tm._can_swerve_to_lane(swerve_car, lane2, 5.0, 20.0, false),
+		"Normal mode must reject simultaneous pending transfer"
+	)
+	assert(
+		not tm._can_swerve_to_lane(swerve_car, lane2, 5.0, 20.0, true),
+		"Risk mode must reject simultaneous pending transfer"
+	)
+	tm._pending_transfers.clear()
+	transfer_dummy.queue_free()
+
+	# Verify unconditional rejection of large-vehicle initiators
+	for large_type in [Car.CarType.BUS, Car.CarType.SHIPPING_TRUCK, Car.CarType.TRUCK]:
+		swerve_car.car_type = large_type
+		assert(
+			not tm._can_swerve_to_lane(swerve_car, lane2, 5.0, 20.0, false),
+			"Normal mode must reject large vehicle initiator %s" % str(large_type)
+		)
+		assert(
+			not tm._can_swerve_to_lane(swerve_car, lane2, 5.0, 20.0, true),
+			"Risk mode must reject large vehicle initiator %s" % str(large_type)
+		)
+	swerve_car.car_type = Car.CarType.SEDAN
+
+	print("  Gap threshold rules verified: risk mode reduces only forward/rear gap thresholds")
+
+	# Prove normal drivers reject marginal target-lane gaps while forced reckless driver accepts it
+	lane.cars.clear()
+	lane2.cars.clear()
+	tm._pending_transfers.clear()
+
+	var slow_lead_car: Car = pcar_scene.instantiate()
+	main.add_child(slow_lead_car)
+	slow_lead_car.setup(
+		lane2.id, lane2.z, lane2.direction, lane2.start_x, lane2.length, 12.0, Car.CarType.SEDAN
+	)
+	slow_lead_car.lane_distance = 50.0
+	slow_lead_car.speed = 12.0
+	slow_lead_car.desired_speed = 12.0
+	slow_lead_car.lane_speed = 12.0
+	lane2.cars.append(slow_lead_car)
+
+	# Target car in lane 1 ahead with marginal gap (gap_ahead = 56.5 - 40.0 - 4.5 = 12.0m, between 7.5m and 16.0m)
+	var test_target_lead: Car = pcar_scene.instantiate()
+	main.add_child(test_target_lead)
+	test_target_lead.setup(
+		lane.id, lane.z, lane.direction, lane.start_x, lane.length, 25.0, Car.CarType.SEDAN
+	)
+	test_target_lead.lane_distance = 56.5
+	test_target_lead.speed = 25.0
+	test_target_lead.desired_speed = 25.0
+	test_target_lead.lane_speed = 25.0
+	lane.cars.append(test_target_lead)
+
+	# 1. Normal driver behind slow lead (fast driver, blocked by 12 m/s lead, but normal safe-gap rejects 12m marginal gap in lane 1)
+	var normal_follower: Car = pcar_scene.instantiate()
+	main.add_child(normal_follower)
+	normal_follower.setup(
+		lane2.id, lane2.z, lane2.direction, lane2.start_x, lane2.length, 25.0, Car.CarType.SEDAN
+	)
+	normal_follower.lane_distance = 40.0
+	normal_follower.speed = 25.0
+	normal_follower.desired_speed = 25.0
+	normal_follower.risk_tolerance = 0.1
+	normal_follower.lane_change_cooldown = 0.0
+	lane2.cars.append(normal_follower)
+
+	tm._update_lane_traffic(lane2, 0.016)
+	assert(
+		not normal_follower.is_changing_lanes,
+		"Normal driver must reject marginal target lane gap and stay on safe-gap path"
+	)
+	assert(
+		normal_follower.lane_change_cooldown > 0.0,
+		"Normal driver must reset lane_change_cooldown after rejecting pass"
+	)
+
+	# Remove normal driver
+	lane2.cars.erase(normal_follower)
+	normal_follower.queue_free()
+	tm._pending_transfers.clear()
+
+	# 2. Forced reckless driver in identical situation accepts the marginal gap
+	var reckless_follower: Car = pcar_scene.instantiate()
+	main.add_child(reckless_follower)
+	reckless_follower.setup(
+		lane2.id, lane2.z, lane2.direction, lane2.start_x, lane2.length, 25.0, Car.CarType.SEDAN
+	)
+	reckless_follower.lane_distance = 40.0
+	reckless_follower.speed = 25.0
+	reckless_follower.desired_speed = 25.0
+	reckless_follower.risk_tolerance = 0.9
+	reckless_follower.force_risky_pass = true
+	reckless_follower.lane_change_cooldown = 0.0
+	lane2.cars.append(reckless_follower)
+
+	tm._update_lane_traffic(lane2, 0.016)
+	assert(
+		reckless_follower.is_changing_lanes,
+		"Forced reckless driver must accept marginal gap and initiate lane change"
+	)
+	assert(
+		reckless_follower.risk_commit_active,
+		"Reckless driver initiating risky pass must activate risk commit window"
+	)
+
+	# Remove reckless follower
+	lane2.cars.erase(reckless_follower)
+	reckless_follower.queue_free()
+	tm._pending_transfers.clear()
+
+	# 3. Forced reckless driver rejects unsafe sub-marginal target gap (< 7.5m)
+	test_target_lead.lane_distance = 48.0  # gap_ahead = 48.0 - 40.0 - 4.5 = 3.5m (< 7.5m)
+	var reckless_unsafe: Car = pcar_scene.instantiate()
+	main.add_child(reckless_unsafe)
+	reckless_unsafe.setup(
+		lane2.id, lane2.z, lane2.direction, lane2.start_x, lane2.length, 25.0, Car.CarType.SEDAN
+	)
+	reckless_unsafe.lane_distance = 40.0
+	reckless_unsafe.speed = 25.0
+	reckless_unsafe.desired_speed = 25.0
+	reckless_unsafe.risk_tolerance = 1.0
+	reckless_unsafe.force_risky_pass = true
+	reckless_unsafe.lane_change_cooldown = 0.0
+	lane2.cars.append(reckless_unsafe)
+
+	tm._update_lane_traffic(lane2, 0.016)
+	assert(
+		not reckless_unsafe.is_changing_lanes,
+		"Forced reckless driver must reject unsafe sub-marginal target gap"
+	)
+	assert(
+		reckless_unsafe.lane_change_cooldown > 0.0,
+		"Forced reckless driver must reset lane_change_cooldown after rejecting unsafe gap"
+	)
+	lane2.cars.erase(reckless_unsafe)
+	reckless_unsafe.queue_free()
+	tm._pending_transfers.clear()
+
+	# Cleanup test cars
+	lane2.cars.erase(slow_lead_car)
+	slow_lead_car.queue_free()
+	lane.cars.erase(test_target_lead)
+	test_target_lead.queue_free()
+	tm._pending_transfers.clear()
+	print(
+		"  Safe-gap path verified: normal drivers reject marginal gap, forced reckless driver accepts"
+	)
+
+	swerve_car.queue_free()
+	target_car.queue_free()
+	lane2.cars.clear()
+
+	blocked_reckless.queue_free()
+	blocker_lead.queue_free()
+	target_blocker.queue_free()
+
+	test_sedan.queue_free()
+	test_bus.queue_free()
+	print(
+		"  Driver state verified: stable risk_tolerance sampled at setup, large vehicles excluded"
+	)
 	# Cleanup
 	shipping_truck.queue_free()
 	box_truck.queue_free()
@@ -1224,10 +2165,667 @@ func _run_test_speed_variation() -> void:
 	sedan.queue_free()
 	f150_coal.queue_free()
 	sports.queue_free()
+	hatchback.queue_free()
 	lead_car.queue_free()
 	fast_follower.queue_free()
 	slow_follower.queue_free()
 
 	print("SPEED_VARIATION_TEST: SUCCESS - --test-speed-variation passed cleanly!")
+	main.get_tree().quit(0)
+
+
+func _run_test_shortcut_contracts() -> void:
+	var tm = main.get_node_or_null("TrafficManager") as TrafficManager
+	assert(tm != null, "TrafficManager must exist")
+	await main.get_tree().process_frame
+
+	# Clear existing cars from lanes and lot and stop ambient simulation
+	tm.set_physics_process(false)
+	for lane in tm.lanes:
+		lane.spawn_timer = 999999.0
+		for c in lane.cars:
+			c.queue_free()
+		lane.cars.clear()
+	for c in tm.lot_cars:
+		c.queue_free()
+	tm.lot_cars.clear()
+	await main.get_tree().process_frame
+
+	var pcar_scene = load("res://cars/passenger_car.tscn")
+
+	# Scenario 21: Ensure tree exit releases every current or pending parking reservation
+	if tm.lot != null and tm.lot.spots.size() >= 2:
+		var spot_a: ParkingSpot = tm.lot.spots[0]
+		var spot_b: ParkingSpot = tm.lot.spots[1]
+		tm.lot.release(spot_a)
+		tm.lot.release(spot_b)
+
+		# Test current reservation release on tree exit
+		var res_car: Car = pcar_scene.instantiate()
+		main.add_child(res_car)
+		tm.lot.reserve(spot_a, res_car)
+		assert(spot_a.state == ParkingSpot.State.RESERVED, "spot_a must be RESERVED")
+		assert(spot_a.car == res_car, "spot_a car must be res_car")
+		res_car.queue_free()
+		await main.get_tree().process_frame
+		await main.get_tree().process_frame
+		assert(not is_instance_valid(res_car), "res_car must be freed")
+		assert(
+			spot_a.state == ParkingSpot.State.FREE, "spot_a must be FREE after res_car tree exit"
+		)
+		assert(spot_a.car == null, "spot_a car must be null after res_car tree exit")
+		print("  Tree exit: current parking reservation released")
+
+		# Test both current and pending destination spot released on tree exit
+		var dual_car: Car = pcar_scene.instantiate()
+		main.add_child(dual_car)
+		tm.lot.reserve(spot_a, dual_car)
+		tm.lot.occupy(spot_a)
+		tm.lot.reserve_destination(spot_b, dual_car)
+		assert(spot_a.state == ParkingSpot.State.OCCUPIED, "spot_a must be OCCUPIED")
+		assert(spot_b.state == ParkingSpot.State.RESERVED, "spot_b must be RESERVED")
+		assert(dual_car.spot == spot_a, "dual_car current spot must be spot_a")
+		assert(dual_car.pending_destination_spot == spot_b, "dual_car pending spot must be spot_b")
+		assert(
+			tm.lot.check_invariants() == 0,
+			"Parking lot invariants must hold with pending destination"
+		)
+
+		dual_car.queue_free()
+		await main.get_tree().process_frame
+		await main.get_tree().process_frame
+		assert(not is_instance_valid(dual_car), "dual_car must be freed")
+		assert(spot_a.state == ParkingSpot.State.FREE, "spot_a must be FREE after tree exit")
+		assert(spot_a.car == null, "spot_a car must be null")
+		assert(spot_b.state == ParkingSpot.State.FREE, "spot_b must be FREE after tree exit")
+		assert(spot_b.car == null, "spot_b car must be null")
+		assert(tm.lot.check_invariants() == 0, "No leaked spots after dual reservation tree exit")
+		print("  Tree exit: both current and pending destination reservations released cleanly")
+
+		# Test grass shortcut link contracts
+		var links := ParkingLot.get_shortcut_links()
+		assert(links.size() == 2, "Must have exactly 2 authored shortcut links")
+		assert(
+			ParkingLot.has_shortcut_link(&"strip_mall", &"cramped_inn"),
+			"Must have strip_mall -> cramped_inn link"
+		)
+		assert(
+			ParkingLot.has_shortcut_link(&"cramped_inn", &"strip_mall"),
+			"Must have cramped_inn -> strip_mall link"
+		)
+		assert(
+			not ParkingLot.has_shortcut_link(&"smell", &"north"),
+			"Must not infer link between smell and north"
+		)
+		assert(
+			not ParkingLot.has_shortcut_link(&"smell", &"walgroins"),
+			"Must not infer link between smell and walgroins"
+		)
+		assert(
+			not ParkingLot.has_shortcut_link(&"strip_mall", &"smell"),
+			"Must not infer link between strip_mall and smell"
+		)
+
+		# Check direct crossing geometry (constant Z = 24.8 across grass gap x in [13, 18])
+		var sm_to_ci := ParkingLot.get_shortcut_link(&"strip_mall", &"cramped_inn")
+		var entry_pt: Vector3 = sm_to_ci["grass_entry"]
+		var exit_pt: Vector3 = sm_to_ci["grass_exit"]
+		assert(
+			entry_pt.x == 13.0 and exit_pt.x == 18.0,
+			"Grass entry and exit X bounds must be 13 and 18"
+		)
+		assert(
+			absf(entry_pt.z - 24.8) < 0.01 and absf(exit_pt.z - 24.8) < 0.01,
+			"Grass crossing must be direct along z=24.8"
+		)
+		assert(
+			ParkingLot.is_in_grass_shortcut(Vector3(15.5, 0.0, 24.8)),
+			"Midpoint must be in grass shortcut"
+		)
+		assert(
+			not ParkingLot.is_in_grass_shortcut(Vector3(10.0, 0.0, 24.8)),
+			"Point outside X bounds must not be in grass shortcut"
+		)
+
+		# Candidate spots must be selected strictly by authored destination site, never inferred by distance
+		var dest_sites := ParkingLot.get_shortcut_destination_sites(&"strip_mall")
+		assert(dest_sites == [&"cramped_inn"], "strip_mall destination site must be cramped_inn")
+		assert(
+			ParkingLot.get_shortcut_destination_sites(&"smell").is_empty(),
+			"smell must have no shortcut destination sites"
+		)
+
+		# Visual desire path / tire ruts must exist in scene
+		var desire_path := main.find_child("ShortcutDesirePath", true, false)
+		assert(desire_path != null, "ShortcutDesirePath mesh must exist in scene")
+		var rut_north := main.find_child("ShortcutRutNorth", true, false)
+		var rut_south := main.find_child("ShortcutRutSouth", true, false)
+		assert(rut_north != null and rut_south != null, "Shortcut tire ruts must exist in scene")
+		print("  Grass shortcut: direct crossing, explicit site links, and visual path verified")
+
+		# Test dwelling completion, single roll, and fallback to normal departure
+		var sm_spot: ParkingSpot = null
+		var ci_spot: ParkingSpot = null
+		var smell_spot: ParkingSpot = null
+		for s in tm.lot.spots:
+			var site := ParkingLot.lot_group(s)
+			if site == &"strip_mall" and sm_spot == null and s.state == ParkingSpot.State.FREE:
+				sm_spot = s
+			elif site == &"cramped_inn" and ci_spot == null and s.state == ParkingSpot.State.FREE:
+				ci_spot = s
+			elif site == &"smell" and smell_spot == null and s.state == ParkingSpot.State.FREE:
+				smell_spot = s
+		if sm_spot == null or ci_spot == null or smell_spot == null:
+			for s in tm.lot.spots:
+				var site := ParkingLot.lot_group(s)
+				if site == &"strip_mall" and sm_spot == null:
+					tm.lot.release(s)
+					sm_spot = s
+				elif site == &"cramped_inn" and ci_spot == null:
+					tm.lot.release(s)
+					ci_spot = s
+				elif site == &"smell" and smell_spot == null:
+					tm.lot.release(s)
+					smell_spot = s
+		assert(
+			sm_spot != null and ci_spot != null and smell_spot != null,
+			"Required parking spots must exist"
+		)
+
+		# 1. Car dwelling: does not roll until dwell_left <= 0.0
+		var test_sc_car: Car = pcar_scene.instantiate()
+		main.add_child(test_sc_car)
+		tm.lot_cars.append(test_sc_car)
+		test_sc_car.state = Car.State.PARKED
+		tm.lot.reserve(sm_spot, test_sc_car)
+		tm.lot.occupy(sm_spot)
+		test_sc_car.dwell_left = 1.0
+		test_sc_car.shortcut_evaluated = false
+		test_sc_car.force_shortcut = true
+
+		tm._update_lot_cars(0.4)
+		assert(test_sc_car.dwell_left > 0.0, "dwell_left must decrease but remain positive")
+		assert(not test_sc_car.shortcut_evaluated, "Shortcut must not be evaluated while dwelling")
+		assert(
+			test_sc_car.pending_destination_spot == null,
+			"pending_destination_spot must be null while dwelling"
+		)
+
+		# 2. Dwell finishes -> rolls once. With force_shortcut, reserves destination spot.
+		tm._update_lot_cars(0.7)
+		assert(test_sc_car.dwell_left <= 0.0, "dwell_left must have completed")
+		assert(test_sc_car.shortcut_evaluated, "Shortcut must be evaluated once dwelling finishes")
+		assert(
+			test_sc_car.pending_destination_spot != null,
+			"Destination spot must be reserved when forced"
+		)
+		var reserved_dest := test_sc_car.pending_destination_spot
+		assert(
+			reserved_dest.state == ParkingSpot.State.RESERVED, "Destination spot must be RESERVED"
+		)
+
+		# Verify single roll: subsequent update does not re-roll or overwrite destination
+		tm._update_lot_cars(0.1)
+		assert(
+			test_sc_car.pending_destination_spot == reserved_dest,
+			"Single roll invariant: destination must not change"
+		)
+
+		# Clean up test_sc_car
+		test_sc_car.queue_free()
+		await main.get_tree().process_frame
+		await main.get_tree().process_frame
+		tm.lot_cars.clear()
+
+		# 3. Fallback to normal departure if no link is available (e.g. smell site)
+		var no_link_car: Car = pcar_scene.instantiate()
+		main.add_child(no_link_car)
+		tm.lot_cars.append(no_link_car)
+		no_link_car.state = Car.State.PARKED
+		tm.lot.reserve(smell_spot, no_link_car)
+		tm.lot.occupy(smell_spot)
+		no_link_car.dwell_left = 0.05
+		no_link_car.force_shortcut = true
+		tm._update_lot_cars(0.1)
+		assert(no_link_car.shortcut_evaluated, "Shortcut must be evaluated")
+		assert(
+			no_link_car.pending_destination_spot == null,
+			"Fallback: car at site with no link must not reserve a shortcut destination"
+		)
+		no_link_car.queue_free()
+		await main.get_tree().process_frame
+		await main.get_tree().process_frame
+		tm.lot_cars.clear()
+
+		# 4. Fallback to normal departure if destination lot has no available spots
+		# Temporarily occupy all cramped_inn spots
+		var occupied_ci_spots: Array[ParkingSpot] = []
+		for s in tm.lot.spots:
+			if ParkingLot.lot_group(s) == &"cramped_inn" and s.state == ParkingSpot.State.FREE:
+				s.state = ParkingSpot.State.OCCUPIED
+				occupied_ci_spots.append(s)
+
+		var full_dest_car: Car = pcar_scene.instantiate()
+		main.add_child(full_dest_car)
+		tm.lot_cars.append(full_dest_car)
+		full_dest_car.state = Car.State.PARKED
+		tm.lot.reserve(sm_spot, full_dest_car)
+		tm.lot.occupy(sm_spot)
+		full_dest_car.dwell_left = 0.05
+		full_dest_car.force_shortcut = true
+		tm._update_lot_cars(0.1)
+		assert(full_dest_car.shortcut_evaluated, "Shortcut must be evaluated")
+		assert(
+			full_dest_car.pending_destination_spot == null,
+			"Fallback: when destination spots are full, car must fall back to normal departure"
+		)
+
+		# Restore occupied cramped_inn spots
+		for s in occupied_ci_spots:
+			s.state = ParkingSpot.State.FREE
+		full_dest_car.queue_free()
+		await main.get_tree().process_frame
+		await main.get_tree().process_frame
+		tm.lot_cars.clear()
+		assert(
+			tm.lot.check_invariants() == 0, "Parking lot invariants must hold after fallback tests"
+		)
+		print("  Shortcut departure: roll once on dwell finish and fallback contracts verified")
+
+		# Test: Reserve destination before movement while retaining source spot through reverse-out
+		var rev_test_car: Car = pcar_scene.instantiate()
+		main.add_child(rev_test_car)
+		tm.lot_cars.append(rev_test_car)
+		tm.lot.release(sm_spot)
+		rev_test_car.state = Car.State.PARKED
+		tm.lot.reserve(sm_spot, rev_test_car)
+		tm.lot.occupy(sm_spot)
+		rev_test_car.dwell_left = 0.0
+		rev_test_car.shortcut_evaluated = false
+		rev_test_car.force_shortcut = true
+
+		# Step 1: Destination must be reserved BEFORE movement occurs
+		tm._update_lot_cars(0.016)
+		assert(
+			rev_test_car.pending_destination_spot != null,
+			"Destination must be reserved before movement"
+		)
+		var dest_spot := rev_test_car.pending_destination_spot
+		assert(
+			dest_spot.state == ParkingSpot.State.RESERVED,
+			"Destination must be RESERVED before movement"
+		)
+		assert(dest_spot.car == rev_test_car, "Destination spot car must be rev_test_car")
+		assert(
+			sm_spot.state == ParkingSpot.State.OCCUPIED,
+			"Source spot must still be OCCUPIED before movement"
+		)
+		assert(sm_spot.car == rev_test_car, "Source spot car must still be rev_test_car")
+		assert(
+			tm.lot.check_invariants() == 0, "No leaked spots with dual reservation before movement"
+		)
+
+		# Step 2: Car starts reversing out; both spots must be retained throughout reverse-out
+		assert(
+			rev_test_car.state == Car.State.REVERSING_OUT, "Car must transition to REVERSING_OUT"
+		)
+		# Advance partially along reverse route
+		tm._update_lot_cars(0.1)
+		if rev_test_car.state == Car.State.REVERSING_OUT:
+			assert(rev_test_car.spot == sm_spot, "Source spot must be retained mid-reverse")
+			assert(sm_spot.car == rev_test_car, "Source spot car must be rev_test_car mid-reverse")
+			assert(
+				rev_test_car.pending_destination_spot == dest_spot,
+				"Destination reservation must be retained mid-reverse"
+			)
+			assert(
+				dest_spot.state == ParkingSpot.State.RESERVED,
+				"Destination spot must stay RESERVED mid-reverse"
+			)
+			assert(
+				dest_spot.car == rev_test_car,
+				"Destination spot car must stay rev_test_car mid-reverse"
+			)
+			assert(tm.lot.check_invariants() == 0, "No leaked spots mid-reverse")
+
+		# Step 3: Complete reverse-out -> release source, promote destination, follow shortcut route
+		assert(rev_test_car.path != null, "Car must have a reverse-out path")
+		# Reversing starts at path_distance = length and advances backward down to 0.0
+		rev_test_car.path_distance = 0.01
+		tm._update_lot_cars(0.1)
+		assert(
+			rev_test_car.state == Car.State.SHORTCUT,
+			"Car must transition to SHORTCUT after reverse-out"
+		)
+		assert(
+			sm_spot.state == ParkingSpot.State.FREE,
+			"Source spot must be released after reverse-out"
+		)
+		assert(sm_spot.car == null, "Source spot car must be null after reverse-out")
+		assert(
+			rev_test_car.pending_destination_spot == null,
+			"pending_destination_spot must be cleared"
+		)
+		assert(rev_test_car.spot == dest_spot, "Destination spot must be promoted to car.spot")
+		assert(
+			dest_spot.state == ParkingSpot.State.RESERVED,
+			"Promoted destination spot must remain RESERVED"
+		)
+		assert(dest_spot.car == rev_test_car, "Promoted destination spot car must be rev_test_car")
+		assert(rev_test_car.path != null, "Car must have shortcut route path")
+		assert(tm.lot.check_invariants() == 0, "No leaked spots after promotion to shortcut")
+
+		# Step 4: Verify lower grass speed vs lot speed in SHORTCUT state
+		# Position car at start of route (aisle outside grass)
+		rev_test_car.path_distance = 0.5
+		rev_test_car.update_presentation()
+		assert(
+			not ParkingLot.is_in_grass_shortcut(rev_test_car.global_position),
+			"Must be outside grass at route start"
+		)
+		tm._update_lot_cars(0.016)
+		var speed_outside: float = rev_test_car.desired_speed
+
+		# Position car inside grass shortcut corridor
+		var grass_offset := -1.0
+		var sample_step := 0.2
+		var curr := 0.0
+		while curr < rev_test_car.path.get_baked_length():
+			var p := rev_test_car.path.sample_baked(curr)
+			if ParkingLot.is_in_grass_shortcut(p):
+				grass_offset = curr
+				break
+			curr += sample_step
+		assert(grass_offset >= 0.0, "Must find grass shortcut offset along route")
+		rev_test_car.path_distance = grass_offset
+		rev_test_car.update_presentation()
+		assert(
+			ParkingLot.is_in_grass_shortcut(rev_test_car.global_position),
+			"Must be in grass shortcut"
+		)
+		tm._update_lot_cars(0.016)
+		var speed_inside: float = rev_test_car.desired_speed
+		assert(
+			speed_inside <= TrafficManager.V_GRASS + 0.01,
+			"Grass speed must be <= V_GRASS (got %f)" % speed_inside
+		)
+		assert(
+			speed_inside < speed_outside,
+			"Grass speed (%f) must be lower than lot speed (%f)" % [speed_inside, speed_outside]
+		)
+
+		# Step 5: Verify swept-footprint yielding in SHORTCUT state
+		var blocker_car: Car = pcar_scene.instantiate()
+		main.add_child(blocker_car)
+		tm.lot_cars.append(blocker_car)
+		blocker_car.motion = Car.Motion.PATH
+		blocker_car.state = Car.State.TO_EXIT
+		blocker_car.path = rev_test_car.path
+		blocker_car.path_distance = grass_offset + 3.0
+		blocker_car.global_position = rev_test_car.path.sample_baked(grass_offset + 3.0)
+		blocker_car.speed = 0.0
+		blocker_car.desired_speed = 0.0
+		blocker_car.update_presentation()
+		tm._update_lot_cars(0.016)
+		var found_blocker := tm.find_blocker(rev_test_car)
+		assert(
+			found_blocker == blocker_car,
+			"Shortcut car must detect blocker ahead in shortcut corridor"
+		)
+		assert(
+			rev_test_car.desired_speed == 0.0,
+			"Shortcut car must yield (desired_speed == 0.0) when blocked"
+		)
+
+		# Remove blocker -> car must unblock and resume
+		tm.lot_cars.erase(blocker_car)
+		blocker_car.queue_free()
+		await main.get_tree().process_frame
+		await main.get_tree().process_frame
+		tm._update_lot_cars(0.016)
+		assert(tm.find_blocker(rev_test_car) == null, "Blocker must be cleared")
+		assert(
+			rev_test_car.desired_speed > 0.0, "Shortcut car must resume speed once blocker clears"
+		)
+		# Step 6: Arrival at destination spot, brief dwell, and normal lot exit
+		rev_test_car.speed = 1.0
+		rev_test_car.path_distance = rev_test_car.path.get_baked_length()
+		tm._update_lot_cars(0.016)
+		assert(
+			rev_test_car.state == Car.State.PARKED,
+			"Car must transition to PARKED on shortcut arrival"
+		)
+		assert(
+			dest_spot.state == ParkingSpot.State.OCCUPIED,
+			"Destination spot must be OCCUPIED on shortcut arrival"
+		)
+		assert(dest_spot.car == rev_test_car, "Destination spot car must be rev_test_car")
+		assert(
+			(
+				rev_test_car.dwell_left >= TrafficManager.SHORTCUT_DWELL_MIN - 0.1
+				and rev_test_car.dwell_left <= TrafficManager.SHORTCUT_DWELL_MAX + 0.1
+			),
+			(
+				"Car must have brief dwell time [%f, %f], got %f"
+				% [
+					TrafficManager.SHORTCUT_DWELL_MIN,
+					TrafficManager.SHORTCUT_DWELL_MAX,
+					rev_test_car.dwell_left
+				]
+			)
+		)
+		assert(rev_test_car.has_taken_shortcut, "has_taken_shortcut must be true on arrival")
+		assert(rev_test_car.shortcut_evaluated, "shortcut_evaluated must be true on arrival")
+		assert(rev_test_car.lane_id == -1, "Parked car lane_id must be -1")
+		assert(tm.lot.check_invariants() == 0, "No leaked spots upon shortcut arrival")
+
+		# Prevent immediate shortcut chaining: car cannot take another shortcut from destination lot
+		assert(
+			not rev_test_car.is_eligible_for_shortcut(),
+			"Car that has taken shortcut must not be eligible for shortcut chaining"
+		)
+		rev_test_car.shortcut_evaluated = false
+		rev_test_car.force_shortcut = true
+		tm._evaluate_shortcut_departure(rev_test_car)
+		assert(
+			rev_test_car.pending_destination_spot == null,
+			"Immediate shortcut chaining must be rejected even if evaluated/forced at destination"
+		)
+
+		# Elapse brief dwell in destination spot -> reverse out
+		rev_test_car.dwell_left = 0.0
+		tm._update_lot_cars(0.016)
+		assert(
+			rev_test_car.state == Car.State.REVERSING_OUT,
+			"Car must start reversing out after destination spot dwell finishes"
+		)
+		assert(
+			rev_test_car.pending_destination_spot == null,
+			"Car must not have pending destination spot during destination exit"
+		)
+
+		# Complete reverse-out -> release destination spot, enter TO_EXIT along destination lot's normal exit
+		rev_test_car.path_distance = 0.01
+		tm._update_lot_cars(0.016)
+		assert(
+			rev_test_car.state == Car.State.TO_EXIT,
+			"Car must transition to TO_EXIT after reversing out of destination spot"
+		)
+		assert(
+			dest_spot.state == ParkingSpot.State.FREE, "Destination spot must be released to FREE"
+		)
+		assert(dest_spot.car == null, "Destination spot car must be cleared")
+		assert(rev_test_car.spot == null, "Car spot reference must be cleared")
+		assert(rev_test_car.path != null, "Car must have an exit path")
+		var ci_wait: Vector3 = ParkingLot.CI_WAIT_POINT
+		var path_end: Vector3 = rev_test_car.path.get_point_position(
+			rev_test_car.path.point_count - 1
+		)
+		assert(
+			path_end.distance_to(ci_wait) < 1.0,
+			(
+				"Exit path must lead to destination lot's normal exit wait point (expected ~%s, got %s)"
+				% [ci_wait, path_end]
+			)
+		)
+		assert(tm.lot.check_invariants() == 0, "No leaked spots after destination spot exit")
+
+		# Complete TO_EXIT -> arrive at destination lot's merge wait point
+		rev_test_car.speed = 1.0
+		rev_test_car.path_distance = rev_test_car.path.get_baked_length()
+		tm._update_lot_cars(0.016)
+		assert(
+			rev_test_car.state == Car.State.WAITING_TO_MERGE,
+			"Car must transition to WAITING_TO_MERGE at destination lot exit"
+		)
+		assert(
+			rev_test_car.merge_target_lane == 3,
+			"Merge target lane must be destination lot's lane (3)"
+		)
+
+		rev_test_car.queue_free()
+		await main.get_tree().process_frame
+		await main.get_tree().process_frame
+		tm.lot_cars.clear()
+		assert(tm.lot.check_invariants() == 0, "No leaked spots after test car cleanup")
+
+		# Test reservation releases on cancellation, collision, despawn, and tree exit
+		var s_source: ParkingSpot = null
+		var s_dest: ParkingSpot = null
+		for sp in tm.lot.spots:
+			if (
+				sp.site_id == &"strip_mall"
+				and sp.state == ParkingSpot.State.FREE
+				and s_source == null
+			):
+				s_source = sp
+			elif (
+				sp.site_id == &"cramped_inn"
+				and sp.state == ParkingSpot.State.FREE
+				and s_dest == null
+			):
+				s_dest = sp
+		assert(s_source != null and s_dest != null, "Must find free source and dest spots")
+
+		# 1. Cancellation via cancel_shortcut() and cancel_reservations()
+		var c_cancel: Car = pcar_scene.instantiate()
+		c_cancel.setup(0, 0.0, 1.0, 0.0, 100.0, 10.0, Car.CarType.SEDAN)
+		c_cancel.state = Car.State.PARKED
+		main.add_child(c_cancel)
+		tm.lot.reserve(s_source, c_cancel)
+		tm.lot.occupy(s_source)
+		s_source.car = c_cancel
+		c_cancel.spot = s_source
+		tm.lot.reserve_destination(s_dest, c_cancel)
+		assert(
+			(
+				s_source.state == ParkingSpot.State.OCCUPIED
+				and s_dest.state == ParkingSpot.State.RESERVED
+			)
+		)
+		assert(tm.lot.check_invariants() == 0, "No leaks with both current and pending spots")
+
+		c_cancel.cancel_shortcut()
+		assert(
+			c_cancel.pending_destination_spot == null, "pending_destination_spot must be cleared"
+		)
+		assert(
+			s_dest.state == ParkingSpot.State.FREE and s_dest.car == null,
+			"Destination spot must be FREE"
+		)
+		assert(
+			s_source.state == ParkingSpot.State.OCCUPIED and s_source.car == c_cancel,
+			"Source spot still OCCUPIED"
+		)
+		assert(tm.lot.check_invariants() == 0, "No leaks after cancel_shortcut()")
+
+		tm.lot.reserve_destination(s_dest, c_cancel)
+		c_cancel.cancel_reservations()
+		assert(
+			c_cancel.spot == null and c_cancel.pending_destination_spot == null,
+			"Both spots cleared on car"
+		)
+		assert(
+			s_source.state == ParkingSpot.State.FREE and s_source.car == null, "Source spot FREE"
+		)
+		assert(s_dest.state == ParkingSpot.State.FREE and s_dest.car == null, "Dest spot FREE")
+		assert(tm.lot.check_invariants() == 0, "No leaks after cancel_reservations()")
+		c_cancel.queue_free()
+		await main.get_tree().process_frame
+
+		# 3. Despawn release
+		var c_despawn: Car = pcar_scene.instantiate()
+		c_despawn.setup(0, 0.0, 1.0, 0.0, 100.0, 10.0, Car.CarType.SEDAN)
+		main.add_child(c_despawn)
+		tm.lot.reserve(s_source, c_despawn)
+		tm.lot.occupy(s_source)
+		c_despawn.spot = s_source
+		tm.lot.reserve_destination(s_dest, c_despawn)
+		assert(tm.lot.check_invariants() == 0)
+		c_despawn.despawn()
+		assert(s_source.state == ParkingSpot.State.FREE and s_source.car == null)
+		assert(s_dest.state == ParkingSpot.State.FREE and s_dest.car == null)
+		assert(tm.lot.check_invariants() == 0, "No leaks after despawn()")
+		await main.get_tree().process_frame
+
+		# 4. Tree exit release
+		var c_tree: Car = pcar_scene.instantiate()
+		c_tree.setup(0, 0.0, 1.0, 0.0, 100.0, 10.0, Car.CarType.SEDAN)
+		main.add_child(c_tree)
+		tm.lot.reserve(s_source, c_tree)
+		tm.lot.occupy(s_source)
+		c_tree.spot = s_source
+		tm.lot.reserve_destination(s_dest, c_tree)
+		c_tree.queue_free()
+		await main.get_tree().process_frame
+		await main.get_tree().process_frame
+		assert(s_source.state == ParkingSpot.State.FREE and s_source.car == null)
+		assert(s_dest.state == ParkingSpot.State.FREE and s_dest.car == null)
+		assert(tm.lot.check_invariants() == 0, "No leaks after tree exit")
+
+		# 5. Route failure / route cancellation during reverse-out fallback
+		var c_cancel_route: Car = pcar_scene.instantiate()
+		c_cancel_route.setup(0, 0.0, 1.0, 0.0, 100.0, 10.0, Car.CarType.SEDAN)
+		main.add_child(c_cancel_route)
+		tm.lot_cars.append(c_cancel_route)
+		tm.lot.reserve(s_source, c_cancel_route)
+		tm.lot.occupy(s_source)
+		c_cancel_route.spot = s_source
+		tm.lot.reserve_destination(s_dest, c_cancel_route)
+		c_cancel_route.state = Car.State.REVERSING_OUT
+		c_cancel_route.follow_path(ParkingLot.reverse_route(s_source), true)
+		c_cancel_route.speed = -TrafficManager.V_PARK
+		c_cancel_route.desired_speed = -TrafficManager.V_PARK
+		var orig_site: StringName = s_dest.site_id
+		s_dest.site_id = &"smell"
+		c_cancel_route.path_distance = 0.01
+		tm._update_lot_cars(0.1)
+		s_dest.site_id = orig_site
+		assert(
+			c_cancel_route.state == Car.State.TO_EXIT,
+			"Car must fallback to TO_EXIT on route cancellation"
+		)
+		assert(
+			c_cancel_route.pending_destination_spot == null,
+			"Pending destination spot must be cleared"
+		)
+		assert(
+			s_dest.state == ParkingSpot.State.FREE and s_dest.car == null,
+			"Destination spot released to FREE"
+		)
+		assert(
+			s_source.state == ParkingSpot.State.FREE and s_source.car == null,
+			"Source spot released to FREE"
+		)
+		assert(
+			tm.lot.check_invariants() == 0,
+			"No leaks after shortcut cancellation during reverse-out"
+		)
+		c_cancel_route.queue_free()
+		tm.lot_cars.clear()
+		await main.get_tree().process_frame
+		print("  Spot release on cancellation, collision, despawn, and tree exit verified")
+		print("  Destination arrival, brief dwell, and normal lot exit verified")
+	print("SHORTCUT_CONTRACTS_TEST: SUCCESS - --test-shortcut-contracts passed cleanly!")
 	main.get_tree().quit(0)
 	return

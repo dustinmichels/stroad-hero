@@ -646,6 +646,7 @@ mesh = SubResource("Mesh_ArchSignPlaque")
 
 [node name="SignName" type="Label3D" parent="Building/MainArchPortico"]
 cast_shadow = 0
+visibility_range_end = 80.0
 transform = Transform3D(1, 0.18, 0, 0, 1, 0, 0, 0, 1, 0, 4.0, 0.74)
 pixel_size = 0.012
 modulate = Color(0.12, 0.18, 0.62, 1)
@@ -753,6 +754,7 @@ mesh = SubResource("Mesh_Arch2Crown")
 
 [node name="Arch2Label" type="Label3D" parent="Building/SecondaryArch"]
 cast_shadow = 0
+visibility_range_end = 70.0
 transform = Transform3D(1, 0.18, 0, 0, 1, 0, 0, 0, 1, 0, 3.5, 0.48)
 pixel_size = 0.011
 modulate = Color(0.12, 0.18, 0.62, 1)
@@ -837,6 +839,7 @@ mesh = SubResource("Mesh_WindowMedium")
 
 [node name="OpenSign" type="Label3D" parent="Building/WindowCenter"]
 cast_shadow = 0
+visibility_range_end = 40.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.12)
 pixel_size = 0.012
 modulate = Color(1, 0.2, 0.1, 1)
@@ -875,6 +878,7 @@ mesh = SubResource("Mesh_ArrowShaft")
 
 [node name="DriveThruLabelFront" type="Label3D" parent="RoadsideSign"]
 cast_shadow = 0
+visibility_range_end = 60.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.22, 2.35, 0.32)
 pixel_size = 0.011
 modulate = Color(1, 1, 1, 1)
@@ -894,6 +898,7 @@ mesh = SubResource("Mesh_ArrowShaft")
 
 [node name="DriveThruLabelBack" type="Label3D" parent="RoadsideSign"]
 cast_shadow = 0
+visibility_range_end = 60.0
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0.22, 2.35, -0.32)
 pixel_size = 0.011
 modulate = Color(1, 1, 1, 1)
@@ -1018,6 +1023,7 @@ mesh = SubResource("Mesh_BellHighlight")
 
 [node name="SignTacoFront" type="Label3D" parent="RoadsideSign"]
 cast_shadow = 0
+visibility_range_end = 80.0
 transform = Transform3D(0.8, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.3, 0.32)
 pixel_size = 0.012
 modulate = Color(0.2, 0.08, 0.35, 1)
@@ -1027,6 +1033,7 @@ font_size = 32
 
 [node name="SignTacoBack" type="Label3D" parent="RoadsideSign"]
 cast_shadow = 0
+visibility_range_end = 80.0
 transform = Transform3D(-0.8, 0, 0, 0, 1, 0, 0, 0, -1, 0, 4.3, -0.32)
 pixel_size = 0.012
 modulate = Color(0.2, 0.08, 0.35, 1)
@@ -1036,6 +1043,7 @@ font_size = 32
 
 [node name="SignHellFront" type="Label3D" parent="RoadsideSign"]
 cast_shadow = 0
+visibility_range_end = 80.0
 transform = Transform3D(0.8, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.8, 0.32)
 pixel_size = 0.012
 modulate = Color(0.2, 0.08, 0.35, 1)
@@ -1045,6 +1053,7 @@ font_size = 32
 
 [node name="SignHellBack" type="Label3D" parent="RoadsideSign"]
 cast_shadow = 0
+visibility_range_end = 80.0
 transform = Transform3D(-0.8, 0, 0, 0, 1, 0, 0, 0, -1, 0, 3.8, -0.32)
 pixel_size = 0.012
 modulate = Color(0.2, 0.08, 0.35, 1)
@@ -1084,32 +1093,39 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.0, 0.05, 1.625)
 mesh = SubResource("Mesh_TacoDTSide")
 
 [node name="PickupLaneInnerLine" type="MeshInstance3D" parent="DriveThru"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.3, 0.07, 0)
 mesh = SubResource("Mesh_TacoDTLineLong")
 
 [node name="PickupLaneOuterLine" type="MeshInstance3D" parent="DriveThru"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.7, 0.07, 0)
 mesh = SubResource("Mesh_TacoDTLineLong")
 
 [node name="ReturnLaneInnerLine" type="MeshInstance3D" parent="DriveThru"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.3, 0.07, 0)
 mesh = SubResource("Mesh_TacoDTLineLong")
 
 [node name="ReturnLaneOuterLine" type="MeshInstance3D" parent="DriveThru"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.7, 0.07, 0)
 mesh = SubResource("Mesh_TacoDTLineLong")
 
 [node name="RearLaneInnerLine" type="MeshInstance3D" parent="DriveThru"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.07, -6.3)
 mesh = SubResource("Mesh_TacoDTLineRear")
 
 [node name="RearLaneOuterLine" type="MeshInstance3D" parent="DriveThru"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.07, -11.7)
 mesh = SubResource("Mesh_TacoDTLineRear")
 
 [node name="Striping" type="Node3D" parent="DriveThru"]
 
 [node name="StopBarWindow" type="MeshInstance3D" parent="DriveThru/Striping"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.0, 0.11, 0.05)
 mesh = SubResource("Mesh_TacoStopBar")
 
@@ -1126,6 +1142,7 @@ modulate = Color(0.96, 0.72, 0.08, 1)
 outline_modulate = Color(0.15, 0.15, 0.15, 1)
 
 [node name="StopBarOrder" type="MeshInstance3D" parent="DriveThru/Striping"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.0, 0.11, -2.0)
 mesh = SubResource("Mesh_TacoOrderBar")
 
@@ -1142,34 +1159,42 @@ modulate = Color(0.96, 0.72, 0.08, 1)
 outline_modulate = Color(0.15, 0.15, 0.15, 1)
 
 [node name="WindowApronBorder" type="MeshInstance3D" parent="DriveThru/Striping"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.55, 0.11, 0.0)
 mesh = SubResource("Mesh_TacoWindowApronLine")
 
 [node name="Hash1" type="MeshInstance3D" parent="DriveThru/Striping"]
+cast_shadow = 0
 transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 9.35, 0.11, -1.8)
 mesh = SubResource("Mesh_TacoHazardHash")
 
 [node name="Hash2" type="MeshInstance3D" parent="DriveThru/Striping"]
+cast_shadow = 0
 transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 9.35, 0.11, -1.2)
 mesh = SubResource("Mesh_TacoHazardHash")
 
 [node name="Hash3" type="MeshInstance3D" parent="DriveThru/Striping"]
+cast_shadow = 0
 transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 9.35, 0.11, -0.6)
 mesh = SubResource("Mesh_TacoHazardHash")
 
 [node name="Hash4" type="MeshInstance3D" parent="DriveThru/Striping"]
+cast_shadow = 0
 transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 9.35, 0.11, 0.0)
 mesh = SubResource("Mesh_TacoHazardHash")
 
 [node name="Hash5" type="MeshInstance3D" parent="DriveThru/Striping"]
+cast_shadow = 0
 transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 9.35, 0.11, 0.6)
 mesh = SubResource("Mesh_TacoHazardHash")
 
 [node name="Hash6" type="MeshInstance3D" parent="DriveThru/Striping"]
+cast_shadow = 0
 transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 9.35, 0.11, 1.2)
 mesh = SubResource("Mesh_TacoHazardHash")
 
 [node name="Hash7" type="MeshInstance3D" parent="DriveThru/Striping"]
+cast_shadow = 0
 transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 9.35, 0.11, 1.8)
 mesh = SubResource("Mesh_TacoHazardHash")
 
@@ -1177,10 +1202,12 @@ mesh = SubResource("Mesh_TacoHazardHash")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.0, 0.11, 4.5)
 
 [node name="Head" type="MeshInstance3D" parent="DriveThru/Striping/ArrowApproach"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, -0.6)
 mesh = SubResource("Mesh_TacoArrowPavementHead")
 
 [node name="Stem" type="MeshInstance3D" parent="DriveThru/Striping/ArrowApproach"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.45)
 mesh = SubResource("Mesh_TacoArrowStem")
 
@@ -1188,10 +1215,12 @@ mesh = SubResource("Mesh_TacoArrowStem")
 transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 0.0, 0.11, -9.0)
 
 [node name="Head" type="MeshInstance3D" parent="DriveThru/Striping/ArrowRear"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, -0.6)
 mesh = SubResource("Mesh_TacoArrowPavementHead")
 
 [node name="Stem" type="MeshInstance3D" parent="DriveThru/Striping/ArrowRear"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.45)
 mesh = SubResource("Mesh_TacoArrowStem")
 
@@ -1199,10 +1228,12 @@ mesh = SubResource("Mesh_TacoArrowStem")
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 12.0, 0.11, 4.5)
 
 [node name="Head" type="MeshInstance3D" parent="DriveThru/Striping/ArrowExit"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, -0.6)
 mesh = SubResource("Mesh_TacoArrowPavementHead")
 
 [node name="Stem" type="MeshInstance3D" parent="DriveThru/Striping/ArrowExit"]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.45)
 mesh = SubResource("Mesh_TacoArrowStem")
 [node name="PavementDriveThru" type="Label3D" parent="DriveThru/Striping"]
@@ -1429,6 +1460,7 @@ mesh = SubResource("Mesh_TacoDTCanopy")
 
 [node name="PickupLabel" type="Label3D" parent="DriveThru"]
 cast_shadow = 0
+visibility_range_end = 50.0
 transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 9.1, 3.2, 0)
 pixel_size = 0.0074
 modulate = Color(0.85, 0.1, 0.45, 1)

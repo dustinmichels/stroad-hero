@@ -60,10 +60,27 @@ size = Vector3(44, 0.1, 21.3)
 [sub_resource type="BoxShape3D" id="Shape_DorfParkingApron"]
 size = Vector3(44, 0.1, 21.3)
 
+[sub_resource type="StandardMaterial3D" id="Mat_WornGrass"]
+albedo_color = Color(0.38, 0.42, 0.22, 1)
+roughness = 0.95
+
+[sub_resource type="StandardMaterial3D" id="Mat_TireRut"]
+albedo_color = Color(0.28, 0.24, 0.17, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="Mesh_ShortcutDesirePath"]
+material = SubResource("Mat_WornGrass")
+size = Vector3(5.2, 0.02, 2.6)
+
+[sub_resource type="BoxMesh" id="Mesh_ShortcutTireRut"]
+material = SubResource("Mat_TireRut")
+size = Vector3(5.2, 0.025, 0.35)
+
 
 [node name="Parking" type="Node3D"]
 
 [node name="ParkingLot" type="MeshInstance3D" parent="." unique_id=781763629]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0.05, -25.35)
 mesh = SubResource("Mesh_ParkingApron")
 
@@ -73,86 +90,107 @@ mesh = SubResource("Mesh_ParkingApron")
 shape = SubResource("Shape_ParkingApron")
 
 [node name="ParkingStall_N_m20" type="MeshInstance3D" parent="." unique_id=1479897510]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 0.06, -32.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_N_m16" type="MeshInstance3D" parent="." unique_id=586201130]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 0.06, -32.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_N_m12" type="MeshInstance3D" parent="." unique_id=805609898]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0.06, -32.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_N_m8" type="MeshInstance3D" parent="." unique_id=1049907492]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0.06, -32.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_N_m4" type="MeshInstance3D" parent="." unique_id=1215385819]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.06, -32.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_N_0" type="MeshInstance3D" parent="." unique_id=1849864749]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06, -32.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_N_4" type="MeshInstance3D" parent="." unique_id=1969034141]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.06, -32.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_N_8" type="MeshInstance3D" parent="." unique_id=334292246]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.06, -32.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_N_12" type="MeshInstance3D" parent="." unique_id=549093578]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0.06, -32.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_N_16" type="MeshInstance3D" parent="." unique_id=1877989131]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0.06, -32.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_Smell_m52" type="MeshInstance3D" parent="." unique_id=300880261]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -52, 0.06, -31)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_Smell_m48" type="MeshInstance3D" parent="." unique_id=519005718]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -48, 0.06, -31)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_Smell_m44" type="MeshInstance3D" parent="." unique_id=236627048]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -44, 0.06, -31)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_S_m20" type="MeshInstance3D" parent="." unique_id=547576093]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 0.06, -18.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_S_m16" type="MeshInstance3D" parent="." unique_id=15859819]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 0.06, -18.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_S_m12" type="MeshInstance3D" parent="." unique_id=67247322]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0.06, -18.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_S_m8" type="MeshInstance3D" parent="." unique_id=793932264]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0.06, -18.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_S_m4" type="MeshInstance3D" parent="." unique_id=2001577064]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.06, -18.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_S_0" type="MeshInstance3D" parent="." unique_id=1280856670]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06, -18.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_S_4" type="MeshInstance3D" parent="." unique_id=1075818285]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.06, -18.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="TacoParkingLot" type="MeshInstance3D" parent="." unique_id=331171546]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35.5, 0.05, -25.35)
 mesh = SubResource("Mesh_TacoParkingApron")
 
@@ -162,26 +200,32 @@ mesh = SubResource("Mesh_TacoParkingApron")
 shape = SubResource("Shape_TacoParkingApron")
 
 [node name="ParkingStall_Taco_26" type="MeshInstance3D" parent="." unique_id=931961953]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26, 0.06, -18.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_Taco_30" type="MeshInstance3D" parent="." unique_id=935026200]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0.06, -18.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_Taco_34" type="MeshInstance3D" parent="." unique_id=469839194]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 34, 0.06, -18.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_Taco_38" type="MeshInstance3D" parent="." unique_id=1336281214]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 0.06, -18.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_Taco_42" type="MeshInstance3D" parent="." unique_id=1241728689]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 42, 0.06, -18.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="HamptonParkingLot" type="MeshInstance3D" parent="." unique_id=374192399]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0.05, 27)
 mesh = SubResource("Mesh_HamptonParkingLot")
 
@@ -191,6 +235,7 @@ mesh = SubResource("Mesh_HamptonParkingLot")
 shape = SubResource("Shape_HamptonParkingLot")
 
 [node name="HamptonDriveway" type="MeshInstance3D" parent="." unique_id=1876846794]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38.5, 0.05, 14.125)
 mesh = SubResource("Mesh_HamptonDriveway")
 
@@ -200,34 +245,42 @@ mesh = SubResource("Mesh_HamptonDriveway")
 shape = SubResource("Shape_HamptonDriveway")
 
 [node name="ParkingStall_Hampton_20" type="MeshInstance3D" parent="." unique_id=29586043]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0.06, 28)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_Hampton_24" type="MeshInstance3D" parent="." unique_id=507482938]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 0.06, 28)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_Hampton_28" type="MeshInstance3D" parent="." unique_id=1864452090]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 0.06, 28)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_Hampton_32" type="MeshInstance3D" parent="." unique_id=2093465094]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, 0.06, 28)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_Hampton_52" type="MeshInstance3D" parent="." unique_id=698605659]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 52, 0.06, 28)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_Hampton_56" type="MeshInstance3D" parent="." unique_id=2127841369]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 56, 0.06, 28)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_Hampton_60" type="MeshInstance3D" parent="." unique_id=1432532228]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 60, 0.06, 28)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="DorfParkingLot" type="MeshInstance3D" parent="." unique_id=1206825064]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 101, 0.05, -25.35)
 mesh = SubResource("Mesh_DorfParkingApron")
 
@@ -237,38 +290,62 @@ mesh = SubResource("Mesh_DorfParkingApron")
 shape = SubResource("Shape_DorfParkingApron")
 
 [node name="ParkingStall_Dorf_S_49" type="MeshInstance3D" parent="." unique_id=1178704985]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 80, 0.06, -26.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_Dorf_S_53" type="MeshInstance3D" parent="." unique_id=1238133007]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 84, 0.06, -26.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_Dorf_S_57" type="MeshInstance3D" parent="." unique_id=1907571470]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 88, 0.06, -26.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_Dorf_S_61" type="MeshInstance3D" parent="." unique_id=2139682935]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 92, 0.06, -26.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_Dorf_S_65" type="MeshInstance3D" parent="." unique_id=1680940991]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 96, 0.06, -26.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_Dorf_R_69" type="MeshInstance3D" parent="." unique_id=1745979692]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 100, 0.06, -29.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_Dorf_R_73" type="MeshInstance3D" parent="." unique_id=1712270678]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 104, 0.06, -29.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_Dorf_R_77" type="MeshInstance3D" parent="." unique_id=885206161]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 108, 0.06, -29.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_Dorf_R_81" type="MeshInstance3D" parent="." unique_id=668550854]
+cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 112, 0.06, -29.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
+
+[node name="ShortcutDesirePath" type="MeshInstance3D" parent="."]
+cast_shadow = 0
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.5, 0.052, 24.8)
+mesh = SubResource("Mesh_ShortcutDesirePath")
+
+[node name="ShortcutRutNorth" type="MeshInstance3D" parent="."]
+cast_shadow = 0
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.5, 0.055, 24.025)
+mesh = SubResource("Mesh_ShortcutTireRut")
+
+[node name="ShortcutRutSouth" type="MeshInstance3D" parent="."]
+cast_shadow = 0
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.5, 0.055, 25.575)
+mesh = SubResource("Mesh_ShortcutTireRut")

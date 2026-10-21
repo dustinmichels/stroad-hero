@@ -118,6 +118,7 @@ common/physics_interpolation.web=true
 
 [rendering]
 
+limits/opengl/max_lights_per_object.web=8
 scaling_3d/scale.web=0.75
 lights_and_shadows/directional_shadow/size.web=2048
 lights_and_shadows/directional_shadow/soft_shadow_filter_quality.web=1

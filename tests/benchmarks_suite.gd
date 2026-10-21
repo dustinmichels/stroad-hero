@@ -6,9 +6,27 @@ var _perf_frames: int = 0
 var _perf_is_walk: bool = false
 var _perf_walk_dir: float = 1.0
 var _perf_phys_samples: Array[float] = []
+var _perf_phys_script_samples: Array[float] = []
+var _perf_phys_server_samples: Array[float] = []
 var _perf_proc_samples: Array[float] = []
+var _perf_physics_tick_start_usec: int = 0
+var _perf_physics_probe_usec: int = 0
+var _perf_process_frame_start_usec: int = 0
 var _perf_last_tick_usec: int = 0
 var _perf_wall_samples: Array[float] = []
+
+
+class PhysicsBenchmarkProbe:
+	extends Node
+	var suite: BenchmarksSuite
+
+	func _physics_process(_delta: float) -> void:
+		suite._on_probe_physics_process()
+
+	func _process(_delta: float) -> void:
+		suite._on_probe_process()
+
+
 var _render_bench_active: bool = false
 var _render_bench_target_frames: int = 240
 var _render_bench_frames: int = 0
@@ -17,6 +35,15 @@ var _render_bench_objects: Array[int] = []
 var _render_bench_frame_intervals: Array[float] = []
 var _render_bench_last_frame_usec: int = 0
 var _render_bench_f3_texts: Array[String] = []
+
+var _gameplay_bench_active: bool = false
+var _gameplay_phase_target_sec: float = 20.0
+var _gameplay_current_phase: int = 0
+var _gameplay_phase_start_usec: int = 0
+var _gameplay_last_frame_usec: int = 0
+var _gameplay_frame_physics_script_ms: float = 0.0
+var _gameplay_prev_cars_spawned: int = 0
+var _gameplay_phase_data: Dictionary = {}
 
 
 func matches_args() -> bool:
@@ -27,6 +54,8 @@ func matches_args() -> bool:
 				"--bench-physics",
 				"--bench-physics-walk",
 				"--bench-render",
+				"--bench-gameplay",
+				"--bench-gameplay-compat",
 				"--test-render",
 				"--test-render-stats",
 				"--test-verify-render",
@@ -49,6 +78,14 @@ func setup_ready() -> void:
 		if _perf_is_walk and main.mats:
 			main.mats.global_position = Vector3(9.0, 0.0, -15.0)
 
+		var probe := PhysicsBenchmarkProbe.new()
+		probe.name = "PhysicsBenchmarkProbe"
+		probe.suite = self
+		probe.process_physics_priority = 1 << 30
+		probe.process_priority = 1 << 30
+		main.add_child(probe)
+		main.get_tree().physics_frame.connect(_on_physics_frame_stamp)
+		main.get_tree().process_frame.connect(_on_process_frame_stamp)
 	if (
 		"--bench-render" in user_args
 		or "--test-render" in user_args
@@ -77,8 +114,93 @@ func setup_ready() -> void:
 				mb.bake_main_scene(main)
 		RenderingServer.frame_post_draw.connect(_on_render_frame_post_draw)
 
+	if "--bench-gameplay" in user_args or "--bench-gameplay-compat" in user_args:
+		_gameplay_bench_active = true
+		main.set_physics_process(true)
+		main.get_tree().paused = false
+		for arg in user_args:
+			if arg.begins_with("--duration="):
+				_gameplay_phase_target_sec = float(arg.substr(11))
+		_gameplay_phase_data = {
+			"day":
+			{
+				"frame_count": 0,
+				"frame_intervals": [] as Array[float],
+				"draw_calls": [] as Array[int],
+				"objects": [] as Array[int],
+				"spikes": [],
+			},
+			"night":
+			{
+				"frame_count": 0,
+				"frame_intervals": [] as Array[float],
+				"draw_calls": [] as Array[int],
+				"objects": [] as Array[int],
+				"spikes": [],
+			},
+		}
+		var probe := PhysicsBenchmarkProbe.new()
+		probe.name = "PhysicsBenchmarkProbe"
+		probe.suite = self
+		probe.process_physics_priority = 1 << 30
+		probe.process_priority = 1 << 30
+		main.add_child(probe)
+		main.get_tree().physics_frame.connect(_on_physics_frame_stamp)
+		main.get_tree().process_frame.connect(_on_process_frame_stamp)
+		if "--bake" in user_args or "--bench-gameplay-compat" in user_args:
+			var mb = load("res://addons/mesh_baker/mesh_baker.gd")
+			if mb:
+				mb.bake_main_scene(main)
+		RenderingServer.frame_post_draw.connect(_on_gameplay_frame_post_draw)
+
 	if "--test-verify-render" in user_args:
 		_run_verify_render_test()
+
+
+func _record_physics_server_step(now_usec: int) -> void:
+	if _perf_physics_probe_usec > 0:
+		var server_ms := float(now_usec - _perf_physics_probe_usec) / 1000.0
+		if _perf_frames > 60:
+			_perf_phys_server_samples.append(server_ms)
+			var script_ms := 0.0
+			if _perf_phys_script_samples.size() > 0:
+				script_ms = _perf_phys_script_samples[_perf_phys_script_samples.size() - 1]
+			_perf_phys_samples.append(script_ms + server_ms)
+		_perf_physics_probe_usec = 0
+		if _perf_target_frames > 0 and _perf_frames >= _perf_target_frames:
+			_report_perf_benchmark()
+			main.get_tree().quit(0)
+
+
+func _on_physics_frame_stamp() -> void:
+	var now_usec := Time.get_ticks_usec()
+	_record_physics_server_step(now_usec)
+	_perf_physics_tick_start_usec = now_usec
+	if _perf_last_tick_usec > 0 and _perf_frames >= 60:
+		_perf_wall_samples.append(float(now_usec - _perf_last_tick_usec) / 1000.0)
+	_perf_last_tick_usec = now_usec
+
+
+func _on_process_frame_stamp() -> void:
+	var now_usec := Time.get_ticks_usec()
+	_record_physics_server_step(now_usec)
+	_perf_process_frame_start_usec = now_usec
+
+
+func _on_probe_physics_process() -> void:
+	var now_usec := Time.get_ticks_usec()
+	_perf_physics_probe_usec = now_usec
+	var script_ms := float(now_usec - _perf_physics_tick_start_usec) / 1000.0
+	if _perf_frames > 60:
+		_perf_phys_script_samples.append(script_ms)
+	if _gameplay_bench_active:
+		_gameplay_frame_physics_script_ms += script_ms
+
+
+func _on_probe_process() -> void:
+	if _perf_frames > 60:
+		var proc_ms := float(Time.get_ticks_usec() - _perf_process_frame_start_usec) / 1000.0
+		_perf_proc_samples.append(proc_ms)
 
 
 func on_physics_process(_delta: float) -> void:
@@ -91,94 +213,117 @@ func on_physics_process(_delta: float) -> void:
 				_perf_walk_dir = 1.0
 			main.mats.velocity = Vector3(_perf_walk_dir * 3.5, 0.0, 0.0)
 			main.mats.move_and_slide()
-		if _perf_frames > 60:
-			var phys_ms: float = Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0
-			var proc_ms: float = Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0
-			_perf_phys_samples.append(phys_ms)
-			_perf_proc_samples.append(proc_ms)
-			var now_usec := Time.get_ticks_usec()
-			if _perf_last_tick_usec > 0:
-				_perf_wall_samples.append(float(now_usec - _perf_last_tick_usec) / 1000.0)
-			_perf_last_tick_usec = now_usec
-		if _perf_frames >= _perf_target_frames:
-			_report_perf_benchmark()
-			main.get_tree().quit(0)
+
+
+static func _compute_stats(samples_sorted: Array[float]) -> Dictionary:
+	var count := samples_sorted.size()
+	if count == 0:
+		return {"min": 0.0, "avg": 0.0, "p50": 0.0, "p95": 0.0, "p99": 0.0, "max": 0.0}
+	var sum := 0.0
+	for v in samples_sorted:
+		sum += v
+	return {
+		"min": samples_sorted[0],
+		"avg": sum / float(count),
+		"p50": samples_sorted[int(count * 0.50)],
+		"p95": samples_sorted[mini(count - 1, int(count * 0.95))],
+		"p99": samples_sorted[mini(count - 1, int(count * 0.99))],
+		"max": samples_sorted[count - 1],
+	}
 
 
 func _report_perf_benchmark() -> void:
 	var phys_sorted := _perf_phys_samples.duplicate()
 	phys_sorted.sort()
+	var script_sorted := _perf_phys_script_samples.duplicate()
+	script_sorted.sort()
+	var server_sorted := _perf_phys_server_samples.duplicate()
+	server_sorted.sort()
 	var proc_sorted := _perf_proc_samples.duplicate()
 	proc_sorted.sort()
+	var wall_sorted := _perf_wall_samples.duplicate()
+	wall_sorted.sort()
+
 	var n: int = phys_sorted.size()
 	if n == 0:
 		print("PERF_BENCHMARK: No samples collected")
 		return
-	var wall_sorted := _perf_wall_samples.duplicate()
-	wall_sorted.sort()
-	var wall_n := wall_sorted.size()
-	var wall_sum := 0.0
-	for w in wall_sorted:
-		wall_sum += w
-	var wall_avg: float = (wall_sum / float(wall_n)) if wall_n > 0 else 0.0
-	var wall_p50: float = float(wall_sorted[int(wall_n * 0.50)]) if wall_n > 0 else 0.0
-	var wall_p95: float = (
-		float(wall_sorted[mini(wall_n - 1, int(wall_n * 0.95))]) if wall_n > 0 else 0.0
-	)
-	var wall_p99: float = (
-		float(wall_sorted[mini(wall_n - 1, int(wall_n * 0.99))]) if wall_n > 0 else 0.0
-	)
-	var wall_max: float = float(wall_sorted[wall_n - 1]) if wall_n > 0 else 0.0
+
+	var phys_stats := _compute_stats(phys_sorted)
+	var script_stats := _compute_stats(script_sorted)
+	var server_stats := _compute_stats(server_sorted)
+	var proc_stats := _compute_stats(proc_sorted)
+	var wall_stats := _compute_stats(wall_sorted)
+
 	print(
 		(
 			"  Wall Tick (ms): avg=%.3f, p50=%.3f, p95=%.3f, p99=%.3f, max=%.3f"
-			% [wall_avg, wall_p50, wall_p95, wall_p99, wall_max]
+			% [wall_stats.avg, wall_stats.p50, wall_stats.p95, wall_stats.p99, wall_stats.max]
 		)
 	)
 
-	var phys_sum := 0.0
-	for v in phys_sorted:
-		phys_sum += v
-	var proc_sum := 0.0
-	for v in proc_sorted:
-		proc_sum += v
-
-	var phys_min: float = phys_sorted[0]
-	var phys_avg: float = phys_sum / float(n)
-	var phys_p50: float = phys_sorted[int(n * 0.50)]
-	var phys_p95: float = phys_sorted[mini(n - 1, int(n * 0.95))]
-	var phys_p99: float = phys_sorted[mini(n - 1, int(n * 0.99))]
-	var phys_max: float = phys_sorted[n - 1]
-
-	var proc_min: float = proc_sorted[0]
-	var proc_avg: float = proc_sum / float(n)
-	var proc_p50: float = proc_sorted[int(n * 0.50)]
-	var proc_p95: float = proc_sorted[mini(n - 1, int(n * 0.95))]
-	var proc_p99: float = proc_sorted[mini(n - 1, int(n * 0.99))]
-	var proc_max: float = proc_sorted[n - 1]
-
 	var ticks_per_sec: int = Engine.physics_ticks_per_second
-	var phys_cpu_ms_per_sec: float = phys_avg * float(ticks_per_sec)
+	var phys_cpu_ms_per_sec: float = phys_stats.avg * float(ticks_per_sec)
 
 	var mode_str := "WALK" if _perf_is_walk else "IDLE"
 	print("==================================================")
 	print("PERF_BENCHMARK: mode=%s, ticks_per_sec=%d, samples=%d" % [mode_str, ticks_per_sec, n])
 	print(
 		(
-			"  Physics Step (ms): avg=%.3f, p50=%.3f, p95=%.3f, p99=%.3f, min=%.3f, max=%.3f"
-			% [phys_avg, phys_p50, phys_p95, phys_p99, phys_min, phys_max]
+			"  Physics Step (ms):   avg=%.3f, p50=%.3f, p95=%.3f, p99=%.3f, min=%.3f, max=%.3f"
+			% [
+				phys_stats.avg,
+				phys_stats.p50,
+				phys_stats.p95,
+				phys_stats.p99,
+				phys_stats.min,
+				phys_stats.max
+			]
 		)
 	)
 	print(
 		(
-			"  Total Physics CPU: %.2f ms / simulated second (%.1f%% of 1 core)"
+			"    Physics Script:    avg=%.3f, p50=%.3f, p95=%.3f, p99=%.3f, min=%.3f, max=%.3f"
+			% [
+				script_stats.avg,
+				script_stats.p50,
+				script_stats.p95,
+				script_stats.p99,
+				script_stats.min,
+				script_stats.max
+			]
+		)
+	)
+	print(
+		(
+			"    Physics Server:    avg=%.3f, p50=%.3f, p95=%.3f, p99=%.3f, min=%.3f, max=%.3f"
+			% [
+				server_stats.avg,
+				server_stats.p50,
+				server_stats.p95,
+				server_stats.p99,
+				server_stats.min,
+				server_stats.max
+			]
+		)
+	)
+	print(
+		(
+			"  Total Physics CPU:   %.2f ms / simulated second (%.1f%% of 1 core)"
 			% [phys_cpu_ms_per_sec, phys_cpu_ms_per_sec / 10.0]
 		)
 	)
 	print(
 		(
-			"  Process Frame (ms): avg=%.3f, p50=%.3f, p95=%.3f, p99=%.3f, min=%.3f, max=%.3f"
-			% [proc_avg, proc_p50, proc_p95, proc_p99, proc_min, proc_max]
+			"  Process Frame (ms):  avg=%.3f, p50=%.3f, p95=%.3f, p99=%.3f, min=%.3f, max=%.3f"
+			% [
+				proc_stats.avg,
+				proc_stats.p50,
+				proc_stats.p95,
+				proc_stats.p99,
+				proc_stats.min,
+				proc_stats.max
+			]
 		)
 	)
 	print("==================================================")
@@ -186,25 +331,11 @@ func _report_perf_benchmark() -> void:
 		"mode": mode_str,
 		"physics_ticks_per_second": ticks_per_sec,
 		"samples": n,
-		"physics_step_ms":
-		{
-			"min": phys_min,
-			"avg": phys_avg,
-			"p50": phys_p50,
-			"p95": phys_p95,
-			"p99": phys_p99,
-			"max": phys_max,
-		},
+		"physics_step_ms": phys_stats,
+		"physics_script_ms": script_stats,
+		"physics_server_ms": server_stats,
 		"physics_cpu_ms_per_sec": phys_cpu_ms_per_sec,
-		"process_frame_ms":
-		{
-			"min": proc_min,
-			"avg": proc_avg,
-			"p50": proc_p50,
-			"p95": proc_p95,
-			"p99": proc_p99,
-			"max": proc_max,
-		}
+		"process_frame_ms": proc_stats,
 	}
 	print("PERF_BENCHMARK_RESULT: " + JSON.stringify(result_dict))
 
@@ -342,6 +473,217 @@ func _report_render_benchmark() -> void:
 		"f3_hud_last": f3_last,
 	}
 	print("RENDER_BENCHMARK_RESULT: " + JSON.stringify(result_dict))
+
+
+func _on_gameplay_frame_post_draw() -> void:
+	if not _gameplay_bench_active:
+		return
+	var now_usec := Time.get_ticks_usec()
+	if _gameplay_last_frame_usec == 0:
+		_gameplay_last_frame_usec = now_usec
+		_gameplay_phase_start_usec = now_usec
+		if main.traffic_manager and "cars_spawned" in main.traffic_manager.stats:
+			_gameplay_prev_cars_spawned = int(main.traffic_manager.stats["cars_spawned"])
+		return
+
+	var fi_ms := float(now_usec - _gameplay_last_frame_usec) / 1000.0
+	_gameplay_last_frame_usec = now_usec
+
+	var current_cars_spawned: int = 0
+	if main.traffic_manager and "cars_spawned" in main.traffic_manager.stats:
+		current_cars_spawned = int(main.traffic_manager.stats["cars_spawned"])
+	var cars_spawned := current_cars_spawned - _gameplay_prev_cars_spawned
+	_gameplay_prev_cars_spawned = current_cars_spawned
+
+	var script_ms := _gameplay_frame_physics_script_ms
+	_gameplay_frame_physics_script_ms = 0.0
+
+	var dc := int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME))
+	var obj := int(Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME))
+
+	var phase_name := "day" if _gameplay_current_phase == 0 else "night"
+	var phase_dict: Dictionary = _gameplay_phase_data[phase_name]
+	phase_dict["frame_count"] += 1
+	var frame_idx: int = phase_dict["frame_count"]
+
+	(phase_dict["frame_intervals"] as Array[float]).append(fi_ms)
+	(phase_dict["draw_calls"] as Array[int]).append(dc)
+	(phase_dict["objects"] as Array[int]).append(obj)
+
+	if fi_ms > 25.0:
+		var spike_info := {
+			"phase": phase_name,
+			"frame": frame_idx,
+			"interval_ms": fi_ms,
+			"physics_script_ms": script_ms,
+			"cars_spawned": cars_spawned,
+		}
+		(phase_dict["spikes"] as Array).append(spike_info)
+		print(
+			(
+				"[SPIKE] phase=%s frame=%d: %.2f ms (> 25 ms), physics_script=%.2f ms, cars_spawned=%d"
+				% [phase_name, frame_idx, fi_ms, script_ms, cars_spawned]
+			)
+		)
+
+	var phase_elapsed_sec := float(now_usec - _gameplay_phase_start_usec) / 1_000_000.0
+	if phase_elapsed_sec >= _gameplay_phase_target_sec:
+		if _gameplay_current_phase == 0:
+			print(
+				(
+					"GAMEPLAY_BENCHMARK: Completed Day phase (%d frames, %.2f s). Transitioning to Night (19.9h)..."
+					% [phase_dict["frame_count"], phase_elapsed_sec]
+				)
+			)
+			GameState.set_time_hours(19.9)
+			_gameplay_current_phase = 1
+			_gameplay_phase_start_usec = Time.get_ticks_usec()
+			_gameplay_frame_physics_script_ms = 0.0
+		else:
+			print(
+				(
+					"GAMEPLAY_BENCHMARK: Completed Night phase (%d frames, %.2f s)."
+					% [phase_dict["frame_count"], phase_elapsed_sec]
+				)
+			)
+			_gameplay_bench_active = false
+			_report_gameplay_benchmark()
+			main.get_tree().quit(0)
+
+
+func _report_gameplay_benchmark() -> void:
+	print("==================================================")
+	print("GAMEPLAY BENCHMARK REPORT (target %.1f s per phase)" % _gameplay_phase_target_sec)
+	var summary_results := {}
+
+	for phase_name in ["day", "night"]:
+		var pdata: Dictionary = _gameplay_phase_data[phase_name]
+		var fi_list: Array[float] = pdata["frame_intervals"]
+		var dc_list: Array[int] = pdata["draw_calls"]
+		var obj_list: Array[int] = pdata["objects"]
+		var n: int = fi_list.size()
+
+		if n == 0:
+			print("  Phase %s: No frames recorded" % phase_name.to_upper())
+			continue
+
+		var fi_sorted := fi_list.duplicate()
+		fi_sorted.sort()
+		var dc_sorted := dc_list.duplicate()
+		dc_sorted.sort()
+		var obj_sorted := obj_list.duplicate()
+		obj_sorted.sort()
+
+		var fi_min: float = fi_sorted[0]
+		var fi_max: float = fi_sorted[n - 1]
+		var fi_p50: float = fi_sorted[int(n * 0.50)]
+		var fi_p95: float = fi_sorted[mini(n - 1, int(n * 0.95))]
+		var fi_p99: float = fi_sorted[mini(n - 1, int(n * 0.99))]
+		var fi_sum: float = 0.0
+		var count_gt_20: int = 0
+		var count_gt_33: int = 0
+		for v in fi_sorted:
+			fi_sum += v
+			if v > 20.0:
+				count_gt_20 += 1
+			if v > 33.0:
+				count_gt_33 += 1
+		var fi_avg: float = fi_sum / float(n)
+		var pct_gt_20: float = (float(count_gt_20) / float(n)) * 100.0
+		var pct_gt_33: float = (float(count_gt_33) / float(n)) * 100.0
+		var effective_fps: float = (1000.0 / fi_avg) if fi_avg > 0.0 else 0.0
+
+		var dc_min: int = dc_sorted[0]
+		var dc_max: int = dc_sorted[n - 1]
+		var dc_p50: int = dc_sorted[int(n * 0.50)]
+		var dc_p95: int = dc_sorted[mini(n - 1, int(n * 0.95))]
+		var dc_p99: int = dc_sorted[mini(n - 1, int(n * 0.99))]
+		var dc_sum: int = 0
+		for v in dc_sorted:
+			dc_sum += v
+		var dc_avg: float = float(dc_sum) / float(n)
+
+		var obj_min: int = obj_sorted[0]
+		var obj_max: int = obj_sorted[n - 1]
+		var obj_p50: int = obj_sorted[int(n * 0.50)]
+		var obj_p95: int = obj_sorted[mini(n - 1, int(n * 0.95))]
+		var obj_p99: int = obj_sorted[mini(n - 1, int(n * 0.99))]
+		var obj_sum: int = 0
+		for v in obj_sorted:
+			obj_sum += v
+		var obj_avg: float = float(obj_sum) / float(n)
+		var spikes: Array = pdata["spikes"]
+
+		print("--------------------------------------------------")
+		print("PHASE: %s (frames=%d)" % [phase_name.to_upper(), n])
+		print(
+			(
+				"  Frame Interval (ms): avg=%.2f (%.1f fps), min=%.2f, p50=%.2f, p95=%.2f, p99=%.2f, max=%.2f"
+				% [fi_avg, effective_fps, fi_min, fi_p50, fi_p95, fi_p99, fi_max]
+			)
+		)
+		print("  Frames > 20 ms:      %d (%.2f%%)" % [count_gt_20, pct_gt_20])
+		print("  Frames > 33 ms:      %d (%.2f%%)" % [count_gt_33, pct_gt_33])
+		print(
+			(
+				"  Draw Calls:          avg=%.1f, min=%d, p50=%d, p95=%d, p99=%d, max=%d"
+				% [dc_avg, dc_min, dc_p50, dc_p95, dc_p99, dc_max]
+			)
+		)
+		print(
+			(
+				"  Render Objects:      avg=%.1f, min=%d, p50=%d, p95=%d, p99=%d, max=%d"
+				% [obj_avg, obj_min, obj_p50, obj_p95, obj_p99, obj_max]
+			)
+		)
+		print("  Spikes (> 25 ms):    %d" % spikes.size())
+		for s in spikes:
+			print(
+				(
+					"    frame %d: %.2f ms, physics_script=%.2f ms, cars_spawned=%d"
+					% [s["frame"], s["interval_ms"], s["physics_script_ms"], s["cars_spawned"]]
+				)
+			)
+
+		summary_results[phase_name] = {
+			"frames": n,
+			"frame_interval_ms":
+			{
+				"min": fi_min,
+				"avg": fi_avg,
+				"p50": fi_p50,
+				"p95": fi_p95,
+				"p99": fi_p99,
+				"max": fi_max,
+				"effective_fps": effective_fps,
+			},
+			"pct_gt_20ms": pct_gt_20,
+			"pct_gt_33ms": pct_gt_33,
+			"count_gt_20ms": count_gt_20,
+			"count_gt_33ms": count_gt_33,
+			"draw_calls":
+			{
+				"min": dc_min,
+				"avg": dc_avg,
+				"p50": dc_p50,
+				"p95": dc_p95,
+				"p99": dc_p99,
+				"max": dc_max,
+			},
+			"objects":
+			{
+				"min": obj_min,
+				"avg": obj_avg,
+				"p50": obj_p50,
+				"p95": obj_p95,
+				"p99": obj_p99,
+				"max": obj_max,
+			},
+			"spikes": spikes,
+		}
+
+	print("==================================================")
+	print("GAMEPLAY_BENCHMARK_RESULT: " + JSON.stringify(summary_results))
 
 
 func _run_verify_render_test() -> void:
@@ -741,6 +1083,7 @@ func _run_verify_render_test() -> void:
 		Car.CarType.MINIVAN,
 		Car.CarType.JEEP,
 		Car.CarType.F150,
+		Car.CarType.CYBERTRUCK,
 	]
 	for ct in all_types:
 		test_car.car_type = ct
@@ -779,6 +1122,13 @@ func _run_verify_render_test() -> void:
 				c /= 3.0
 				if c.x > 1.2 and c.x < 2.4 and c.y > 1.15 and abs(c.z) < 0.9:
 					assert(mdt.get_face_normal(fi).y > 0.5, "F150 hood faces must point upward")
+		if ct == Car.CarType.CYBERTRUCK:
+			var body := test_car.get_node_or_null("Visuals/Cybertruck/Body") as MeshInstance3D
+			assert(body != null and body.mesh != null, "Cybertruck Body mesh must exist")
+			var flb := (
+				test_car.get_node_or_null("Visuals/Cybertruck/FrontLightBar") as MeshInstance3D
+			)
+			assert(flb != null and flb.mesh != null, "Cybertruck FrontLightBar must exist")
 
 	# Verify other vehicle scenes
 	var other_scenes := [
@@ -786,6 +1136,8 @@ func _run_verify_render_test() -> void:
 		"res://cars/truck.tscn",
 		"res://cars/taxi.tscn",
 		"res://cars/shipping_truck.tscn",
+		"res://cars/f150.tscn",
+		"res://cars/cybertruck.tscn",
 	]
 	for s_path in other_scenes:
 		var scn = load(s_path)
@@ -795,7 +1147,7 @@ func _run_verify_render_test() -> void:
 		assert(v._active_wheels.size() >= 4, "%s must have >= 4 wheels" % s_path)
 		v.queue_free()
 	test_car.queue_free()
-	print("  Vehicles verified: 8 passenger body types + 4 commercial vehicle classes")
+	print("  Vehicles verified: 9 passenger body types + 4 commercial vehicle classes")
 
 	# --- 3. Paint Colors ---
 	print("VERIFY_RENDER [3/7]: Verifying paint colors and vertex colors...")
@@ -966,8 +1318,11 @@ func _run_verify_render_test() -> void:
 			lbl.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_OFF,
 			"Label3D %s must have cast_shadow OFF" % lbl.name
 		)
-		if lbl.visibility_range_end > 0.0:
-			culled_labels += 1
+		assert(
+			lbl.visibility_range_end > 0.0,
+			"Label3D %s (%s) must have visibility_range_end > 0.0" % [lbl.name, lbl.get_path()]
+		)
+		culled_labels += 1
 		assert(lbl.text != "", "Label3D %s text must not be empty" % lbl.name)
 	print(
 		(

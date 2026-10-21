@@ -91,6 +91,12 @@ func dismiss_immediately() -> void:
 
 func _ready() -> void:
 	add_to_group("start_screen")
+	var user_args: PackedStringArray = OS.get_cmdline_user_args()
+	for arg in OS.get_cmdline_args():
+		if not user_args.has(arg):
+			user_args.append(arg)
+	if "--skip-start-screen" in user_args:
+		skip_start_screen = true
 	if skip_start_screen:
 		dismiss_immediately()
 		return
@@ -139,9 +145,18 @@ func _start_default_warmup() -> void:
 		target_tm = get_tree().get_first_node_in_group("traffic_manager")
 	if target_tm == null and get_parent():
 		target_tm = get_parent().get_node_or_null("TrafficManager")
+
+	var target_ec: EnvironmentController = null
+	if is_inside_tree():
+		target_ec = (
+			get_tree().get_first_node_in_group("environment_controller") as EnvironmentController
+		)
+	if target_ec == null and get_parent():
+		target_ec = get_parent().get_node_or_null("EnvironmentController") as EnvironmentController
+
 	var warmup := WorldWarmup.new()
 	set_warmup(warmup)
-	warmup.start_warmup(get_tree(), target_props, target_tm)
+	warmup.start_warmup(get_tree(), target_props, target_tm, target_ec)
 
 
 func set_loading(loading: bool) -> void:

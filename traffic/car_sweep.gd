@@ -18,6 +18,11 @@ static func lookahead(car: Car) -> float:
 	return maxf(4.0, (spd * spd) / (2.0 * BRAKE_ACCELERATION) + 3.0)
 
 
+static var sweep_hits: int = 0
+static var sweep_reused: int = 0
+static var sweep_allocs: int = 0
+
+
 ## Evaluates and caches oriented bounding boxes along the car's path or forward heading.
 ## Preserves car.sweep_rev to guarantee zero heap allocation on cache hits.
 static func car_sweep(car: Car, cache: Dictionary) -> Dictionary:
@@ -25,7 +30,12 @@ static func car_sweep(car: Car, cache: Dictionary) -> Dictionary:
 	var car_id := car.get_instance_id()
 	var cached: Dictionary = cache.get(car_id, {})
 	if not cached.is_empty() and cached.get("rev", -1) == rev:
+		sweep_hits += 1
 		return cached
+	if not cached.is_empty():
+		sweep_reused += 1
+	else:
+		sweep_allocs += 1
 
 	var backward := (
 		car.speed < 0.0 or car.desired_speed < 0.0 or car.state == Car.State.REVERSING_OUT
@@ -34,8 +44,15 @@ static func car_sweep(car: Car, cache: Dictionary) -> Dictionary:
 	var half_w := car.car_width * 0.5
 	var side := half_w + SWEEP_SIDE_MARGIN
 	var heading := car.get_heading()
-	var rects: Array[PackedVector2Array] = [footprint(car.global_position, heading, half_l, half_w)]
-	var dists: Array[float] = [0.0]
+	var rects: Array[PackedVector2Array] = []
+	var dists: Array[float] = []
+	if not cached.is_empty():
+		rects = cached.get("rects", [])
+		rects.clear()
+		dists = cached.get("dists", [])
+		dists.clear()
+	rects.append(footprint(car.global_position, heading, half_l, half_w))
+	dists.append(0.0)
 	var look := lookahead(car)
 	var horizon := look + SWEEP_INTENT_EXTRA
 	if car.state == Car.State.REVERSING_OUT and car.path != null:
@@ -53,15 +70,21 @@ static func car_sweep(car: Car, cache: Dictionary) -> Dictionary:
 			rects.append(footprint(car.global_position + move * t, heading, half_l, side))
 			dists.append(t)
 
-	var sweep := {
-		"rev": rev,
-		"rects": rects,
-		"dists": dists,
-		"look": look,
-		"reach": horizon + car.car_length,
-	}
-	cache[car_id] = sweep
-	return sweep
+	if cached.is_empty():
+		var sweep := {
+			"rev": rev,
+			"rects": rects,
+			"dists": dists,
+			"look": look,
+			"reach": horizon + car.car_length,
+		}
+		cache[car_id] = sweep
+		return sweep
+	else:
+		cached["rev"] = rev
+		cached["look"] = look
+		cached["reach"] = horizon + car.car_length
+		return cached
 
 
 ## Appends footprints at SWEEP_STEP intervals from path distance `from` over `travel`

@@ -17,6 +17,7 @@ func matches_args() -> bool:
 				"--test-start-screen",
 				"--test-startup",
 				"--test-character-editor",
+				"--test-objectives-editor",
 			]
 		):
 			return true
@@ -52,6 +53,9 @@ func setup_ready() -> void:
 		return
 	if "--test-character-editor" in user_args:
 		_run_test_character_editor()
+		return
+	if "--test-objectives-editor" in user_args:
+		_run_test_objectives_editor()
 		return
 
 
@@ -138,6 +142,23 @@ func _run_test_day_weather() -> void:
 	)
 	assert(main.hud.weather_display.time_label.text.length() > 0, "Time label must have text")
 
+	# 8. Web shadow overrides
+	var env_ctrl: EnvironmentController = main.get_node_or_null("EnvironmentController")
+	assert(env_ctrl != null, "EnvironmentController must exist")
+	assert(env_ctrl.sun_light != null, "EnvironmentController.sun_light must exist")
+	var orig_mode := env_ctrl.sun_light.directional_shadow_mode
+	var orig_dist := env_ctrl.sun_light.directional_shadow_max_distance
+	env_ctrl.apply_web_shadow_overrides(true)
+	assert(
+		env_ctrl.sun_light.directional_shadow_mode == DirectionalLight3D.SHADOW_ORTHOGONAL,
+		"Web shadow mode must be SHADOW_ORTHOGONAL"
+	)
+	assert(
+		is_equal_approx(env_ctrl.sun_light.directional_shadow_max_distance, 45.0),
+		"Web shadow max distance must be 45.0"
+	)
+	env_ctrl.sun_light.directional_shadow_mode = orig_mode
+	env_ctrl.sun_light.directional_shadow_max_distance = orig_dist
 	print("DAY_WEATHER_TEST: SUCCESS - --test-day-weather passed cleanly!")
 	main.get_tree().quit(0)
 
@@ -1080,6 +1101,19 @@ func _run_test_startup() -> void:
 				b != null and b.visible, "Building %s must be visible after warmup" % building_name
 			)
 
+	# Verify night lighting warmup completed and restored to daytime
+	assert(not GameState.are_lights_on(), "Lights must not be active during daytime")
+	var sl := props.get_node_or_null("Streetlights") as Node3D if props else null
+	if sl:
+		for lamp in sl.get_children():
+			if lamp is MultiMeshInstance3D:
+				continue
+			var light: SpotLight3D = lamp.get_node_or_null("Light")
+			if light:
+				assert(
+					not light.visible,
+					"Streetlight SpotLight3D must be restored to off after warmup"
+				)
 	# 2. Menu gating: verify tree remains paused and objectives are gated
 	assert(main.get_tree().paused, "Tree must remain paused while StartScreen is gating")
 	assert(
@@ -1218,4 +1252,42 @@ func _run_test_character_editor() -> void:
 	assert(not editor.visible, "Editor must be hidden when closed")
 
 	print("CHARACTER_EDITOR_TEST: SUCCESS - --test-character-editor passed cleanly!")
+	main.get_tree().quit(0)
+
+
+func _run_test_objectives_editor() -> void:
+	await main.get_tree().process_frame
+	var dock_script = load("res://addons/objectives_editor/objectives_editor_dock.gd")
+	assert(dock_script != null, "ObjectivesEditorDock script must exist")
+	var dock = dock_script.new()
+	assert(dock != null, "ObjectivesEditorDock must instantiate")
+	main.add_child(dock)
+	await main.get_tree().process_frame
+
+	# 1. Verify data loaded
+	assert(dock.data.has("locations"), "Data must have locations key")
+	assert(dock.data.has("dialogue_parts"), "Data must have dialogue_parts key")
+	assert(dock.data["locations"].size() >= 4, "Must have at least 4 store locations")
+
+	# 2. Verify Tab 1 populated
+	assert(dock.loc_item_list.item_count >= 4, "Location item list must be populated")
+	assert(dock.item_item_list.item_count > 0, "Item list must be populated for first location")
+
+	# 3. Verify Tab 2 populated
+	assert(dock.opening_item_list.item_count > 0, "Opening dialogue list must be populated")
+	assert(dock.cat_option_btn.item_count > 0, "Category option button must have items")
+	assert(dock.request_item_list.item_count > 0, "Request template list must be populated")
+
+	# 4. Verify Tab 3 (Dialogue Combiner & Tester)
+	dock._on_tab_changed(2)
+	assert(dock.test_loc_option.item_count >= 4, "Tester location options must be populated")
+	assert(dock.test_item_option.item_count > 0, "Tester item options must be populated")
+	dock._update_tester_preview()
+	assert(
+		dock.test_output_display.text.length() > 0,
+		"Tester output display must generate preview text"
+	)
+
+	dock.queue_free()
+	print("OBJECTIVES_EDITOR_TEST: SUCCESS - --test-objectives-editor passed cleanly!")
 	main.get_tree().quit(0)

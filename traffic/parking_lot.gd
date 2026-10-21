@@ -272,6 +272,103 @@ const SITES: Dictionary[StringName, Dictionary] = {
 		"reverse_run": SOUTH_REVERSE_RUN,
 	},
 }
+## Authored shortcut links between adjacent lots across grass.
+## Each link explicitly specifies source and destination site_id values plus
+## world-space waypoints connecting the lots.
+## Links are strictly explicit site-to-site topologies; never infer links from spot distance.
+const SHORTCUT_LINKS: Array[Dictionary] = [
+	{
+		"source_site_id": &"strip_mall",
+		"destination_site_id": &"cramped_inn",
+		"from_site": &"strip_mall",
+		"to_site": &"cramped_inn",
+		"waypoints":
+		[
+			Vector3(11.0, 0.0, 24.8),
+			Vector3(13.0, 0.0, 24.8),
+			Vector3(18.0, 0.0, 24.8),
+			Vector3(20.0, 0.0, 24.8),
+		],
+		"grass_entry": Vector3(13.0, 0.0, 24.8),
+		"grass_exit": Vector3(18.0, 0.0, 24.8),
+	},
+	{
+		"source_site_id": &"cramped_inn",
+		"destination_site_id": &"strip_mall",
+		"from_site": &"cramped_inn",
+		"to_site": &"strip_mall",
+		"waypoints":
+		[
+			Vector3(20.0, 0.0, 24.8),
+			Vector3(18.0, 0.0, 24.8),
+			Vector3(13.0, 0.0, 24.8),
+			Vector3(11.0, 0.0, 24.8),
+		],
+		"grass_entry": Vector3(18.0, 0.0, 24.8),
+		"grass_exit": Vector3(13.0, 0.0, 24.8),
+	},
+]
+
+
+static func get_shortcut_links() -> Array[Dictionary]:
+	return SHORTCUT_LINKS
+
+
+static func get_shortcut_links_for_site(site_id: StringName) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for link in SHORTCUT_LINKS:
+		if link.get("source_site_id", &"") == site_id:
+			result.append(link)
+	return result
+
+
+static func get_shortcut_link(
+	source_site_id: StringName, destination_site_id: StringName
+) -> Dictionary:
+	for link in SHORTCUT_LINKS:
+		if (
+			link.get("source_site_id", &"") == source_site_id
+			and link.get("destination_site_id", &"") == destination_site_id
+		):
+			return link
+	return {}
+
+
+static func has_shortcut_link(source_site_id: StringName, destination_site_id: StringName) -> bool:
+	return not get_shortcut_link(source_site_id, destination_site_id).is_empty()
+
+
+static func is_in_grass_shortcut(pos: Vector3) -> bool:
+	return pos.x >= 13.0 and pos.x <= 18.0 and pos.z >= 23.0 and pos.z <= 26.5
+
+
+static func get_shortcut_destination_sites(source_site_id: StringName) -> Array[StringName]:
+	var sites: Array[StringName] = []
+	for link in SHORTCUT_LINKS:
+		if link.get("source_site_id", &"") == source_site_id:
+			var dest_site: StringName = link.get("destination_site_id", &"")
+			if dest_site != &"" and not sites.has(dest_site):
+				sites.append(dest_site)
+	return sites
+
+
+static func get_shortcut_candidate_spots(
+	from_spot: ParkingSpot, candidate_spots: Array[ParkingSpot]
+) -> Array[ParkingSpot]:
+	var from_site := lot_group(from_spot)
+	var dest_sites := get_shortcut_destination_sites(from_site)
+	var results: Array[ParkingSpot] = []
+	if dest_sites.is_empty():
+		return results
+	for spot in candidate_spots:
+		if spot == null or spot == from_spot:
+			continue
+		if spot.state != ParkingSpot.State.FREE:
+			continue
+		var spot_site := lot_group(spot)
+		if spot_site in dest_sites:
+			results.append(spot)
+	return results
 
 
 static func get_site_for_destination(dest: StringName) -> StringName:
@@ -898,6 +995,49 @@ static func frontage_exit_route(spot, radius := 1.5) -> Curve3D:
 	return PathBuilder.build(pts, radius)
 
 
+static func shortcut_route(from_spot, to_spot, radius := 0.8) -> Curve3D:
+	var from_pos := _spot_position(from_spot)
+	var to_pos := _spot_position(to_spot)
+	var from_site := lot_group(from_spot)
+	var to_site := lot_group(to_spot)
+	var link := get_shortcut_link(from_site, to_site)
+	if link.is_empty():
+		push_error(
+			"ParkingLot.shortcut_route: no shortcut link between %s and %s" % [from_site, to_site]
+		)
+		return Curve3D.new()
+
+	var sx := from_pos.x
+	var from_aisle_z := south_exit_aisle_z(from_site, sx)
+	var sign_val := _south_exit_sign(from_site, sx)
+	var start_pos := Vector3(sx - sign_val * SOUTH_REVERSE_RUN, 0.0, from_aisle_z)
+	var to_aisle_z := south_entry_aisle_z(to_site, to_pos.x)
+
+	var pts := PackedVector3Array()
+	pts.append(start_pos)
+
+	if from_site == &"strip_mall" and to_site == &"cramped_inn":
+		if start_pos.x < 11.0:
+			pts.append(Vector3(11.0, 0.0, 24.8))
+		pts.append(Vector3(13.0, 0.0, 24.8))
+		pts.append(Vector3(18.0, 0.0, 24.8))
+		if to_pos.x > 20.0:
+			pts.append(Vector3(20.0, 0.0, to_aisle_z))
+		pts.append(Vector3(to_pos.x, 0.0, to_aisle_z))
+		pts.append(to_pos)
+	elif from_site == &"cramped_inn" and to_site == &"strip_mall":
+		if start_pos.x > 20.0:
+			pts.append(Vector3(20.0, 0.0, 24.8))
+		pts.append(Vector3(18.0, 0.0, 24.8))
+		pts.append(Vector3(13.0, 0.0, 24.8))
+		if to_pos.x < 11.0:
+			pts.append(Vector3(11.0, 0.0, to_aisle_z))
+		pts.append(Vector3(to_pos.x, 0.0, to_aisle_z))
+		pts.append(to_pos)
+
+	return PathBuilder.build(pts, radius)
+
+
 func _init() -> void:
 	_build_spots()
 
@@ -1050,9 +1190,33 @@ func release(spot: ParkingSpot) -> void:
 		return
 	if spot.car != null:
 		if is_instance_valid(spot.car):
-			spot.car.spot = null
+			if spot.car.spot == spot:
+				spot.car.spot = null
+			if "pending_destination_spot" in spot.car and spot.car.pending_destination_spot == spot:
+				spot.car.pending_destination_spot = null
 		spot.car = null
 	spot.state = ParkingSpot.State.FREE
+	spot_changed.emit(spot)
+
+
+func reserve_destination(spot: ParkingSpot, car: Car) -> void:
+	if spot == null or car == null:
+		push_error("ParkingLot.reserve_destination: spot and car must not be null")
+		assert(spot != null and car != null, "spot and car must not be null")
+		return
+	if spot.state != ParkingSpot.State.FREE:
+		push_error(
+			"ParkingLot.reserve_destination: spot %d expected FREE, was %s" % [spot.id, spot.state]
+		)
+		assert(spot.state == ParkingSpot.State.FREE, "spot must be FREE to reserve")
+		return
+	if spot.car != null:
+		push_error("ParkingLot.reserve_destination: spot %d already has car" % spot.id)
+		assert(spot.car == null, "spot must have no car to reserve")
+		return
+	spot.state = ParkingSpot.State.RESERVED
+	spot.car = car
+	car.pending_destination_spot = spot
 	spot_changed.emit(spot)
 
 
@@ -1063,6 +1227,14 @@ func check_invariants() -> int:
 			if spot.car != null:
 				leaked += 1
 		else:
-			if spot.car == null or not is_instance_valid(spot.car) or spot.car.spot != spot:
+			if spot.car == null or not is_instance_valid(spot.car):
+				leaked += 1
+			elif (
+				spot.car.spot != spot
+				and (
+					"pending_destination_spot" not in spot.car
+					or spot.car.pending_destination_spot != spot
+				)
+			):
 				leaked += 1
 	return leaked
