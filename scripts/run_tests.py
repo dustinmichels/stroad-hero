@@ -59,6 +59,8 @@ EXTENDED_TESTS = [
     "--test-retro-filter",
     "--test-lane-wander",
     "--test-grass-shortcut",
+    "--test-traffic-stop",
+    "--test-bus-stop",
 ]
 BENCHMARKS = [
     "--bench-physics",

@@ -7,11 +7,17 @@ const WAIL_SECONDS := 3
 
 static var _wail_stream: AudioStreamWAV
 
+## Lights and wail together; `siren_audible` mutes the wail while the lights keep flashing.
 @export var siren_active: bool = true:
 	set(value):
 		siren_active = value
 		if _audio != null:
 			_apply_active()
+@export var siren_audible: bool = true:
+	set(value):
+		siren_audible = value
+		if _audio != null:
+			_apply_audio()
 
 var _audio: AudioStreamPlayer3D
 var _red_materials: Array[StandardMaterial3D] = []
@@ -45,7 +51,11 @@ func _apply_active() -> void:
 	_flash_time = 0.0
 	_flash_step = -1
 	_update_flashes()
-	if siren_active:
+	_apply_audio()
+
+
+func _apply_audio() -> void:
+	if siren_active and siren_audible:
 		if not _audio.playing:
 			_audio.play()
 	else:

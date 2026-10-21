@@ -253,6 +253,9 @@ func _apply_visual_type() -> void:
 		if OS.is_debug_build() and ProjectSettings.get_setting("debug/bake_preview", false):
 			MeshBakerScript.bake_car_body(active_model)
 		active_model.visible = true
+		if car_type == CarType.POLICE_SUV:
+			# Traffic police drive dark until they start a traffic stop.
+			active_model.set("siren_active", false)
 		visuals.add_child(active_model)
 		_wheels_initialized = false
 		_signals_initialized = false

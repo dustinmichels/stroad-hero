@@ -43,6 +43,7 @@
 [ext_resource type="PackedScene" path="res://world/trees.tscn" id="41_trees"]
 [ext_resource type="PackedScene" path="res://world/flags.tscn" id="42_flags"]
 [ext_resource type="PackedScene" path="res://ui/retro_filter.tscn" id="43_retro_filter"]
+[ext_resource type="PackedScene" path="res://world/bus_stops.tscn" id="44_bus_stops"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.35, 0.55, 0.85, 1)
@@ -209,6 +210,8 @@ transform = Transform3D(0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, 0.707107, 
 transform = Transform3D(-0.34202, 0, 0.939693, 0, 1, 0, -0.939693, 0, -0.34202, -22, 0.1, -34.5)
 
 [node name="Streetlights" parent="Props" unique_id=356683526 instance=ExtResource("40_streetlights")]
+
+[node name="BusStops" parent="Props" instance=ExtResource("44_bus_stops")]
 
 [node name="Trees" parent="Props" unique_id=1613321626 instance=ExtResource("41_trees")]
 

@@ -71,6 +71,8 @@ func matches_args() -> bool:
 				"--test-cramped-inn-dropoff",
 				"--test-frontage",
 				"--test-grass-shortcut",
+				"--test-traffic-stop",
+				"--test-bus-stop",
 			]
 		):
 			return true
@@ -214,6 +216,10 @@ func setup_ready() -> void:
 		_run_test_cramped_inn_dropoff()
 	if "--test-grass-shortcut" in user_args:
 		_run_test_grass_shortcut()
+	if "--test-traffic-stop" in user_args:
+		_run_test_traffic_stop()
+	if "--test-bus-stop" in user_args:
+		_run_test_bus_stop()
 
 
 func on_physics_process(_delta: float) -> void:
@@ -1558,3 +1564,279 @@ func _run_test_grass_shortcut() -> void:
 		"GRASS_SHORTCUT_TEST: SUCCESS - Verified every shortcut link: source release, destination reservation/occupancy, grass route traversal, and eventual normal exit!"
 	)
 	main.get_tree().quit(0)
+
+
+## Patrol police light up behind a car, both pull onto the shoulder clear of street furniture,
+## traffic (an in-lane bus and a car free to move over) gets past without stopping or touching
+## them, then the stopped car leaves before the police, who go dark.
+func _run_test_traffic_stop() -> void:
+	seed(7)
+	var tm = main.get_node_or_null("TrafficManager") as TrafficManager
+	assert(tm != null, "TrafficManager must exist")
+	# Let static bodies register so shoulder clearance queries see poles and lamps.
+	await main.get_tree().physics_frame
+	await main.get_tree().physics_frame
+	for c in tm.lot_cars:
+		if is_instance_valid(c):
+			c.queue_free()
+	tm.lot_cars.clear()
+	for l in tm.lanes:
+		for c in l.cars:
+			if is_instance_valid(c):
+				c.queue_free()
+		l.cars.clear()
+		l.spawn_timer = 9999.0
+
+	var lane: TrafficManager.Lane = tm.lanes[3]
+	var suspect := _spawn_stop_test_car(tm, tm.PassengerCarScene, lane, 45.0, Car.CarType.SEDAN)
+	var police := _spawn_stop_test_car(tm, tm.PassengerCarScene, lane, 15.0, Car.CarType.POLICE_SUV)
+	police.on_patrol = true
+	assert(not police.is_siren_on(), "Patrol police must cruise dark before a traffic stop")
+
+	var stop: TrafficStop = null
+	var followers: Array[Car] = []
+	var passed: Dictionary = {}
+	var saw_pursuit_lights := false
+	var saw_stopped := false
+	var suspect_left_tick := -1
+	var police_left_tick := -1
+	var delta := 1.0 / 30.0
+	for tick in range(6000):
+		tm._update_traffic_stops(delta)
+		for l in tm.lanes:
+			tm._update_lane_traffic(l, delta)
+		tm._apply_pending_lane_transfers()
+		tm._physics_tick_count += 1
+		if stop == null:
+			stop = police.traffic_stop
+			continue
+		if stop.phase == TrafficStop.Phase.PURSUIT and police.is_siren_on():
+			saw_pursuit_lights = true
+
+		if stop.phase == TrafficStop.Phase.STOPPED and not saw_stopped:
+			saw_stopped = true
+			assert(saw_pursuit_lights, "Police must light up while closing in")
+			var stop_gap := TrafficStop.bumper_gap(police, suspect)
+			assert(
+				stop_gap > 0.0 and stop_gap < TrafficStop.POLICE_GAP + 1.0,
+				"Police must stop right behind the pulled-over car (gap %.2f)" % stop_gap
+			)
+			# Inner side on the asphalt shoulder (ends at |z| = 11.85, world/road.tscn), outer
+			# side up on the sidewalk.
+			for c in [suspect, police]:
+				var inner: float = absf(c.current_lateral_z) - c.car_width * 0.5
+				var outer: float = absf(c.current_lateral_z) + c.car_width * 0.5
+				assert(
+					inner < 11.85 and outer > Car.CURB_Z,
+					(
+						"Pulled-over car must straddle pavement and sidewalk (z %.2f..%.2f)"
+						% [inner, outer]
+					)
+				)
+				assert(
+					_stop_footprint_clear(tm, c),
+					"Pulled-over car at x=%.1f must not sit in a pole or lamp" % c.global_position.x
+				)
+			# Traffic arrives once both cars sit on the shoulder.
+			followers.append(
+				_spawn_stop_test_car(
+					tm, tm.BusScene, lane, stop.police_stop_distance - 60.0, Car.CarType.BUS
+				)
+			)
+			followers.append(
+				_spawn_stop_test_car(
+					tm,
+					tm.PassengerCarScene,
+					lane,
+					stop.police_stop_distance - 95.0,
+					Car.CarType.HATCHBACK
+				)
+			)
+
+		for f in followers:
+			if passed.has(f):
+				continue
+			if f.lane_distance > suspect.lane_distance + 0.5 * (f.car_length + suspect.car_length):
+				passed[f] = true
+				continue
+			if f.lane_distance > stop.police_stop_distance - 40.0:
+				assert(
+					f.speed > 3.0,
+					"Traffic must keep moving past a traffic stop, not queue behind it"
+				)
+			for c in [suspect, police]:
+				assert(
+					not CarSweep.footprints_overlap(
+						_stop_test_footprint(f), _stop_test_footprint(c)
+					),
+					"Passing traffic must swerve clear of pulled-over cars"
+				)
+
+		if stop.phase == TrafficStop.Phase.STOPPED:
+			# Hold the stop until traffic has passed, then send everyone on their way.
+			stop.dwell_left = (
+				1.0 if passed.size() < followers.size() else minf(stop.dwell_left, 0.5)
+			)
+		if saw_stopped:
+			if suspect_left_tick < 0 and suspect.speed > 1.0:
+				suspect_left_tick = tick
+			if police_left_tick < 0 and police.speed > 1.0:
+				police_left_tick = tick
+		if stop.phase == TrafficStop.Phase.DONE:
+			break
+
+	assert(saw_stopped, "Traffic stop must reach the shoulder")
+	assert(stop.phase == TrafficStop.Phase.DONE, "Traffic stop must finish")
+	assert(passed.size() == 2, "Both following vehicles must get past the traffic stop")
+	assert(
+		suspect_left_tick >= 0 and police_left_tick > suspect_left_tick,
+		"Stopped car must pull away before the police"
+	)
+	for c in [suspect, police]:
+		assert(c.state == Car.State.CRUISING and c.traffic_stop == null, "Cars must rejoin traffic")
+		assert(
+			absf(c.current_lateral_z - lane.z) < 0.1,
+			"Departing cars must return to the lane center"
+		)
+	assert(not police.is_siren_on(), "Police lights must go off after the stop")
+	assert(not police.on_patrol, "A patrol car makes one traffic stop")
+	print(
+		"TRAFFIC_STOP_TEST: SUCCESS - pursuit, shoulder stop, swerving traffic, and departure order"
+	)
+	main.get_tree().quit(0)
+
+
+## A curb-lane bus brakes to its stop with the door at the pole, tucks in beside the lane, and
+## dwells while a car that must stay in its lane swerves past without queueing or touching it;
+## then it pulls back out to its lane center and drives on.
+## Police never pick a bus stop for a traffic stop.
+func _run_test_bus_stop() -> void:
+	seed(11)
+	var tm = main.get_node_or_null("TrafficManager") as TrafficManager
+	assert(tm != null, "TrafficManager must exist")
+	await main.get_tree().physics_frame
+	await main.get_tree().physics_frame
+	for c in tm.lot_cars:
+		if is_instance_valid(c):
+			c.queue_free()
+	tm.lot_cars.clear()
+	for l in tm.lanes:
+		for c in l.cars:
+			if is_instance_valid(c):
+				c.queue_free()
+		l.cars.clear()
+		l.spawn_timer = 9999.0
+
+	var lane: TrafficManager.Lane = tm.lanes[3]
+	var pole_d := 200.0
+	var bus := _spawn_stop_test_car(tm, tm.BusScene, lane, 110.0, Car.CarType.BUS) as BusCar
+	var stop_d := bus.stop_distance_for(pole_d)
+
+	var probe := _spawn_stop_test_car(tm, tm.PassengerCarScene, tm.lanes[0], 5.0, Car.CarType.SEDAN)
+	var edge := TrafficStop.OUTER_EDGE_MAX
+	lane.bus_stops = PackedFloat32Array()
+	assert(
+		TrafficStop.is_site_clear(tm, lane, stop_d, probe, probe, edge),
+		"Test stop site must otherwise be clear for a traffic stop"
+	)
+	lane.bus_stops = PackedFloat32Array([pole_d])
+	assert(
+		not TrafficStop.is_site_clear(tm, lane, stop_d, probe, probe, edge),
+		"Police must not pick a bus stop for a traffic stop"
+	)
+	probe.queue_free()
+	tm.lanes[0].cars.clear()
+
+	var followers: Array[Car] = []
+	var passed: Dictionary = {}
+	var saw_dwell := false
+	var saw_pull_out := false
+	var delta := 1.0 / 30.0
+	for tick in range(3000):
+		for l in tm.lanes:
+			tm._update_lane_traffic(l, delta)
+		tm._apply_pending_lane_transfers()
+		tm._physics_tick_count += 1
+
+		if bus.stop_phase == BusCar.StopPhase.DWELLING and not saw_dwell:
+			saw_dwell = true
+			assert(
+				absf(bus.lane_distance - stop_d) < 1.0 and bus.speed == 0.0,
+				(
+					"Bus must stop with its door at the pole (off by %.2f m)"
+					% (bus.lane_distance - stop_d)
+				)
+			)
+			assert(bus.is_beside_lane(), "A dwelling bus must tuck in beside its lane")
+			var outer: float = absf(bus.current_lateral_z) + bus.car_width * 0.5
+			assert(outer < Car.CURB_Z, "Bus must stay off the sidewalk (outer z %.2f)" % outer)
+			var stays_in_lane := _spawn_stop_test_car(
+				tm, tm.PassengerCarScene, lane, stop_d - 80.0, Car.CarType.SUV
+			)
+			stays_in_lane.had_errand = true  # left a lot: never changes lanes
+			followers.append(stays_in_lane)
+
+		for f in followers:
+			if passed.has(f):
+				continue
+			if f.lane_distance > bus.lane_distance + 0.5 * (f.car_length + bus.car_length):
+				passed[f] = true
+				continue
+			if f.lane_distance > stop_d - 40.0:
+				assert(f.speed > 3.0, "Traffic must keep moving past a stopped bus, not queue")
+			assert(
+				not CarSweep.footprints_overlap(_stop_test_footprint(f), _stop_test_footprint(bus)),
+				"Passing traffic must swerve clear of a stopped bus"
+			)
+
+		if bus.stop_phase == BusCar.StopPhase.DWELLING:
+			# Hold the bus until traffic has passed, then let it leave.
+			bus.stop_timer = 1.0 if passed.size() < followers.size() else minf(bus.stop_timer, 0.5)
+		if bus.stop_phase == BusCar.StopPhase.PULLING_OUT:
+			saw_pull_out = true
+		if saw_pull_out and bus.stop_phase == BusCar.StopPhase.NONE:
+			break
+
+	assert(saw_dwell, "Bus must stop at the bus stop")
+	assert(passed.size() == 1, "In-lane traffic must get past the stopped bus")
+	assert(saw_pull_out and bus.stop_phase == BusCar.StopPhase.NONE, "Bus must pull away")
+	assert(bus.speed > 1.0 and bus.lane_distance > stop_d, "Bus must drive on after its stop")
+	assert(absf(bus.current_lateral_z - lane.z) < 0.1, "Bus must return to its lane center")
+	assert(bus.turn_signal == Car.TurnSignal.NONE, "Bus must cancel its signal after rejoining")
+	print("BUS_STOP_TEST: SUCCESS - stop at pole, traffic swerves past, bus pulls back out")
+	main.get_tree().quit(0)
+
+
+func _spawn_stop_test_car(
+	tm: TrafficManager,
+	scene: PackedScene,
+	lane: TrafficManager.Lane,
+	distance: float,
+	type: Car.CarType
+) -> Car:
+	var car: Car = scene.instantiate()
+	tm.add_child(car)
+	car.setup(lane.id, lane.z, lane.direction, lane.start_x, lane.length, 14.0, type)
+	car.lane_distance = distance
+	car.update_presentation()
+	lane.cars.append(car)
+	return car
+
+
+func _stop_test_footprint(car: Car) -> PackedVector2Array:
+	return CarSweep.footprint(
+		car.global_position, car.get_heading(), car.car_length * 0.5, car.car_width * 0.5
+	)
+
+
+func _stop_footprint_clear(tm: TrafficManager, car: Car) -> bool:
+	var box := BoxShape3D.new()
+	box.size = Vector3(car.car_length, 1.6, car.car_width)
+	var params := PhysicsShapeQueryParameters3D.new()
+	params.shape = box
+	params.collision_mask = 1
+	params.collide_with_areas = false
+	params.transform = Transform3D(
+		Basis(Vector3.UP, car.rotation.y), car.global_position + Vector3(0.0, 1.2, 0.0)
+	)
+	return tm.get_world_3d().direct_space_state.intersect_shape(params, 1).is_empty()

@@ -125,6 +125,7 @@ WAITING_TO_MERGE  - Yielding at stroad entry apron for a gap in mainline traffic
 MERGING           - Blending from lot exit path into target stroad lane
 DRIVE_THRU        - Following queued drive-thru lane and order/pickup windows
 SHORTCUT          - Traversing authored cross-lot grass corridor to adjacent site
+PULLED_OVER       - Traffic stop: pulling onto, sitting on, or leaving the curb-lane shoulder
 ```
 
 Each update examines only local information:
@@ -195,6 +196,25 @@ To create organic traffic friction, a small fraction of drivers exhibit aggressi
   - Sub-marginal gaps ($< 7.5\text{ m}$ forward or $< 4.5\text{ m}$ rear) are rejected unconditionally.
 - **Invariants:** Risk mode never relaxes core safety invariants: wrong-direction lanes, lane ends, turn-in zones, existing overlaps, and simultaneous adjacent maneuvers remain strictly prohibited.
 - **Commit Window:** Once initiated, the reckless driver enters a brief `risk_commit_active` window (1.0 s) with normal lane-change cooldowns, preventing rapid oscillating swerves.
+
+## Police Traffic Stops
+
+Police can pull cars over on the curb lanes (0 and 3). `TrafficStop` (`traffic/traffic_stop.gd`) owns one stop; `TrafficManager.traffic_stops` runs them before lane updates.
+
+- **Patrol duty:** A police SUV spawned on the stroad rolls patrol duty (`PATROL_PROBABILITY`, 75%) instead of an errand. Patrol cars drift toward the curb lane and drive dark (`Car.set_siren`).
+- **Pursuit:** A patrol car in a curb lane lights up (lights + wail) behind the nearest car ahead within 60 m, if that car is cruising errand-free, is not a bus/shipping truck/police, and a stop site exists ahead. The police speed up to close in; the pursuit aborts after 30 s or if either car leaves the lane.
+- **Stop site:** When the police are within 14 m, the stopped car picks the first site past its braking distance where both cars fit with their outer side at $|z| \in [13.15, 13.4]$ m, straddling the road edge (11.25 m) and the sidewalk curb (13.0 m). Sites stay inside the tunnels, off each lot's turn-in → driveway → merge span (10 m before, 12 m after), and clear of anything standing in the shoulder box (a physics query catches lamps, poles, hydrants, signs, and pedestrians).
+- **Pulling over:** Both cars enter `PULLED_OVER` and brake to their stop points, police 2.5 m behind. Within 30 m of its stop point each car eases onto the shoulder through `Car.lateral_bias` (a critically damped spring on top of lane wander), so it doesn't ride the shoulder across driveways. Wheels past the curb lift and roll the body.
+- **Dwell & departure:** They sit 12–22 s with police lights flashing silently. The stopped car signals, waits until nothing is alongside and the nearest car behind is far enough back for its speed (or has stopped), launches gently, steers back, and rejoins as `CRUISING`; once it is 12 m away the police go dark and leave the same way. After 3 s of signaling, traffic behind that can still stop yields to the departing car. Each patrol car makes one stop.
+- **Passing traffic:** A pulled-over car with $|\text{lateral\_bias}| \ge 2$ m no longer counts as a lane leader (unless it is pulling out, see above). Cars behind slow toward 9 m/s, swerve 1 m away from the shoulder in-lane within 35 m, and eligible drivers move over a lane within 60 m. No car changes into a lane just before a stop. A car on the shoulder follows nobody; a stop participant still mid-transition remains a normal leader.
+
+## Bus Stops
+
+Bus stop poles (`props/bus_stop.tscn`, placed by `world/bus_stops.tscn`) are in the `bus_stops` group. `TrafficManager._collect_bus_stops()` assigns each to the curb lane on its side (`Lane.bus_stops`, pole lane distances). Two serve westbound Lane 0 (x = 52, −88) and two serve eastbound Lane 3 (x = −75, 108). All four sit clear of lot turn-ins and merges.
+
+- **Pulling in:** A `BusCar` in a curb lane starts approaching the next pole once it is within comfortable braking distance (2 m/s²), signals right, and brakes so its front door stops at the pole. A stop that would need more than 3.5 m/s², or that another curb stop already occupies, is skipped. Within 30 m it tucks toward the curb through `Car.lateral_bias`, ending with its outer side at $|z| = 12.95$ m, short of the sidewalk and the sign.
+- **Dwell & departure:** It dwells 6–12 s, then signals left and pulls out under the same rules as a traffic stop (`TrafficStop.lane_clear_to_reenter`, yield request after 3 s, gentle launch, steer back once rolling).
+- **Passing traffic:** Once tucked in ($|\text{lateral\_bias}| \ge 2.2$ m) the bus is beside the lane (`Car.is_beside_lane()`). Traffic slows, swerves in-lane, or moves over exactly as it does for a traffic stop. Police never pick a site overlapping a bus stop's curb zone (30 m behind to 6 m past the pole).
 
 ## Grass Shortcuts Between Lots
 

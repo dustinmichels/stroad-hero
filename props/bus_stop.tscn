@@ -1,0 +1,140 @@
+[gd_scene format=3]
+
+[ext_resource type="FontFile" path="res://fonts/Overpass-Black.ttf" id="1_font"]
+
+[sub_resource type="CylinderShape3D" id="Shape_Pole"]
+height = 3.0
+radius = 0.06
+
+[sub_resource type="StandardMaterial3D" id="Mat_Galvanized"]
+albedo_color = Color(0.66, 0.68, 0.7, 1)
+metallic = 0.8
+roughness = 0.38
+
+[sub_resource type="StandardMaterial3D" id="Mat_Aluminum"]
+albedo_color = Color(0.84, 0.86, 0.88, 1)
+metallic = 0.85
+roughness = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Mat_SignBlue"]
+albedo_color = Color(0.07, 0.28, 0.66, 1)
+roughness = 0.45
+
+[sub_resource type="CylinderMesh" id="Mesh_Pole"]
+material = SubResource("Mat_Galvanized")
+top_radius = 0.045
+bottom_radius = 0.045
+height = 3.0
+radial_segments = 10
+
+[sub_resource type="CylinderMesh" id="Mesh_PoleCap"]
+material = SubResource("Mat_Galvanized")
+top_radius = 0.03
+bottom_radius = 0.055
+height = 0.05
+radial_segments = 10
+
+[sub_resource type="BoxMesh" id="Mesh_Plate"]
+material = SubResource("Mat_Aluminum")
+size = Vector3(0.03, 0.66, 0.46)
+
+[sub_resource type="BoxMesh" id="Mesh_Face"]
+material = SubResource("Mat_SignBlue")
+size = Vector3(0.004, 0.6, 0.4)
+
+[sub_resource type="BoxMesh" id="Mesh_Bracket"]
+material = SubResource("Mat_Galvanized")
+size = Vector3(0.05, 0.04, 0.1)
+
+[node name="BusStop" type="StaticBody3D" groups=["bus_stops"]]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+shape = SubResource("Shape_Pole")
+
+[node name="Pole" type="MeshInstance3D" parent="."]
+visibility_range_end = 85.0
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+mesh = SubResource("Mesh_Pole")
+
+[node name="PoleCap" type="MeshInstance3D" parent="."]
+visibility_range_end = 85.0
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.025, 0)
+mesh = SubResource("Mesh_PoleCap")
+
+[node name="Sign" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.55, -0.28)
+
+[node name="Plate" type="MeshInstance3D" parent="Sign"]
+visibility_range_end = 85.0
+mesh = SubResource("Mesh_Plate")
+
+[node name="FaceEast" type="MeshInstance3D" parent="Sign"]
+visibility_range_end = 85.0
+cast_shadow = 0
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.017, 0, 0)
+mesh = SubResource("Mesh_Face")
+
+[node name="FaceWest" type="MeshInstance3D" parent="Sign"]
+visibility_range_end = 85.0
+cast_shadow = 0
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.017, 0, 0)
+mesh = SubResource("Mesh_Face")
+
+[node name="BracketTop" type="MeshInstance3D" parent="Sign"]
+visibility_range_end = 85.0
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.24, 0.25)
+mesh = SubResource("Mesh_Bracket")
+
+[node name="BracketBottom" type="MeshInstance3D" parent="Sign"]
+visibility_range_end = 85.0
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.24, 0.25)
+mesh = SubResource("Mesh_Bracket")
+
+[node name="LabelEast" type="Label3D" parent="Sign"]
+cast_shadow = 0
+visibility_range_end = 60.0
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0.021, 0.05, 0)
+pixel_size = 0.0034
+modulate = Color(0.96, 0.98, 0.95, 1)
+text = "BUS
+STOP"
+font = ExtResource("1_font")
+font_size = 44
+outline_size = 0
+line_spacing = -10.0
+
+[node name="RouteEast" type="Label3D" parent="Sign"]
+cast_shadow = 0
+visibility_range_end = 60.0
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0.021, -0.22, 0)
+pixel_size = 0.0034
+modulate = Color(0.96, 0.98, 0.95, 1)
+text = "ROUTE 19"
+font = ExtResource("1_font")
+font_size = 20
+outline_size = 0
+
+[node name="LabelWest" type="Label3D" parent="Sign"]
+cast_shadow = 0
+visibility_range_end = 60.0
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -0.021, 0.05, 0)
+pixel_size = 0.0034
+modulate = Color(0.96, 0.98, 0.95, 1)
+text = "BUS
+STOP"
+font = ExtResource("1_font")
+font_size = 44
+outline_size = 0
+line_spacing = -10.0
+
+[node name="RouteWest" type="Label3D" parent="Sign"]
+cast_shadow = 0
+visibility_range_end = 60.0
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -0.021, -0.22, 0)
+pixel_size = 0.0034
+modulate = Color(0.96, 0.98, 0.95, 1)
+text = "ROUTE 19"
+font = ExtResource("1_font")
+font_size = 20
+outline_size = 0

@@ -31,7 +31,8 @@ enum State {
 	WAITING_TO_MERGE,
 	MERGING,
 	DRIVE_THRU,
-	SHORTCUT
+	SHORTCUT,
+	PULLED_OVER
 }
 
 enum TurnSignal { NONE, LEFT, RIGHT }
@@ -91,8 +92,8 @@ var sweep_rev: int = 0:
 			sweep_rev += 1
 			_update_headlamps()
 			_update_exhaust()
-			if state == State.APPROACHING:
-				_center_for_approach()
+			if state == State.APPROACHING or state == State.PULLED_OVER:
+				_center_in_lane()
 			elif state == State.CRUISING and prev_state != State.CRUISING:
 				_init_lane_wander()
 
@@ -119,6 +120,8 @@ func get_state_name() -> String:
 			return "DRIVE_THRU"
 		State.SHORTCUT:
 			return "SHORTCUT"
+		State.PULLED_OVER:
+			return "PULLED_OVER"
 	return "UNKNOWN"
 
 
@@ -159,7 +162,7 @@ var lane_z: float = 0.0:
 	set(value):
 		lane_z = value
 		if not is_changing_lanes:
-			current_lateral_z = lane_z + lane_wander_offset
+			current_lateral_z = lane_z + lane_wander_offset + lateral_bias
 var lane_length: float = 140.0
 var start_x: float = -70.0
 var spot: ParkingSpot = null
@@ -173,6 +176,10 @@ var dwell_left: float = 0.0
 var merge_wait_time: float = 0.0
 var errand: Errand = null
 var had_errand: bool = false
+## Police only: patrolling instead of running errands, looking for a car to pull over.
+var on_patrol: bool = false
+## Active traffic stop this car is part of (as police or as the stopped car).
+var traffic_stop: TrafficStop = null
 var blocked_time: float = 0.0
 var current_blocker: Car = null
 var merge_target_lane: int = 0
@@ -224,6 +231,18 @@ var lane_wander_timer: float = 0.0
 var lane_wander_start_offset: float = 0.0
 var lane_wander_duration: float = 0.0
 var lane_wander_elapsed: float = 0.0
+
+## Deliberate sideways displacement on top of lane wander: pulling onto the shoulder or
+## swerving around a stopped car. Eased toward lateral_bias_target by a critically damped spring.
+const LATERAL_BIAS_STIFFNESS: float = 2.5
+const LATERAL_BIAS_MAX_SPEED: float = 1.8
+var lateral_bias: float = 0.0
+var lateral_bias_target: float = 0.0
+var lateral_bias_velocity: float = 0.0
+## The stroad sidewalk starts at |z| = CURB_Z, CURB_HEIGHT above the pavement; wheels
+## that climb it raise and roll the body.
+const CURB_Z: float = 13.0
+const CURB_HEIGHT: float = 0.2
 
 
 func get_max_lane_wander_offset() -> float:
@@ -277,7 +296,7 @@ func _init_lane_wander() -> void:
 	lane_wander_duration = randf_range(WANDER_TRANSITION_MIN, WANDER_TRANSITION_MAX)
 
 
-func _center_for_approach() -> void:
+func _center_in_lane() -> void:
 	lane_wander_target = 0.0
 	lane_wander_start_offset = lane_wander_offset
 	lane_wander_elapsed = 0.0
@@ -285,9 +304,30 @@ func _center_for_approach() -> void:
 	lane_wander_timer = 999.0
 
 
+func _is_wander_centered() -> bool:
+	return state == State.APPROACHING or state == State.PULLED_OVER
+
+
+## Stopping at the curb (traffic stop or bus stop), in any phase from pulling in to rejoining.
+## Lane traffic never changes into a lane just before such a car.
+func is_curb_stopping() -> bool:
+	return state == State.PULLED_OVER
+
+
+## Sitting far enough toward the curb that lane traffic swerves past instead of following.
+func is_beside_lane() -> bool:
+	return TrafficStop.is_car_shouldered(self)
+
+
+## Signaling to rejoin the lane from the curb; traffic behind yields if it can still stop.
+func is_requesting_lane_reentry() -> bool:
+	return traffic_stop != null and traffic_stop.is_requesting_gap(self)
+
+
 func _advance_lane_wander(delta: float) -> void:
 	var max_offset := get_max_lane_wander_offset()
-	if state != State.APPROACHING:
+	var centered := _is_wander_centered()
+	if not centered:
 		lane_wander_timer -= delta
 		if lane_wander_timer <= 0.0:
 			lane_wander_target = randf_range(-max_offset, max_offset) if max_offset > 0.0 else 0.0
@@ -299,13 +339,32 @@ func _advance_lane_wander(delta: float) -> void:
 	lane_wander_elapsed += delta
 	var t := clampf(lane_wander_elapsed / maxf(0.001, lane_wander_duration), 0.0, 1.0)
 	var smooth_t := t * t * (3.0 - 2.0 * t)
-	var eff_target := (
-		0.0 if state == State.APPROACHING else clampf(lane_wander_target, -max_offset, max_offset)
-	)
+	var eff_target := 0.0 if centered else clampf(lane_wander_target, -max_offset, max_offset)
 	lane_wander_offset = clampf(
 		lerpf(lane_wander_start_offset, eff_target, smooth_t), -max_offset, max_offset
 	)
-	current_lateral_z = lane_z + lane_wander_offset
+	current_lateral_z = lane_z + lane_wander_offset + lateral_bias
+
+
+func _advance_lateral_bias(delta: float) -> void:
+	var error := lateral_bias_target - lateral_bias
+	if absf(error) < 0.001 and absf(lateral_bias_velocity) < 0.001:
+		lateral_bias = lateral_bias_target
+		lateral_bias_velocity = 0.0
+		return
+	var accel := (
+		LATERAL_BIAS_STIFFNESS * error - 2.0 * sqrt(LATERAL_BIAS_STIFFNESS) * lateral_bias_velocity
+	)
+	lateral_bias_velocity = clampf(
+		lateral_bias_velocity + accel * delta, -LATERAL_BIAS_MAX_SPEED, LATERAL_BIAS_MAX_SPEED
+	)
+	lateral_bias += lateral_bias_velocity * delta
+
+
+func _reset_lateral_bias() -> void:
+	lateral_bias = 0.0
+	lateral_bias_target = 0.0
+	lateral_bias_velocity = 0.0
 
 
 func start_risk_commit(duration: float = RISK_COMMIT_DURATION) -> void:
@@ -334,6 +393,8 @@ func start_lane_change(target_id: int, target_z: float, is_risky: bool = false) 
 		lane_change_duration = randf_range(0.8, 1.1)
 	lane_change_from_z = current_lateral_z
 	lane_change_target_lane_z = target_z
+	# The lane change starts from the biased position, so the bias is absorbed here.
+	_reset_lateral_bias()
 	var max_offset := get_max_lane_wander_offset()
 	lane_wander_target = randf_range(-max_offset, max_offset) if max_offset > 0.0 else 0.0
 	lane_change_to_z = target_z + lane_wander_target
@@ -341,6 +402,20 @@ func start_lane_change(target_id: int, target_z: float, is_risky: bool = false) 
 		(target_z > lane_change_from_z) if (direction > 0.0) else (target_z < lane_change_from_z)
 	)
 	set_turn_signal(TurnSignal.RIGHT if is_right else TurnSignal.LEFT)
+
+
+## Police roof lights (and wail when audible). No-op for cars without a siren.
+func set_siren(lights: bool, audible: bool = true) -> void:
+	var model := get_active_model()
+	if model == null or not ("siren_active" in model):
+		return
+	model.set("siren_audible", audible)
+	model.set("siren_active", lights)
+
+
+func is_siren_on() -> bool:
+	var model := get_active_model()
+	return model != null and ("siren_active" in model) and bool(model.get("siren_active"))
 
 
 var turn_signal: TurnSignal = TurnSignal.NONE
@@ -531,6 +606,7 @@ func setup(
 ) -> void:
 	lane_id = p_lane_id
 	motion = Motion.LANE
+	_reset_lateral_bias()
 	lane_z = p_lane_z
 	current_lateral_z = p_lane_z
 	is_changing_lanes = false
@@ -570,6 +646,7 @@ func follow_path(curve: Curve3D, from_end := false) -> void:
 	path = curve
 	lane_wander_offset = 0.0
 	lane_wander_target = 0.0
+	_reset_lateral_bias()
 	current_lateral_z = lane_z
 	if from_end and curve != null:
 		path_distance = curve.get_baked_length()
@@ -1475,6 +1552,7 @@ func advance_simulation(delta: float) -> void:
 			set_turn_signal(TurnSignal.NONE)
 			reset_lane_change_cooldown()
 	else:
+		_advance_lateral_bias(delta)
 		_advance_lane_wander(delta)
 
 	lane_distance += speed * delta
@@ -1533,10 +1611,15 @@ func update_presentation() -> void:
 		return
 	var current_x := start_x + (direction * lane_distance)
 	var z_pos := current_lateral_z
+	# Outer wheels mounting the sidewalk curb lift and roll the body toward the road.
+	var half_track := car_width * 0.5 - 0.15
+	var curb_lift := clampf((absf(z_pos) + half_track - CURB_Z) / 0.25, 0.0, 1.0) * CURB_HEIGHT
+	var y_pos := 0.05 + curb_lift * 0.5
 	if is_inside_tree():
-		global_position = Vector3(current_x, 0.05, z_pos)
+		global_position = Vector3(current_x, y_pos, z_pos)
 	else:
-		position = Vector3(current_x, 0.05, z_pos)
+		position = Vector3(current_x, y_pos, z_pos)
+	rotation.x = -atan2(curb_lift, half_track * 2.0)
 
 	var dz_dt := 0.0
 	if is_changing_lanes:
@@ -1550,13 +1633,13 @@ func update_presentation() -> void:
 		var t := clampf(lane_wander_elapsed / lane_wander_duration, 0.0, 1.0)
 		var max_offset := get_max_lane_wander_offset()
 		var eff_target := (
-			0.0
-			if state == State.APPROACHING
-			else clampf(lane_wander_target, -max_offset, max_offset)
+			0.0 if _is_wander_centered() else clampf(lane_wander_target, -max_offset, max_offset)
 		)
 		dz_dt = (
 			(eff_target - lane_wander_start_offset) * (6.0 * t * (1.0 - t)) / lane_wander_duration
 		)
+	if not is_changing_lanes:
+		dz_dt += lateral_bias_velocity
 
 	var dx_dt := speed * direction
 	if absf(dx_dt) > 0.01:

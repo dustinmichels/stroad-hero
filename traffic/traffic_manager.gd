@@ -64,6 +64,8 @@ class Lane:
 	var spawn_interval_max: float
 	var spawn_timer: float = 0.0
 	var cars: Array[Car] = []
+	## Lane distances of the bus stop poles along this lane, ascending.
+	var bus_stops: PackedFloat32Array = []
 
 	func _init(
 		p_id: int,
@@ -89,6 +91,13 @@ class Lane:
 
 	func distance_at(x: float) -> float:
 		return (x - start_x) * direction
+
+	## Whether lane-distance span [back_d, front_d] reaches into a bus stop's curb zone.
+	func overlaps_bus_stop(back_d: float, front_d: float) -> bool:
+		for pole_d in bus_stops:
+			if front_d >= pole_d - BUS_STOP_ZONE_BEHIND and back_d <= pole_d + BUS_STOP_ZONE_AHEAD:
+				return true
+		return false
 
 	func forward() -> Vector3:
 		return Vector3(direction, 0, 0)
@@ -149,6 +158,7 @@ var _watchdog_ignores: Dictionary[int, Dictionary] = {}  # int (car_instance_id)
 var _sweep_cache: Dictionary[int, Dictionary] = {}  # car instance id -> _car_sweep() result
 var _reach_cache: Dictionary[int, float] = {}  # car instance id -> max reach
 var _pending_transfers: Array[Dictionary] = []
+var traffic_stops: Array[TrafficStop] = []
 const MAX_ACTIVE_HEADLAMPS: int = 12
 var profile_find_blocker: bool = false
 var _was_lights_on: bool = false
@@ -225,6 +235,16 @@ const SWEEP_SIDE_MARGIN := 0.15  # lateral clearance added to a car's projected 
 const SWEEP_TIE_EPS := 0.25  # route-conflict distances closer than this count as a tie
 const SWEEP_INTENT_EXTRA := 4.0  # meters past the lookahead used to settle who crosses first
 const REVERSE_CLEAR_TRAVEL := 1.0  # meters of another car's route a back-out route must avoid
+const PATROL_PROBABILITY := 0.75  # police spawned on the stroad patrol instead of running errands
+const MAX_TRAFFIC_STOPS := 2  # at most one per curb lane
+const STOP_SWERVE_BIAS := 1.0  # in-lane swerve away from a pulled-over car
+const STOP_SWERVE_LOOKAHEAD := 35.0
+const STOP_SLOW_LOOKAHEAD := 80.0
+const STOP_MOVE_OVER_LOOKAHEAD := 60.0
+const V_PASS_STOP := 9.0  # speed when passing a traffic stop in its lane
+const BUS_STOP_GROUP := &"bus_stops"
+const BUS_STOP_ZONE_BEHIND := 30.0  # curb kept clear behind a stop pole for a bus pulling in
+const BUS_STOP_ZONE_AHEAD := 6.0
 
 var staged_initial_spawn: bool = true
 
@@ -255,6 +275,7 @@ func _ready() -> void:
 		ParkingLot.frontage_merge_route(),
 	]
 	_setup_lanes()
+	_collect_bus_stops()
 	if staged_initial_spawn:
 		_spawn_initial_traffic_staged()
 	else:
@@ -298,6 +319,20 @@ func _setup_lanes() -> void:
 	lanes.append(Lane.new(4, 5.625, 1.0, eb_start_x, eb_len, 21.0, 27.0, 1.4, 2.6))
 	# Lane 5: Eastbound inner (express speedway)
 	lanes.append(Lane.new(5, 1.875, 1.0, eb_start_x, eb_len, 25.0, 32.0, 1.0, 2.0))
+
+
+## Each bus stop pole (BUS_STOP_GROUP) serves the curb lane on its side of the stroad.
+func _collect_bus_stops() -> void:
+	for lane in lanes:
+		lane.bus_stops.clear()
+	for node in get_tree().get_nodes_in_group(BUS_STOP_GROUP):
+		var pole: Vector3 = (node as Node3D).global_position
+		var lane: Lane = lanes[0] if pole.z < 0.0 else lanes[3]
+		var d := lane.distance_at(pole.x)
+		if d > 0.0 and d < lane.length:
+			lane.bus_stops.append(d)
+	for lane in lanes:
+		lane.bus_stops.sort()
 
 
 func _pre_populate_traffic() -> void:
@@ -434,6 +469,7 @@ func _spawn_initial_traffic_staged() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	_update_traffic_stops(delta)
 	for lane in lanes:
 		_update_lane_traffic(lane, delta)
 		_update_lane_spawning(lane, delta)
@@ -1625,7 +1661,14 @@ func _spawn_car_at(lane: Lane, initial_distance: float, scene: PackedScene = nul
 	car.lane_distance = initial_distance
 	car.update_presentation()
 	car.reset_physics_interpolation()
-	if lane.id == 0 and car.can_take_errands():
+	# Patrol duty replaces the errand roll: patrolling police look for a car to pull over.
+	car.on_patrol = (
+		car.car_type == Car.CarType.POLICE_SUV
+		and not _is_test_mode()
+		and randf() < PATROL_PROBABILITY
+	)
+	var takes_errands := car.can_take_errands() and not car.on_patrol
+	if lane.id == 0 and takes_errands:
 		if randf() < P_ERRAND:
 			if (
 				initial_distance < DECISION_D
@@ -1649,7 +1692,7 @@ func _spawn_car_at(lane: Lane, initial_distance: float, scene: PackedScene = nul
 						car.errand = Errand.new(&"smell_gas", randf_range(8.0, 16.0))
 					car.had_errand = true
 					stats["errands_assigned"] += 1
-	elif lane.id == 3 and car.can_take_errands():
+	elif lane.id == 3 and takes_errands:
 		if randf() < P_ERRAND:
 			var roll := randf()
 			if car.car_type == Car.CarType.TAXI:
@@ -1775,6 +1818,10 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 
 	# Sort cars by distance descending (farthest ahead first)
 	valid_cars.sort_custom(func(a: Car, b: Car) -> bool: return a.lane_distance > b.lane_distance)
+	var shouldered_cars: Array[Car] = []
+	for car in valid_cars:
+		if car.is_beside_lane():
+			shouldered_cars.append(car)
 
 	var surviving_cars: Array[Car] = []
 	for i in range(valid_cars.size()):
@@ -1808,13 +1855,13 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 							car.had_errand = false
 							stats["errands_dropped_lot_full"] += 1
 		# Smooth car-following with velocity-dependent safe gap and comfortable deceleration
+		var stop: TrafficStop = car.traffic_stop
 		var following_target: float = car.desired_speed
 		var brake_accel: float = BRAKE_ACCELERATION
-		var lead_car: Car = null
+		var lead_car: Car = _lane_lead(valid_cars, i)
 		var lead_gap: float = 999.0
 		var safe_gap: float = maxf(SAFE_FOLLOWING_GAP, 3.5 + car.speed * 0.75)
-		if i > 0:
-			lead_car = valid_cars[i - 1]
+		if lead_car != null:
 			var is_lead_turning: bool = (
 				lead_car.state == Car.State.APPROACHING or lead_car.state == Car.State.TO_SPOT
 			)
@@ -1840,25 +1887,52 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 				else:
 					brake_accel = A_COMFORT * 2.5
 
+		# Cars beside the lane at the curb: slow down, swerve past, or move over a lane.
+		var curb_stopping := stop != null or car.is_curb_stopping()
+		var stop_gap: float = INF
+		if not curb_stopping and not shouldered_cars.is_empty():
+			stop_gap = _shouldered_gap(car, shouldered_cars)
+		if not curb_stopping and not car.is_changing_lanes:
+			car.lateral_bias_target = (
+				-signf(lane.z) * STOP_SWERVE_BIAS if stop_gap < STOP_SWERVE_LOOKAHEAD else 0.0
+			)
+		var move_over: bool = stop_gap > 0.0 and stop_gap < STOP_MOVE_OVER_LOOKAHEAD
+
 		var swerved := false
 		if (
 			car.state == Car.State.CRUISING
 			and car.errand == null
 			and not car.had_errand
+			and stop == null
+			and not car.on_patrol
 			and not car.is_changing_lanes
 			and car.lane_change_cooldown <= 0.0
-			and lead_car != null
+			and (lead_car != null or move_over)
 		):
+			var pass_gap := lead_gap
+			var pass_lead_speed: float = lead_car.lane_speed if lead_car != null else 0.0
+			if move_over and stop_gap < pass_gap:
+				pass_gap = stop_gap
+				pass_lead_speed = 0.0
 			var wants_pass: bool = (
-				(lead_gap < safe_gap * 2.2 and lead_car.lane_speed < car.desired_speed - 0.8)
-				or (car.car_type == Car.CarType.SPORTS and lead_gap < safe_gap)
+				move_over
+				or (
+					lead_car != null
+					and (
+						(
+							lead_gap < safe_gap * 2.2
+							and lead_car.lane_speed < car.desired_speed - 0.8
+						)
+						or (car.car_type == Car.CarType.SPORTS and lead_gap < safe_gap)
+					)
+				)
 			)
 			if wants_pass:
 				var candidate_lane_ids := _get_passing_lane_candidates(lane.id)
 				for target_lane_id in candidate_lane_ids:
 					if target_lane_id >= 0 and target_lane_id < lanes.size():
 						var target_lane := lanes[target_lane_id]
-						if _can_swerve_to_lane(car, target_lane, lead_gap, lead_car.lane_speed):
+						if _can_swerve_to_lane(car, target_lane, pass_gap, pass_lead_speed):
 							swerved = true
 							car.start_lane_change(target_lane_id, target_lane.z)
 							var target_lane_spd := calculate_car_desired_speed(target_lane, car)
@@ -1877,7 +1951,7 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 							if target_lane_id >= 0 and target_lane_id < lanes.size():
 								var target_lane := lanes[target_lane_id]
 								if _can_swerve_to_lane(
-									car, target_lane, lead_gap, lead_car.lane_speed, true
+									car, target_lane, pass_gap, pass_lead_speed, true
 								):
 									swerved = true
 									car.start_lane_change(target_lane_id, target_lane.z, true)
@@ -1894,7 +1968,15 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 				if not swerved:
 					car.reset_lane_change_cooldown()
 
+		if not swerved and car.on_patrol and stop == null:
+			swerved = _try_patrol_keep_right(car, lane, lead_gap)
+
 		var target_speed: float = maxf(0.0, minf(car.desired_speed, following_target))
+		if stop_gap < STOP_SLOW_LOOKAHEAD:
+			var pass_target := sqrt(
+				V_PASS_STOP * V_PASS_STOP + 2.0 * A_COMFORT * maxf(0.0, stop_gap)
+			)
+			target_speed = minf(target_speed, pass_target)
 		if car.state == Car.State.APPROACHING:
 			if car.turn_signal != Car.TurnSignal.RIGHT:
 				car.set_turn_signal(Car.TurnSignal.RIGHT)
@@ -1902,6 +1984,10 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 			var approach_dist: float = maxf(0.0, turn_d - car.lane_distance)
 			var approach_target: float = sqrt(V_TURN * V_TURN + 2.0 * A_COMFORT * approach_dist)
 			target_speed = minf(target_speed, approach_target)
+		if stop != null:
+			target_speed = stop.limit_speed(car, target_speed)
+		elif car is BusCar:
+			target_speed = _update_bus_stop(lane, car, target_speed, delta)
 
 		var motor_accel := MOTOR_ACCELERATION
 		if car.car_type == Car.CarType.SPORTS:
@@ -2131,6 +2217,11 @@ func _can_swerve_to_lane(
 	for other in target_lane.cars:
 		if other == null or not is_instance_valid(other) or other == car:
 			continue
+		# Never change into a lane right before (or beside) a car stopping at the curb.
+		if other.is_curb_stopping():
+			var stop_ahead := other.lane_distance - car.lane_distance
+			if stop_ahead > -15.0 and stop_ahead < STOP_MOVE_OVER_LOOKAHEAD:
+				return false
 
 		# Existing physical/bounding overlap rejection
 		var center_dist := car.global_position.distance_to(other.global_position)
@@ -2230,6 +2321,172 @@ func _apply_pending_lane_transfers() -> void:
 		if is_instance_valid(c) and not target_lane.cars.has(c):
 			target_lane.cars.append(c)
 	_pending_transfers.clear()
+
+
+## Starts, advances, and ends a bus's stops; returns its lane target speed capped for the phase.
+func _update_bus_stop(lane: Lane, bus: BusCar, target_speed: float, delta: float) -> float:
+	if bus.stop_phase == BusCar.StopPhase.NONE:
+		_try_start_bus_stop(lane, bus)
+		if bus.stop_phase == BusCar.StopPhase.NONE:
+			return target_speed
+	var lane_clear := (
+		bus.stop_phase == BusCar.StopPhase.PULLING_OUT
+		and TrafficStop.lane_clear_to_reenter(lane, bus, bus.stop_timer, null, null)
+	)
+	bus.advance_stop(delta, lane_clear)
+	return bus.limit_stop_speed(target_speed)
+
+
+## Begins the bus's approach to the next stop once it is within comfortable braking distance.
+## A stop it can no longer brake for, or one already taken by another curb stop, is skipped.
+func _try_start_bus_stop(lane: Lane, bus: BusCar) -> void:
+	if bus.is_changing_lanes or bus.motion != Car.Motion.LANE or bus.state != Car.State.CRUISING:
+		return
+	for pole_d in lane.bus_stops:
+		if pole_d <= bus.last_pole_distance:
+			continue
+		var remaining := bus.stop_distance_for(pole_d) - bus.lane_distance
+		if remaining > bus.speed * bus.speed / (2.0 * BusCar.COMFORT_DECEL) + 2.0:
+			return
+		bus.last_pole_distance = pole_d
+		if (
+			remaining > BusCar.ARRIVAL_TOLERANCE
+			and bus.speed * bus.speed / (2.0 * remaining) <= BusCar.MAX_STOP_DECEL
+			and not _bus_stop_occupied(lane, bus, pole_d)
+		):
+			bus.begin_pull_in(pole_d)
+		return
+
+
+func _bus_stop_occupied(lane: Lane, bus: BusCar, pole_d: float) -> bool:
+	for other in lane.cars:
+		if not is_instance_valid(other) or other == bus or not other.is_curb_stopping():
+			continue
+		var ahead := other.lane_distance - pole_d
+		if ahead > -BUS_STOP_ZONE_BEHIND and ahead < BUS_STOP_ZONE_AHEAD + bus.car_length:
+			return true
+	return false
+
+
+func _update_traffic_stops(delta: float) -> void:
+	for k in range(traffic_stops.size() - 1, -1, -1):
+		if not traffic_stops[k].update(self, delta):
+			traffic_stops.remove_at(k)
+	if _physics_tick_count % 30 == 0 and traffic_stops.size() < MAX_TRAFFIC_STOPS:
+		for lane_id in [0, 3]:
+			if lane_id < lanes.size():
+				_try_start_patrol_stop(lanes[lane_id])
+
+
+func _try_start_patrol_stop(lane: Lane) -> void:
+	for stop in traffic_stops:
+		if stop.lane == lane:
+			return
+	for police in lane.cars:
+		if not is_instance_valid(police) or not police.on_patrol:
+			continue
+		var suspect := _car_ahead(lane, police)
+		if (
+			suspect != null
+			and TrafficStop.bumper_gap(police, suspect) <= TrafficStop.MAX_START_GAP
+			and start_traffic_stop(police, suspect) != null
+		):
+			return
+
+
+## Lights up police behind suspect if it can pull it over before the road ends; null otherwise.
+func start_traffic_stop(police: Car, suspect: Car) -> TrafficStop:
+	if not TrafficStop.can_patrol(police) or not TrafficStop.can_be_stopped(suspect, police):
+		return null
+	var lane := lanes[police.lane_id]
+	for stop in traffic_stops:
+		if stop.lane == lane:
+			return null
+	var site := TrafficStop.find_site(
+		self,
+		lane,
+		TrafficStop.earliest_stop_distance(police, suspect),
+		suspect,
+		police,
+		TrafficStop.OUTER_EDGE_MAX
+	)
+	if site < 0.0:
+		return null
+	var stop := TrafficStop.new(police, suspect, lane)
+	traffic_stops.append(stop)
+	return stop
+
+
+## Nearest car ahead of car in lane, or null.
+func _car_ahead(lane: Lane, car: Car) -> Car:
+	var nearest: Car = null
+	for other in lane.cars:
+		if not is_instance_valid(other) or other == car:
+			continue
+		if (
+			other.lane_distance > car.lane_distance
+			and (nearest == null or other.lane_distance < nearest.lane_distance)
+		):
+			nearest = other
+	return nearest
+
+
+## Nearest car ahead that valid_cars[i] must follow. Cars beside the lane at the curb are
+## passed, not followed, unless they are pulling out and this car can still yield to them.
+## A car on the shoulder follows nobody (its traffic stop sets where it stops); a stop
+## participant still in its lane keeps following its partner.
+func _lane_lead(valid_cars: Array[Car], i: int) -> Car:
+	var car := valid_cars[i]
+	if TrafficStop.is_car_shouldered(car):
+		return null
+	var partner: Car = car.traffic_stop.partner_of(car) if car.traffic_stop != null else null
+	for j in range(i - 1, -1, -1):
+		var other := valid_cars[j]
+		if other == partner or not other.is_beside_lane() or TrafficStop.is_yielded_to(other, car):
+			return other
+	return null
+
+
+## Bumper gap to the nearest pulled-over car not yet passed (negative alongside), or INF.
+func _shouldered_gap(car: Car, shouldered_cars: Array[Car]) -> float:
+	var nearest := INF
+	for other in shouldered_cars:
+		var half_lengths := 0.5 * (car.car_length + other.car_length)
+		var gap := other.lane_distance - car.lane_distance - half_lengths
+		if gap > -(2.0 * half_lengths + 1.5):
+			nearest = minf(nearest, gap)
+	return nearest
+
+
+## Patrolling police drift toward the curb lane, where traffic stops happen.
+func _try_patrol_keep_right(car: Car, lane: Lane, lead_gap: float) -> bool:
+	if car.state != Car.State.CRUISING or car.is_changing_lanes or car.lane_change_cooldown > 0.0:
+		return false
+	var curb_id := _curbward_lane_id(lane.id)
+	if curb_id < 0:
+		return false
+	var curb_lane := lanes[curb_id]
+	# -INF lead speed: no "stuck behind a slower car" veto when merely keeping right.
+	if not _can_swerve_to_lane(car, curb_lane, lead_gap, -INF):
+		car.reset_lane_change_cooldown()
+		return false
+	car.start_lane_change(curb_id, curb_lane.z)
+	car.desired_speed = calculate_car_desired_speed(curb_lane, car)
+	_pending_transfers.append({"car": car, "target_lane": curb_lane})
+	return true
+
+
+func _curbward_lane_id(lane_id: int) -> int:
+	match lane_id:
+		1:
+			return 0
+		2:
+			return 1
+		4:
+			return 3
+		5:
+			return 4
+	return -1
 
 
 func _exit_tree() -> void:

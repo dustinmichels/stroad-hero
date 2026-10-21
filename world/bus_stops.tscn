@@ -1,0 +1,17 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://props/bus_stop.tscn" id="1_bus_stop"]
+
+[node name="BusStops" type="Node3D"]
+
+[node name="BusStop_North_52" parent="." instance=ExtResource("1_bus_stop")]
+transform = Transform3D(-1, 0, 1.22465e-16, 0, 1, 0, -1.22465e-16, 0, -1, 52, 0.245, -13.9)
+
+[node name="BusStop_North_m88" parent="." instance=ExtResource("1_bus_stop")]
+transform = Transform3D(-1, 0, 1.22465e-16, 0, 1, 0, -1.22465e-16, 0, -1, -88, 0.245, -13.9)
+
+[node name="BusStop_South_m75" parent="." instance=ExtResource("1_bus_stop")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -75, 0.245, 13.9)
+
+[node name="BusStop_South_108" parent="." instance=ExtResource("1_bus_stop")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 108, 0.245, 13.9)
