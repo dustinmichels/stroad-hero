@@ -8,6 +8,7 @@
 - **Cybertruck rebuild**: Replaced box-assembled body with generated faceted meshes (`scripts/generate_cybertruck.gd`): single-ridge wedge profile, inward-leaning greenhouse with flush windshield/side glass, tonneau cover, polygonal arch flares, headlight/taillight markers for lamps and turn signals. Stainless steel is its only finish (never repainted).
 - **Mats running gait**: Sprinting now blends out of the walking pose into longer strides, higher knee lift, stronger arm swing, and a forward lean.
 - **Retro visual style filter**: Added real-time post-process pixelation, ordered $4\times4$ Bayer dithering, soft silhouette edge inking, and quantized retro palettes (`shaders/pixel_art.gdshader`, `ui/retro_filter.tscn`). Toggleable and cycleable live via `F1`, led by a subtle high-def 2x preset tuned for readable 3D storefront text and signs, followed by 16-Bit, Chunky, 8-Bit, Game Boy, Amber CRT, and CGA modes.
+- **Custom game icon**: Replaced default Godot engine icon with custom SVG app icon depicting Mats in full heroic sprint dodging a monster American pickup across multi-lane stroad markings inside an MUTCD-style warning diamond sign assembly with vectorized "STROAD HERO" plaque.
 
 ## Oct 20, 2026
 
