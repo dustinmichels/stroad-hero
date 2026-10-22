@@ -7,16 +7,17 @@ enum Preset {
 	RETRO_16BIT = 2,
 	RETRO_CHUNKY = 3,
 	ARCADE_8BIT = 4,
-	GAMEBOY = 5,
-	AMBER_CRT = 6,
-	CGA_CYBER = 7,
-	NES = 8,
-	ONE_BIT = 9,
-	VIRTUAL_BOY = 10,
-	ARCADE_CRT = 11,
-	NIGHT_VISION = 12,
-	THERMAL = 13,
-	COMIC = 14,
+	PICO8_VIVID = 5,
+	GAMEBOY = 6,
+	AMBER_CRT = 7,
+	CGA_CYBER = 8,
+	NES = 9,
+	ONE_BIT = 10,
+	VIRTUAL_BOY = 11,
+	ARCADE_CRT = 12,
+	NIGHT_VISION = 13,
+	THERMAL = 14,
+	COMIC = 15,
 }
 
 # Shader `palette_mode` ids. Palettes are built once in _ready; entry 0 is the
@@ -33,6 +34,7 @@ enum Palette {
 	NIGHT_VISION = 8,
 	THERMAL = 9,
 	COMIC = 10,
+	PICO8_EXTENDED = 11,
 }
 
 const DEFAULT_OUTLINE_COLOR := Color(0.05, 0.06, 0.09)
@@ -53,6 +55,7 @@ const BASE_PARAMS := {
 	"curvature": 0.0,
 	"vignette": 0.0,
 	"grain": 0.0,
+	"saturation": 1.0,
 }
 
 const PRESETS := {
@@ -88,6 +91,15 @@ const PRESETS := {
 		"dither_strength": 0.90,
 		"outline_opacity": 0.80,
 		"palette_mode": Palette.PICO8,
+	},
+	Preset.PICO8_VIVID:
+	{
+		"name": "8-Bit Vivid (PICO-8 + Secret Palette)",
+		"color_depth": 8.0,
+		"dither_strength": 0.75,
+		"outline_opacity": 0.80,
+		"palette_mode": Palette.PICO8_EXTENDED,
+		"saturation": 1.6,
 	},
 	Preset.GAMEBOY:
 	{
@@ -344,26 +356,50 @@ func _build_palette_textures() -> void:
 			Color(1.0, 1.0, 1.0),
 		]
 	)
+	var pico8: Array = [
+		Color8(0, 0, 0),
+		Color8(29, 43, 83),
+		Color8(126, 37, 83),
+		Color8(0, 135, 81),
+		Color8(171, 82, 54),
+		Color8(95, 87, 79),
+		Color8(194, 195, 199),
+		Color8(255, 241, 232),
+		Color8(255, 0, 77),
+		Color8(255, 163, 0),
+		Color8(255, 236, 39),
+		Color8(0, 228, 54),
+		Color8(41, 173, 255),
+		Color8(131, 118, 156),
+		Color8(255, 119, 168),
+		Color8(255, 204, 170),
+	]
+	_register_palette(Palette.PICO8, pico8)
+	# PICO-8's 16 undocumented "secret" colors (128–143): darker and in-between
+	# hues, so muted scene colors land on a tint instead of the base greys.
 	_register_palette(
-		Palette.PICO8,
-		[
-			Color8(0, 0, 0),
-			Color8(29, 43, 83),
-			Color8(126, 37, 83),
-			Color8(0, 135, 81),
-			Color8(171, 82, 54),
-			Color8(95, 87, 79),
-			Color8(194, 195, 199),
-			Color8(255, 241, 232),
-			Color8(255, 0, 77),
-			Color8(255, 163, 0),
-			Color8(255, 236, 39),
-			Color8(0, 228, 54),
-			Color8(41, 173, 255),
-			Color8(131, 118, 156),
-			Color8(255, 119, 168),
-			Color8(255, 204, 170),
-		]
+		Palette.PICO8_EXTENDED,
+		(
+			pico8
+			+ [
+				Color8(41, 24, 20),
+				Color8(17, 29, 53),
+				Color8(66, 33, 54),
+				Color8(18, 83, 89),
+				Color8(116, 47, 41),
+				Color8(73, 51, 59),
+				Color8(162, 136, 121),
+				Color8(243, 239, 125),
+				Color8(190, 18, 80),
+				Color8(255, 108, 36),
+				Color8(168, 231, 46),
+				Color8(0, 181, 67),
+				Color8(6, 90, 181),
+				Color8(117, 70, 101),
+				Color8(255, 110, 89),
+				Color8(255, 157, 129),
+			]
+		)
 	)
 	var nes: Array = []
 	for rgb in NES_RGB:

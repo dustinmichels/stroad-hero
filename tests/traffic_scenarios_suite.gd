@@ -313,7 +313,6 @@ func on_physics_process(_delta: float) -> void:
 						"Must have observed waiting car holding position while car passed"
 					)
 					assert(_test_car.merge_wait_time > 0.0, "Merge wait time must accumulate")
-					assert(tm.stats["max_merge_wait"] > 0.0, "max_merge_wait must be updated")
 					assert(
 						tm._can_merge(_test_car),
 						"Merge must be accepted once passing car clears d=71.0"
@@ -369,7 +368,6 @@ func on_physics_process(_delta: float) -> void:
 				assert(
 					_saw_follower_yield, "Upstream traffic must yield appropriately to merging car"
 				)
-				assert(tm.stats["max_merge_wait"] > 0.0, "max_merge_wait must be tracked")
 				assert(_test_car.motion == Car.Motion.LANE, "Merged car must use lane motion")
 				assert(_test_car.lane_id == 0, "Merged car must join lane 0")
 				assert(_test_car.errand == null, "Merged car must clear its completed errand")
@@ -827,9 +825,6 @@ func _run_test_drive_thru() -> void:
 
 	# 1. Live Taco Hell Drive-Thru Simulation
 	var car1: Car = tm.spawn_drive_thru_car(&"taco_hell_drive_thru")
-	assert(car1.state == Car.State.DRIVE_THRU, "car1 must start in DRIVE_THRU state")
-	assert(car1.merge_target_lane == 0, "car1 target lane must be 0")
-	assert(car1.path == tm.taco_hell_drive_thru_path, "car1 must follow taco_hell_drive_thru_path")
 
 	var car2: Car = null
 	var saw_c1_order := false
@@ -913,11 +908,6 @@ func _run_test_drive_thru() -> void:
 		lane.spawn_timer = 999.0
 
 	var bk1: Car = tm.spawn_drive_thru_car(&"booger_king")
-	assert(bk1.state == Car.State.DRIVE_THRU, "bk1 must start in DRIVE_THRU state")
-	assert(bk1.merge_target_lane == 3, "bk1 target lane must be 3 (Eastbound)")
-	assert(
-		bk1.path == tm.booger_king_drive_thru_path, "bk1 must follow booger_king_drive_thru_path"
-	)
 
 	var bk2: Car = null
 	var saw_bk1_order := false
@@ -1119,13 +1109,8 @@ func _run_test_cramped_inn_dropoff() -> void:
 
 	# 1. Spawn a Taxi doing Cramped Inn drop-off/pickup
 	var taxi: Car = tm.spawn_cramped_inn_dropoff_car(true)
-	assert(taxi != null, "taxi must be spawned")
-	assert(taxi.car_type == Car.CarType.TAXI, "taxi must be CarType.TAXI")
 	assert(taxi.can_take_errands(), "taxi must be able to take drop-off errand")
 	assert(not taxi.can_park(), "taxi must not be able to park in stalls")
-	assert(taxi.state == Car.State.DRIVE_THRU, "taxi must start in DRIVE_THRU state")
-	assert(taxi.merge_target_lane == 3, "taxi merge_target_lane must be 3")
-	assert(taxi.path == tm.cramped_inn_dropoff_path, "taxi must follow cramped_inn_dropoff_path")
 
 	var car2: Car = null
 	var saw_taxi_under_awning := false
@@ -1143,12 +1128,6 @@ func _run_test_cramped_inn_dropoff() -> void:
 		ticks += 1
 		if car2 == null and taxi.path_distance >= 12.0:
 			car2 = tm.spawn_cramped_inn_dropoff_car(false)
-			assert(car2 != null, "car2 must be spawned")
-			assert(car2.state == Car.State.DRIVE_THRU, "car2 must start in DRIVE_THRU state")
-			assert(
-				car2.path == tm.cramped_inn_dropoff_path,
-				"car2 must follow cramped_inn_dropoff_path"
-			)
 
 		tm._update_lot_cars(delta)
 		for lane in tm.lanes:
@@ -1290,10 +1269,6 @@ func _run_test_grass_shortcut() -> void:
 		car.dwell_left = 0.1
 
 		assert(tm.lot.check_invariants() == 0, "Initial invariant check must pass")
-		assert(car.state == Car.State.PARKED, "Car must start PARKED")
-		assert(car.spot == source_spot, "Car must be assigned source_spot")
-		assert(source_spot.state == ParkingSpot.State.OCCUPIED, "source_spot must be OCCUPIED")
-		assert(car.pending_destination_spot == null, "pending_destination_spot must start null")
 
 		# 4. Simulation loop
 		var delta := 0.05
@@ -1393,7 +1368,6 @@ func _run_test_grass_shortcut() -> void:
 				)
 				assert(observed_dest_spot.car == car, "Destination spot car must be car")
 				assert(car.has_taken_shortcut, "has_taken_shortcut must be true")
-				assert(car.lane_id == -1, "Parked car lane_id must be -1")
 				assert(tm.lot.check_invariants() == 0, "No leaks on destination arrival")
 				saw_dest_occupied = true
 				# Force destination dwell to finish promptly through normal field

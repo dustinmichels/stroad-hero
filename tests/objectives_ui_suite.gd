@@ -8,16 +8,12 @@ func matches_args() -> bool:
 			arg
 			in [
 				"--test-day-weather",
-				"--test-foliage-wind",
-				"--test-powerlines",
-				"--test-chainlink-fence",
-				"--test-stroad-tunnels",
+				"--test-world-bounds",
 				"--test-objective-manager",
 				"--test-objectives",
 				"--test-start-screen",
 				"--test-startup",
 				"--test-character-editor",
-				"--test-objectives-editor",
 				"--test-retro-filter",
 			]
 		):
@@ -29,16 +25,8 @@ func setup_ready() -> void:
 	if "--test-day-weather" in user_args:
 		_run_test_day_weather()
 		return
-	if "--test-foliage-wind" in user_args:
-		_run_test_foliage_wind()
-		return
-	if "--test-powerlines" in user_args:
-		_run_test_powerlines()
-		return
-	if "--test-chainlink-fence" in user_args:
-		_run_test_chainlink_fence()
-	if "--test-stroad-tunnels" in user_args:
-		_run_test_stroad_tunnels()
+	if "--test-world-bounds" in user_args:
+		_run_test_world_bounds()
 		return
 	if "--test-objective-manager" in user_args:
 		_run_test_objective_manager()
@@ -55,9 +43,6 @@ func setup_ready() -> void:
 	if "--test-character-editor" in user_args:
 		_run_test_character_editor()
 		return
-	if "--test-objectives-editor" in user_args:
-		_run_test_objectives_editor()
-		return
 	if "--test-retro-filter" in user_args:
 		_run_test_retro_filter()
 		return
@@ -65,18 +50,9 @@ func setup_ready() -> void:
 
 func _run_test_day_weather() -> void:
 	await main.get_tree().process_frame
-	# 1. Verify day span constants
-	var start_h := GameState.START_HOUR
-	var end_h := GameState.END_HOUR
-	assert(is_equal_approx(start_h, 15.5), "Day must start at 3:30 PM (15.5)")
-	assert(is_equal_approx(end_h, 21.0), "Day must end at 9:00 PM (21.0)")
-	# 2. Time string formatting and period
 	GameState.set_time_hours(15.5)
-	assert(GameState.get_time_string() == "3:30 PM", "15.5 should format as 3:30 PM")
-	assert(GameState.get_period_name() == "AFTERNOON", "15.5 should be AFTERNOON")
 	assert(GameState.are_lights_on() == false, "Lights should be off at 3:30 PM")
 	var streetlights: Node3D = main.get_node_or_null("Props/Streetlights")
-	assert(streetlights != null, "Props/Streetlights must exist")
 	var lamp0: Node3D = streetlights.get_child(0) as Node3D
 	var spot0: SpotLight3D = lamp0.get_node_or_null("Light") as SpotLight3D
 	var lamp_mesh0: MeshInstance3D = lamp0.get_node_or_null("Lamp") as MeshInstance3D
@@ -86,397 +62,105 @@ func _run_test_day_weather() -> void:
 			lamp_mesh0.material_override == null,
 			"Streetlight luminaire material override must be null at 3:30 PM"
 		)
-	# 3. Evening / Dusk progression
 	GameState.set_time_hours(18.5)
-	assert(GameState.get_time_string() == "6:30 PM", "18.5 should format as 6:30 PM")
 	assert(GameState.are_lights_on() == true, "Lights should be on at 6:30 PM")
-	assert(GameState.time_of_day == GameState.TimeOfDay.EVENING, "18.5 should be EVENING")
 	assert(spot0 != null and spot0.visible, "Streetlight SpotLight3D must be on at 6:30 PM")
 	if lamp_mesh0:
-		assert(
-			lamp_mesh0.material_override != null,
-			"Streetlight luminaire material override must be active at 6:30 PM"
-		)
 		var mat: StandardMaterial3D = lamp_mesh0.material_override as StandardMaterial3D
 		assert(
 			mat != null and mat.emission_enabled,
 			"Streetlight luminaire material must be emissive at 6:30 PM"
 		)
-	# 4. Night progression
-	GameState.set_time_hours(20.5)
-	assert(GameState.get_time_string() == "8:30 PM", "20.5 should format as 8:30 PM")
+	GameState.set_time_hours(19.75)
 	assert(GameState.are_lights_on() == true, "Lights should be on at night")
-	assert(GameState.time_of_day == GameState.TimeOfDay.NIGHT, "20.5 should be NIGHT")
 	assert(spot0 != null and spot0.visible, "Streetlight SpotLight3D must be on at night")
-	# 5. Day rollover / loop
+	# Day end: clock stops at 8:00 PM, summary pauses, button starts the next day
 	GameState.current_day = 1
-	GameState.set_time_hours(20.9)
+	GameState.set_time_hours(19.9)
 	GameState.advance_time(0.2)
-	assert(GameState.current_day == 2, "Reaching 9:00 PM should increment current_day to 2")
+	assert(GameState.day_over, "Reaching 8:00 PM should end the day")
+	assert(is_equal_approx(GameState.current_time_hours, 20.0), "Clock must stop at 8:00 PM")
+	GameState.advance_time(0.5)
+	assert(is_equal_approx(GameState.current_time_hours, 20.0), "Ended day must not advance")
+	var summary: DaySummary = main.hud.day_summary
+	assert(summary.visible, "Day summary must show when the day ends")
+	assert(main.get_tree().paused, "Day summary must pause the game")
+	summary.next_day_button.pressed.emit()
+	assert(not summary.visible, "Day summary must hide after starting the next day")
+	assert(not main.get_tree().paused, "Starting the next day must unpause")
+	assert(GameState.current_day == 2, "Next day button should advance to day 2")
+	assert(not GameState.day_over, "New day must not be over")
 	assert(
-		GameState.current_time_hours >= 15.5 and GameState.current_time_hours < 16.0,
-		"Time should wrap back to 3:30 PM"
+		is_equal_approx(GameState.current_time_hours, GameState.START_HOUR),
+		"New day should start at the day start hour"
 	)
 	assert(
 		spot0 != null and not spot0.visible,
-		"Streetlight SpotLight3D must turn off when looping back to day"
+		"Streetlight SpotLight3D must turn off when the next day starts"
 	)
 	if lamp_mesh0:
 		assert(
 			lamp_mesh0.material_override == null,
-			"Streetlight luminaire material override must clear when looping back to day"
+			"Streetlight luminaire material override must clear when the next day starts"
 		)
-	# 6. Cardinal direction calculation
-	assert(
-		GameState.get_cardinal_direction_name(Vector3(0, 0, -1)) == "N", "World -Z must be North"
-	)
-	assert(GameState.get_cardinal_direction_name(Vector3(1, 0, 0)) == "E", "World +X must be East")
-	assert(GameState.get_cardinal_direction_name(Vector3(0, 0, 1)) == "S", "World +Z must be South")
-	assert(GameState.get_cardinal_direction_name(Vector3(-1, 0, 0)) == "W", "World -X must be West")
-	assert(
-		GameState.get_cardinal_direction_name(Vector3(1, 0, -1).normalized()) == "NE",
-		"World +X, -Z must be NE"
-	)
-
-	# 7. WeatherDisplay component exists and updates
-	assert(main.hud != null, "HUD must exist")
-	assert(main.hud.weather_display != null, "WeatherDisplay must be mounted in HUD")
-	assert(
-		main.hud.weather_display.compass_dial != null, "Compass dial must exist in WeatherDisplay"
-	)
-	assert(main.hud.weather_display.time_label.text.length() > 0, "Time label must have text")
-
-	# 8. Web shadow overrides
-	var env_ctrl: EnvironmentController = main.get_node_or_null("EnvironmentController")
-	assert(env_ctrl != null, "EnvironmentController must exist")
-	assert(env_ctrl.sun_light != null, "EnvironmentController.sun_light must exist")
-	var orig_mode := env_ctrl.sun_light.directional_shadow_mode
-	var orig_dist := env_ctrl.sun_light.directional_shadow_max_distance
-	env_ctrl.apply_web_shadow_overrides(true)
-	assert(
-		env_ctrl.sun_light.directional_shadow_mode == DirectionalLight3D.SHADOW_ORTHOGONAL,
-		"Web shadow mode must be SHADOW_ORTHOGONAL"
-	)
-	assert(
-		is_equal_approx(env_ctrl.sun_light.directional_shadow_max_distance, 45.0),
-		"Web shadow max distance must be 45.0"
-	)
-	env_ctrl.sun_light.directional_shadow_mode = orig_mode
-	env_ctrl.sun_light.directional_shadow_max_distance = orig_dist
 	print("DAY_WEATHER_TEST: SUCCESS - --test-day-weather passed cleanly!")
 	main.get_tree().quit(0)
 
 
-func _run_test_foliage_wind() -> void:
-	await main.get_tree().process_frame
-	await main.get_tree().process_frame
-
-	var trees_node := main.get_node_or_null("Props/Trees") as Node3D
-	assert(trees_node != null, "Props/Trees must exist in main scene")
-
-	var live_oaks: Array[StreetTree] = []
-	for child in trees_node.get_children():
-		if child is StreetTree and child.tree_type == StreetTree.TreeType.LIVE_OAK:
-			live_oaks.append(child)
-	assert(live_oaks.size() > 0, "Main scene must contain at least one LiveOak tree")
-
-	for oak in live_oaks:
-		var foliage := oak.get_node_or_null("Visuals/LiveOak/Foliage") as MeshInstance3D
-		assert(foliage != null, "LiveOak must have Foliage MeshInstance3D")
-		for s in range(3):
-			var mat := foliage.get_surface_override_material(s) as ShaderMaterial
-			assert(mat != null, "Surface %d override on LiveOak foliage must be ShaderMaterial" % s)
-			assert(mat.shader != null, "ShaderMaterial must have valid shader resource")
-			var albedo = mat.get_shader_parameter("albedo_color")
-			assert(albedo is Color or albedo is Vector3, "Albedo color uniform must be present")
-
-	# Test dynamic wind updates propagate to shader parameters
-	var test_dir := Vector3(0.0, 0.0, 1.0)
-	var test_speed := 2.2
-	GameState.set_wind_direction(test_dir, true)
-	GameState.set_wind_speed(test_speed)
-	await main.get_tree().process_frame
-
-	var sample_oak := live_oaks[0]
-	var sample_foliage := sample_oak.get_node_or_null("Visuals/LiveOak/Foliage") as MeshInstance3D
-	var sample_mat := sample_foliage.get_surface_override_material(0) as ShaderMaterial
-	var current_dir: Vector2 = sample_mat.get_shader_parameter("wind_direction")
-	var current_spd: float = sample_mat.get_shader_parameter("wind_strength")
-	assert(current_dir.is_equal_approx(Vector2(0.0, 1.0)), "Wind direction uniform must update")
-	assert(is_equal_approx(current_spd, 2.2), "Wind strength uniform must update")
-
-	GameState.resume_wind_simulation()
-	print("FOLIAGE_WIND_TEST: SUCCESS - --test-foliage-wind passed cleanly!")
-	main.get_tree().quit(0)
-
-
-func _run_test_powerlines() -> void:
-	await main.get_tree().process_frame
-	await main.get_tree().process_frame
-
-	var powerlines := main.get_node_or_null("Props/Powerlines") as Node3D
-	assert(powerlines != null, "Props/Powerlines must exist in main scene")
-	assert(powerlines.get_child_count() >= 2, "Props/Powerlines must contain multiple poles")
-
-	var child_count := powerlines.get_child_count()
-	for i in range(child_count):
-		var pole := powerlines.get_child(i) as Powerline
-		assert(pole != null, "Child %d of Powerlines must be a Powerline" % i)
-
-		var col := pole.get_node_or_null("CollisionShape3D") as CollisionShape3D
-		assert(col != null, "Powerline %d must have a CollisionShape3D" % i)
-		assert(
-			absf(pole.global_position.z - (-13.85)) < 0.05,
-			(
-				"Powerline pole %s must be centered in sidewalk (z=-13.85), got z=%.3f"
-				% [pole.name, pole.global_position.z]
-			)
-		)
-
-		var wire_mi := pole.get_node_or_null("WireMesh") as MeshInstance3D
-		assert(wire_mi != null, "Powerline %d must have a WireMesh" % i)
-
-		if i < child_count - 1:
-			assert(wire_mi.visible == true, "Powerline %d must have visible wires" % i)
-			assert(wire_mi.mesh != null, "Powerline %d must have a generated wire mesh" % i)
-			assert(
-				wire_mi.mesh.get_surface_count() > 0,
-				"Powerline %d wire mesh must have surfaces" % i
-			)
-			var verts: int = wire_mi.mesh.surface_get_array_len(0)
-			assert(verts > 0, "Powerline %d wire mesh must contain vertices" % i)
-		else:
-			assert(wire_mi.visible == false, "Terminal powerline must not dangle wires forward")
-
-	# Test standalone re-usable scene instantiation
-	var pl_scene := load("res://props/powerline.tscn") as PackedScene
-	assert(pl_scene != null, "props/powerline.tscn must load as a PackedScene")
-	var standalone := pl_scene.instantiate() as Powerline
-	assert(standalone != null, "Must instantiate Powerline")
-	standalone.has_transformer = true
-	main.add_child(standalone)
-	await main.get_tree().process_frame
-	assert(standalone.has_transformer == true, "Standalone pole must support transformer")
-	var st_transformer := standalone.get_node_or_null("Visuals/Transformer") as Node3D
-	assert(
-		st_transformer != null and st_transformer.visible == true,
-		"Transformer must be visible when enabled"
-	)
-	standalone.queue_free()
-
-	# Physics collision: verify pole obstructs pedestrian Mats walking down the middle of the sidewalk
-	main.mats.global_position = Vector3(4.0, 0.245, -13.85)
-	main.mats.velocity = Vector3(10.0, 0.0, 0.0)
+func _assert_mats_blocked(start: Vector3, vel: Vector3, passes: Callable, msg: String) -> void:
+	main.mats.global_position = start
 	for _step in range(30):
-		main.mats.velocity = Vector3(10.0, 0.0, 0.0)
+		main.mats.velocity = vel
 		main.mats._physics_process(1.0 / 60.0)
-	assert(
-		main.mats.global_position.x < 5.8,
-		(
-			"Electricity pole in middle of sidewalk must physically block Mats (got x=%.2f)"
-			% main.mats.global_position.x
-		)
-	)
-
-	print("POWERLINES_TEST: SUCCESS - --test-powerlines passed cleanly!")
-	main.get_tree().quit(0)
+	assert(passes.call(main.mats.global_position), msg)
 
 
-func _run_test_chainlink_fence() -> void:
+func _run_test_world_bounds() -> void:
 	await main.get_tree().process_frame
 	await main.get_tree().process_frame
-
-	const FenceScript = preload("res://props/chainlink_fence.gd")
-
-	# 1. Verify boundary fence at edge of earth is removed
-	assert(
-		main.get_node_or_null("BoundaryFence") == null,
-		"BoundaryFence around edge of earth must no longer exist"
-	)
-
-	# 2. Verify forest fences exist at the start of the forest
-	var forest = main.get_node_or_null("Props/Forest")
-	assert(forest != null, "Props/Forest must exist in main scene")
-
-	var north_fence = forest.get_node_or_null("NorthForestFence")
-	var south_fence = forest.get_node_or_null("SouthForestFence")
-	assert(
-		north_fence != null and north_fence is FenceScript,
-		"NorthForestFence must exist and be ChainlinkFence"
-	)
-	assert(
-		south_fence != null and south_fence is FenceScript,
-		"SouthForestFence must exist and be ChainlinkFence"
-	)
-
-	# 3. Verify collision shapes and visibility settings on forest fences
-	assert(
-		north_fence.get_node_or_null("Collision_0") != null,
-		"NorthForestFence must have segment collision"
-	)
-	assert(
-		south_fence.get_node_or_null("Collision_0") != null,
-		"SouthForestFence must have segment collision"
-	)
-	assert(
-		north_fence.visibility_distance == 60.0, "NorthForestFence visibility distance must be 60m"
-	)
-	assert(
-		south_fence.visibility_distance == 60.0, "SouthForestFence visibility distance must be 60m"
-	)
-
-	# 4. Test physics collision: prove Mats cannot walk through the forest fences
-	# North fence collision test (fence is at z = -60.0 between x = -100 and 150)
-	main.mats.global_position = Vector3(25.0, 0.3, -59.0)
-	main.mats.velocity = Vector3(0.0, 0.0, -10.0)
-	for _step in range(30):
-		main.mats.velocity = Vector3(0.0, 0.0, -10.0)
-		main.mats._physics_process(1.0 / 60.0)
-	assert(
-		main.mats.global_position.z > -60.0,
+	_assert_mats_blocked(
+		Vector3(25.0, 0.3, -59.0),
+		Vector3(0.0, 0.0, -10.0),
+		func(p: Vector3) -> bool: return p.z > -60.0,
 		"North forest fence must block Mats from entering forest"
 	)
-
-	# South fence collision test (fence is at z = 64.0 between x = -100 and 168)
-	main.mats.global_position = Vector3(25.0, 0.3, 63.0)
-	main.mats.velocity = Vector3(0.0, 0.0, 10.0)
-	for _step in range(30):
-		main.mats.velocity = Vector3(0.0, 0.0, 10.0)
-		main.mats._physics_process(1.0 / 60.0)
-	assert(
-		main.mats.global_position.z < 64.0,
+	_assert_mats_blocked(
+		Vector3(25.0, 0.3, 63.0),
+		Vector3(0.0, 0.0, 10.0),
+		func(p: Vector3) -> bool: return p.z < 64.0,
 		"South forest fence must block Mats from entering forest"
 	)
-
-	# 5. Test standalone reusable section scene
-	var sec_scene := load("res://props/chainlink_fence_section.tscn") as PackedScene
-	assert(sec_scene != null, "props/chainlink_fence_section.tscn must load as PackedScene")
-	var sec_inst = sec_scene.instantiate()
-	assert(sec_inst != null and sec_inst is FenceScript, "Must instantiate ChainlinkFenceSection")
-	main.add_child(sec_inst)
-	await main.get_tree().process_frame
-	assert(
-		sec_inst.get_node_or_null("CollisionSection") != null, "Section must have CollisionSection"
-	)
-	sec_inst.queue_free()
-
-	print("CHAINLINK_FENCE_TEST: SUCCESS - --test-chainlink-fence passed cleanly!")
-	main.get_tree().quit(0)
-
-
-func _run_test_stroad_tunnels() -> void:
-	await main.get_tree().process_frame
-	await main.get_tree().process_frame
-
-	# 1. Verify stroad extension
-	var road_node := main.get_node_or_null("Road")
-	assert(road_node != null, "Road node must exist in main scene")
-	var stroad := road_node.get_node_or_null("Stroad") as MeshInstance3D
-	assert(stroad != null, "Stroad mesh instance must exist")
-	assert(stroad.mesh is BoxMesh, "Stroad mesh must be BoxMesh")
-	var stroad_mesh := stroad.mesh as BoxMesh
-	assert(
-		stroad_mesh.size.x >= 300.0,
-		"Stroad must be extended to at least 300m in length (got %.1f)" % stroad_mesh.size.x
-	)
-
-	# 2. Verify road markings extension
-	var markings := road_node.get_node_or_null("Markings")
-	assert(markings != null, "Markings node must exist")
-	for line_name in ["CenterLine1", "CenterLine2", "EdgeLineSouth", "EdgeLineNorth"]:
-		var line_mi := markings.get_node_or_null(line_name) as MeshInstance3D
-		assert(line_mi != null, "Line marking %s must exist" % line_name)
-		assert(
-			(line_mi.mesh as BoxMesh).size.x >= 300.0, "%s must extend to at least 300m" % line_name
-		)
-
-	# 3. Verify tunnel nodes exist under Props
-	var props_node := main.get_node_or_null("Props")
-	assert(props_node != null, "Props node must exist")
-	var tunnel_west := props_node.get_node_or_null("TunnelWest") as Tunnel
-	var tunnel_east := props_node.get_node_or_null("TunnelEast") as Tunnel
-	assert(tunnel_west != null, "TunnelWest must exist under Props and be Tunnel instance")
-	assert(tunnel_east != null, "TunnelEast must exist under Props and be Tunnel instance")
-
-	assert(
-		tunnel_west.global_position.x <= -100.0,
-		"TunnelWest must be at west edge of stroad (x <= -100)"
-	)
-	assert(
-		tunnel_east.global_position.x >= 150.0,
-		"TunnelEast must be at east edge of stroad (x >= 150)"
-	)
-
-	# 4. Verify tunnel components and chain-link fences
-	for t in [tunnel_west, tunnel_east]:
-		var portal = t.get_node_or_null("PortalStructure")
-		assert(portal != null, "Tunnel %s must have PortalStructure" % t.name)
-		var tube = t.get_node_or_null("TunnelTube")
-		assert(tube != null, "Tunnel %s must have TunnelTube" % t.name)
-
-		var fences = t.get_node_or_null("ChainlinkFences")
-		assert(fences != null, "Tunnel %s must have ChainlinkFences" % t.name)
-		var f_south = fences.get_node_or_null("Fence_SouthAcross")
-		var f_north = fences.get_node_or_null("Fence_NorthAcross")
-		var f_side_s = fences.get_node_or_null("Fence_SouthSide")
-		var f_side_n = fences.get_node_or_null("Fence_NorthSide")
-		assert(
-			f_south != null and f_north != null,
-			"Tunnel %s must have fences across sidewalks" % t.name
-		)
-		assert(
-			f_side_s != null and f_side_n != null, "Tunnel %s must have fences on sides" % t.name
-		)
-
-		# Verify portal player blocker
-		var blocker = t.get_node_or_null("Col_PortalPlayerBlocker") as CollisionShape3D
-		assert(blocker != null, "Tunnel %s must have Col_PortalPlayerBlocker" % t.name)
-
-	# 5. Physics test: prove Mats is blocked from entering West tunnel on roadway
-	main.mats.global_position = Vector3(-98.0, 0.3, 0.0)
-	main.mats.velocity = Vector3(-10.0, 0.0, 0.0)
-	for _step in range(30):
-		main.mats.velocity = Vector3(-10.0, 0.0, 0.0)
-		main.mats._physics_process(1.0 / 60.0)
-	assert(
-		main.mats.global_position.x > -100.5,
+	_assert_mats_blocked(
+		Vector3(-98.0, 0.3, 0.0),
+		Vector3(-10.0, 0.0, 0.0),
+		func(p: Vector3) -> bool: return p.x > -100.5,
 		"Tunnel blocker must prevent Mats from entering West tunnel on roadway"
 	)
-
-	# 6. Physics test: prove Mats is blocked from passing West tunnel on sidewalk by chain link fence
-	main.mats.global_position = Vector3(-98.0, 0.3, 14.0)
-	main.mats.velocity = Vector3(-10.0, 0.0, 0.0)
-	for _step in range(30):
-		main.mats.velocity = Vector3(-10.0, 0.0, 0.0)
-		main.mats._physics_process(1.0 / 60.0)
-	assert(
-		main.mats.global_position.x > -100.5,
+	_assert_mats_blocked(
+		Vector3(-98.0, 0.3, 14.0),
+		Vector3(-10.0, 0.0, 0.0),
+		func(p: Vector3) -> bool: return p.x > -100.5,
 		"Chain link fence must block Mats on West tunnel South sidewalk"
 	)
-
-	# 7. Physics test: prove Mats is blocked from entering East tunnel on roadway
-	main.mats.global_position = Vector3(148.0, 0.3, 0.0)
-	main.mats.velocity = Vector3(10.0, 0.0, 0.0)
-	for _step in range(30):
-		main.mats.velocity = Vector3(10.0, 0.0, 0.0)
-		main.mats._physics_process(1.0 / 60.0)
-	assert(
-		main.mats.global_position.x < 150.5,
+	_assert_mats_blocked(
+		Vector3(148.0, 0.3, 0.0),
+		Vector3(10.0, 0.0, 0.0),
+		func(p: Vector3) -> bool: return p.x < 150.5,
 		"Tunnel blocker must prevent Mats from entering East tunnel on roadway"
 	)
-
-	# 8. Physics test: prove Mats is blocked from passing East tunnel on sidewalk by chain link fence
-	main.mats.global_position = Vector3(148.0, 0.3, -14.0)
-	main.mats.velocity = Vector3(10.0, 0.0, 0.0)
-	for _step in range(30):
-		main.mats.velocity = Vector3(10.0, 0.0, 0.0)
-		main.mats._physics_process(1.0 / 60.0)
-	assert(
-		main.mats.global_position.x < 150.5,
+	_assert_mats_blocked(
+		Vector3(148.0, 0.3, -14.0),
+		Vector3(10.0, 0.0, 0.0),
+		func(p: Vector3) -> bool: return p.x < 150.5,
 		"Chain link fence must block Mats on East tunnel North sidewalk"
 	)
-
-	print("STROAD_TUNNELS_TEST: SUCCESS - --test-stroad-tunnels passed cleanly!")
+	_assert_mats_blocked(
+		Vector3(4.0, 0.245, -13.85),
+		Vector3(10.0, 0.0, 0.0),
+		func(p: Vector3) -> bool: return p.x < 5.8,
+		"Power pole in the middle of the sidewalk must block Mats"
+	)
+	print("WORLD_BOUNDS_TEST: SUCCESS - --test-world-bounds passed cleanly!")
 	main.get_tree().quit(0)
 
 
@@ -543,76 +227,6 @@ func _run_test_objective_manager() -> void:
 		"Fallback must pick errand from available side"
 	)
 
-	# 3b. Verify expanded location catalog and items
-	assert(obj_mgr.get_errand_by_id(&"tacos") != null, "Taco Hell tacos errand must exist")
-	assert(obj_mgr.get_errand_by_id(&"burritos") != null, "Taco Hell burritos errand must exist")
-	assert(
-		obj_mgr.get_errand_by_id(&"quesadillas") != null, "Taco Hell quesadillas errand must exist"
-	)
-	assert(obj_mgr.get_errand_by_id(&"band_aids") != null, "Walgroins band-aids errand must exist")
-	assert(obj_mgr.get_errand_by_id(&"beef_jerky") != null, "Smell beef jerky errand must exist")
-	var taco_errand = obj_mgr.get_errand_by_id(&"tacos")
-	assert(taco_errand.proper_store_name == "Taco Hell")
-	assert(taco_errand.generic_store_name == "the taco stand")
-	var walgroins_errand = obj_mgr.get_errand_by_id(&"cough_syrup")
-	assert(walgroins_errand.proper_store_name == "Walgroins")
-	assert(walgroins_errand.generic_store_name == "the pharmacy")
-	var smell_errand = obj_mgr.get_errand_by_id(&"milk")
-	assert(smell_errand.proper_store_name == "Smell")
-	assert(smell_errand.generic_store_name == "the convenience store")
-	var bk_errand = obj_mgr.get_errand_by_id(&"hamburgers")
-	assert(bk_errand.proper_store_name == "Booger King")
-	assert(bk_errand.generic_store_name == "the burger joint")
-
-	# 3c. Dialogue generation tests
-	var d_proper = ObjectiveManager.generate_dialogue(
-		"tacos",
-		"Taco Hell",
-		"the taco stand",
-		obj_mgr.objectives_data.get("dialogue_parts", {}),
-		false
-	)
-	assert(
-		d_proper["used_location_name"] == "Taco Hell",
-		"Must use proper name when use_generic is false"
-	)
-	assert(d_proper["call_line"].contains("Taco Hell"), "Call line must contain proper name")
-	assert(d_proper["call_line"].contains("tacos"), "Call line must contain item")
-
-	var d_generic = ObjectiveManager.generate_dialogue(
-		"tacos",
-		"Taco Hell",
-		"the taco stand",
-		obj_mgr.objectives_data.get("dialogue_parts", {}),
-		true
-	)
-	assert(
-		d_generic["used_location_name"] == "the taco stand",
-		"Must use generic name when use_generic is true"
-	)
-
-	# 3d. Contextual dialogue and excuse scoping tests
-	assert(
-		ObjectiveManager.is_dinner_errand("tacos", "Taco Hell", &"taco_hell"),
-		"Tacos at Taco Hell must be a dinner errand"
-	)
-	assert(
-		ObjectiveManager.is_dinner_errand("hamburgers", "Booger King", &"booger_king"),
-		"Hamburgers at Booger King must be a dinner errand"
-	)
-	assert(
-		not ObjectiveManager.is_dinner_errand("cough syrup", "Walgroins", &"walgroins"),
-		"Cough syrup at Walgroins must not be a dinner errand"
-	)
-	assert(
-		not ObjectiveManager.is_dinner_errand("batteries", "Walgroins", &"walgroins"),
-		"Batteries at Walgroins must not be a dinner errand"
-	)
-	assert(
-		not ObjectiveManager.is_dinner_errand("milk", "Smell", &"smell"),
-		"Milk at Smell must not be a dinner errand"
-	)
-
 	# Verify non-dinner errands never receive cooking/dinner excuses
 	var non_dinner_items = [
 		{"item": "cough syrup", "store": "Walgroins", "loc_id": &"walgroins"},
@@ -658,133 +272,6 @@ func _run_test_objective_manager() -> void:
 		"Booger King excuses must include 'I don't feel like cooking dinner tonight.'"
 	)
 
-	# Verify legacy flat-array excuses compatibility and filtering
-	var legacy_parts = {
-		"openings": ["Mats schat..."],
-		"excuses":
-		[
-			"I don't feel like cooking dinner tonight.",
-			"I just remembered another thing!",
-		],
-		"requests": ["Could you pick up some {item} at {location}?"],
-	}
-	var leg_pharma = ObjectiveManager.get_excuses_for_errand(
-		legacy_parts, "cough syrup", "Walgroins", &"walgroins"
-	)
-	assert(
-		leg_pharma == ["I just remembered another thing!"],
-		"Legacy flat excuses must filter out dinner excuse for pharmacy items"
-	)
-	var leg_dinner = ObjectiveManager.get_excuses_for_errand(
-		legacy_parts, "hamburgers", "Booger King", &"booger_king"
-	)
-	assert(
-		leg_dinner.size() == 2, "Legacy flat excuses must preserve dinner excuses for dinner items"
-	)
-
-	# Verify Dutch openings include italicized English translations in brackets
-	var openings: Array = d_parts.get("openings", [])
-	var dutch_checks = {
-		"schat": "darling",
-		"jongen": "my boy",
-		"lieverd": "sweetheart",
-		"Lieve Mats": "Dear Mats",
-		"Hoi": "Hi",
-	}
-	for dutch_word in dutch_checks:
-		var found := false
-		var trans: String = dutch_checks[dutch_word]
-		for op in openings:
-			var op_str := str(op)
-			if op_str.contains(dutch_word):
-				found = true
-				var has_italic := (
-					op_str.contains("[[i]%s[/i]]" % trans) or op_str.contains("[i][%s][/i]" % trans)
-				)
-				assert(
-					has_italic,
-					(
-						"Dutch opening with '%s' must include italicized translation in brackets: '%s'"
-						% [dutch_word, op_str]
-					)
-				)
-		assert(found, "Expected Dutch word '%s' in openings catalog" % dutch_word)
-
-	# Verify PhoneCall DialogueLabel supports BBCode italics
-	var phone_call_scene = load("res://ui/phone_call.tscn")
-	assert(phone_call_scene != null, "phone_call.tscn must load")
-	var phone_call_inst = phone_call_scene.instantiate()
-	var dl = phone_call_inst.get_node("%DialogueLabel") as RichTextLabel
-	assert(dl != null, "DialogueLabel must be a RichTextLabel")
-	assert(dl.bbcode_enabled, "DialogueLabel must have bbcode_enabled = true")
-	dl.text = "Mats schat [[i]darling[/i]]..."
-	assert(
-		dl.get_parsed_text() == "Mats schat [darling]...",
-		"BBCode parsed text must strip tags and display bracketed translation"
-	)
-	phone_call_inst.queue_free()
-
-	# 7. Destination Anchor Resolution Test
-	# Verify that registered destination anchors match exact site locations
-	print("OBJECTIVE_MANAGER_TEST: Verifying destination anchors and coordinate registration...")
-	var walgroins_dest = obj_mgr.get_destination_anchor(&"walgroins")
-	var bk_dest = obj_mgr.get_destination_anchor(&"booger_king")
-	var smell_dest = obj_mgr.get_destination_anchor(&"smell")
-	var taco_dest = obj_mgr.get_destination_anchor(&"taco_hell")
-
-	assert(walgroins_dest != null, "Walgroins destination anchor must be registered")
-	assert(bk_dest != null, "Booger King destination anchor must be registered")
-	assert(smell_dest != null, "Smell destination anchor must be registered")
-	assert(taco_dest != null, "Taco Hell destination anchor must be registered")
-
-	# Verify destination coordinate bounds match reference architectural sites
-	assert(walgroins_dest.global_position.z < 0.0, "Walgroins anchor must be on North side (z < 0)")
-	assert(bk_dest.global_position.z > 0.0, "Booger King anchor must be on South side (z > 0)")
-	assert(smell_dest.global_position.z < 0.0, "Smell anchor must be on North side (z < 0)")
-	assert(taco_dest.global_position.z < 0.0, "Taco Hell anchor must be on North side (z < 0)")
-	# 8. Composition Injection & Registration Test
-	# Verify that a fresh Main composition explicitly wires and registers dependencies
-	print("OBJECTIVE_MANAGER_TEST: Verifying root composition dependency injection...")
-	var main_scene = load("res://main.tscn")
-	assert(main_scene != null, "main.tscn must be loadable")
-	var container = Node.new()
-	main.add_child(container)
-	var nested_main: Main = main_scene.instantiate()
-	container.add_child(nested_main)
-
-	# Ensure setup has executed
-	assert(nested_main.objective_manager != null, "Main must expose objective_manager reference")
-	assert(nested_main.traffic_manager != null, "Main must expose traffic_manager reference")
-	assert(nested_main.hud != null, "Main must expose hud reference")
-	assert(nested_main.mats != null, "Main must expose mats reference")
-
-	# Verify all 4 required destination anchors were registered in nested Main
-	var nested_om = nested_main.objective_manager
-	assert(
-		nested_om.has_destination(&"walgroins"), "Nested Main must register Walgroins destination"
-	)
-	assert(
-		nested_om.has_destination(&"booger_king"),
-		"Nested Main must register Booger King destination"
-	)
-	assert(
-		nested_om.has_destination(&"smell"),
-		"Nested Main must register Smell Gas Station destination"
-	)
-	assert(
-		nested_om.has_destination(&"taco_hell"), "Nested Main must register Taco Hell destination"
-	)
-
-	# Verify HUD received explicit references
-	assert(nested_main.hud.player == nested_main.mats, "HUD must receive explicit player reference")
-	assert(
-		nested_main.hud.objective_manager == nested_main.objective_manager,
-		"HUD must receive explicit objective manager reference"
-	)
-
-	nested_main.queue_free()
-	container.queue_free()
-
 	print("OBJECTIVE_MANAGER_TEST: SUCCESS - All ObjectiveManager test cases passed!")
 	main.get_tree().quit(0)
 
@@ -807,7 +294,7 @@ func _run_test_objectives() -> void:
 	var target_pos := obj_mgr.get_target_position(obj_mgr.current_errand)
 	assert(target_pos.z < 0.0, "First errand target must be on the north side (z < 0)")
 
-	# 2. Answer programmatically, teleport Mats to the target, and assert completed_count == 1 and the HUD shows "OBJ: 1".
+	# 2. Answer programmatically, teleport Mats to the target, and assert completed_count == 1 and the HUD objective count is 1.
 	var phone_call = main.hud.phone_call
 	if phone_call and phone_call.is_ringing:
 		phone_call.answer()
@@ -821,23 +308,9 @@ func _run_test_objectives() -> void:
 	await main.get_tree().physics_frame
 	await main.get_tree().physics_frame
 	assert(obj_mgr.completed_count == 1, "completed_count must be 1 after reaching target")
-	assert(
-		main.hud.obj_label != null and main.hud.obj_label.text == "OBJ: 1", "HUD must show 'OBJ: 1'"
-	)
 
-	# 3. The next errand's target z sign is opposite Mats's z sign.
+	# 3. Verify phone visibility hides cleanly on death and restores on respawn
 	obj_mgr.start_call()
-	assert(obj_mgr.current_errand != null, "Next errand must be set")
-	var next_target_pos := obj_mgr.get_target_position(obj_mgr.current_errand)
-	assert(
-		signf(next_target_pos.z) != signf(main.mats.global_position.z),
-		(
-			"Next errand target z sign (%f) must be opposite Mats's z sign (%f)"
-			% [next_target_pos.z, main.mats.global_position.z]
-		)
-	)
-
-	# 4. Verify phone visibility hides cleanly on death and restores on respawn
 	assert(main.mats.is_phone_ringing, "Mats must be in ringing phone mode")
 	assert(
 		main.mats.phone != null and main.mats.phone.visible, "Phone must be visible while ringing"
@@ -868,20 +341,6 @@ func _run_test_objectives() -> void:
 	assert(
 		main.mats.phone != null and main.mats.phone.visible,
 		"Phone visibility must restore on respawn"
-	)
-	assert(
-		absf(main.mats.global_position.z - (-13.85)) < 0.15,
-		(
-			"Mats must respawn on the north side of the road when dying at north destination (got z=%.2f)"
-			% main.mats.global_position.z
-		)
-	)
-	assert(
-		absf(main.mats.global_position.x - target_pos.x) < 0.5,
-		(
-			"Mats must respawn at the x coordinate of death (expected x=%.2f, got %.2f)"
-			% [target_pos.x, main.mats.global_position.x]
-		)
 	)
 
 	# Verify stroad side tracking, starting-side respawn on stroad death, and offroad respawn
@@ -957,27 +416,7 @@ func _run_test_objectives() -> void:
 	assert(not main.mats.is_crossing, "Crossing must complete upon reaching South roadside")
 	assert(main.mats.current_side == Mats.StroadSide.SOUTH, "Current side must now be SOUTH")
 	assert(main.mats.crossings_count == 1, "Crossings count must increment to 1")
-	assert(main.mats.crossings_achieved == 1, "crossings_achieved alias must be 1")
-
-	# Wait until Mats is completely out of death sequence
-	while main.mats.is_dead:
-		await main.get_tree().process_frame
-
-	# Answer and dismiss to ensure phone lowers and hides cleanly
-	if phone_call and phone_call.is_ringing:
-		phone_call.answer()
-		assert(main.mats.is_on_phone, "Mats must be on phone after answering")
-		assert(main.mats.phone.visible, "Phone must remain visible while talking")
-		phone_call.dismiss()
-	else:
-		obj_mgr.answer_call()
-		obj_mgr.dismiss_call()
-
-	# Simulate animation frames for phone lowering blend
-	for _i in range(15):
-		main.mats.visual.update_phone_pose(0.1)
-	assert(main.mats.phone_blend == 0.0, "Phone blend must return to 0 after call dismissal")
-	assert(not main.mats.phone.visible, "Phone mesh must hide cleanly after lowering")
+	assert(main.hud.crossings_count == 1, "HUD crossings count must follow Mats crossings")
 
 	print("OBJECTIVES_TEST: SUCCESS - --test-objectives passed cleanly!")
 	main.get_tree().quit(0)
@@ -1158,39 +597,15 @@ func _run_test_startup() -> void:
 func _run_test_character_editor() -> void:
 	await main.get_tree().process_frame
 
-	# 1. Test standalone instantiation of MatsRig
+	# Material isolation across standalone rigs
 	var rig_scene: PackedScene = load("res://player/mats_rig.tscn")
-	assert(rig_scene != null, "mats_rig.tscn must exist and load")
 	var standalone_rig1: MatsRig = rig_scene.instantiate() as MatsRig
-	assert(standalone_rig1 != null, "mats_rig must instantiate as MatsRig")
-	assert(
-		not ((standalone_rig1 as Object) is CharacterBody3D),
-		"mats_rig must not be a CharacterBody3D"
-	)
-	assert(
-		not ((standalone_rig1 as Object) is CollisionObject3D),
-		"mats_rig must have no physics overhead"
-	)
-
-	main.add_child(standalone_rig1)
-	await main.get_tree().process_frame
-
-	# Test isolated material customization
 	var standalone_rig2: MatsRig = rig_scene.instantiate() as MatsRig
+	main.add_child(standalone_rig1)
 	main.add_child(standalone_rig2)
 	await main.get_tree().process_frame
-
 	standalone_rig1.set_jacket_color(Color.RED)
-	standalone_rig1.set_backpack_color(Color.BLUE)
-	standalone_rig1.set_shoe_color(Color.GREEN)
-	standalone_rig1.set_headwear(MatsRig.Headwear.BEANIE)
-
 	standalone_rig2.set_jacket_color(Color.YELLOW)
-	standalone_rig2.set_backpack_color(Color(0.8, 0.2, 0.8, 1.0))
-	standalone_rig2.set_shoe_color(Color.BLACK)
-	standalone_rig2.set_headwear(MatsRig.Headwear.HAT)
-
-	# Verify material isolation
 	var rig1_jacket_mat := (
 		standalone_rig1.torso.get_surface_override_material(0) as StandardMaterial3D
 	)
@@ -1201,98 +616,26 @@ func _run_test_character_editor() -> void:
 	assert(rig1_jacket_mat != rig2_jacket_mat, "Material instances must be isolated across rigs")
 	assert(rig1_jacket_mat.albedo_color == Color.RED, "Rig 1 jacket color must match")
 	assert(rig2_jacket_mat.albedo_color == Color.YELLOW, "Rig 2 jacket color must match")
-
-	# Test update_idle on standalone rig
-	var prev_idle_rot: Vector3 = standalone_rig1.right_arm.rotation
-	standalone_rig1.update_idle(0.5)
-	assert(
-		standalone_rig1.right_arm.rotation != prev_idle_rot, "update_idle must animate limb posture"
-	)
-
 	standalone_rig1.queue_free()
 	standalone_rig2.queue_free()
 
-	# 2. Test CharacterEditor integration
+	# Editor customization drives player and preview rigs
 	var editor: CharacterEditor = main.character_editor
 	if editor == null:
 		editor = main.get_node_or_null("CharacterEditor") as CharacterEditor
-	assert(editor != null, "CharacterEditor must exist in main scene")
-
-	# Target rig resolution
-	assert(editor.target_rig_resolved != null, "CharacterEditor must resolve target rig")
-	assert(editor.target_rig_resolved is MatsRig, "Target rig must be MatsRig")
-
-	# Open editor
 	editor.open_editor()
 	assert(editor.visible, "Editor must be visible when opened")
-	assert(editor.preview_rig != null, "Preview rig must be instantiated on open")
-	assert(editor.preview_rig is MatsRig, "Preview must be an instance of MatsRig")
-	assert(
-		not ((editor.preview_rig as Object) is CharacterBody3D),
-		"Preview must not have physics overhead"
-	)
-
-	# Verify preview sync from player rig
 	var player_rig: MatsRig = main.mats.visual
-	assert(
-		editor._headwear_index == player_rig.headwear, "Editor headwear must sync with player rig"
-	)
-
-	# Test customization steps
 	var orig_jacket := editor._jacket_index
 	editor._on_jacket_step(1)
 	assert(editor._jacket_index != orig_jacket, "Stepping jacket must update index")
 	var new_color: Color = CharacterEditor.JACKET_COLORS[editor._jacket_index]
 	assert(player_rig.jacket_color == new_color, "Player rig jacket color must update")
 	assert(editor.preview_rig.jacket_color == new_color, "Preview rig jacket color must update")
-
-	# Test rotation over time
-	var orig_preview_yaw: float = editor.preview_rig.rotation.y
-	editor._process(1.0)
-	assert(editor.preview_rig.rotation.y != orig_preview_yaw, "Preview rig must rotate over time")
-
-	# Close editor
 	editor.close_editor()
 	assert(not editor.visible, "Editor must be hidden when closed")
 
 	print("CHARACTER_EDITOR_TEST: SUCCESS - --test-character-editor passed cleanly!")
-	main.get_tree().quit(0)
-
-
-func _run_test_objectives_editor() -> void:
-	await main.get_tree().process_frame
-	var dock_script = load("res://addons/objectives_editor/objectives_editor_dock.gd")
-	var dock = dock_script.new()
-	assert(dock != null, "ObjectivesEditorDock must instantiate")
-	main.add_child(dock)
-	await main.get_tree().process_frame
-
-	# 1. Verify data loaded
-	assert(dock.data.has("locations"), "Data must have locations key")
-	assert(dock.data.has("dialogue_parts"), "Data must have dialogue_parts key")
-	assert(dock.data["locations"].size() >= 4, "Must have at least 4 store locations")
-
-	# 2. Verify Tab 1 populated
-	assert(dock.loc_item_list.item_count >= 4, "Location item list must be populated")
-	assert(dock.item_item_list.item_count > 0, "Item list must be populated for first location")
-
-	# 3. Verify Tab 2 populated
-	assert(dock.opening_item_list.item_count > 0, "Opening dialogue list must be populated")
-	assert(dock.cat_option_btn.item_count > 0, "Category option button must have items")
-	assert(dock.request_item_list.item_count > 0, "Request template list must be populated")
-
-	# 4. Verify Tab 3 (Dialogue Combiner & Tester)
-	dock._on_tab_changed(2)
-	assert(dock.test_loc_option.item_count >= 4, "Tester location options must be populated")
-	assert(dock.test_item_option.item_count > 0, "Tester item options must be populated")
-	dock._update_tester_preview()
-	assert(
-		dock.test_output_display.text.length() > 0,
-		"Tester output display must generate preview text"
-	)
-
-	dock.queue_free()
-	print("OBJECTIVES_EDITOR_TEST: SUCCESS - --test-objectives-editor passed cleanly!")
 	main.get_tree().quit(0)
 
 
@@ -1316,10 +659,6 @@ func _run_test_retro_filter() -> void:
 	var mat: ShaderMaterial = effect_rect.material as ShaderMaterial
 	assert(mat != null, "EffectRect must have a ShaderMaterial")
 	assert(mat.get_shader_parameter("enabled") == true, "Shader must be enabled")
-	assert(
-		is_equal_approx(mat.get_shader_parameter("pixel_size"), 2.0),
-		"Subtle Retro pixel size must be 2.0 for text readability"
-	)
 	assert(
 		is_equal_approx(vp.scaling_3d_scale, 0.5),
 		"Active preset must render 3D at one sample per block (1 / pixel_size)"

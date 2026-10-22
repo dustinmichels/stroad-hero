@@ -129,10 +129,10 @@ If §1–§5 do not reach §6, ship a reduced web demo that ends with a download
 - [ ] **Demo feature tag**
   - Web preset `custom_features="demo"`; `OS.has_feature("demo")` plus a `--demo` CLI flag for desktop testing.
 - [ ] **Single evening**
-  - Start at 18.5 (evening) or 19.75 (night) with `loop_day = false`; slow `time_scale` (18.5→21.0 is 150 s at 1.0).
+  - Start at 18.5 (evening) or 19.5 (night); slow `time_scale` (18.5→20.0 is 90 s at 1.0).
   - Hide `ui/time_of_day_toggle.gd`; disable `godotSetTimeHours`.
   - Note: night is the most expensive web scenario (Compatibility night 32.3 ms vs day 22.4 ms).
 - [ ] **End of demo**
-  - `GameState.advance_time()` silently clamps at `END_HOUR` when not looping; add a signal.
+  - `GameState.day_ended` already fires at `END_HOUR` and the HUD's `DaySummary` pauses the tree; hook the demo end there.
   - Pause the tree and call `window.godotDemoEnded()`; show a real `<a href>` download link in `web/custom_web_template.html` (avoids popup blocking of `OS.shell_open`).
 - [ ] [HUMAN REVIEW NEEDED] Stores kept, demo length, download URL.

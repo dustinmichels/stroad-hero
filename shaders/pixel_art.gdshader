@@ -27,6 +27,9 @@ uniform sampler2D palette_texture : hint_default_white, filter_nearest;
 uniform int palette_size = 4;
 // Pick the palette entry by luminance (dark→bright ramp) instead of nearest RGB.
 uniform bool luma_ramp = false;
+// Saturation multiplier applied before dither and quantization (1.0 = unchanged).
+// Pushes muted scene colors past a palette's greys toward its hues.
+uniform float saturation : hint_range(0.0, 3.0, 0.05) = 1.0;
 
 // ── Display effects (applied after quantization) ──────────────────────────────
 // Darkens the gap between block rows, one scanline per block.
@@ -128,6 +131,11 @@ void fragment() {
 			if ((lum_grad * 0.6 + col_grad * 0.3) > outline_threshold && lum_c < lum_max_neighbor) {
 				is_edge = true;
 			}
+		}
+
+		if (saturation != 1.0) {
+			float sat_lum = dot(c, vec3(0.299, 0.587, 0.114));
+			c = clamp(mix(vec3(sat_lum), c, saturation), 0.0, 1.0);
 		}
 
 		// ── Ordered dither + grain ─────────────────────────────────────────

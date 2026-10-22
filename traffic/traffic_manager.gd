@@ -177,6 +177,7 @@ var stats: Dictionary = {
 	"max_stuck_time": 0.0,
 	"max_merge_wait": 0.0,
 	"watchdog_fires": 0,
+	"stuck_despawns": 0,
 	"leaked": 0,
 	"find_blocker_calls": 0,
 	"find_blocker_usec_total": 0,
@@ -256,6 +257,11 @@ const PARK_DWELL_MIN := 3.0
 const PARK_DWELL_MAX := 8.0
 ## A parked car leaves only while at most 0..this many cars are already leaving its site.
 const MAX_LEAVE_TOLERANCE := 3
+## A car standing still this long with no reason to (parked, dwelling, traffic stop) is
+## removed so a conflict the yielding rules cannot resolve doesn't back up the stroad.
+const STUCK_DESPAWN_TIME := 30.0
+## Stroad spawning pauses while this many cars (all states, parked included) are alive.
+const MAX_LIVE_CARS := 110
 
 var staged_initial_spawn: bool = true
 ## Occupancy floor for parked departures; test fixtures zero it so lone cars can leave.
@@ -264,6 +270,8 @@ var parking_fill_floor: float = PARKING_TARGET_FILL
 var _site_spots: Dictionary = {}
 var _site_staying: Dictionary = {}
 var _site_leaving: Dictionary = {}
+var stuck_despawn_time: float = STUCK_DESPAWN_TIME
+var live_car_count: int = 0
 
 
 func set_random_seed(seed_val: int) -> void:
@@ -278,6 +286,8 @@ func populate_immediately() -> void:
 
 
 func _ready() -> void:
+	child_entered_tree.connect(_on_child_entered_tree)
+	child_exiting_tree.connect(_on_child_exiting_tree)
 	lot = ParkingLot.new()
 	add_child(lot)
 	debug_overlay = TrafficDebug.new(self)
@@ -522,6 +532,7 @@ func _physics_process(delta: float) -> void:
 		_update_lane_spawning(lane, delta)
 	_apply_pending_lane_transfers()
 	_update_lot_cars(delta)
+	_despawn_stalled_car(delta)
 	_physics_tick_count += 1
 	if _physics_tick_count % 6 == 0:
 		_update_headlamp_lod()
@@ -1669,11 +1680,97 @@ func _unhandled_input(event: InputEvent) -> void:
 			spawn_smell_car(&"smell_store")
 
 
+func _on_child_entered_tree(node: Node) -> void:
+	if node is Car:
+		live_car_count += 1
+
+
+func _on_child_exiting_tree(node: Node) -> void:
+	if node is Car:
+		live_car_count -= 1
+
+
+## Updates every live car's stall timer and removes the longest-stalled car once it
+## exceeds stuck_despawn_time (at most one per tick, so a jam clears from its root).
+func _despawn_stalled_car(delta: float) -> void:
+	var worst: Car = null
+	for car in lot_cars:
+		worst = _track_stall(car, delta, worst)
+	for lane in lanes:
+		for car in lane.cars:
+			worst = _track_stall(car, delta, worst)
+	if worst != null:
+		_despawn_stuck_car(worst)
+
+
+func _track_stall(car: Car, delta: float, worst: Car) -> Car:
+	# Lot cars in a lane apron appear in both lists; count each car once per tick.
+	if not is_instance_valid(car) or car.stall_tick == _physics_tick_count:
+		return worst
+	car.stall_tick = _physics_tick_count
+	if (
+		car.is_moving()
+		or car.state == Car.State.PARKED
+		or car.traffic_stop != null
+		or car.dt_dwell_timer > 0.0
+	):
+		car.stalled_time = 0.0
+		return worst
+	car.stalled_time += delta
+	if car.stalled_time < stuck_despawn_time:
+		return worst
+	if worst == null or car.stalled_time > worst.stalled_time:
+		return car
+	return worst
+
+
+func _despawn_stuck_car(car: Car) -> void:
+	stats["stuck_despawns"] += 1
+	var b := car.current_blocker if is_instance_valid(car.current_blocker) else null
+	print(
+		(
+			"STUCK: removing car %d (%s) at %s after %.1fs stalled; blocker %s"
+			% [
+				car.get_instance_id(),
+				car.get_state_name(),
+				car.global_position,
+				car.stalled_time,
+				(
+					"%d (%s) at %s" % [b.get_instance_id(), b.get_state_name(), b.global_position]
+					if b != null
+					else "none"
+				),
+			]
+		)
+	)
+	lot_cars.erase(car)
+	# Cars queued behind the removed one stalled nearly as long; restart every timer so
+	# they get a full window to pull away instead of being removed one after another.
+	for lane in lanes:
+		lane.cars.erase(car)
+		for other in lane.cars:
+			_clear_stall_after_despawn(other, car)
+	for other in lot_cars:
+		_clear_stall_after_despawn(other, car)
+	_watchdog_ignores.erase(car.get_instance_id())
+	car.despawn()
+
+
+func _clear_stall_after_despawn(other: Car, removed: Car) -> void:
+	if not is_instance_valid(other):
+		return
+	other.stalled_time = 0.0
+	if other.current_blocker == removed:
+		other.current_blocker = null
+
+
 func _update_lane_spawning(lane: Lane, delta: float) -> void:
 	lane.spawn_timer -= delta
 	if lane.spawn_timer > 0.0:
 		return
-
+	if live_car_count >= MAX_LIVE_CARS:
+		lane.spawn_timer = 0.5
+		return
 	# Check headway: ensure no car is too close to spawn point
 	var can_spawn := true
 	for car in lane.cars:

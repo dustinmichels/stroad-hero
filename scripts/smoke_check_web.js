@@ -315,7 +315,7 @@ async function runSmokeCheck(targetUrl, timeoutSec = 45, options = {}) {
 
         // Night phase
         console.log(`Sampling Night phase (${sampleDurationSec}s)...`);
-        await evaluate("if (window.godotSetTimeHours) { window.godotSetTimeHours(20.25); }");
+        await evaluate("if (window.godotSetTimeHours) { window.godotSetTimeHours(19.75); }");
         await new Promise((r) => setTimeout(r, 1000));
         const nightIntervals = await evaluate(rafScript);
         nightStats = calculateStats(nightIntervals);

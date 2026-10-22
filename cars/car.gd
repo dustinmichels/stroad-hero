@@ -186,6 +186,9 @@ var on_patrol: bool = false
 var traffic_stop: TrafficStop = null
 var blocked_time: float = 0.0
 var current_blocker: Car = null
+## Seconds this car has stood still without a reason (see TrafficManager._track_stall).
+var stalled_time: float = 0.0
+var stall_tick: int = -1
 var merge_target_lane: int = 0
 var dt_order_done: bool = false
 var dt_pickup_done: bool = false

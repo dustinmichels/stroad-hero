@@ -346,9 +346,9 @@ func apply_time_hours(hours: float, _immediate: bool = true) -> void:
 		target_sun_color = _day_sun_color
 		target_sun_energy = _day_sun_energy
 		target_sun_rot = _day_sun_rotation
-	elif t < 19.25:
+	elif t < 18.5:
 		# Afternoon to Golden Hour / Sunset
-		var p := clampf((t - 17.5) / (19.25 - 17.5), 0.0, 1.0)
+		var p := clampf((t - 17.5) / (18.5 - 17.5), 0.0, 1.0)
 		var s := p * p * (3.0 - 2.0 * p)
 		target_sky_top = DAY_SKY_TOP.lerp(EVENING_SKY_TOP, s)
 		target_sky_horizon = DAY_SKY_HORIZON.lerp(EVENING_SKY_HORIZON, s)
@@ -360,9 +360,9 @@ func apply_time_hours(hours: float, _immediate: bool = true) -> void:
 		target_sun_color = DAY_SUN_COLOR.lerp(EVENING_SUN_COLOR, s)
 		target_sun_energy = lerpf(DAY_SUN_ENERGY, EVENING_SUN_ENERGY, s)
 		target_sun_rot = _day_sun_rotation.lerp(EVENING_SUN_ROTATION, s)
-	elif t < 20.5:
+	elif t < GameState.NIGHT_HOUR:
 		# Sunset to Night / Twilight
-		var p := clampf((t - 19.25) / (20.5 - 19.25), 0.0, 1.0)
+		var p := clampf((t - 18.5) / (GameState.NIGHT_HOUR - 18.5), 0.0, 1.0)
 		var s := p * p * (3.0 - 2.0 * p)
 		target_sky_top = EVENING_SKY_TOP.lerp(NIGHT_SKY_TOP, s)
 		target_sky_horizon = EVENING_SKY_HORIZON.lerp(NIGHT_SKY_HORIZON, s)

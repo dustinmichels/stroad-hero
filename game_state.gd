@@ -14,13 +14,16 @@ signal time_of_day_changed(mode: TimeOfDay)
 ## Emitted whenever the continuous game time updates.
 signal time_changed(time_hours: float, time_str: String)
 
-## Emitted when a game day concludes and the next day begins.
+## Emitted when the clock reaches END_HOUR. Time stops until start_next_day().
+signal day_ended(day_number: int)
+
+## Emitted when a new game day begins.
 signal day_advanced(day_number: int)
 
 const START_HOUR: float = 15.5  # 3:30 PM
-const END_HOUR: float = 21.0  # 9:00 PM
+const END_HOUR: float = 20.0  # 8:00 PM
 const DUSK_HOUR: float = 18.25  # ~6:15 PM (streetlights and headlights turn on)
-const NIGHT_HOUR: float = 19.75  # ~7:45 PM (full night)
+const NIGHT_HOUR: float = 19.5  # 7:30 PM (full night)
 
 const CARDINALS_16: Array[String] = [
 	"N",
@@ -50,24 +53,24 @@ const CARDINALS_16: Array[String] = [
 ## Speed multiplier for wind changes over time.
 @export var wind_variation_speed: float = 1.0
 
-## Real-world seconds per game day (3:30 PM to 9:00 PM = 5.5 hours = 330 minutes).
-## At 330.0s, 1 real second = 1 game minute.
-@export var day_duration_seconds: float = 330.0
+## Real-world seconds per game day (3:30 PM to 8:00 PM = 4.5 hours = 270 game minutes).
+## At 180.0s, 1 real second = 1.5 game minutes.
+@export var day_duration_seconds: float = 180.0
 
 ## Multiplier for time progression (1.0 = normal, 0.0 = paused).
 @export var time_scale: float = 1.0
 
-## Whether the day loops back to 3:30 PM when 9:00 PM is reached.
-@export var loop_day: bool = true
-
 ## Initial time of day setting.
 @export var initial_time_of_day: TimeOfDay = TimeOfDay.DAY
 
-## Current time of day in decimal hours (15.5 = 3:30 PM, 21.0 = 9:00 PM).
+## Current time of day in decimal hours (15.5 = 3:30 PM, 20.0 = 8:00 PM).
 static var current_time_hours: float = 15.5
 
 ## Current in-game day index (1, 2, ...).
 static var current_day: int = 1
+
+## True once the clock reaches END_HOUR, until start_next_day() is called.
+static var day_over: bool = false
 
 ## Whether automatic time progression is paused.
 static var time_paused: bool = false
@@ -118,7 +121,7 @@ func _ready() -> void:
 	_update_wind_calculation(base_wind_angle, base_wind_speed)
 	var user_args := OS.get_cmdline_user_args()
 	if "--night-mode" in user_args:
-		set_time_hours(20.25)
+		set_time_hours(NIGHT_HOUR)
 	elif "--evening-mode" in user_args or "--sunset-mode" in user_args:
 		set_time_hours(18.5)
 	else:
@@ -128,7 +131,7 @@ func _ready() -> void:
 			TimeOfDay.EVENING:
 				set_time_hours(18.5)
 			TimeOfDay.NIGHT:
-				set_time_hours(20.25)
+				set_time_hours(NIGHT_HOUR)
 	if time_of_day != TimeOfDay.DAY and instance:
 		instance.time_of_day_changed.emit(time_of_day)
 	if instance:
@@ -142,7 +145,7 @@ func _process(delta: float) -> void:
 		if instance:
 			instance.wind_changed.emit(wind_direction, wind_speed)
 
-	if not time_paused and day_duration_seconds > 0.0:
+	if not time_paused and not day_over and day_duration_seconds > 0.0:
 		var total_day_hours := END_HOUR - START_HOUR
 		var hours_per_sec := (total_day_hours / day_duration_seconds) * time_scale
 		advance_time(delta * hours_per_sec)
@@ -231,11 +234,11 @@ static func get_time_string() -> String:
 static func get_period_name() -> String:
 	if current_time_hours < 17.5:
 		return "AFTERNOON"
-	elif current_time_hours < 18.5:
+	elif current_time_hours < DUSK_HOUR:
 		return "GOLDEN HOUR"
-	elif current_time_hours < 19.5:
+	elif current_time_hours < 18.75:
 		return "SUNSET"
-	elif current_time_hours < 20.25:
+	elif current_time_hours < NIGHT_HOUR:
 		return "TWILIGHT"
 	else:
 		return "NIGHT"
@@ -250,25 +253,30 @@ static func get_cardinal_direction_name(dir: Vector3) -> String:
 	return CARDINALS_16[idx]
 
 
-## Advances the game time by a given number of hours.
+## Advances the game time by a given number of hours. Ends the day at END_HOUR.
 static func advance_time(hours_delta: float) -> void:
-	current_time_hours += hours_delta
-	if current_time_hours >= END_HOUR:
-		if instance and instance.loop_day:
-			current_time_hours = (
-				START_HOUR + fmod(current_time_hours - START_HOUR, END_HOUR - START_HOUR)
-			)
-			current_day += 1
-			if instance:
-				instance.day_advanced.emit(current_day)
-		else:
-			current_time_hours = END_HOUR
+	if day_over:
+		return
+	current_time_hours = minf(current_time_hours + hours_delta, END_HOUR)
 	_sync_time_mode()
 	if instance:
 		instance.time_changed.emit(current_time_hours, get_time_string())
+	if current_time_hours >= END_HOUR:
+		day_over = true
+		if instance:
+			instance.day_ended.emit(current_day)
 
 
-## Explicitly set the current time in decimal hours (15.5 to 21.0).
+## Begins the next day at START_HOUR.
+static func start_next_day() -> void:
+	current_day += 1
+	day_over = false
+	set_time_hours(START_HOUR)
+	if instance:
+		instance.day_advanced.emit(current_day)
+
+
+## Explicitly set the current time in decimal hours (15.5 to 20.0).
 static func set_time_hours(hours: float) -> void:
 	current_time_hours = clampf(hours, START_HOUR, END_HOUR)
 	_sync_time_mode()
@@ -298,7 +306,7 @@ static func set_time_of_day(mode: TimeOfDay) -> void:
 		TimeOfDay.EVENING:
 			set_time_hours(18.5)
 		TimeOfDay.NIGHT:
-			set_time_hours(20.25)
+			set_time_hours(NIGHT_HOUR)
 
 
 ## Cycles time of day (DAY -> EVENING -> NIGHT -> DAY) and returns the new state.
@@ -307,7 +315,7 @@ static func cycle_time_of_day() -> TimeOfDay:
 		TimeOfDay.DAY:
 			set_time_hours(18.5)
 		TimeOfDay.EVENING:
-			set_time_hours(20.25)
+			set_time_hours(NIGHT_HOUR)
 		TimeOfDay.NIGHT:
 			set_time_hours(START_HOUR)
 	return time_of_day

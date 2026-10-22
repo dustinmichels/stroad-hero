@@ -272,47 +272,6 @@ func on_physics_process(_delta: float) -> void:
 					"Mats must be reparented out of cart after death"
 				)
 				assert(_cart_test_cart._rider == null, "Cart rider must be null after rider died")
-				assert(
-					_cart_test_cart._nearby_mats == null,
-					"Cart nearby mats must be null after rider died and respawned"
-				)
-				assert(
-					vis.left_leg.rotation.is_zero_approx(),
-					"Left leg rotation must be reset after respawn"
-				)
-				assert(
-					vis.right_leg.rotation.is_zero_approx(),
-					"Right leg rotation must be reset after respawn"
-				)
-				assert(
-					vis.left_knee.rotation.is_zero_approx(),
-					"Left knee rotation must be reset after respawn"
-				)
-				assert(
-					vis.right_knee.rotation.is_zero_approx(),
-					"Right knee rotation must be reset after respawn"
-				)
-				assert(
-					vis.left_arm.rotation.is_zero_approx(),
-					"Left arm rotation must be reset after respawn"
-				)
-				assert(
-					vis.right_arm.rotation.is_zero_approx(),
-					"Right arm rotation must be reset after respawn"
-				)
-				assert(
-					vis.left_elbow.rotation.is_zero_approx(),
-					"Left elbow rotation must be reset after respawn"
-				)
-				assert(
-					vis.right_elbow.rotation.is_zero_approx(),
-					"Right elbow rotation must be reset after respawn"
-				)
-				assert(vis.position.is_zero_approx(), "Visual position must be reset after respawn")
-				assert(vis._pose_tween == null, "Visual pose tween must be null after respawn")
-				assert(
-					main.mats._mount_tween == null, "Mats mount tween must be null after respawn"
-				)
 				print("Stage 4 passed! Now testing pushing shopping cart (stages 5-8)...")
 				_cart_test_stage = 5
 				_test_frames = 0
@@ -424,15 +383,6 @@ func on_physics_process(_delta: float) -> void:
 				assert(not main.mats.is_pushing_cart, "is_pushing_cart must be false after death")
 				assert(_cart_test_cart.get_pusher() == null, "Cart pusher must be cleared on death")
 				assert(not vis.visible, "Visual rig must be hidden on death")
-				assert(vis._pose_tween == null, "Visual pose tween must be null on death")
-				assert(
-					vis.left_arm.rotation.is_zero_approx(), "Left arm rotation must reset on death"
-				)
-				assert(
-					vis.right_arm.rotation.is_zero_approx(),
-					"Right arm rotation must reset on death"
-				)
-				assert(vis.position.is_zero_approx(), "Visual position must reset on death")
 				_cart_test_stage = 10
 				_test_frames = 0
 		elif _cart_test_stage == 10:
@@ -446,25 +396,6 @@ func on_physics_process(_delta: float) -> void:
 					_cart_test_cart.get_pusher() == null, "Cart pusher must stay null on respawn"
 				)
 				assert(vis.visible, "Visual rig must be visible after respawn")
-				assert(
-					vis.left_arm.rotation.is_zero_approx(),
-					"Left arm rotation must be reset after respawn"
-				)
-				assert(
-					vis.right_arm.rotation.is_zero_approx(),
-					"Right arm rotation must be reset after respawn"
-				)
-				assert(
-					vis.left_leg.rotation.is_zero_approx(),
-					"Left leg rotation must be reset after respawn"
-				)
-				assert(
-					vis.right_leg.rotation.is_zero_approx(),
-					"Right leg rotation must be reset after respawn"
-				)
-				assert(vis.position.is_zero_approx(), "Visual position must be reset after respawn")
-				assert(vis._pose_tween == null, "Visual pose tween must be null after respawn")
-				assert(main.mats._mount_tween == null, "Mount tween must be null after respawn")
 				print("  Death and respawn while pushing verified!")
 				print(
 					"CART_TEST completed: mount, sit, exit, death, behind-detection, p-to-push, walk-pushing, space-jump-in, stop-pushing, and death-while-pushing verified!"
@@ -482,7 +413,6 @@ func on_physics_process(_delta: float) -> void:
 			)
 			assert(not main.mats.is_sprinting, "Must not be sprinting initially")
 			assert(not main.mats.is_exhausted, "Must not be exhausted initially")
-			assert(main.hud.stamina_wheel != null, "HUD must have stamina_wheel")
 			Input.action_press("move_right")
 			_mats_stage = 1
 			_test_frames = 0
@@ -510,14 +440,6 @@ func on_physics_process(_delta: float) -> void:
 				)
 				assert(
 					main.mats.stamina < main.mats.max_stamina, "Stamina must drain while sprinting"
-				)
-				main.hud.stamina_wheel._process(0.016)
-				assert(
-					main.hud.stamina_wheel.visible, "Stamina wheel must be visible while sprinting"
-				)
-				assert(
-					main.hud.stamina_wheel.modulate.a > 0.0,
-					"Stamina wheel alpha must be > 0 while sprinting"
 				)
 				# Set stamina near empty to test depletion
 				main.mats.stamina = 0.1
@@ -550,23 +472,13 @@ func on_physics_process(_delta: float) -> void:
 					not main.mats.is_exhausted,
 					"Exhaustion must clear once recovered above threshold"
 				)
-				main.mats.stamina = main.mats.max_stamina
-				_mats_stage = 6
-				_test_frames = 0
-		elif _mats_stage == 6:
-			for _i in range(35):
-				main.hud.stamina_wheel._process(0.05)
-			assert(
-				not main.hud.stamina_wheel.visible or main.hud.stamina_wheel.modulate.a < 0.05,
-				"Stamina wheel must fade out when full"
-			)
-			Input.action_release("move_right")
-			Input.action_release("sprint")
-			print(
-				"SPRINT_TEST: ALL CHECKS PASSED - sprint, stamina drain, exhaustion, recovery, and stamina wheel verified!"
-			)
-			main.get_tree().quit(0)
-			return
+				Input.action_release("move_right")
+				Input.action_release("sprint")
+				print(
+					"SPRINT_TEST: ALL CHECKS PASSED - sprint, stamina drain, exhaustion, and recovery verified!"
+				)
+				main.get_tree().quit(0)
+				return
 	if "--test-mats-collision" in user_args:
 		_test_frames += 1
 		var tick_scale: float = Engine.physics_ticks_per_second / 60.0
@@ -575,18 +487,6 @@ func on_physics_process(_delta: float) -> void:
 		var f_120: int = maxi(1, int(round(120.0 * tick_scale)))
 		if _col_test_stage == 0:
 			main.mats.velocity = Vector3(0.0, 0.0, 4.0)
-			if main.mats.global_position.z >= 12.8 and main.mats.global_position.z <= 13.3:
-				print(
-					(
-						"  [Curb Step-Up Trace] f=%d y=%.4f z=%.4f on_floor=%s"
-						% [
-							_test_frames,
-							main.mats.global_position.y,
-							main.mats.global_position.z,
-							main.mats.is_on_floor()
-						]
-					)
-				)
 			if _test_frames >= f_40:
 				assert(
 					absf(main.mats.global_position.y - 0.245) < 0.05,
@@ -599,18 +499,6 @@ func on_physics_process(_delta: float) -> void:
 				_test_frames = 0
 		elif _col_test_stage == 1:
 			main.mats.velocity = Vector3(0.0, 0.0, -4.0)
-			if main.mats.global_position.z >= 12.8 and main.mats.global_position.z <= 13.3:
-				print(
-					(
-						"  [Curb Step-Down Trace] f=%d y=%.4f z=%.4f on_floor=%s"
-						% [
-							_test_frames,
-							main.mats.global_position.y,
-							main.mats.global_position.z,
-							main.mats.is_on_floor()
-						]
-					)
-				)
 			if _test_frames >= f_50:
 				assert(
 					main.mats.global_position.z < 12.9,

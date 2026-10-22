@@ -145,6 +145,7 @@ class CompassDial:
 		draw_circle(center, 2.5, Color(0.9, 0.95, 1.0, 1.0))
 
 
+var day_label: Label
 var time_label: Label
 var period_label: Label
 var wind_label: Label
@@ -174,6 +175,7 @@ func _ready() -> void:
 		GameState.instance.time_changed.connect(_on_time_changed)
 		GameState.instance.wind_changed.connect(_on_wind_changed)
 		GameState.instance.time_of_day_changed.connect(_on_time_of_day_changed)
+		GameState.instance.day_advanced.connect(_on_day_advanced)
 
 
 func _exit_tree() -> void:
@@ -184,6 +186,8 @@ func _exit_tree() -> void:
 			GameState.instance.wind_changed.disconnect(_on_wind_changed)
 		if GameState.instance.time_of_day_changed.is_connected(_on_time_of_day_changed):
 			GameState.instance.time_of_day_changed.disconnect(_on_time_of_day_changed)
+		if GameState.instance.day_advanced.is_connected(_on_day_advanced):
+			GameState.instance.day_advanced.disconnect(_on_day_advanced)
 
 
 func _build_ui() -> void:
@@ -198,6 +202,17 @@ func _build_ui() -> void:
 	text_vbox.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	text_vbox.add_theme_constant_override("separation", 1)
 	hbox.add_child(text_vbox)
+
+	day_label = Label.new()
+	day_label.name = "DayLabel"
+	if _font_bold:
+		day_label.add_theme_font_override("font", _font_bold)
+	day_label.add_theme_font_size_override("font_size", 14)
+	day_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.35))
+	day_label.add_theme_color_override("font_outline_color", Color(0.08, 0.10, 0.14))
+	day_label.add_theme_constant_override("outline_size", 3)
+	day_label.text = "Day 1"
+	text_vbox.add_child(day_label)
 
 	time_label = Label.new()
 	time_label.name = "TimeLabel"
@@ -291,9 +306,14 @@ func _on_time_of_day_changed(_mode: GameState.TimeOfDay) -> void:
 	_update_display()
 
 
+func _on_day_advanced(_day_number: int) -> void:
+	_update_display()
+
+
 func _update_display() -> void:
 	if not time_label:
 		return
+	day_label.text = "Day %d" % GameState.current_day
 	time_label.text = GameState.get_time_string()
 	var period := GameState.get_period_name()
 	period_label.text = period

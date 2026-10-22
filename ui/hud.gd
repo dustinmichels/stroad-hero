@@ -6,13 +6,11 @@ extends CanvasLayer
 @export var character_editor: CharacterEditor = null
 
 @onready var spd_label: Label = %SpdLabel
-@onready var desc_label: Label = %DescLabel
 @onready var action_label: Label = %ActionLabel
 @onready var margin_container: MarginContainer = $MarginContainer
 @onready var panel_container: PanelContainer = %PanelContainer
 @onready var obj_label: Label = %ObjLabel
-@onready var obj_desc_label: Label = %ObjDescLabel
-@onready var obj_panel_container: PanelContainer = %ObjPanelContainer
+@onready var crossings_label: Label = %CrossingsLabel
 @onready var phone_call: PhoneCall = $PhoneCall
 @onready var objective_line: Control = %ObjectiveLine
 @onready var current_objective_label: Label = %CurrentObjectiveLabel
@@ -26,9 +24,11 @@ var current_objective_text: String = ""
 const WeatherDisplayClass = preload("res://ui/weather_display.gd")
 
 var weather_display: WeatherDisplayClass = null
+var day_summary: DaySummary = null
 var night_mode_button: Control = null
 var spd_count: int = 0
 var obj_count: int = 0
+var crossings_count: int = 0
 var fade_overlay: ColorRect
 var _action_prompt_sources := {}
 var _default_margin_pos := Vector2(20.0, 20.0)
@@ -43,6 +43,7 @@ func _ready() -> void:
 	_setup_weather_display()
 	_setup_objective_toast()
 	_setup_stamina_wheel()
+	_setup_day_summary()
 	if margin_container:
 		_default_margin_pos = margin_container.position
 		margin_container.pivot_offset = Vector2.ZERO
@@ -61,6 +62,8 @@ func _process(_delta: float) -> void:
 
 
 func _exit_tree() -> void:
+	if GameState.instance and GameState.instance.day_ended.is_connected(_on_day_ended):
+		GameState.instance.day_ended.disconnect(_on_day_ended)
 	if objective_manager:
 		if objective_manager.objective_started.is_connected(_on_objective_started):
 			objective_manager.objective_started.disconnect(_on_objective_started)
@@ -108,6 +111,19 @@ func _setup_stamina_wheel() -> void:
 		stamina_wheel.mats = player as Mats
 	if _camera and stamina_wheel:
 		stamina_wheel.camera = _camera
+
+
+func _setup_day_summary() -> void:
+	if not day_summary:
+		day_summary = DaySummary.new()
+		day_summary.name = "DaySummary"
+		add_child(day_summary)
+	if GameState.instance and not GameState.instance.day_ended.is_connected(_on_day_ended):
+		GameState.instance.day_ended.connect(_on_day_ended)
+
+
+func _on_day_ended(_day_number: int) -> void:
+	day_summary.show_summary(spd_count, obj_count, crossings_count)
 
 
 func _setup_weather_display() -> void:
@@ -222,8 +238,6 @@ func _reset_spd_panel() -> void:
 	if spd_label:
 		spd_label.modulate = Color.WHITE
 		spd_label.scale = Vector2.ONE
-	if desc_label:
-		desc_label.modulate = Color(0.85, 0.65, 0.65, 0.9)
 
 
 func emphasize_death_spd(hold_duration: float = 1.5) -> void:
@@ -247,7 +261,7 @@ func emphasize_death_spd(hold_duration: float = 1.5) -> void:
 	# Show current count before incrementing
 	_update_display()
 
-	# Create placeholder in HBoxContainer to hold OBJ panel in place
+	# Placeholder keeps the objective line below the panel in place while it flies out
 	_spd_placeholder = Control.new()
 	_spd_placeholder.name = "SpdPlaceholder"
 	_spd_placeholder.custom_minimum_size = panel_container.size
@@ -301,10 +315,6 @@ func emphasize_death_spd(hold_duration: float = 1.5) -> void:
 		. set_trans(Tween.TRANS_BACK)
 		. set_ease(Tween.EASE_OUT)
 	)
-	if desc_label:
-		_spd_tween.parallel().tween_property(
-			desc_label, "modulate", Color(1.0, 0.9, 0.9, 1.0), move_in_time
-		)
 
 	# 2. Count up
 	var punch_scale := target_scale * 1.15
@@ -352,10 +362,6 @@ func emphasize_death_spd(hold_duration: float = 1.5) -> void:
 		. set_trans(Tween.TRANS_CUBIC)
 		. set_ease(Tween.EASE_IN_OUT)
 	)
-	if desc_label:
-		_spd_tween.parallel().tween_property(
-			desc_label, "modulate", Color(0.85, 0.65, 0.65, 0.9), shrink_time
-		)
 
 	await _spd_tween.finished
 	_reset_spd_panel()
@@ -413,11 +419,25 @@ func set_action_prompt(source: Node, active: bool, text: String = "") -> void:
 
 
 func set_player(p: Node3D) -> void:
+	var old_mats := player as Mats if is_instance_valid(player) else null
+	if old_mats and old_mats.crossings_changed.is_connected(_on_crossings_changed):
+		old_mats.crossings_changed.disconnect(_on_crossings_changed)
 	player = p
+	var mats := p as Mats
+	if mats:
+		mats.crossings_changed.connect(_on_crossings_changed)
+		crossings_count = mats.crossings_count
+		_update_display()
 	if objective_arrow:
-		objective_arrow.mats = p as Mats
+		objective_arrow.mats = mats
 	if stamina_wheel:
-		stamina_wheel.mats = p as Mats
+		stamina_wheel.mats = mats
+
+
+func _on_crossings_changed(count: int) -> void:
+	crossings_count = count
+	_update_display()
+	_animate_increment(crossings_label, Color(1.0, 0.85, 0.2, 1.0))
 
 
 func set_camera(cam: Camera3D) -> void:
@@ -460,10 +480,14 @@ func _resolve_character_editor() -> void:
 
 
 func _resolve_player() -> void:
-	if player == null and is_inside_tree():
-		var p := get_tree().get_first_node_in_group("player") as Node3D
-		if p:
-			set_player(p)
+	if not is_inside_tree():
+		return
+	var mats := player as Mats
+	if mats and mats.crossings_changed.is_connected(_on_crossings_changed):
+		return
+	var p := player if player else get_tree().get_first_node_in_group("player") as Node3D
+	if p:
+		set_player(p)
 
 
 func _resolve_camera() -> void:
@@ -657,7 +681,9 @@ func _update_display() -> void:
 	if spd_label:
 		spd_label.text = "SPD: %d" % spd_count
 	if obj_label:
-		obj_label.text = "OBJ: %d" % obj_count
+		obj_label.text = "Objectives: %d" % obj_count
+	if crossings_label:
+		crossings_label.text = "Crossings: %d" % crossings_count
 
 
 func _animate_increment(

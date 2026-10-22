@@ -335,3 +335,8 @@ Parked cars have no errand timer. Lots stay semi-full and churn instead:
   - the site stays at or above `PARKING_TARGET_FILL` (50%) of its stalls once it goes, counting inbound reservations and excluding cars already leaving.
 - **Inflow:** Curb lanes 0 and 3 spawn every 1.8–3.4 s and 90% of eligible cars roll an errand (`P_ERRAND`). Each arrival above the floor frees a parked car, so lot traffic tracks arrivals.
 - Test fixtures set `parking_fill_floor = 0` so a lone test car can leave an otherwise empty lot.
+
+## Jam Recovery and Car Cap
+
+- **Stuck removal:** `TrafficManager._despawn_stalled_car()` runs every tick after lot updates. Each live car (lot and lane, counted once) accumulates `Car.stalled_time` while `!is_moving()`; it resets while moving, `PARKED`, dwelling at a drive-thru window (`dt_dwell_timer`), or in a traffic stop. Once a car passes `STUCK_DESPAWN_TIME` (30 s; `stuck_despawn_time` per instance), the longest-stalled car is despawned and every other car's `stalled_time` restarts, so the queue behind it gets a full window to pull away instead of being removed in a chain. This catches conflicts the yielding rules and deadlock watchdog cannot resolve (e.g. two head-on `SHORTCUT` cars the watchdog keeps re-firing on). Counted in `stats["stuck_despawns"]` and logged as `STUCK:` with the car's blocker.
+- **Spawn cap:** `live_car_count` tracks `Car` children of the manager (all states, parked included). Lane spawning waits while it is at `MAX_LIVE_CARS` (110); a fresh game starts with ~80.
