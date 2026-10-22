@@ -62,12 +62,17 @@ BENCHMARKS = [
     "--bench-physics-walk",
     "--bench-gameplay",
     "--bench-gameplay-compat",
+    "--bench-tour",
 ]
 # Benchmarks that open a window for realtime graphical capture
 WINDOWED_TESTS = {
     "--bench-gameplay",
     "--bench-gameplay-compat",
+    "--bench-tour",
 }
+# --bench-tour: 6 s boot + warmup + day/night (3 s settle + 11 waypoints x 4 s) + dusk (3 s + 10 s sweep)
+TOUR_DEFAULT_WARMUP = 120
+TOUR_BASE_TIMEOUT = 240
 DEFAULT_TIMEOUT = 120
 FAILURE_MARKERS = (b"SCRIPT ERROR:", b"Assertion failed", b"CrashHandlerException")
 
@@ -85,6 +90,8 @@ def run_single_test(
     timeout: int = DEFAULT_TIMEOUT,
     runtime_args: list[str] | None = None,
     fixed_fps: int | None = None,
+    main_pack: str | None = None,
+    gpu_profile: bool = False,
 ):
     cmd = [
         GODOT_BIN,
@@ -95,13 +102,17 @@ def run_single_test(
         cmd.extend(["--rendering-method", "gl_compatibility", "--force-web-shadows"])
     if fixed_fps is not None:
         cmd.extend(["--fixed-fps", str(fixed_fps)])
+    if gpu_profile:
+        # Metal reports no GPU timestamps; the per-pass profile needs Vulkan (MoltenVK on macOS).
+        cmd.extend(["--rendering-driver", "vulkan", "--gpu-profile"])
+    # A main pack replaces the project directory: the exported (baked) build runs instead of res://.
+    cmd.extend(["--main-pack", main_pack] if main_pack else ["--path", "."])
     cmd.extend([
-        "--path",
-        ".",
         TEST_SCENE,
         "--",
         test_flag,
         *(runtime_args or []),
+        *(["--gpu-profile"] if gpu_profile else []),
     ])
     started = time.monotonic()
     proc = None
@@ -157,6 +168,50 @@ def run_single_test(
         selector.close()
 
 
+def split_gpu_profile(output: str) -> tuple[str, list[str]]:
+    """Remove engine --gpu-profile blocks from a --bench-tour log and summarize them.
+
+    The engine prints a block of per-pass GPU averages about once a second. Blocks printed
+    between BENCH_TOUR_SAMPLE begin/end markers are averaged per phase/waypoint.
+    """
+    kept: list[str] = []
+    samples: dict[str, list[dict[str, float]]] = {}
+    current: str | None = None
+    block: dict[str, float] | None = None
+    for line in output.splitlines():
+        if line.startswith("GPU PROFILE (total "):
+            block = {"total": float(line.split("total ", 1)[1].split("ms", 1)[0])}
+            if current is not None:
+                samples[current].append(block)
+            continue
+        if block is not None and line.startswith("\t-"):
+            name, _, ms = line[2:].rpartition(": ")
+            block[name] = float(ms.strip().removesuffix("ms"))
+            continue
+        block = None
+        if line.startswith("BENCH_TOUR_SAMPLE: begin "):
+            current = line.split("begin ", 1)[1].strip()
+            samples.setdefault(current, [])
+        elif line.startswith("BENCH_TOUR_SAMPLE: end"):
+            current = None
+        else:
+            kept.append(line)
+
+    summary = ["GPU PROFILE per waypoint (ms, mean of ~1 s engine blocks; top passes):"]
+    for key, blocks in samples.items():
+        if not blocks:
+            summary.append(f"  {key:22s} no GPU PROFILE blocks")
+            continue
+        # vp_begin_/vp_end_<rid> are per-viewport timestamp markers, not passes.
+        names = {name for b in blocks for name in b if not name.startswith("vp_")}
+        means = {name: sum(b.get(name, 0.0) for b in blocks) / len(blocks) for name in names}
+        total = means.pop("total")
+        top = sorted(means.items(), key=lambda kv: kv[1], reverse=True)[:8]
+        passes = ", ".join(f"{name} {ms:.2f}" for name, ms in top)
+        summary.append(f"  {key:22s} total {total:5.2f} (n={len(blocks)}) | {passes}")
+    return "\n".join(kept), summary
+
+
 def main():
     if not os.path.isfile(GODOT_BIN):
         print(f"Error: Godot binary not found at '{GODOT_BIN}'", file=sys.stderr)
@@ -167,11 +222,19 @@ def main():
     if args and args[0] == "--":
         args = args[1:]
     runtime_args = [
-        arg for arg in args if arg.startswith(("--duration=", "--physics-ticks="))
+        arg
+        for arg in args
+        if arg in ("--bake", "--profile-traffic")
+        or arg.startswith(
+            ("--duration=", "--physics-ticks=", "--seed=", "--warmup=", "--tour-phases=", "--tour-wps=")
+        )
     ]
     args = [arg for arg in args if arg not in runtime_args]
+    gpu_profile = "--gpu-profile" in args
+    args = [arg for arg in args if arg != "--gpu-profile"]
 
     fixed_fps: int | None = None
+    main_pack: str | None = None
     cleaned_args: list[str] = []
     i = 0
     while i < len(args):
@@ -182,6 +245,12 @@ def main():
         elif arg.startswith("--fixed-fps="):
             fixed_fps = int(arg.split("=", 1)[1])
             i += 1
+        elif arg.startswith("--main-pack="):
+            main_pack = arg.split("=", 1)[1]
+            i += 1
+        elif arg == "--main-pack" and i + 1 < len(args):
+            main_pack = args[i + 1]
+            i += 2
         elif arg == "--fixed-fps":
             if i + 1 < len(args) and args[i + 1].isdigit():
                 fixed_fps = int(args[i + 1])
@@ -193,7 +262,15 @@ def main():
             cleaned_args.append(arg)
             i += 1
     args = cleaned_args
+    if main_pack and not os.path.isfile(main_pack):
+        print(f"Error: main pack '{main_pack}' not found (run: mise run export-mac-pack)", file=sys.stderr)
+        sys.exit(1)
     timeout = int(os.environ.get("TEST_TIMEOUT", DEFAULT_TIMEOUT))
+    tour_warmup = next(
+        (float(a.split("=", 1)[1]) for a in runtime_args if a.startswith("--warmup=")),
+        TOUR_DEFAULT_WARMUP,
+    )
+    tour_timeout = max(timeout, int(TOUR_BASE_TIMEOUT + tour_warmup))
     all_tests = INNER_TESTS + EXTENDED_TESTS
     all_flags = set(all_tests + BENCHMARKS) | WINDOWED_TESTS
 
@@ -204,6 +281,10 @@ def main():
         print("  mise run test --extended       Run inner and extended tests")
         print("  mise run test --list           List tests and benchmarks")
         print("  mise run bench                 Run manual benchmarks (gameplay benchmarks open a window)")
+        print("  mise run bench --bench-tour    Run only the named benchmark(s)")
+        print("  --bench-tour options: --seed=N --warmup=SEC --tour-phases=day,dusk,night --tour-wps=a,b --bake")
+        print("  --gpu-profile                  Vulkan per-pass GPU times per tour waypoint (engine --gpu-profile)")
+        print("  --main-pack=/tmp/stroad_mac.pck  Run from the exported baked pack (mise run export-mac-pack)")
         print("  mise run test --fixed-fps 60   Run in fixed-FPS CPU mode (frames run back-to-back)")
         print("  mise run test -- <test-flag>   Run specific test flags")
         sys.exit(0)
@@ -223,7 +304,7 @@ def main():
     if "--extended" in args:
         tests_to_run = all_tests
     elif "--bench" in args:
-        tests_to_run = BENCHMARKS
+        tests_to_run = [arg for arg in args if arg in BENCHMARKS] or BENCHMARKS
     elif args:
         unknown = [arg for arg in args if arg not in all_flags]
         if unknown:
@@ -248,11 +329,22 @@ def main():
     )
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
         futures = {
-            pool.submit(run_single_test, flag, timeout, runtime_args, fixed_fps): flag
+            pool.submit(
+                run_single_test,
+                flag,
+                tour_timeout if flag == "--bench-tour" else timeout,
+                runtime_args,
+                fixed_fps,
+                main_pack,
+                gpu_profile,
+            ): flag
             for flag in tests_to_run
         }
         for future in as_completed(futures):
             test_flag, status, duration, output = future.result()
+            if gpu_profile and test_flag == "--bench-tour":
+                output, gpu_summary = split_gpu_profile(output)
+                output += "\n" + "\n".join(gpu_summary)
             if status == "PASS":
                 print(f"[{status:7s}] {test_flag:30s} ({duration:.2f}s)")
                 if test_flag in BENCHMARKS or test_flag in WINDOWED_TESTS:

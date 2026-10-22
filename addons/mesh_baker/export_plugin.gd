@@ -10,7 +10,7 @@ func _get_name() -> String:
 
 
 func _get_customization_configuration_hash() -> int:
-	return 13
+	return 16
 
 
 func _begin_customize_scenes(platform: EditorExportPlatform, features: PackedStringArray) -> bool:
@@ -21,41 +21,7 @@ func _begin_customize_scenes(platform: EditorExportPlatform, features: PackedStr
 func _customize_scene(scene: Node, path: String) -> Node:
 	if not scene is Node3D:
 		return null
-	if path == "res://main.tscn":
-		print("[MeshBakerExportPlugin] Baking main scene: ", path)
-		return MeshBakerScript.bake_main_scene(scene as Node3D)
-	elif path.begins_with("res://cars/bodies/"):
-		print("[MeshBakerExportPlugin] Baking car body: ", path)
-		return MeshBakerScript.bake_car_body(scene as Node3D)
-	elif (
-		path
-		in [
-			"res://cars/bus.tscn",
-			"res://cars/truck.tscn",
-			"res://cars/van.tscn",
-			"res://cars/shipping_truck.tscn",
-			"res://cars/taxi.tscn",
-		]
-	):
-		print("[MeshBakerExportPlugin] Baking vehicle scene: ", path)
-		return MeshBakerScript.bake_vehicle_scene(scene as Node3D)
-	elif path.begins_with("res://buildings/"):
-		print("[MeshBakerExportPlugin] Baking building: ", path)
-		return MeshBakerScript.bake_static_scene(scene as Node3D)
-	elif path == "res://props/dumpster.tscn":
-		print("[MeshBakerExportPlugin] Baking dumpster: ", path)
-		return MeshBakerScript.bake_dumpster(scene as Node3D)
-	elif (
-		path
-		in [
-			"res://props/shopping_cart.tscn",
-			"res://props/bollard.tscn",
-			"res://props/street_lamp.tscn",
-			"res://props/fire_hydrant.tscn",
-			"res://props/overhead_road_sign.tscn",
-			"res://props/ice_machine.tscn",
-		]
-	):
-		print("[MeshBakerExportPlugin] Baking prop: ", path)
-		return MeshBakerScript.bake_static_scene(scene as Node3D)
-	return null
+	var baked: Node = MeshBakerScript.bake_scene_for_path(scene as Node3D, path)
+	if baked != null:
+		print("[MeshBakerExportPlugin] Baked: ", path)
+	return baked

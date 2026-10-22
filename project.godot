@@ -26,6 +26,8 @@ window/size/viewport_height=1080
 window/size/mode=2
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
+window/vsync/vsync_mode=2
+window/vsync/vsync_mode.macos=1
 
 [editor_plugins]
 
@@ -112,12 +114,13 @@ push_cart={
 
 [physics]
 
-common/max_physics_steps_per_frame.web=3
+common/max_physics_steps_per_frame=3
 common/physics_ticks_per_second.web=30
 common/physics_interpolation.web=true
 
 [rendering]
 
+textures/vram_compression/import_etc2_astc=true
 limits/opengl/max_lights_per_object.web=8
 scaling_3d/scale.web=0.75
 lights_and_shadows/directional_shadow/size.web=2048

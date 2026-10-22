@@ -45,6 +45,70 @@ var _gameplay_frame_physics_script_ms: float = 0.0
 var _gameplay_prev_cars_spawned: int = 0
 var _gameplay_phase_data: Dictionary = {}
 
+const TOUR_WAYPOINTS := [
+	["start", Vector3(0.0, 0.3, 13.85)],
+	["walgroins", Vector3(-3.0, 0.3, -30.0)],
+	["taco_hell", Vector3(35.0, 0.3, -27.0)],
+	["smell_gas", Vector3(-55.0, 0.3, -18.0)],
+	["dorf", Vector3(100.0, 0.3, -27.0)],
+	["booger_king", Vector3(-42.0, 0.3, 28.0)],
+	["strip_mall", Vector3(-5.0, 0.3, 28.0)],
+	["cramped_inn", Vector3(40.0, 0.3, 28.0)],
+	["car_care", Vector3(120.0, 0.3, 34.0)],
+	["east_road", Vector3(140.0, 0.3, 8.0)],
+	["west_road", Vector3(-90.0, 0.3, 8.0)],
+]
+const TOUR_BOOT_SEC := 6.0
+const TOUR_PHASE_SETTLE_SEC := 3.0
+const TOUR_SETTLE_SEC := 1.0
+const TOUR_SAMPLE_SEC := 3.0
+const TOUR_SPIKE_MS := 25.0
+## Dusk phase: sweep the clock from just before the lights switch on to just past full night,
+## compressed from ~96 s of game time so the lights-on and night switches land in one sample.
+const TOUR_DUSK_FROM_HOUR := GameState.DUSK_HOUR - 0.25
+const TOUR_DUSK_TO_HOUR := GameState.NIGHT_HOUR + 0.1
+const TOUR_DUSK_SWEEP_SEC := 10.0
+const TOUR_PHASES := ["day", "dusk", "night"]
+const TOUR_METRICS := [
+	"fi", "steps", "tm", "mats", "rest", "render_cpu", "gpu", "draw_calls", "primitives"
+]
+
+enum TourState { BOOT, WARMUP, PHASE_SETTLE, WAYPOINT }
+
+var _tour_active: bool = false
+var _tour_state: TourState = TourState.BOOT
+var _tour_state_start_usec: int = 0
+var _tour_warmup_sec: float = 120.0
+var _tour_waypoints: Array = []
+var _tour_phases: Array[String] = []
+## Engine --gpu-profile is on: print sample markers so scripts/run_tests.py can attribute the
+## engine's GPU PROFILE blocks to waypoints.
+var _tour_gpu_profile: bool = false
+var _tour_sampling: bool = false
+var _tour_phase_idx: int = 0
+var _tour_wp_idx: int = 0
+var _tour_vp_rid: RID
+var _tour_last_frame_usec: int = 0
+var _tour_frame_phys_usec: int = 0
+var _tour_frame_steps: int = 0
+var _tour_frame_tm_usec: int = 0
+var _tour_frame_mats_usec: int = 0
+var _tour_tm_start_usec: int = 0
+var _tour_mats_start_usec: int = 0
+## phase -> waypoint -> metric -> Array[float]
+var _tour_samples: Dictionary = {}
+var _tour_spikes: Array = []
+
+
+## Stamps the start/end of a node's physics callback; placed at priorities ±1 around it.
+class TourStamp:
+	extends Node
+	var suite: BenchmarksSuite
+	var key: int = 0
+
+	func _physics_process(_delta: float) -> void:
+		suite._on_tour_stamp(key)
+
 
 func matches_args() -> bool:
 	for arg in user_args:
@@ -56,6 +120,7 @@ func matches_args() -> bool:
 				"--bench-render",
 				"--bench-gameplay",
 				"--bench-gameplay-compat",
+				"--bench-tour",
 				"--test-render",
 				"--test-render-stats",
 				"--test-verify-render",
@@ -152,7 +217,8 @@ func setup_ready() -> void:
 			if mb:
 				mb.bake_main_scene(main)
 		RenderingServer.frame_post_draw.connect(_on_gameplay_frame_post_draw)
-
+	if "--bench-tour" in user_args:
+		_setup_tour()
 	if "--test-verify-render" in user_args:
 		_run_verify_render_test()
 
@@ -195,6 +261,9 @@ func _on_probe_physics_process() -> void:
 		_perf_phys_script_samples.append(script_ms)
 	if _gameplay_bench_active:
 		_gameplay_frame_physics_script_ms += script_ms
+	if _tour_active:
+		_tour_frame_phys_usec += now_usec - _perf_physics_tick_start_usec
+		_tour_frame_steps += 1
 
 
 func _on_probe_process() -> void:
@@ -204,6 +273,8 @@ func _on_probe_process() -> void:
 
 
 func on_physics_process(_delta: float) -> void:
+	if _tour_active:
+		_hold_tour_position()
 	if "--bench-physics" in user_args or "--bench-physics-walk" in user_args:
 		_perf_frames += 1
 		if _perf_is_walk and main.mats:
@@ -688,8 +759,63 @@ func _report_gameplay_benchmark() -> void:
 	print("GAMEPLAY_BENCHMARK_RESULT: " + JSON.stringify(summary_results))
 
 
+## Triangles per render key (shadow casting, visibility range) across every mesh
+## under `root`, or per shadow setting alone when `shadow_only`. Baking must not
+## move a part into a mesh with other settings.
+func _triangles_by_render_key(root: Node, shadow_only := false) -> Dictionary:
+	var mesh_baker = load("res://addons/mesh_baker/mesh_baker.gd")
+	var out := {}
+	for mi: MeshInstance3D in root.find_children("*", "MeshInstance3D", true, false):
+		if mi.mesh == null:
+			continue
+		var key := str(mi.cast_shadow if shadow_only else mesh_baker.render_key(mi))
+		for s in range(mi.mesh.get_surface_count()):
+			var arrays := mi.mesh.surface_get_arrays(s)
+			var indices = arrays[Mesh.ARRAY_INDEX]
+			var count: int = indices.size() if indices != null else arrays[Mesh.ARRAY_VERTEX].size()
+			out[key] = out.get(key, 0) + int(count / 3.0)
+	return out
+
+
+func _verify_static_bake_keeps_render_settings() -> void:
+	var building := (load("res://buildings/taco_hell.tscn") as PackedScene).instantiate() as Node3D
+	var before := _triangles_by_render_key(building)
+	load("res://addons/mesh_baker/mesh_baker.gd").bake_static_scene(building)
+	assert(building.has_node("BakedStaticMesh"), "Taco Hell must bake")
+	var after := _triangles_by_render_key(building)
+	assert(
+		before == after,
+		"Baking must keep each part's shadow and visibility range: %s -> %s" % [before, after]
+	)
+	building.free()
+	# MultiMesh templates unify the visibility range but must keep shadow-off parts
+	# (the street lamp head) out of the shadow pass.
+	var lamp := (load("res://props/street_lamp.tscn") as PackedScene).instantiate() as Node3D
+	var lamp_before := _triangles_by_render_key(lamp, true)
+	load("res://addons/mesh_baker/mesh_baker.gd").bake_static_scene(lamp, null, true)
+	var lamp_after := _triangles_by_render_key(lamp, true)
+	assert(
+		lamp_before == lamp_after,
+		"Template bakes must keep each part's shadow: %s -> %s" % [lamp_before, lamp_after]
+	)
+	lamp.free()
+
+
+func _has_emissive_baked_streetlight(streetlights: Node) -> bool:
+	for child in streetlights.get_children():
+		var mmi := child as MultiMeshInstance3D
+		if mmi == null or mmi.multimesh == null or mmi.multimesh.mesh == null:
+			continue
+		for s in range(mmi.multimesh.mesh.get_surface_count()):
+			var mat = mmi.multimesh.mesh.surface_get_material(s)
+			if mat is StandardMaterial3D and mat.emission_enabled:
+				return true
+	return false
+
+
 func _run_verify_render_test() -> void:
 	await main.get_tree().process_frame
+	_verify_static_bake_keeps_render_settings()
 	var streetlights := main.get_node_or_null("Props/Streetlights")
 	if not streetlights.has_node("BakedMultiMesh"):
 		load("res://addons/mesh_baker/mesh_baker.gd").bake_main_scene(main)
@@ -730,14 +856,9 @@ func _run_verify_render_test() -> void:
 			baked_streetlights.multimesh.mesh != null,
 			"Baked streetlights mesh must not be null when lights on"
 		)
-		var has_lit_surface := false
-		for s in range(baked_streetlights.multimesh.mesh.get_surface_count()):
-			var mat = baked_streetlights.multimesh.mesh.surface_get_material(s)
-			if mat is StandardMaterial3D and mat.emission_enabled:
-				has_lit_surface = true
-				break
 		assert(
-			has_lit_surface, "Baked streetlights mesh must have an emissive surface when lights on"
+			_has_emissive_baked_streetlight(streetlights),
+			"Baked streetlights mesh must have an emissive surface when lights on"
 		)
 		for child in streetlights.get_children():
 			if child is MultiMeshInstance3D:
@@ -749,14 +870,8 @@ func _run_verify_render_test() -> void:
 			)
 
 		main.environment_controller.update_streetlights(false)
-		var has_lit_surface_off := false
-		for s in range(baked_streetlights.multimesh.mesh.get_surface_count()):
-			var mat = baked_streetlights.multimesh.mesh.surface_get_material(s)
-			if mat is StandardMaterial3D and mat.emission_enabled:
-				has_lit_surface_off = true
-				break
 		assert(
-			not has_lit_surface_off,
+			not _has_emissive_baked_streetlight(streetlights),
 			"Baked streetlights mesh must not have an emissive surface when lights off"
 		)
 		for child in streetlights.get_children():
@@ -769,3 +884,324 @@ func _run_verify_render_test() -> void:
 			)
 	print("VERIFY_RENDER: SUCCESS - baked streetlights keep collision and toggle with time of day")
 	main.get_tree().quit(0)
+
+
+func _setup_tour() -> void:
+	var only: PackedStringArray = []
+	_tour_phases.assign(TOUR_PHASES)
+	for arg in user_args:
+		if arg.begins_with("--warmup="):
+			_tour_warmup_sec = float(arg.substr(9))
+		elif arg.begins_with("--tour-phases="):
+			_tour_phases.assign(arg.substr(14).split(",", false))
+		elif arg.begins_with("--tour-wps="):
+			only = arg.substr(11).split(",", false)
+	for wp in TOUR_WAYPOINTS:
+		if only.is_empty() or wp[0] in only:
+			_tour_waypoints.append(wp)
+	for phase in _tour_phases:
+		assert(phase in TOUR_PHASES, "--tour-phases accepts %s, got %s" % [TOUR_PHASES, phase])
+	assert(not _tour_waypoints.is_empty(), "--tour-wps matched no waypoints")
+	# scripts/run_tests.py passes --gpu-profile both to the engine and after `--` (the engine
+	# drops its own flags from OS.get_cmdline_args()).
+	_tour_gpu_profile = "--gpu-profile" in user_args
+
+	_tour_active = true
+	main.set_physics_process(true)
+	main.get_tree().paused = false
+	# Hold the clock so the day can't end (and pause the game) during warmup.
+	GameState.set_time_hours(GameState.START_HOUR)
+	GameState.time_paused = true
+
+	_tour_vp_rid = main.get_viewport().get_viewport_rid()
+	RenderingServer.viewport_set_measure_render_time(_tour_vp_rid, true)
+
+	var probe := PhysicsBenchmarkProbe.new()
+	probe.name = "PhysicsBenchmarkProbe"
+	probe.suite = self
+	probe.process_physics_priority = 1 << 30
+	probe.process_priority = 1 << 30
+	main.add_child(probe)
+	main.get_tree().physics_frame.connect(_on_physics_frame_stamp)
+	main.get_tree().process_frame.connect(_on_process_frame_stamp)
+
+	# TrafficManager and Mats get fixed priorities with stamp nodes on either side.
+	main.traffic_manager.process_physics_priority = -1000
+	main.mats.process_physics_priority = -500
+	for pair in [[0, -1001], [1, -999], [2, -501], [3, -499]]:
+		var stamp := TourStamp.new()
+		stamp.name = "TourStamp%d" % pair[0]
+		stamp.suite = self
+		stamp.key = pair[0]
+		stamp.process_physics_priority = pair[1]
+		main.add_child(stamp)
+
+	# An exported pack (mise run export-mac-pack, run via --main-pack) ships project.binary and is
+	# already baked at export time.
+	var exported := FileAccess.file_exists("res://project.binary")
+	if "--bake" in user_args and not exported:
+		load("res://addons/mesh_baker/mesh_baker.gd").bake_main_scene(main)
+	RenderingServer.frame_post_draw.connect(_on_tour_frame_post_draw)
+	print(
+		(
+			"BENCH_TOUR: renderer=%s driver=%s window=%s scale=%.2f physics_tps=%d vsync=%d warmup=%.0fs phases=%s waypoints=%d exported=%s gpu_profile=%s"
+			% [
+				RenderingServer.get_current_rendering_method(),
+				RenderingServer.get_current_rendering_driver_name(),
+				DisplayServer.window_get_size(),
+				main.get_viewport().scaling_3d_scale,
+				Engine.physics_ticks_per_second,
+				DisplayServer.window_get_vsync_mode(),
+				_tour_warmup_sec,
+				",".join(_tour_phases),
+				_tour_waypoints.size(),
+				exported,
+				_tour_gpu_profile,
+			]
+		)
+	)
+
+
+func _on_tour_stamp(key: int) -> void:
+	var now_usec := Time.get_ticks_usec()
+	match key:
+		0:
+			_tour_tm_start_usec = now_usec
+		1:
+			_tour_frame_tm_usec += now_usec - _tour_tm_start_usec
+		2:
+			_tour_mats_start_usec = now_usec
+		3:
+			_tour_frame_mats_usec += now_usec - _tour_mats_start_usec
+
+
+func _hold_tour_position() -> void:
+	if _tour_state != TourState.PHASE_SETTLE and _tour_state != TourState.WAYPOINT:
+		return
+	main.mats.global_position = _tour_waypoints[_tour_wp_idx][1]
+	main.mats.velocity = Vector3.ZERO
+
+
+func _set_tour_state(state: TourState) -> void:
+	_tour_state = state
+	_tour_state_start_usec = Time.get_ticks_usec()
+
+
+func _start_tour_phase(idx: int) -> void:
+	_tour_phase_idx = idx
+	_tour_wp_idx = 0
+	var phase := _tour_phases[idx]
+	match phase:
+		"day":
+			GameState.set_time_hours(GameState.START_HOUR)
+		"dusk":
+			GameState.set_time_hours(TOUR_DUSK_FROM_HOUR)
+		"night":
+			GameState.set_time_hours(GameState.NIGHT_HOUR)
+	_tour_samples[phase] = {}
+	print("BENCH_TOUR: phase %s (cars=%d)" % [phase, _tour_car_count()])
+	_set_tour_state(TourState.PHASE_SETTLE)
+
+
+func _start_tour_waypoint(idx: int) -> void:
+	_tour_wp_idx = idx
+	var metrics := {}
+	for m in TOUR_METRICS:
+		metrics[m] = [] as Array[float]
+	_tour_samples[_tour_phases[_tour_phase_idx]][_tour_waypoints[idx][0]] = metrics
+	_set_tour_state(TourState.WAYPOINT)
+
+
+## Prints the sample window bounds that scripts/run_tests.py uses to attribute GPU PROFILE blocks.
+func _set_tour_sampling(on: bool) -> void:
+	if on == _tour_sampling:
+		return
+	_tour_sampling = on
+	if not _tour_gpu_profile:
+		return
+	if on:
+		var wp_name: String = _tour_waypoints[_tour_wp_idx][0]
+		print("BENCH_TOUR_SAMPLE: begin %s/%s" % [_tour_phases[_tour_phase_idx], wp_name])
+	else:
+		print("BENCH_TOUR_SAMPLE: end")
+
+
+func _tour_car_count() -> int:
+	var count := 0
+	for child in main.traffic_manager.get_children():
+		if child is Car:
+			count += 1
+	return count
+
+
+func _on_tour_frame_post_draw() -> void:
+	if not _tour_active:
+		return
+	var now_usec := Time.get_ticks_usec()
+	var fi_ms := 0.0
+	if _tour_last_frame_usec > 0:
+		fi_ms = float(now_usec - _tour_last_frame_usec) / 1000.0
+	_tour_last_frame_usec = now_usec
+	var elapsed := float(now_usec - _tour_state_start_usec) / 1_000_000.0
+
+	match _tour_state:
+		TourState.BOOT:
+			if elapsed >= TOUR_BOOT_SEC:
+				if _tour_warmup_sec > 0.0:
+					print("BENCH_TOUR: warming up congestion for %.0f s" % _tour_warmup_sec)
+					_set_tour_state(TourState.WARMUP)
+				else:
+					_start_tour_phase(0)
+		TourState.WARMUP:
+			if elapsed >= _tour_warmup_sec:
+				_start_tour_phase(0)
+		TourState.PHASE_SETTLE:
+			if elapsed >= TOUR_PHASE_SETTLE_SEC:
+				_start_tour_waypoint(0)
+		TourState.WAYPOINT:
+			# Dusk holds the first waypoint and records the whole clock sweep, settle included,
+			# because the lights-on switch lands early in it.
+			var dusk := _tour_phases[_tour_phase_idx] == "dusk"
+			var settle_sec := 0.0 if dusk else TOUR_SETTLE_SEC
+			var sample_sec := TOUR_DUSK_SWEEP_SEC if dusk else TOUR_SAMPLE_SEC
+			if dusk:
+				var t := minf(elapsed / sample_sec, 1.0)
+				GameState.set_time_hours(lerpf(TOUR_DUSK_FROM_HOUR, TOUR_DUSK_TO_HOUR, t))
+			if elapsed > settle_sec:
+				_set_tour_sampling(true)
+				_record_tour_frame(fi_ms)
+			if elapsed > settle_sec + sample_sec:
+				_set_tour_sampling(false)
+				if not dusk and _tour_wp_idx + 1 < _tour_waypoints.size():
+					_start_tour_waypoint(_tour_wp_idx + 1)
+				elif _tour_phase_idx + 1 < _tour_phases.size():
+					_start_tour_phase(_tour_phase_idx + 1)
+				else:
+					_tour_active = false
+					_report_tour()
+					main.get_tree().quit(0)
+
+	_tour_frame_phys_usec = 0
+	_tour_frame_steps = 0
+	_tour_frame_tm_usec = 0
+	_tour_frame_mats_usec = 0
+
+
+func _record_tour_frame(fi_ms: float) -> void:
+	var phase := _tour_phases[_tour_phase_idx]
+	var wp_name: String = _tour_waypoints[_tour_wp_idx][0]
+	var s: Dictionary = _tour_samples[phase][wp_name]
+	var tm_ms := float(_tour_frame_tm_usec) / 1000.0
+	var mats_ms := float(_tour_frame_mats_usec) / 1000.0
+	var rest_ms := (
+		float(_tour_frame_phys_usec - _tour_frame_tm_usec - _tour_frame_mats_usec) / 1000.0
+	)
+	var render_cpu_ms := (
+		RenderingServer.viewport_get_measured_render_time_cpu(_tour_vp_rid)
+		+ RenderingServer.get_frame_setup_time_cpu()
+	)
+	s.fi.append(fi_ms)
+	s.steps.append(float(_tour_frame_steps))
+	s.tm.append(tm_ms)
+	s.mats.append(mats_ms)
+	s.rest.append(rest_ms)
+	s.render_cpu.append(render_cpu_ms)
+	s.gpu.append(RenderingServer.viewport_get_measured_render_time_gpu(_tour_vp_rid))
+	s.draw_calls.append(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME))
+	s.primitives.append(Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME))
+	if fi_ms > TOUR_SPIKE_MS:
+		var spike := {
+			"phase": phase,
+			"waypoint": wp_name,
+			"interval_ms": fi_ms,
+			"steps": _tour_frame_steps,
+			"tm_ms": tm_ms,
+			"mats_ms": mats_ms,
+			"rest_ms": rest_ms,
+			"render_cpu_ms": render_cpu_ms,
+			"cars": _tour_car_count(),
+			"hour": GameState.current_time_hours,
+		}
+		_tour_spikes.append(spike)
+		print(
+			(
+				"[SPIKE] %s/%s: %.1f ms, steps=%d, tm=%.1f ms (%.0f%%), mats=%.1f, rest=%.1f, render_cpu=%.1f, cars=%d, hour=%.2f"
+				% [
+					phase,
+					wp_name,
+					fi_ms,
+					_tour_frame_steps,
+					tm_ms,
+					100.0 * tm_ms / fi_ms,
+					mats_ms,
+					rest_ms,
+					render_cpu_ms,
+					spike.cars,
+					spike.hour,
+				]
+			)
+		)
+
+
+func _report_tour() -> void:
+	var result := {}
+	print("==================================================")
+	print("BENCH_TOUR REPORT (cars=%d)" % _tour_car_count())
+	for phase in _tour_phases:
+		print("PHASE: %s" % phase.to_upper())
+		print(
+			(
+				"  %-12s %6s %6s %6s %5s %6s %6s %6s %6s %6s %6s %6s %6s %8s"
+				% [
+					"waypoint",
+					"fi50",
+					"fi95",
+					"fimax",
+					"stmax",
+					"tm",
+					"tm95",
+					"mats",
+					"rest",
+					"rest95",
+					"rcpu",
+					"gpu",
+					"dc",
+					"prim"
+				]
+			)
+		)
+		var phase_result := {}
+		for wp_name in _tour_samples[phase]:
+			var r := {}
+			var metrics: Dictionary = _tour_samples[phase][wp_name]
+			for m in metrics:
+				var sorted: Array[float] = metrics[m].duplicate()
+				sorted.sort()
+				r[m] = _compute_stats(sorted)
+			phase_result[wp_name] = r
+			print(
+				(
+					"  %-12s %6.1f %6.1f %6.1f %5d %6.2f %6.2f %6.2f %6.2f %6.2f %6.2f %6.2f %6d %8d"
+					% [
+						wp_name,
+						r.fi.p50,
+						r.fi.p95,
+						r.fi.max,
+						int(r.steps.max),
+						r.tm.avg,
+						r.tm.p95,
+						r.mats.avg,
+						r.rest.avg,
+						r.rest.p95,
+						r.render_cpu.avg,
+						r.gpu.avg,
+						int(r.draw_calls.avg),
+						int(r.primitives.avg),
+					]
+				)
+			)
+		var phase_spikes := _tour_spikes.filter(func(s): return s.phase == phase)
+		print("  Spikes (> %.0f ms): %d" % [TOUR_SPIKE_MS, phase_spikes.size()])
+		result[phase] = {"waypoints": phase_result, "spikes": phase_spikes}
+	print("==================================================")
+	print("BENCH_TOUR_RESULT: " + JSON.stringify(result))

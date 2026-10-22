@@ -8,6 +8,7 @@ extends RefCounted
 const SWEEP_STEP := 0.5  # meters between sampled footprints along a car's route
 const SWEEP_SIDE_MARGIN := 0.15  # lateral clearance added to a car's projected footprints
 const SWEEP_INTENT_EXTRA := 4.0  # meters past the lookahead used to settle who crosses first
+const BOUNDS_MARGIN := 0.01  # meters; keeps the whole-sweep reject conservative against SAT rounding
 const BRAKE_ACCELERATION := 25.0
 const REVERSE_CLEAR_TRAVEL := 1.0  # meters of another car's route a back-out route must avoid
 
@@ -46,11 +47,15 @@ static func car_sweep(car: Car, cache: Dictionary) -> Dictionary:
 	var heading := car.get_heading()
 	var rects: Array[PackedVector2Array] = []
 	var dists: Array[float] = []
+	var centers: Array[Vector2] = []
+	var radii: Array[float] = []
 	if not cached.is_empty():
 		rects = cached.get("rects", [])
 		rects.clear()
 		dists = cached.get("dists", [])
 		dists.clear()
+		centers = cached.get("centers", [])
+		radii = cached.get("radii", [])
 	rects.append(footprint(car.global_position, heading, half_l, half_w))
 	dists.append(0.0)
 	var look := lookahead(car)
@@ -70,11 +75,26 @@ static func car_sweep(car: Car, cache: Dictionary) -> Dictionary:
 			rects.append(footprint(car.global_position + move * t, heading, half_l, side))
 			dists.append(t)
 
+	# Per-footprint bounding circles and the whole-sweep AABB for broadphase rejection.
+	var n := rects.size()
+	centers.resize(n)
+	radii.resize(n)
+	var bounds := Rect2(rects[0][0], Vector2.ZERO)
+	for i in n:
+		var r := rects[i]
+		centers[i] = (r[0] + r[2]) * 0.5
+		radii[i] = r[0].distance_to(r[2]) * 0.5
+		bounds = bounds.expand(r[0]).expand(r[1]).expand(r[2]).expand(r[3])
+	bounds = bounds.grow(BOUNDS_MARGIN)
+
 	if cached.is_empty():
 		var sweep := {
 			"rev": rev,
 			"rects": rects,
 			"dists": dists,
+			"centers": centers,
+			"radii": radii,
+			"bounds": bounds,
 			"look": look,
 			"reach": horizon + car.car_length,
 		}
@@ -82,6 +102,7 @@ static func car_sweep(car: Car, cache: Dictionary) -> Dictionary:
 		return sweep
 	else:
 		cached["rev"] = rev
+		cached["bounds"] = bounds
 		cached["look"] = look
 		cached["reach"] = horizon + car.car_length
 		return cached
@@ -130,29 +151,45 @@ static func footprint(
 
 ## Separating-axis test for two rectangles from footprint.
 static func footprints_overlap(a: PackedVector2Array, b: PackedVector2Array) -> bool:
-	var ra := a[0].distance_to(a[2]) * 0.5
-	var rb := b[0].distance_to(b[2]) * 0.5
-	if ((a[0] + a[2]) * 0.5).distance_to((b[0] + b[2]) * 0.5) > ra + rb:
+	return _overlap_with_circles(
+		a,
+		(a[0] + a[2]) * 0.5,
+		a[0].distance_to(a[2]) * 0.5,
+		b,
+		(b[0] + b[2]) * 0.5,
+		b[0].distance_to(b[2]) * 0.5
+	)
+
+
+## Bounding-circle reject, then SAT over both rectangles' two edge normals.
+static func _overlap_with_circles(
+	a: PackedVector2Array, ca: Vector2, ra: float, b: PackedVector2Array, cb: Vector2, rb: float
+) -> bool:
+	if ca.distance_to(cb) > ra + rb:
 		return false
-	for poly in [a, b]:
-		for i in 2:
-			var e: Vector2 = poly[i + 1] - poly[i]
-			var axis := Vector2(-e.y, e.x)
-			var a_min := INF
-			var a_max := -INF
-			for p in a:
-				var d := p.dot(axis)
-				a_min = minf(a_min, d)
-				a_max = maxf(a_max, d)
-			var b_min := INF
-			var b_max := -INF
-			for p in b:
-				var d := p.dot(axis)
-				b_min = minf(b_min, d)
-				b_max = maxf(b_max, d)
-			if a_max < b_min or b_max < a_min:
-				return false
-	return true
+	return not (
+		_separated_on(a[1] - a[0], a, b)
+		or _separated_on(a[2] - a[1], a, b)
+		or _separated_on(b[1] - b[0], a, b)
+		or _separated_on(b[2] - b[1], a, b)
+	)
+
+
+## True when the projections of a and b onto the normal of edge e don't overlap.
+static func _separated_on(e: Vector2, a: PackedVector2Array, b: PackedVector2Array) -> bool:
+	var axis := Vector2(-e.y, e.x)
+	var a0 := a[0].dot(axis)
+	var a1 := a[1].dot(axis)
+	var a2 := a[2].dot(axis)
+	var a3 := a[3].dot(axis)
+	var b0 := b[0].dot(axis)
+	var b1 := b[1].dot(axis)
+	var b2 := b[2].dot(axis)
+	var b3 := b[3].dot(axis)
+	return (
+		maxf(maxf(a0, a1), maxf(a2, a3)) < minf(minf(b0, b1), minf(b2, b3))
+		or maxf(maxf(b0, b1), maxf(b2, b3)) < minf(minf(a0, a1), minf(a2, a3))
+	)
 
 
 ## Computes candidate conflict points along mine's route against theirs.
@@ -163,14 +200,21 @@ static func footprints_overlap(a: PackedVector2Array, b: PackedVector2Array) -> 
 static func candidate_conflict_distance(
 	mine: Dictionary, theirs: Dictionary, reversing_mine: bool, reversing_theirs: bool
 ) -> Vector2:
+	var mine_bounds: Rect2 = mine["bounds"]
+	if not mine_bounds.intersects(theirs["bounds"], true):
+		return Vector2(INF, INF)
 	var a: Array[PackedVector2Array] = mine["rects"]
 	var da: Array[float] = mine["dists"]
+	var ca: Array[Vector2] = mine["centers"]
+	var ra: Array[float] = mine["radii"]
 	var look: float = mine["look"]
 	var b: Array[PackedVector2Array] = theirs["rects"]
+	var cb: Array[Vector2] = theirs["centers"]
+	var rb: Array[float] = theirs["radii"]
 	for i in range(1, a.size()):
 		if da[i] > look:
 			break
-		if footprints_overlap(a[i], b[0]):
+		if _overlap_with_circles(a[i], ca[i], ra[i], b[0], cb[0], rb[0]):
 			return Vector2(da[i], -1.0)
 
 	if reversing_mine != reversing_theirs:
@@ -180,7 +224,7 @@ static func candidate_conflict_distance(
 			if da[i] > look:
 				break
 			for j in range(1, b.size()):
-				if footprints_overlap(a[i], b[j]):
+				if _overlap_with_circles(a[i], ca[i], ra[i], b[j], cb[j], rb[j]):
 					return Vector2(da[i], -1.0)
 		return Vector2(INF, INF)
 
@@ -191,7 +235,7 @@ static func candidate_conflict_distance(
 		for j in range(1, b.size()):
 			if da[i] >= first_mine and db[j] >= first_theirs:
 				continue
-			if footprints_overlap(a[i], b[j]):
+			if _overlap_with_circles(a[i], ca[i], ra[i], b[j], cb[j], rb[j]):
 				first_mine = minf(first_mine, da[i])
 				first_theirs = minf(first_theirs, db[j])
 	# Already in their way (nothing to gain by stopping) or conflict still beyond braking range.

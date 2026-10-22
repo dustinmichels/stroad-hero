@@ -18,6 +18,28 @@ run = 'python3 scripts/run_tests.py --bench "$@"'
 description = "Render Mats character preview views (front, side, back, walk, kneel) to /tmp"
 run = 'python3 scripts/render_mats_preview.py "$@"'
 
+[tasks.export-mac-pack]
+description = "Export a baked macOS .pck to /tmp/stroad_mac.pck for benchmarking the shipped build (mise run bench --main-pack=/tmp/stroad_mac.pck)"
+run = '''
+set -eu
+work=/tmp/stroad-hero-export-mac
+bash scripts/prepare_export_copy.sh "$work"
+/Applications/Godot.app/Contents/MacOS/Godot --headless --path "$work" --export-pack "macOS" /tmp/stroad_mac.pck
+'''
+
+[tasks.export-desktop]
+description = "Export baked macOS, Windows, and Linux release builds to build/{macos,windows,linux} (from a /tmp copy)"
+run = '''
+set -eu
+work=/tmp/stroad-hero-export-desktop
+bash scripts/prepare_export_copy.sh "$work"
+for target in "macOS:macos/Stroad Hero.zip" "Windows Desktop:windows/StroadHero.exe" "Linux:linux/StroadHero.x86_64"; do
+    out="$PWD/build/${target#*:}"
+    mkdir -p "$(dirname "$out")"
+    /Applications/Godot.app/Contents/MacOS/Godot --headless --path "$work" --export-release "${target%%:*}" "$out"
+done
+'''
+
 # ----- WEB -----
 [tasks.export-web]
 description = "Export the Web preset to build/web (from a /tmp copy, so the open editor's .godot/ is untouched)"
@@ -28,10 +50,7 @@ if [ ! -f "templates/web_release.zip" ]; then
     bash scripts/build_custom_template.sh templates/web_release.zip
 fi
 work=/tmp/stroad-hero-export
-rsync -a --delete --exclude .git --exclude build ./ "$work/"
-if ! grep -q "addons/mesh_baker/plugin.cfg" "$work/project.godot"; then
-    printf '\n[editor_plugins]\n\nenabled=PackedStringArray("res://addons/mesh_baker/plugin.cfg")\n' >> "$work/project.godot"
-fi
+bash scripts/prepare_export_copy.sh "$work"
 mkdir -p build/web
 /Applications/Godot.app/Contents/MacOS/Godot --headless --path "$work" --export-release "Web" "$PWD/build/web/index.html"
 '''

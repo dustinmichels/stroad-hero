@@ -1,5 +1,12 @@
 # Changelog
 
+## Oct 22, 2026
+
+- **Desktop perf measurement**: `mise run bench --bench-tour` tours Mats through 11 waypoints day and night after a congestion warmup and reports per-waypoint frame/physics-step/TrafficManager/render stats. `mise run export-mac-pack` builds a baked macOS pack to benchmark the shipped build (`--main-pack=/tmp/stroad_mac.pck`), and `--profile-traffic` times each TrafficManager section. Baseline in `docs/optimizations.md` §5: night congestion pushes TrafficManager p95 to 13.6 ms, with frames up to 112 ms.
+- **Export bake fidelity & culling**: `MeshBaker` keeps each part's shadow casting and visibility range (merges grouped by render key, static scenes split into 30 m cells) and generates LODs for merged meshes. Baked-pack primitives at the bench camera drop from 870k to 234k (unbaked: 466k). Baked buildings no longer wash out (vertex colors now read as sRGB), and flag poles no longer vanish at 35 m.
+- **Desktop exports**: `macOS`, `Windows Desktop`, and `Linux` presets; `mise run export-desktop` builds all three baked into `build/`. Fixed two baked-pack bugs: streetlight/bollard MultiMeshes saved without transforms (headless export), and baked sub-scenes loading twice (every building, 15 extra lamps with SpotLights, trees, flags, car spokes).
+- **Frame pacing**: V-Sync is now Adaptive on Windows/Linux (`display/window/vsync/vsync_mode=2`; macOS is pinned to Enabled). Where Vulkan supports FIFO_RELAXED, an over-budget frame can present without waiting for the next vblank instead of dropping to 30 fps (untested on Windows/Linux). On Metal (Metal System Trace), MetalFX spatial 0.75 saves ~2.9 ms of GPU time vs ~2.1 ms for FSR1, while MetalFX temporal costs more than native (`docs/optimizations.md` §5.15–5.16).
+
 ## Oct 21, 2026
 
 - **Day cycle & summary**: Days now run 3:30–8:00 PM (3 real minutes), darkening to full night by 7:30 PM. At 8:00 the game pauses on a "Day over!" panel with SPD / Objectives / Crossings and a "Start Day N" button; the top-right widget shows "Day N" (`ui/day_summary.gd`, `GameState.day_ended`). The top-left HUD shows the same three counters in a single box, with Crossings counting Mats's completed main-stroad crossings.

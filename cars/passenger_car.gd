@@ -31,12 +31,10 @@ const BODY_SCENE_PATHS: Dictionary = {
 
 static var _body_scenes: Dictionary = {}
 
-static var BODY_SCENES: Dictionary:
-	get:
-		for type in BODY_SCENE_PATHS:
-			if not _body_scenes.has(type):
-				_body_scenes[type] = load(BODY_SCENE_PATHS[type])
-		return _body_scenes
+
+static func load_body_scenes() -> void:
+	for type in BODY_SCENE_PATHS:
+		get_body_scene(type)
 
 
 static func get_body_scene(type: CarType) -> PackedScene:

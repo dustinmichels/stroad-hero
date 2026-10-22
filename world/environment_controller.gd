@@ -5,8 +5,8 @@ extends Node
 @export var sun_light: DirectionalLight3D = null
 @export var streetlights: Node3D = null
 
-var _baked_streetlights_unlit_mesh: Mesh = null
-var _baked_streetlights_lit_mesh: Mesh = null
+## Baked streetlight MultiMesh -> [unlit mesh, lit mesh (bulb surfaces swapped)].
+var _baked_streetlight_meshes: Dictionary = {}
 var _streetlights_active_target: int = -1
 var _streetlight_seq: int = 0
 var _day_captured: bool = false
@@ -177,23 +177,24 @@ func update_streetlights(enabled: bool, staggered: bool = false) -> void:
 
 
 func _update_baked_streetlights(sl: Node3D, enabled: bool, bulb_mat: StandardMaterial3D) -> void:
-	var baked_mmi := sl.get_node_or_null("BakedMultiMesh") as MultiMeshInstance3D
-	if baked_mmi and baked_mmi.multimesh and baked_mmi.multimesh.mesh:
-		if _baked_streetlights_unlit_mesh == null:
-			_baked_streetlights_unlit_mesh = baked_mmi.multimesh.mesh
-			var lit_mesh := _baked_streetlights_unlit_mesh.duplicate() as Mesh
+	for child in sl.get_children():
+		var baked_mmi := child as MultiMeshInstance3D
+		if baked_mmi == null or baked_mmi.multimesh == null or baked_mmi.multimesh.mesh == null:
+			continue
+		var mm := baked_mmi.multimesh
+		if not _baked_streetlight_meshes.has(mm):
+			var unlit_mesh := mm.mesh
+			var lit_mesh := unlit_mesh.duplicate() as Mesh
 			for s in range(lit_mesh.get_surface_count()):
-				var orig_mat := _baked_streetlights_unlit_mesh.surface_get_material(s)
+				var orig_mat := unlit_mesh.surface_get_material(s)
 				if (
 					orig_mat is StandardMaterial3D
 					and orig_mat.albedo_color.r > 0.85
 					and orig_mat.metallic < 0.2
 				):
 					lit_mesh.surface_set_material(s, bulb_mat)
-			_baked_streetlights_lit_mesh = lit_mesh
-		baked_mmi.multimesh.mesh = (
-			_baked_streetlights_lit_mesh if enabled else _baked_streetlights_unlit_mesh
-		)
+			_baked_streetlight_meshes[mm] = [unlit_mesh, lit_mesh]
+		mm.mesh = _baked_streetlight_meshes[mm][1 if enabled else 0]
 
 
 func _set_all_streetlights(sl: Node3D, enabled: bool, bulb_mat: StandardMaterial3D) -> void:
@@ -246,23 +247,7 @@ func warmup_streetlights(enable_lit: bool, single_light: bool = true) -> void:
 	if not sl:
 		return
 	var bulb_mat := _get_lamp_bulb_on_mat()
-	var baked_mmi := sl.get_node_or_null("BakedMultiMesh") as MultiMeshInstance3D
-	if baked_mmi and baked_mmi.multimesh and baked_mmi.multimesh.mesh:
-		if _baked_streetlights_unlit_mesh == null:
-			_baked_streetlights_unlit_mesh = baked_mmi.multimesh.mesh
-			var lit_mesh := _baked_streetlights_unlit_mesh.duplicate() as Mesh
-			for s in range(lit_mesh.get_surface_count()):
-				var orig_mat := _baked_streetlights_unlit_mesh.surface_get_material(s)
-				if (
-					orig_mat is StandardMaterial3D
-					and orig_mat.albedo_color.r > 0.85
-					and orig_mat.metallic < 0.2
-				):
-					lit_mesh.surface_set_material(s, bulb_mat)
-			_baked_streetlights_lit_mesh = lit_mesh
-		baked_mmi.multimesh.mesh = (
-			_baked_streetlights_lit_mesh if enable_lit else _baked_streetlights_unlit_mesh
-		)
+	_update_baked_streetlights(sl, enable_lit, bulb_mat)
 	var first_light_handled := false
 	for lamp in sl.get_children():
 		if lamp is MultiMeshInstance3D:

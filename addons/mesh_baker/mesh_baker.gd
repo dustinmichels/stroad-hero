@@ -40,6 +40,118 @@ const PRESERVED_STATIC_MESH_NAMES: Array[StringName] = [
 	&"StatusLed",
 ]
 
+## Merged static meshes never span grid cells of this size (m), so frustum and
+## visibility-range culling still work per neighbourhood instead of per scene.
+const BAKE_CELL_SIZE := 30.0
+
+## Render key of a GeometryInstance3D with default settings.
+const DEFAULT_RENDER_KEY: Array = [
+	GeometryInstance3D.SHADOW_CASTING_SETTING_ON,
+	0.0,
+	0.0,
+	0.0,
+	0.0,
+	GeometryInstance3D.VISIBILITY_RANGE_FADE_DISABLED,
+]
+
+## Render key of the wheel spokes/hubs `Car` adds to unbaked wheels.
+const WHEEL_DETAIL_RENDER_KEY: Array = [
+	GeometryInstance3D.SHADOW_CASTING_SETTING_OFF,
+	0.0,
+	0.0,
+	35.0,
+	0.0,
+	GeometryInstance3D.VISIBILITY_RANGE_FADE_DISABLED,
+]
+
+## Vehicle scenes baked whole by `bake_vehicle_scene` (car bodies bake by folder).
+const BAKED_VEHICLE_SCENES: Array[String] = [
+	"res://cars/bus.tscn",
+	"res://cars/truck.tscn",
+	"res://cars/van.tscn",
+	"res://cars/shipping_truck.tscn",
+	"res://cars/taxi.tscn",
+]
+
+## Props baked by `bake_static_scene` (buildings bake by folder).
+const BAKED_PROP_SCENES: Array[String] = [
+	"res://props/shopping_cart.tscn",
+	"res://props/bollard.tscn",
+	"res://props/street_lamp.tscn",
+	"res://props/fire_hydrant.tscn",
+	"res://props/overhead_road_sign.tscn",
+	"res://props/ice_machine.tscn",
+]
+
+
+## Export entry point: bakes the packed scene at `path`, or returns null when it
+## ships unbaked. Every scene listed here is baked in its own exported file, so
+## scenes that instance it must not bake into it again.
+static func bake_scene_for_path(scene: Node3D, path: String) -> Node3D:
+	if path == "res://main.tscn":
+		return bake_main_scene(scene, false)
+	# An inherited scene (sedan.tscn over sedan.blend) loads its base already baked;
+	# baking it again stacks a second set of merged meshes on top.
+	if _bakes_on_its_own(_inherited_base_path(path)):
+		return null
+	if path.begins_with("res://cars/bodies/"):
+		return bake_car_body(scene)
+	if path in BAKED_VEHICLE_SCENES:
+		return bake_vehicle_scene(scene)
+	if path.begins_with("res://buildings/"):
+		bake_static_scene(scene)
+		bake_bollards(scene, scene)
+		return scene
+	if path == "res://props/dumpster.tscn":
+		return bake_dumpster(scene)
+	if path in BAKED_PROP_SCENES:
+		return bake_static_scene(scene)
+	return null
+
+
+## Saves the instanced sub-scene `node` inline under `scene_root` (nested instances
+## stay references). A packed scene cannot delete an instance's children, so without
+## this every node a bake removes from the instance would load again next to its
+## baked copy.
+static func make_local(node: Node, scene_root: Node) -> void:
+	if node.scene_file_path == "":
+		return
+	var inner_owner := node
+	node.scene_file_path = ""
+	var stack: Array[Node] = [node]
+	while not stack.is_empty():
+		var curr: Node = stack.pop_back()
+		for child in curr.get_children():
+			if child.owner == inner_owner:
+				child.owner = scene_root
+				stack.append(child)
+
+
+## Fills `mm` through its buffer: the headless exporter's dummy RenderingServer
+## drops `set_instance_transform`, which saved every instance as identity.
+static func set_multimesh_transforms(mm: MultiMesh, xforms: Array[Transform3D]) -> void:
+	mm.instance_count = xforms.size()
+	var buf := PackedFloat32Array()
+	buf.resize(xforms.size() * 12)
+	for i in range(xforms.size()):
+		var t := xforms[i]
+		var o := i * 12
+		for row in range(3):
+			buf[o + row * 4] = t.basis.x[row]
+			buf[o + row * 4 + 1] = t.basis.y[row]
+			buf[o + row * 4 + 2] = t.basis.z[row]
+			buf[o + row * 4 + 3] = t.origin[row]
+	mm.buffer = buf
+
+
+## Godot measures a MultiMesh's visibility range to its AABB center, so pad a
+## per-instance range by the spread of the instances or the outer ones vanish early.
+static func _padded_range(range_end: float, xforms: Array[Transform3D]) -> float:
+	var bounds := AABB(xforms[0].origin, Vector3.ZERO)
+	for t in xforms:
+		bounds = bounds.expand(t.origin)
+	return range_end + bounds.size.length() * 0.5
+
 
 static func get_relative_transform(node: Node3D, root: Node3D) -> Transform3D:
 	var xform := Transform3D.IDENTITY
@@ -264,6 +376,47 @@ static func materials_can_collapse_by_color(a: Material, b: Material) -> bool:
 	return true
 
 
+## Appends one surface of `mesh`, transformed by `xform`. SurfaceTool.append_from
+## transforms normals by the basis itself, which tilts them under non-uniform scale
+## (the flattened Taco Hell bells shaded brighter), so the arrays are transformed here.
+static func _append_mesh_surface(
+	st: SurfaceTool, mesh: Mesh, surface_idx: int, xform: Transform3D
+) -> void:
+	if mesh == null or surface_idx < 0 or surface_idx >= mesh.get_surface_count():
+		return
+	_append_arrays(st, mesh.surface_get_arrays(surface_idx), xform)
+
+
+static func _append_arrays(st: SurfaceTool, arrays: Array, xform: Transform3D) -> void:
+	if arrays.is_empty():
+		return
+	var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	if verts.is_empty():
+		return
+	for i in range(verts.size()):
+		verts[i] = xform * verts[i]
+	arrays[Mesh.ARRAY_VERTEX] = verts
+	if arrays[Mesh.ARRAY_NORMAL] is PackedVector3Array:
+		var normal_basis := xform.basis.inverse().transposed()
+		var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+		for i in range(normals.size()):
+			normals[i] = (normal_basis * normals[i]).normalized()
+		arrays[Mesh.ARRAY_NORMAL] = normals
+	if arrays[Mesh.ARRAY_TANGENT] is PackedFloat32Array:
+		var tangents: PackedFloat32Array = arrays[Mesh.ARRAY_TANGENT]
+		for i in range(0, tangents.size() - 3, 4):
+			var t := (
+				(xform.basis * Vector3(tangents[i], tangents[i + 1], tangents[i + 2])).normalized()
+			)
+			tangents[i] = t.x
+			tangents[i + 1] = t.y
+			tangents[i + 2] = t.z
+		arrays[Mesh.ARRAY_TANGENT] = tangents
+	var temp_mesh := ArrayMesh.new()
+	temp_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	st.append_from(temp_mesh, 0, Transform3D.IDENTITY)
+
+
 static func _append_mesh_surface_with_color(
 	st: SurfaceTool, mesh: Mesh, surface_idx: int, xform: Transform3D, color: Color
 ) -> void:
@@ -285,9 +438,7 @@ static func _append_mesh_surface_with_color(
 	else:
 		colors.fill(color)
 	arrays[Mesh.ARRAY_COLOR] = colors
-	var temp_mesh := ArrayMesh.new()
-	temp_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
-	st.append_from(temp_mesh, 0, xform)
+	_append_arrays(st, arrays, xform)
 
 
 static func commit_surfaces_with_color_collapsing(
@@ -313,12 +464,14 @@ static func commit_surfaces_with_color_collapsing(
 			if mat != null:
 				st.set_material(mat)
 			for item in surfaces_by_material[mat]:
-				st.append_from(item["mesh"], item["surface"], item["transform"])
+				_append_mesh_surface(st, item["mesh"], item["surface"], item["transform"])
 			st.commit(merged_mesh)
 		else:
 			var base_mat: StandardMaterial3D = grp["base_material"] as StandardMaterial3D
 			var collapsed_mat: StandardMaterial3D = base_mat.duplicate()
 			collapsed_mat.vertex_color_use_as_albedo = true
+			# Vertex colors carry the sRGB albedo_color values they replace.
+			collapsed_mat.vertex_color_is_srgb = true
 			collapsed_mat.albedo_color = Color.WHITE
 			var st := SurfaceTool.new()
 			st.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -330,6 +483,146 @@ static func commit_surfaces_with_color_collapsing(
 						st, item["mesh"], item["surface"], item["transform"], col
 					)
 			st.commit(merged_mesh)
+
+
+## Per-instance settings every part of a merged mesh must share, so baking never
+## changes which parts cast shadows or when they are culled by distance.
+static func render_key(gi: GeometryInstance3D) -> Array:
+	return [
+		gi.cast_shadow,
+		gi.visibility_range_begin,
+		gi.visibility_range_begin_margin,
+		gi.visibility_range_end,
+		gi.visibility_range_end_margin,
+		gi.visibility_range_fade_mode,
+	]
+
+
+static func apply_render_key(gi: GeometryInstance3D, key: Array) -> void:
+	gi.cast_shadow = key[0]
+	gi.visibility_range_begin = key[1]
+	gi.visibility_range_begin_margin = key[2]
+	gi.visibility_range_end = key[3]
+	gi.visibility_range_end_margin = key[4]
+	gi.visibility_range_fade_mode = key[5]
+
+
+## Appends one item per surface of `mi` (transform relative to `root`) to `items`.
+static func append_mesh_items(items: Array[Dictionary], mi: MeshInstance3D, root: Node3D) -> void:
+	var xform := get_relative_transform(mi, root)
+	var key := render_key(mi)
+	for s in range(mi.mesh.get_surface_count()):
+		(
+			items
+			. append(
+				{
+					"mesh": mi.mesh,
+					"surface": s,
+					"transform": xform,
+					"material": get_surface_material(mi, s),
+					"key": key,
+					"name": mi.name,
+				}
+			)
+		)
+
+
+## Merges `items` ({mesh, surface, transform, material, key}) into one mesh per
+## render key and, when `cell_size` > 0, per horizontal grid cell of the part's
+## AABB center (grid anchored at the parts' minimum corner, so anything smaller
+## than a cell stays whole). Returns [{mesh, key, first}] in first-seen order
+## (`first` is the group's first item).
+static func merge_by_render_key(items: Array[Dictionary], cell_size: float) -> Array[Dictionary]:
+	var centers: Array[Vector3] = []
+	var grid_origin := Vector3.INF
+	if cell_size > 0.0:
+		for item in items:
+			var xform: Transform3D = item["transform"]
+			var center := (xform * (item["mesh"] as Mesh).get_aabb()).get_center()
+			centers.append(center)
+			grid_origin = grid_origin.min(center)
+	var groups: Dictionary = {}
+	var order: Array[String] = []
+	var canonical_materials: Array[Material] = []
+	for i in range(items.size()):
+		var item := items[i]
+		var key: Array = item["key"]
+		var group_id := str(key)
+		if cell_size > 0.0:
+			var size := cell_size
+			if key[3] > 0.0:
+				# Godot measures the range to the merged AABB center: keep it near each part.
+				size = minf(size, key[3] * 0.25)
+			var local := centers[i] - grid_origin
+			group_id += "|%d,%d" % [floori(local.x / size), floori(local.z / size)]
+		if not groups.has(group_id):
+			var mat_order: Array[Material] = []
+			groups[group_id] = {"by_mat": {}, "mat_order": mat_order, "first": item}
+			order.append(group_id)
+		var group: Dictionary = groups[group_id]
+		var mat := get_canonical_material(item["material"], canonical_materials)
+		if not group["by_mat"].has(mat):
+			group["by_mat"][mat] = []
+			group["mat_order"].append(mat)
+		group["by_mat"][mat].append(item)
+	var out: Array[Dictionary] = []
+	for group_id in order:
+		var group: Dictionary = groups[group_id]
+		var mesh := ArrayMesh.new()
+		commit_surfaces_with_color_collapsing(mesh, group["by_mat"], group["mat_order"])
+		out.append({"mesh": with_lods(mesh), "key": group["first"]["key"], "first": group["first"]})
+	return out
+
+
+## Rebuilds `mesh` with generated LODs: SurfaceTool merges drop the source meshes'
+## LODs. Returns `mesh` unchanged where ImporterMesh is stripped (web template).
+static func with_lods(mesh: ArrayMesh) -> ArrayMesh:
+	if mesh.get_surface_count() == 0 or not ClassDB.class_exists(&"ImporterMesh"):
+		return mesh
+	# Untyped and created by name: a typed ImporterMesh reference would not compile
+	# on the web template, where the class is disabled.
+	var importer = ClassDB.instantiate(&"ImporterMesh")
+	for s in range(mesh.get_surface_count()):
+		var arrays := mesh.surface_get_arrays(s)
+		if arrays[Mesh.ARRAY_INDEX] == null:
+			# LOD generation skips surfaces without an index array.
+			var st := SurfaceTool.new()
+			st.create_from(mesh, s)
+			st.index()
+			arrays = st.commit_to_arrays()
+		importer.add_surface(
+			mesh.surface_get_primitive_type(s), arrays, [], {}, mesh.surface_get_material(s)
+		)
+	# Same angles as the scene importer's defaults.
+	importer.generate_lods(60.0, 25.0, [])
+	return importer.get_mesh()
+
+
+## Adds one MeshInstance3D per `merge_by_render_key` result under `parent`. The first is
+## named `base_name`, the rest `base_name` + index, or their first part's name when
+## `keep_part_names` (so name-based lookups such as car paint still match).
+static func add_merged_instances(
+	parent: Node3D,
+	merged: Array[Dictionary],
+	base_name: String,
+	actual_owner: Node,
+	keep_part_names := false
+) -> Array[MeshInstance3D]:
+	var out: Array[MeshInstance3D] = []
+	for i in range(merged.size()):
+		var mi := MeshInstance3D.new()
+		if i == 0:
+			mi.name = base_name
+		elif keep_part_names:
+			mi.name = merged[i]["first"]["name"]
+		else:
+			mi.name = "%s%d" % [base_name, i + 1]
+		mi.mesh = merged[i]["mesh"]
+		apply_render_key(mi, merged[i]["key"])
+		parent.add_child(mi)
+		mi.owner = actual_owner
+		out.append(mi)
+	return out
 
 
 static func bake_wheel(wheel_node: Node3D, scene_root: Node = null) -> Node3D:
@@ -354,10 +647,14 @@ static func bake_wheel(wheel_node: Node3D, scene_root: Node = null) -> Node3D:
 
 	var wheel_items: Array[Dictionary] = []
 	var to_remove_children: Array[Node] = []
+	var wheel_key: Array = (
+		render_key(wheel_node as MeshInstance3D)
+		if wheel_node is MeshInstance3D
+		else DEFAULT_RENDER_KEY
+	)
 
 	if wheel_node is MeshInstance3D and wheel_node.mesh != null:
 		for s in range(wheel_node.mesh.get_surface_count()):
-			var mat := get_surface_material(wheel_node, s)
 			(
 				wheel_items
 				. append(
@@ -365,7 +662,8 @@ static func bake_wheel(wheel_node: Node3D, scene_root: Node = null) -> Node3D:
 						"mesh": wheel_node.mesh,
 						"surface": s,
 						"transform": Transform3D.IDENTITY,
-						"material": mat,
+						"material": get_surface_material(wheel_node, s),
+						"key": wheel_key,
 					}
 				)
 			)
@@ -373,59 +671,22 @@ static func bake_wheel(wheel_node: Node3D, scene_root: Node = null) -> Node3D:
 	for child in wheel_node.get_children():
 		if child is MeshInstance3D and child.mesh != null:
 			var mi := child as MeshInstance3D
-			var xform: Transform3D = mi.transform
-			for s in range(mi.mesh.get_surface_count()):
-				var mat := get_surface_material(mi, s)
-				(
-					wheel_items
-					. append(
-						{
-							"mesh": mi.mesh,
-							"surface": s,
-							"transform": xform,
-							"material": mat,
-						}
-					)
-				)
+			append_mesh_items(wheel_items, mi, wheel_node)
 			to_remove_children.append(mi)
 
-	(
-		wheel_items
-		. append(
-			{
-				"mesh": spoke_mesh,
-				"surface": 0,
-				"transform": Transform3D.IDENTITY,
-				"material": chrome_mat,
-			}
+	for detail_mesh: Mesh in [spoke_mesh, hub_mesh]:
+		(
+			wheel_items
+			. append(
+				{
+					"mesh": detail_mesh,
+					"surface": 0,
+					"transform": Transform3D.IDENTITY,
+					"material": chrome_mat,
+					"key": WHEEL_DETAIL_RENDER_KEY,
+				}
+			)
 		)
-	)
-	(
-		wheel_items
-		. append(
-			{
-				"mesh": hub_mesh,
-				"surface": 0,
-				"transform": Transform3D.IDENTITY,
-				"material": chrome_mat,
-			}
-		)
-	)
-
-	var surfaces_by_material: Dictionary = {}
-	var material_order: Array[Material] = []
-	var canonical_materials: Array[Material] = []
-
-	for item in wheel_items:
-		var orig_mat: Material = item["material"]
-		var mat: Material = get_canonical_material(orig_mat, canonical_materials)
-		item["material"] = mat
-		if not surfaces_by_material.has(mat):
-			surfaces_by_material[mat] = []
-			material_order.append(mat)
-		surfaces_by_material[mat].append(item)
-	var new_wheel_mesh := ArrayMesh.new()
-	commit_surfaces_with_color_collapsing(new_wheel_mesh, surfaces_by_material, material_order)
 
 	var wheel_mi: MeshInstance3D
 	if wheel_node is MeshInstance3D:
@@ -444,9 +705,19 @@ static func bake_wheel(wheel_node: Node3D, scene_root: Node = null) -> Node3D:
 			wheel_mi.owner = actual_owner
 			wheel_node.free()
 
-	wheel_mi.mesh = new_wheel_mesh
+	# Parts sharing the wheel's render key merge into the wheel mesh; the rest
+	# (shadowless, distance-culled rims and caps) become child meshes, the first
+	# named "Spoke" so `Car` sees the wheel as already detailed.
+	var detail_groups: Array[Dictionary] = []
+	wheel_mi.mesh = null
+	for group in merge_by_render_key(wheel_items, 0.0):
+		if group["key"] == wheel_key:
+			wheel_mi.mesh = group["mesh"]
+			wheel_mi.mesh.set_meta("baked_wheel", true)
+		else:
+			detail_groups.append(group)
+	add_merged_instances(wheel_mi, detail_groups, "Spoke", actual_owner)
 	wheel_mi.set_meta("baked_wheel", true)
-	new_wheel_mesh.set_meta("baked_wheel", true)
 
 	if not wheel_mi.has_node("Spoke"):
 		var spoke_tag := Node.new()
@@ -461,9 +732,7 @@ static func bake_car_body(root: Node3D, scene_root: Node = null) -> Node3D:
 	var actual_owner: Node = scene_root if scene_root != null else root
 	var painted_items: Array[Dictionary] = []
 	var stripe_items: Array[Dictionary] = []
-	var trim_by_material: Dictionary = {}
-	var trim_mat_order: Array[Material] = []
-	var canonical_materials: Array[Material] = []
+	var trim_items: Array[Dictionary] = []
 	var light_markers_data: Array[Dictionary] = []
 	var wheels_to_bake: Array[Node3D] = []
 	var to_remove: Array[Node] = []
@@ -492,27 +761,12 @@ static func bake_car_body(root: Node3D, scene_root: Node = null) -> Node3D:
 		if child_name in LIGHT_MARKER_NAMES:
 			light_markers_data.append({"name": child_name, "transform": child.transform})
 		if child is MeshInstance3D and child.mesh:
-			var xform := get_relative_transform(child, root)
-			var is_painted := child_name in PassengerCar.PAINTED_NODE_NAMES
-			var is_stripe := child_name == &"Stripe" or child_name.begins_with("Stripe")
-			for s in range(child.mesh.get_surface_count()):
-				var orig_mat := get_surface_material(child, s)
-				var mat := get_canonical_material(orig_mat, canonical_materials)
-				var entry := {
-					"mesh": child.mesh,
-					"surface": s,
-					"transform": xform,
-					"material": mat,
-				}
-				if is_painted:
-					painted_items.append(entry)
-				elif is_stripe:
-					stripe_items.append(entry)
-				else:
-					if not trim_by_material.has(mat):
-						trim_by_material[mat] = []
-						trim_mat_order.append(mat)
-					trim_by_material[mat].append(entry)
+			if child_name in PassengerCar.PAINTED_NODE_NAMES:
+				append_mesh_items(painted_items, child, root)
+			elif child_name == &"Stripe" or child_name.begins_with("Stripe"):
+				append_mesh_items(stripe_items, child, root)
+			else:
+				append_mesh_items(trim_items, child, root)
 		to_remove.append(child)
 
 	for node in to_remove:
@@ -522,49 +776,15 @@ static func bake_car_body(root: Node3D, scene_root: Node = null) -> Node3D:
 	for wheel in wheels_to_bake:
 		bake_wheel(wheel, actual_owner)
 
-	# 1. Baked Body (painted parts merged into 1 mesh, 1 surface)
-	if not painted_items.is_empty():
-		var body_st := SurfaceTool.new()
-		body_st.begin(Mesh.PRIMITIVE_TRIANGLES)
-		var body_mat: Material = painted_items[0]["material"]
-		if body_mat:
-			body_st.set_material(body_mat)
-		for item in painted_items:
-			body_st.append_from(item["mesh"], item["surface"], item["transform"])
-		var body_mesh := body_st.commit()
-
-		var body_mi := MeshInstance3D.new()
-		body_mi.name = "Body"
-		body_mi.mesh = body_mesh
-		root.add_child(body_mi)
-		body_mi.owner = actual_owner
-
-	# 2. Baked Stripe (stripe parts merged into 1 mesh, 1 surface)
-	if not stripe_items.is_empty():
-		var stripe_st := SurfaceTool.new()
-		stripe_st.begin(Mesh.PRIMITIVE_TRIANGLES)
-		var stripe_mat: Material = stripe_items[0]["material"]
-		if stripe_mat:
-			stripe_st.set_material(stripe_mat)
-		for item in stripe_items:
-			stripe_st.append_from(item["mesh"], item["surface"], item["transform"])
-		var stripe_mesh := stripe_st.commit()
-
-		var stripe_mi := MeshInstance3D.new()
-		stripe_mi.name = "Stripe"
-		stripe_mi.mesh = stripe_mesh
-		root.add_child(stripe_mi)
-		stripe_mi.owner = actual_owner
-
-	# 2. Baked Trim (all other static body parts grouped by material)
-	if not trim_by_material.is_empty():
-		var trim_mesh := ArrayMesh.new()
-		commit_surfaces_with_color_collapsing(trim_mesh, trim_by_material, trim_mat_order)
-		var trim_mi := MeshInstance3D.new()
-		trim_mi.name = "Trim"
-		trim_mi.mesh = trim_mesh
-		root.add_child(trim_mi)
-		trim_mi.owner = actual_owner
+	# Painted parts and stripes take one shared material each (the runtime overrides
+	# it by node name), so each render key bakes to a single surface. Extra keys keep
+	# their first part's name so the paint and stripe lookups still match them.
+	for items in [painted_items, stripe_items]:
+		for item in items:
+			item["material"] = items[0]["material"]
+	add_merged_instances(root, merge_by_render_key(painted_items, 0.0), "Body", actual_owner, true)
+	add_merged_instances(root, merge_by_render_key(stripe_items, 0.0), "Stripe", actual_owner, true)
+	add_merged_instances(root, merge_by_render_key(trim_items, 0.0), "Trim", actual_owner)
 
 	# 3. Light markers (preserves positions for turn signal spawns)
 	for data in light_markers_data:
@@ -592,66 +812,27 @@ static func bake_vehicle_scene(scene: Node3D, scene_root: Node = null) -> Node3D
 	return scene
 
 
-static func _collect_vehicle_meshes(
-	node: Node3D,
-	root: Node3D,
-	surfaces_by_material: Dictionary,
-	material_order: Array[Material],
-	canonical_materials: Array[Material]
-) -> void:
+static func _collect_vehicle_meshes(node: Node3D, root: Node3D, items: Array[Dictionary]) -> void:
 	if node is MeshInstance3D and node.mesh != null:
-		var xform := get_relative_transform(node, root)
-		for s in range(node.mesh.get_surface_count()):
-			var orig_mat := get_surface_material(node, s)
-			var mat := get_canonical_material(orig_mat, canonical_materials)
-			if not surfaces_by_material.has(mat):
-				surfaces_by_material[mat] = []
-				material_order.append(mat)
-			(
-				surfaces_by_material[mat]
-				. append(
-					{
-						"mesh": node.mesh,
-						"surface": s,
-						"transform": xform,
-						"material": mat,
-					}
-				)
-			)
+		append_mesh_items(items, node, root)
 	for child in node.get_children():
 		if child is Node3D and not child.name.begins_with("Wheel"):
-			_collect_vehicle_meshes(
-				child, root, surfaces_by_material, material_order, canonical_materials
-			)
+			_collect_vehicle_meshes(child, root, items)
 
 
 static func _process_vehicle_container(
-	container: Node3D,
-	model: Node3D,
-	actual_owner: Node,
-	surfaces_by_material: Dictionary,
-	material_order: Array[Material],
-	canonical_materials: Array[Material]
+	container: Node3D, model: Node3D, actual_owner: Node, items: Array[Dictionary]
 ) -> void:
 	container.owner = actual_owner
 	var sub_to_remove: Array[Node] = []
 	for subchild in container.get_children():
 		if subchild is MeshInstance3D:
-			_collect_vehicle_meshes(
-				subchild, model, surfaces_by_material, material_order, canonical_materials
-			)
+			_collect_vehicle_meshes(subchild, model, items)
 			sub_to_remove.append(subchild)
 		elif subchild is Label3D:
 			subchild.owner = actual_owner
 		elif subchild is Node3D:
-			_process_vehicle_container(
-				subchild,
-				model,
-				actual_owner,
-				surfaces_by_material,
-				material_order,
-				canonical_materials
-			)
+			_process_vehicle_container(subchild, model, actual_owner, items)
 			if subchild.get_child_count() == 0:
 				sub_to_remove.append(subchild)
 	for sm in sub_to_remove:
@@ -663,9 +844,7 @@ static func bake_vehicle_model(model: Node3D, scene_root: Node = null) -> Node3D
 	if not model is Node3D:
 		return model
 	var actual_owner: Node = scene_root if scene_root != null else model
-	var surfaces_by_material: Dictionary = {}
-	var material_order: Array[Material] = []
-	var canonical_materials: Array[Material] = []
+	var items: Array[Dictionary] = []
 	var light_markers_data: Array[Dictionary] = []
 	var wheels_to_bake: Array[Node3D] = []
 	var to_remove: Array[Node] = []
@@ -692,19 +871,10 @@ static func bake_vehicle_model(model: Node3D, scene_root: Node = null) -> Node3D
 			continue
 
 		if child is MeshInstance3D:
-			_collect_vehicle_meshes(
-				child, model, surfaces_by_material, material_order, canonical_materials
-			)
+			_collect_vehicle_meshes(child, model, items)
 			to_remove.append(child)
 		elif child is Node3D:
-			_process_vehicle_container(
-				child,
-				model,
-				actual_owner,
-				surfaces_by_material,
-				material_order,
-				canonical_materials
-			)
+			_process_vehicle_container(child, model, actual_owner, items)
 			if child.get_child_count() == 0:
 				to_remove.append(child)
 	for node in to_remove:
@@ -714,15 +884,7 @@ static func bake_vehicle_model(model: Node3D, scene_root: Node = null) -> Node3D
 	for wheel in wheels_to_bake:
 		bake_wheel(wheel, actual_owner)
 
-	if not surfaces_by_material.is_empty():
-		var baked_mesh := ArrayMesh.new()
-		commit_surfaces_with_color_collapsing(baked_mesh, surfaces_by_material, material_order)
-
-		var body_mi := MeshInstance3D.new()
-		body_mi.name = "Body"
-		body_mi.mesh = baked_mesh
-		model.add_child(body_mi)
-		body_mi.owner = actual_owner
+	add_merged_instances(model, merge_by_render_key(items, 0.0), "Body", actual_owner)
 
 	for data in light_markers_data:
 		var marker := Marker3D.new()
@@ -826,7 +988,7 @@ static func bake_dumpster(root: Node3D, scene_root: Node = null) -> Node3D:
 		if body_mat != null:
 			body_st.set_material(body_mat)
 		for item in colored_items:
-			body_st.append_from(item["mesh"], item["surface"], item["transform"])
+			_append_mesh_surface(body_st, item["mesh"], item["surface"], item["transform"])
 		body_st.commit(merged_mesh)
 
 	# 2. Surfaces 1+: Static trim parts grouped by material
@@ -841,7 +1003,14 @@ static func bake_dumpster(root: Node3D, scene_root: Node = null) -> Node3D:
 	return root
 
 
-static func bake_static_scene(root: Node3D, scene_root: Node = null) -> Node3D:
+## Merges the static meshes under `root` into "BakedStaticMesh" instances, one per
+## render key and BAKE_CELL_SIZE cell. Hidden subtrees stay unbaked (scripts may
+## toggle them). `single_mesh` bakes MultiMesh templates instead: one mesh per
+## `cast_shadow` setting (shadow-off parts must stay shadow-off), all keeping the
+## longest visibility range.
+static func bake_static_scene(
+	root: Node3D, scene_root: Node = null, single_mesh := false
+) -> Node3D:
 	var actual_owner: Node = scene_root if scene_root != null else root
 	var mesh_instances: Array[MeshInstance3D] = []
 	var stack: Array[Node] = [root]
@@ -853,6 +1022,8 @@ static func bake_static_scene(root: Node3D, scene_root: Node = null) -> Node3D:
 			if child.scene_file_path != "":
 				continue
 			if child.owner != null and child.owner != root and root.is_ancestor_of(child.owner):
+				continue
+			if child is Node3D and not (child as Node3D).visible:
 				continue
 			# Do not merge nodes that have attached scripts or are collision shapes
 			if child.get_script() != null:
@@ -867,33 +1038,21 @@ static func bake_static_scene(root: Node3D, scene_root: Node = null) -> Node3D:
 	if mesh_instances.is_empty():
 		return root
 
-	var by_mat: Dictionary = {}
-	var mat_order: Array[Material] = []
-	var canonical_materials: Array[Material] = []
-	var max_vis_range: float = 0.0
+	var items: Array[Dictionary] = []
 	for mi in mesh_instances:
-		if mi.visibility_range_end > max_vis_range:
-			max_vis_range = mi.visibility_range_end
-		var xform := get_relative_transform(mi, root)
-		for s in range(mi.mesh.get_surface_count()):
-			var orig_mat := get_surface_material(mi, s)
-			var mat := get_canonical_material(orig_mat, canonical_materials)
-			if not by_mat.has(mat):
-				by_mat[mat] = []
-				mat_order.append(mat)
-			(
-				by_mat[mat]
-				. append(
-					{
-						"mesh": mi.mesh,
-						"surface": s,
-						"transform": xform,
-					}
-				)
-			)
-
-	var merged_mesh := ArrayMesh.new()
-	commit_surfaces_with_color_collapsing(merged_mesh, by_mat, mat_order)
+		append_mesh_items(items, mi, root)
+	if single_mesh:
+		var key := DEFAULT_RENDER_KEY.duplicate()
+		for mi in mesh_instances:
+			if mi.visibility_range_end <= 0.0:
+				key[3] = 0.0
+				break
+			key[3] = maxf(key[3], mi.visibility_range_end)
+		for item in items:
+			var item_key := key.duplicate()
+			item_key[0] = item["key"][0]
+			item["key"] = item_key
+	var merged := merge_by_render_key(items, 0.0 if single_mesh else BAKE_CELL_SIZE)
 
 	# Nullify original meshes so they don't render or take draw calls
 	for i in range(mesh_instances.size() - 1, -1, -1):
@@ -904,38 +1063,28 @@ static func bake_static_scene(root: Node3D, scene_root: Node = null) -> Node3D:
 			if parent != null:
 				parent.remove_child(mi)
 				mi.free()
-	var merged_mi := MeshInstance3D.new()
-	merged_mi.name = "BakedStaticMesh"
-	merged_mi.mesh = merged_mesh
-	if max_vis_range > 0.0:
-		merged_mi.visibility_range_end = max_vis_range
-	root.add_child(merged_mi)
-	merged_mi.owner = actual_owner
+	add_merged_instances(root, merged, "BakedStaticMesh", actual_owner)
 	return root
 
 
+## Replaces the meshes of every instance under `container` with one MultiMesh per
+## baked template ("BakedMultiMesh", then "BakedMultiMesh2", ...), each keeping its
+## template's `cast_shadow` and visibility range.
 static func create_multimesh_from_instances(
-	container: Node3D,
-	template_mesh: Mesh,
-	scene_root: Node = null,
-	visibility_range_end: float = 0.0
-) -> MultiMeshInstance3D:
+	container: Node3D, templates: Array[MeshInstance3D], scene_root: Node = null
+) -> Array[MultiMeshInstance3D]:
 	var actual_owner: Node = scene_root if scene_root != null else container
+	var out: Array[MultiMeshInstance3D] = []
 	var instances: Array[Node3D] = []
 	for child in container.get_children():
 		if child is Node3D and not (child is MultiMeshInstance3D):
 			instances.append(child as Node3D)
-	if instances.is_empty() or template_mesh == null:
-		return null
+	if instances.is_empty() or templates.is_empty():
+		return out
 
-	var mm := MultiMesh.new()
-	mm.transform_format = MultiMesh.TRANSFORM_3D
-	mm.mesh = template_mesh
-	mm.instance_count = instances.size()
-
-	for i in range(instances.size()):
-		var inst := instances[i]
-		mm.set_instance_transform(i, inst.transform)
+	var xforms: Array[Transform3D] = []
+	for inst in instances:
+		xforms.append(inst.transform)
 		var to_remove: Array[Node] = []
 		var stack: Array[Node] = [inst]
 		while not stack.is_empty():
@@ -959,20 +1108,29 @@ static func create_multimesh_from_instances(
 			for c: Node in n.get_children():
 				remaining_stack.append(c)
 
-	var mmi := MultiMeshInstance3D.new()
-	mmi.name = "BakedMultiMesh"
-	mmi.multimesh = mm
-	if visibility_range_end > 0.0:
-		mmi.visibility_range_end = visibility_range_end
-	container.add_child(mmi)
-	mmi.owner = actual_owner
-	return mmi
+	for i in range(templates.size()):
+		var template := templates[i]
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.mesh = template.mesh
+		set_multimesh_transforms(mm, xforms)
+		var mmi := MultiMeshInstance3D.new()
+		mmi.name = "BakedMultiMesh" if i == 0 else "BakedMultiMesh%d" % (i + 1)
+		mmi.multimesh = mm
+		mmi.cast_shadow = template.cast_shadow
+		if template.visibility_range_end > 0.0:
+			mmi.visibility_range_end = _padded_range(template.visibility_range_end, xforms)
+		container.add_child(mmi)
+		mmi.owner = actual_owner
+		out.append(mmi)
+	return out
 
 
 static func bake_trees(container: Node3D, actual_owner: Node) -> void:
 	for tree in container.get_children():
 		if not (tree is Node3D):
 			continue
+		make_local(tree, actual_owner)
 		var tree_type: int = tree.get("tree_type")
 		var visuals := tree.get_node_or_null("Visuals") as Node3D
 		if visuals == null:
@@ -1002,6 +1160,8 @@ static func bake_trees(container: Node3D, actual_owner: Node) -> void:
 			active_node = visuals.get_node_or_null(active_name) as Node3D
 		if active_node == null:
 			continue
+		# Palm/LiveOak variants instance a model; the merge below edits its children.
+		make_local(active_node, actual_owner)
 		active_node.scale.y = height_scale
 		active_node.visible = true
 
@@ -1019,48 +1179,22 @@ static func bake_trees(container: Node3D, actual_owner: Node) -> void:
 			if child is MeshInstance3D and child.mesh != null and not ("Foliage" in child.name):
 				static_meshes.append(child)
 		if static_meshes.size() > 1:
-			var by_mat: Dictionary = {}
-			var mat_order: Array[Material] = []
-			var canonical_materials: Array[Material] = []
-			var max_trunk_vis_range: float = 0.0
+			var items: Array[Dictionary] = []
 			for mi in static_meshes:
-				if mi.visibility_range_end > max_trunk_vis_range:
-					max_trunk_vis_range = mi.visibility_range_end
-				var xform := get_relative_transform(mi, active_node)
-				for s in range(mi.mesh.get_surface_count()):
-					var orig_mat := get_surface_material(mi, s)
-					var mat := get_canonical_material(orig_mat, canonical_materials)
-					if not by_mat.has(mat):
-						by_mat[mat] = []
-						mat_order.append(mat)
-					(
-						by_mat[mat]
-						. append(
-							{
-								"mesh": mi.mesh,
-								"surface": s,
-								"transform": xform,
-							}
-						)
-					)
+				append_mesh_items(items, mi, active_node)
 				active_node.remove_child(mi)
 				mi.free()
-			var merged_mesh := ArrayMesh.new()
-			commit_surfaces_with_color_collapsing(merged_mesh, by_mat, mat_order)
-			var merged_mi := MeshInstance3D.new()
-			merged_mi.name = "Trunk"
-			merged_mi.mesh = merged_mesh
-			if max_trunk_vis_range > 0.0:
-				merged_mi.visibility_range_end = max_trunk_vis_range
-			active_node.add_child(merged_mi)
-
-		tree.scene_file_path = ""
+			add_merged_instances(
+				active_node, merge_by_render_key(items, 0.0), "Trunk", actual_owner
+			)
+		# `_apply_tree_type` builds variants without an owner; own them so they save.
 		var stack: Array[Node] = [tree]
 		while not stack.is_empty():
-			var n: Node = stack.pop_back()
-			n.owner = actual_owner
-			for c in n.get_children():
-				stack.append(c)
+			for c in stack.pop_back().get_children():
+				if c.owner == null:
+					c.owner = actual_owner
+				if c.scene_file_path == "":
+					stack.append(c)
 
 
 static func bake_flags(container: Node3D, actual_owner: Node) -> void:
@@ -1106,48 +1240,20 @@ static func bake_flags(container: Node3D, actual_owner: Node) -> void:
 			child.free()
 
 		# Merge static meshes of pole (Footing, BasePlate, Pole, Truck, Ball, Cleat)
-		var pole_items_by_mat: Dictionary = {}
-		var pole_mat_order: Array[Material] = []
-		var canonical_materials: Array[Material] = []
+		var pole_items: Array[Dictionary] = []
 		var pole_nodes_to_remove: Array[Node] = []
-		var max_pole_vis_range: float = 0.0
 		for child in active_node.get_children():
 			if child.name in STATIC_POLE_NAMES and child is MeshInstance3D and child.mesh != null:
-				if child.visibility_range_end > max_pole_vis_range:
-					max_pole_vis_range = child.visibility_range_end
-				var xform := get_relative_transform(child, active_node)
-				for s in range(child.mesh.get_surface_count()):
-					var orig_mat := get_surface_material(child, s)
-					var mat := get_canonical_material(orig_mat, canonical_materials)
-					if not pole_items_by_mat.has(mat):
-						pole_items_by_mat[mat] = []
-						pole_mat_order.append(mat)
-					(
-						pole_items_by_mat[mat]
-						. append(
-							{
-								"mesh": child.mesh,
-								"surface": s,
-								"transform": xform,
-							}
-						)
-					)
+				append_mesh_items(pole_items, child, active_node)
 				pole_nodes_to_remove.append(child)
 
-		if not pole_items_by_mat.is_empty():
+		if not pole_items.is_empty():
 			for node in pole_nodes_to_remove:
 				active_node.remove_child(node)
 				node.free()
-			var merged_pole_mesh := ArrayMesh.new()
-			commit_surfaces_with_color_collapsing(
-				merged_pole_mesh, pole_items_by_mat, pole_mat_order
+			add_merged_instances(
+				active_node, merge_by_render_key(pole_items, 0.0), "Pole", actual_owner
 			)
-			var pole_mi := MeshInstance3D.new()
-			pole_mi.name = "Pole"
-			pole_mi.mesh = merged_pole_mesh
-			if max_pole_vis_range > 0.0:
-				pole_mi.visibility_range_end = max_pole_vis_range
-			active_node.add_child(pole_mi)
 
 		flag.scene_file_path = ""
 		var stack: Array[Node] = [flag]
@@ -1158,14 +1264,19 @@ static func bake_flags(container: Node3D, actual_owner: Node) -> void:
 				stack.append(c)
 
 
+## Merges the bollards `actual_owner` owns (nested sub-scenes bake their own) into
+## one MultiMesh per direct child of `container`.
 static func bake_bollards(container: Node3D, actual_owner: Node) -> void:
 	var bollards_by_site: Dictionary = {}
 	var stack: Array[Node] = [container]
 	while not stack.is_empty():
 		var n: Node = stack.pop_back()
 		if (
-			n.scene_file_path == "res://props/bollard.tscn"
-			or (n.name.begins_with("Bollard") and n is StaticBody3D)
+			n.owner == actual_owner
+			and (
+				n.scene_file_path == "res://props/bollard.tscn"
+				or (n.name.begins_with("Bollard") and n is StaticBody3D)
+			)
 		):
 			var site := n
 			while site != null and site.get_parent() != container and site != container:
@@ -1184,7 +1295,7 @@ static func bake_bollards(container: Node3D, actual_owner: Node) -> void:
 	var bollard_template := load("res://props/bollard.tscn").instantiate() as Node3D
 	if bollard_template == null:
 		return
-	bake_static_scene(bollard_template)
+	bake_static_scene(bollard_template, null, true)
 	var baked_mi := bollard_template.get_node_or_null("BakedStaticMesh") as MeshInstance3D
 	if baked_mi == null or baked_mi.mesh == null:
 		bollard_template.free()
@@ -1201,12 +1312,10 @@ static func bake_bollards(container: Node3D, actual_owner: Node) -> void:
 		var mm := MultiMesh.new()
 		mm.transform_format = MultiMesh.TRANSFORM_3D
 		mm.mesh = template_mesh
-		mm.instance_count = bollard_list.size()
+		var xforms: Array[Transform3D] = []
 
-		for i in range(bollard_list.size()):
-			var bollard := bollard_list[i] as Node3D
-			var xf := get_relative_transform(bollard, site)
-			mm.set_instance_transform(i, xf)
+		for bollard: Node3D in bollard_list:
+			xforms.append(get_relative_transform(bollard, site))
 			var to_remove: Array[Node] = []
 			for c in bollard.get_children():
 				if c is MeshInstance3D:
@@ -1222,70 +1331,114 @@ static func bake_bollards(container: Node3D, actual_owner: Node) -> void:
 				curr.owner = actual_owner
 				for c in curr.get_children():
 					b_stack.append(c)
+		set_multimesh_transforms(mm, xforms)
 
 		var mmi := MultiMeshInstance3D.new()
 		mmi.name = "BakedBollardsMultiMesh"
 		mmi.multimesh = mm
 		if template_vis_range > 0.0:
-			mmi.visibility_range_end = template_vis_range
-		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			mmi.visibility_range_end = _padded_range(template_vis_range, xforms)
 		site.add_child(mmi)
 		mmi.owner = actual_owner
 
 	bollard_template.free()
 
 
-static func bake_main_scene(root: Node3D) -> Node3D:
+## Bakes the main scene. `bake_instanced` also bakes the instanced sub-scenes that
+## export bakes in their own files (`bake_scene_for_path`); runtime previews load
+## them unbaked, while the export must leave them alone or they load twice.
+static func bake_main_scene(root: Node3D, bake_instanced := true) -> Node3D:
 	var road := root.get_node_or_null("Road") as Node3D
 	if road != null:
+		make_local(road, root)
 		var pavement := road.get_node_or_null("PavementDetails")
 		if pavement != null and pavement.has_method("build_mesh"):
 			pavement.build_mesh()
 		bake_static_scene(road, root)
-		var baked_road := road.get_node_or_null("BakedStaticMesh") as MeshInstance3D
-		if baked_road != null:
-			baked_road.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_disable_baked_shadows(road)
 	var parking := root.get_node_or_null("Parking") as Node3D
 	if parking != null:
+		make_local(parking, root)
 		var ruts := parking.get_node_or_null("ShortcutRuts")
 		if ruts != null and ruts.has_method("build_mesh"):
 			ruts.build_mesh()
 		bake_static_scene(parking, root)
-		var baked_parking := parking.get_node_or_null("BakedStaticMesh") as MeshInstance3D
-		if baked_parking != null:
-			baked_parking.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_disable_baked_shadows(parking)
 
 	var streetlights := root.get_node_or_null("Props/Streetlights") as Node3D
 	if streetlights != null and streetlights.get_child_count() > 0:
+		make_local(streetlights, root)
 		var lamp_template := load("res://props/street_lamp.tscn").instantiate() as Node3D
 		if lamp_template != null:
-			bake_static_scene(lamp_template)
-			var baked_lamp := lamp_template.get_node_or_null("BakedStaticMesh") as MeshInstance3D
-			if baked_lamp != null and baked_lamp.mesh != null:
-				create_multimesh_from_instances(
-					streetlights, baked_lamp.mesh, root, baked_lamp.visibility_range_end
-				)
+			bake_static_scene(lamp_template, null, true)
+			var baked_parts: Array[MeshInstance3D] = []
+			for child in lamp_template.get_children():
+				if child is MeshInstance3D and child.name.begins_with("BakedStaticMesh"):
+					baked_parts.append(child)
+			create_multimesh_from_instances(streetlights, baked_parts, root)
 			lamp_template.free()
 
 	var trees := root.get_node_or_null("Props/Trees") as Node3D
 	if trees != null:
+		make_local(trees, root)
 		bake_trees(trees, root)
 
 	var flags := root.get_node_or_null("Props/Flags") as Node3D
 	if flags != null:
+		make_local(flags, root)
 		bake_flags(flags, root)
 
 	var props := root.get_node_or_null("Props") as Node3D
-	if props != null:
-		bake_bollards(props, root)
-		for child in props.get_children():
-			if child.name in [&"Streetlights", &"Trees", &"Flags", &"Powerlines", &"Forest"]:
-				continue
-			if child.name == &"WalgroinsShoppingCarts":
-				for cart in child.get_children():
-					if cart is Node3D and cart.get_node_or_null("BakedStaticMesh") == null:
-						bake_static_scene(cart, root)
-			elif child is Node3D and child.get_node_or_null("BakedStaticMesh") == null:
-				bake_static_scene(child, root)
+	if props == null:
+		return root
+	if bake_instanced:
+		var instanced: Array[Node3D] = []
+		var stack: Array[Node] = [props]
+		while not stack.is_empty():
+			var n: Node = stack.pop_back()
+			for c in n.get_children():
+				stack.append(c)
+			var path := n.scene_file_path
+			# Cars stay unbaked here: their scripts hold references to the body parts.
+			if n is Node3D and _bakes_on_its_own(path) and not path.begins_with("res://cars/"):
+				instanced.append(n as Node3D)
+		for n in instanced:
+			bake_scene_for_path(n, n.scene_file_path)
+	for child in props.get_children():
+		if child.name in [&"Streetlights", &"Trees", &"Flags", &"Powerlines"]:
+			continue
+		# Scripted props (billboards, tunnels, forest) build their meshes in `_ready`.
+		if not (child is Node3D) or child.get_script() != null:
+			continue
+		if _bakes_on_its_own(child.scene_file_path):
+			continue
+		make_local(child, root)
+		bake_static_scene(child, root)
 
 	return root
+
+
+static func _bakes_on_its_own(path: String) -> bool:
+	return (
+		path.begins_with("res://buildings/")
+		or path.begins_with("res://cars/bodies/")
+		or path in BAKED_VEHICLE_SCENES
+		or path in BAKED_PROP_SCENES
+		or path == "res://props/dumpster.tscn"
+	)
+
+
+## Base scene of the inherited scene at `path` ("" when it is not inherited).
+static func _inherited_base_path(path: String) -> String:
+	if not path.ends_with(".tscn"):
+		return ""
+	var state := (load(path) as PackedScene).get_state()
+	if state.get_node_count() == 0 or state.get_node_instance(0) == null:
+		return ""
+	return state.get_node_instance(0).resource_path
+
+
+static func _disable_baked_shadows(root: Node3D) -> void:
+	for child in root.get_children():
+		if child is MeshInstance3D and child.name.begins_with("BakedStaticMesh"):
+			child.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF

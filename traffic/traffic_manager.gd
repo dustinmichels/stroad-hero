@@ -7,6 +7,7 @@ const TAXI_SCENE_PATH := "res://cars/taxi.tscn"
 const TRUCK_SCENE_PATH := "res://cars/truck.tscn"
 const VAN_SCENE_PATH := "res://cars/van.tscn"
 const SHIPPING_TRUCK_SCENE_PATH := "res://cars/shipping_truck.tscn"
+const PoliceSirenScript := preload("res://cars/police_siren.gd")
 
 static var _passenger_car_scene: PackedScene
 static var _bus_scene: PackedScene
@@ -52,6 +53,17 @@ static var ShippingTruckScene: PackedScene:
 		return _shipping_truck_scene
 
 
+## Loads every car scene and passenger body, and synthesizes the siren wail. Run behind the loading
+## screen: the first mid-game spawn of a rare type otherwise stalls a physics tick for 4–13 ms.
+static func _load_car_scenes() -> void:
+	for scene: PackedScene in [
+		PassengerCarScene, BusScene, TaxiScene, TruckScene, VanScene, ShippingTruckScene
+	]:
+		assert(scene != null)
+	PassengerCar.load_body_scenes()
+	PoliceSirenScript.get_wail_stream()
+
+
 class Lane:
 	var id: int
 	var z: float
@@ -64,6 +76,12 @@ class Lane:
 	var spawn_interval_max: float
 	var spawn_timer: float = 0.0
 	var cars: Array[Car] = []
+	## This tick's PATH lot cars on or merging into this lane (see _bucket_lot_cars_by_lane).
+	var lot_path_cars: Array[Car] = []
+	# Scratch arrays reused by _update_lane_traffic; spare_cars and cars swap every tick.
+	var valid_cars: Array[Car] = []
+	var shouldered_cars: Array[Car] = []
+	var spare_cars: Array[Car] = []
 	## Lane distances of the bus stop poles along this lane, ascending.
 	var bus_stops: PackedFloat32Array = []
 
@@ -156,11 +174,42 @@ var lane3_merge_paths: Array[Curve3D] = []
 var _physics_tick_count: int = 0
 var _watchdog_ignores: Dictionary[int, Dictionary] = {}  # int (car_instance_id) -> Dictionary { "target_id": int, "timer": float }
 var _sweep_cache: Dictionary[int, Dictionary] = {}  # car instance id -> _car_sweep() result
+## car id -> { other id -> [mine sweep rev, theirs sweep rev, candidate_conflict_distance] }.
+## A sweep rev covers every input of the candidate, so a hit is exact; cleared every 60 ticks.
+var _pair_cache: Dictionary[int, Dictionary] = {}
 var _reach_cache: Dictionary[int, float] = {}  # car instance id -> max reach
+## Per-tick x-sorted index over the blocker candidates (see _index_blocker_candidates).
+var _indexed_candidates: Array[Car] = []
+var _cand_x := PackedFloat32Array()  # tick-start x of each candidate, ascending
+var _cand_order := PackedInt32Array()  # original candidate index for each _cand_x entry
+var _cand_max_reach := 0.0
 var _pending_transfers: Array[Dictionary] = []
+## True only inside the _physics_process lane loop, while Lane.lot_path_cars is current.
+var _lane_buckets_valid := false
 var traffic_stops: Array[TrafficStop] = []
 const MAX_ACTIVE_HEADLAMPS: int = 12
 var profile_find_blocker: bool = false
+## --profile-traffic section timers: summed/max usec per PROFILE_SECTIONS entry over the window.
+const PROFILE_WINDOW_TICKS := 600
+const PROFILE_SECTIONS: PackedStringArray = [
+	"stops",
+	"lane_traffic",
+	"lane_spawning",
+	"transfers",
+	"lot_cars",
+	"despawn",
+	"bookkeeping",
+	"total"
+]
+var _profile_sum := PackedInt64Array()
+var _profile_max := PackedInt64Array()
+var _profile_ticks := 0
+var _profile_fb_calls := 0
+var _profile_fb_usec := 0
+var _profile_conflicts := 0
+var _profile_pair_hits := 0
+var _profile_cands := 0
+var _profile_reach := 0
 var _was_lights_on: bool = false
 
 var stats: Dictionary = {
@@ -185,6 +234,7 @@ var stats: Dictionary = {
 	"candidates_checked": 0,
 	"reach_passed": 0,
 	"conflicts_evaluated": 0,
+	"pair_cache_hits": 0,
 }
 const P_ERRAND := 0.90
 const P_FRONTAGE_ERRAND := 0.3  # extra frontage-shop roll for lane-3 cars without an errand
@@ -237,6 +287,7 @@ const SWEEP_STEP := 0.5  # meters between sampled footprints along a car's route
 const SWEEP_SIDE_MARGIN := 0.15  # lateral clearance added to a car's projected footprints
 const SWEEP_TIE_EPS := 0.25  # route-conflict distances closer than this count as a tie
 const SWEEP_INTENT_EXTRA := 4.0  # meters past the lookahead used to settle who crosses first
+const CANDIDATE_X_SLACK := 2.0  # meters; > one tick of lot-car travel, pads the candidate x-window
 const REVERSE_CLEAR_TRAVEL := 1.0  # meters of another car's route a back-out route must avoid
 const PATROL_PROBABILITY := 0.75  # police spawned on the stroad patrol instead of running errands
 const MAX_TRAFFIC_STOPS := 2  # at most one per curb lane
@@ -499,6 +550,7 @@ static func is_car_allowed_in_dorf_lot(car: Car) -> bool:
 func _spawn_initial_traffic_staged() -> void:
 	const BATCH_SIZE: int = 4
 	var count := 0
+	_load_car_scenes()
 
 	for lane in lanes:
 		var d := randf_range(16.0, 28.0)
@@ -526,13 +578,122 @@ func _spawn_initial_traffic_staged() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if profile_find_blocker:
+		_physics_process_profiled(delta)
+		return
 	_update_traffic_stops(delta)
+	_bucket_lot_cars_by_lane()
 	for lane in lanes:
 		_update_lane_traffic(lane, delta)
 		_update_lane_spawning(lane, delta)
+	_lane_buckets_valid = false
 	_apply_pending_lane_transfers()
 	_update_lot_cars(delta)
 	_despawn_stalled_car(delta)
+	_end_physics_tick()
+
+
+## Same tick as _physics_process, with per-section timings. Only runs under --profile-traffic,
+## so production ticks never pay for the clock reads.
+func _physics_process_profiled(delta: float) -> void:
+	var t := PackedInt64Array()
+	t.resize(PROFILE_SECTIONS.size())
+	var t0 := Time.get_ticks_usec()
+	var mark := t0
+	_update_traffic_stops(delta)
+	t[0] = Time.get_ticks_usec() - mark
+	mark = Time.get_ticks_usec()
+	_bucket_lot_cars_by_lane()
+	t[1] = Time.get_ticks_usec() - mark
+	for lane in lanes:
+		mark = Time.get_ticks_usec()
+		_update_lane_traffic(lane, delta)
+		var mid := Time.get_ticks_usec()
+		_update_lane_spawning(lane, delta)
+		var done := Time.get_ticks_usec()
+		t[1] += mid - mark
+		t[2] += done - mid
+	_lane_buckets_valid = false
+	mark = Time.get_ticks_usec()
+	_apply_pending_lane_transfers()
+	var after_transfers := Time.get_ticks_usec()
+	_update_lot_cars(delta)
+	var after_lot := Time.get_ticks_usec()
+	_despawn_stalled_car(delta)
+	var after_despawn := Time.get_ticks_usec()
+	_end_physics_tick()
+	var end := Time.get_ticks_usec()
+	t[3] = after_transfers - mark
+	t[4] = after_lot - after_transfers
+	t[5] = after_despawn - after_lot
+	t[6] = end - after_despawn
+	t[7] = end - t0
+	_record_profile_tick(t)
+
+
+func _record_profile_tick(t: PackedInt64Array) -> void:
+	if _profile_sum.is_empty():
+		_profile_sum.resize(PROFILE_SECTIONS.size())
+		_profile_max.resize(PROFILE_SECTIONS.size())
+		_profile_fb_calls = stats["find_blocker_calls"]
+		_profile_fb_usec = stats["find_blocker_usec_total"]
+		_profile_conflicts = stats["conflicts_evaluated"]
+		_profile_pair_hits = stats["pair_cache_hits"]
+		_profile_cands = stats["candidates_checked"]
+		_profile_reach = stats["reach_passed"]
+	for i in t.size():
+		_profile_sum[i] += t[i]
+		_profile_max[i] = maxi(_profile_max[i], t[i])
+	_profile_ticks += 1
+	if _profile_ticks < PROFILE_WINDOW_TICKS:
+		return
+	var parts := PackedStringArray()
+	for i in PROFILE_SECTIONS.size():
+		(
+			parts
+			. append(
+				(
+					"%s=%.3f/%.3f"
+					% [
+						PROFILE_SECTIONS[i],
+						_profile_sum[i] / 1000.0 / _profile_ticks,
+						_profile_max[i] / 1000.0,
+					]
+				)
+			)
+		)
+	var fb_calls: int = stats["find_blocker_calls"] - _profile_fb_calls
+	var fb_usec: int = stats["find_blocker_usec_total"] - _profile_fb_usec
+	var conflicts: int = stats["conflicts_evaluated"] - _profile_conflicts
+	var pair_hits: int = stats["pair_cache_hits"] - _profile_pair_hits
+	var cands: int = stats["candidates_checked"] - _profile_cands
+	var reach_passed: int = stats["reach_passed"] - _profile_reach
+	var lane_cars := 0
+	for lane in lanes:
+		lane_cars += lane.cars.size()
+	print(
+		(
+			"TM_PROFILE: ticks=%d lane_cars=%d lot_cars=%d ms avg/max %s find_blocker=%.1f calls/tick %.3f ms/tick cand=%.1f reach=%.1f /call pair_cache=%d/%d hits"
+			% [
+				_profile_ticks,
+				lane_cars,
+				lot_cars.size(),
+				" ".join(parts),
+				float(fb_calls) / _profile_ticks,
+				fb_usec / 1000.0 / _profile_ticks,
+				float(cands) / maxi(fb_calls, 1),
+				float(reach_passed) / maxi(fb_calls, 1),
+				pair_hits,
+				conflicts,
+			]
+		)
+	)
+	_profile_sum.clear()
+	_profile_max.clear()
+	_profile_ticks = 0
+
+
+func _end_physics_tick() -> void:
 	_physics_tick_count += 1
 	if _physics_tick_count % 6 == 0:
 		_update_headlamp_lod()
@@ -604,6 +765,7 @@ func _try_sidewalk_shortcut(car: Car) -> void:
 func _update_lot_cars(delta: float) -> void:
 	_reach_cache.clear()
 	if _physics_tick_count % 60 == 0:
+		_pair_cache.clear()
 		var dead_cids: Array[int] = []
 		for cid in _sweep_cache:
 			if instance_from_id(cid) == null:
@@ -611,6 +773,7 @@ func _update_lot_cars(delta: float) -> void:
 		for cid in dead_cids:
 			_sweep_cache.erase(cid)
 	var candidates := _build_blocker_candidates()
+	_index_blocker_candidates(candidates)
 	var expired_ignores: Array[int] = []
 	for cid in _watchdog_ignores.keys():
 		_watchdog_ignores[cid]["timer"] -= delta
@@ -1075,6 +1238,26 @@ func _build_blocker_candidates() -> Array[Car]:
 	return candidates
 
 
+## Sorts this tick's candidates by tick-start x so _find_blocker_impl scans only an
+## x-window. Reaches are cached here, so the window bound matches the reach test.
+func _index_blocker_candidates(candidates: Array[Car]) -> void:
+	_indexed_candidates = candidates
+	_cand_max_reach = 0.0
+	var n := candidates.size()
+	var keys: Array[Vector2] = []
+	keys.resize(n)
+	for i in n:
+		var c := candidates[i]
+		keys[i] = Vector2(c.global_position.x, i)
+		_cand_max_reach = maxf(_cand_max_reach, _get_car_reach(c))
+	keys.sort()
+	_cand_x.resize(n)
+	_cand_order.resize(n)
+	for k in n:
+		_cand_x[k] = keys[k].x
+		_cand_order[k] = int(keys[k].y)
+
+
 func _get_car_reach(c: Car) -> float:
 	var cid := c.get_instance_id()
 	if _reach_cache.has(cid):
@@ -1100,7 +1283,19 @@ func _find_blocker_impl(car: Car, candidates: Array[Car] = []) -> Car:
 	var mine: Dictionary = {}
 	var closest_blocker: Car = null
 	var min_dist: float = INF
-	for other in candidate_list:
+	var lo := 0
+	var hi := candidate_list.size()
+	var indexed := is_same(candidate_list, _indexed_candidates)
+	if indexed:
+		# Superset of the pairwise reach test; the slack covers cars that moved
+		# earlier in this tick's loop since the index was built.
+		var w := my_reach + _cand_max_reach + CANDIDATE_X_SLACK
+		lo = _cand_x.bsearch(my_pos.x - w)
+		hi = _cand_x.bsearch(my_pos.x + w, false)
+	var best_i := -1
+	for k in range(lo, hi):
+		var i: int = _cand_order[k] if indexed else k
+		var other := candidate_list[i]
 		if other == car or not is_instance_valid(other):
 			continue
 		if other.state == Car.State.PARKED:
@@ -1124,8 +1319,10 @@ func _find_blocker_impl(car: Car, candidates: Array[Car] = []) -> Car:
 		if profile_find_blocker:
 			stats["conflicts_evaluated"] += 1
 		var dist := _conflict_distance(car, mine, other, theirs)
-		if dist < min_dist:
+		# Ties go to the earliest candidate in list order (stable blocker choice).
+		if dist < min_dist or (dist == min_dist and i < best_i):
 			min_dist = dist
+			best_i = i
 			closest_blocker = other
 	return closest_blocker
 
@@ -1221,14 +1418,41 @@ func _has_lot_priority(car: Car, other: Car, first_mine: float, first_theirs: fl
 ## one car of a pair proceeds, and the one that waits does so before its body is
 ## in the other's way.
 func _conflict_distance(car: Car, mine: Dictionary, other: Car, theirs: Dictionary) -> float:
-	var c := CarSweep.candidate_conflict_distance(
-		mine, theirs, car.state == Car.State.REVERSING_OUT, other.state == Car.State.REVERSING_OUT
-	)
+	var c := _candidate_conflict(car, mine, other, theirs)
 	if c.x == INF:
 		return INF
 	if c.y < 0.0:
 		return c.x
 	return INF if _has_lot_priority(car, other, c.x, c.y) else c.x
+
+
+## CarSweep.candidate_conflict_distance, reused while neither car's sweep changed
+## (stopped cars in a jam hit this every tick). Not shared with the reverse query:
+## the candidate is asymmetric (hard check, lookahead, and index ranges are per-side).
+func _candidate_conflict(car: Car, mine: Dictionary, other: Car, theirs: Dictionary) -> Vector2:
+	var mine_rev: int = mine["rev"]
+	var theirs_rev: int = theirs["rev"]
+	var cid := car.get_instance_id()
+	var row: Variant = _pair_cache.get(cid)
+	if row == null:
+		row = {}
+		_pair_cache[cid] = row
+	var oid := other.get_instance_id()
+	var entry: Variant = row.get(oid)
+	if entry != null and entry[0] == mine_rev and entry[1] == theirs_rev:
+		if profile_find_blocker:
+			stats["pair_cache_hits"] += 1
+		return entry[2]
+	var c := CarSweep.candidate_conflict_distance(
+		mine, theirs, car.state == Car.State.REVERSING_OUT, other.state == Car.State.REVERSING_OUT
+	)
+	if entry == null:
+		row[oid] = [mine_rev, theirs_rev, c]
+	else:
+		entry[0] = mine_rev
+		entry[1] = theirs_rev
+		entry[2] = c
+	return c
 
 
 func _update_car_yielding(car: Car, delta: float, candidates: Array[Car] = []) -> bool:
@@ -1814,6 +2038,8 @@ func _spawn_car_at(lane: Lane, initial_distance: float, scene: PackedScene = nul
 		else:
 			car = BusScene.instantiate()
 			chosen_type = Car.CarType.BUS
+	# Pick the body before _ready builds one, or passenger cars build a sedan and then swap it.
+	car.car_type = chosen_type
 	add_child(car)
 	car.setup(
 		lane.id, lane.z, lane.direction, lane.start_x, lane.length, lane.min_speed, chosen_type
@@ -1941,9 +2167,40 @@ func _is_turning_in_apron(car: Car, lane: Lane) -> bool:
 	return false
 
 
+## Buckets this tick's PATH lot cars by lane once, instead of every lane scanning all lot cars.
+## Valid for the whole lane loop: lane updates never move a lot car to another lane (a car that
+## turns in mid-loop joins lot_cars for its own lane, which is already done).
+func _bucket_lot_cars_by_lane() -> void:
+	for lane in lanes:
+		lane.lot_path_cars.clear()
+	var lane_count := lanes.size()
+	for car in lot_cars:
+		if not is_instance_valid(car) or car.motion != Car.Motion.PATH:
+			continue
+		if car.lane_id >= 0 and car.lane_id < lane_count:
+			lanes[car.lane_id].lot_path_cars.append(car)
+		var target := car.merge_target_lane
+		if target != car.lane_id and target >= 0 and target < lane_count:
+			lanes[target].lot_path_cars.append(car)
+	_lane_buckets_valid = true
+
+
+## Stable insertion sort, farthest ahead first. Lane order barely changes between ticks, so this
+## is near-linear; ties keep their previous order.
+static func _sort_by_lane_distance_desc(cars: Array[Car]) -> void:
+	for i in range(1, cars.size()):
+		var car := cars[i]
+		var d := car.lane_distance
+		var j := i - 1
+		while j >= 0 and d > cars[j].lane_distance:
+			cars[j + 1] = cars[j]
+			j -= 1
+		cars[j + 1] = car
+
+
 func _update_lane_traffic(lane: Lane, delta: float) -> void:
 	# Register any overlapping PATH cars from lot_cars
-	for car in lot_cars:
+	for car in lane.lot_path_cars if _lane_buckets_valid else lot_cars:
 		if (
 			is_instance_valid(car)
 			and car.motion == Car.Motion.PATH
@@ -1954,7 +2211,8 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 				if in_apron and not lane.cars.has(car):
 					lane.cars.append(car)
 	# Clean up despawned / invalid cars and PATH cars that no longer overlap
-	var valid_cars: Array[Car] = []
+	var valid_cars := lane.valid_cars
+	valid_cars.clear()
 	for car in lane.cars:
 		if not is_instance_valid(car) or car.state == Car.State.PARKED:
 			continue
@@ -1975,13 +2233,15 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 		valid_cars.append(car)
 
 	# Sort cars by distance descending (farthest ahead first)
-	valid_cars.sort_custom(func(a: Car, b: Car) -> bool: return a.lane_distance > b.lane_distance)
-	var shouldered_cars: Array[Car] = []
+	_sort_by_lane_distance_desc(valid_cars)
+	var shouldered_cars := lane.shouldered_cars
+	shouldered_cars.clear()
 	for car in valid_cars:
 		if car.is_beside_lane():
 			shouldered_cars.append(car)
 
-	var surviving_cars: Array[Car] = []
+	var surviving_cars := lane.spare_cars
+	surviving_cars.clear()
 	for i in range(valid_cars.size()):
 		var car = valid_cars[i]
 		if car.motion == Car.Motion.PATH:
@@ -2201,6 +2461,7 @@ func _update_lane_traffic(lane: Lane, delta: float) -> void:
 				var t := clampf(remaining / 8.0, 0.0, 1.0)
 				car.scale = Vector3(t, t, t)
 			surviving_cars.append(car)
+	lane.spare_cars = lane.cars
 	lane.cars = surviving_cars
 
 

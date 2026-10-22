@@ -71,6 +71,14 @@ static var _variant_parts_cache: Dictionary = {}
 		if is_inside_tree():
 			build_forest()
 
+## Edge length of the square tiles the forest MultiMeshes are split into, so
+## frustum culling and visibility_range work per tile instead of per map side.
+@export var forest_tile_size: float = 40.0:
+	set(value):
+		forest_tile_size = value
+		if is_inside_tree():
+			build_forest()
+
 ## Exclusion bounding boxes [x_min, x_max, z_min, z_max] for all structures,
 ## roads, parking lots, driveways, signs, and tunnel corridors.
 const EXCLUSION_ZONES = [
@@ -131,15 +139,8 @@ func build_forest() -> void:
 
 	var nx := int(ceil((bounds_max.x - bounds_min.x) / grid_spacing))
 	var nz := int(ceil((bounds_max.y - bounds_min.y) / grid_spacing))
-	var groups: Dictionary = {
-		"West_Near": {},
-		"West_Far": {},
-		"East_Near": {},
-		"East_Far": {},
-	}
-	for g: String in groups:
-		for t in StreetTree.TreeType.values():
-			groups[g][t] = [] as Array[Transform3D]
+	# Bucket key: Vector3i(tile_x, tile_z, near). Each bucket maps TreeType to transforms.
+	var groups: Dictionary = {}
 
 	for ix in range(nx):
 		for iz in range(nz):
@@ -218,14 +219,19 @@ func build_forest() -> void:
 				Basis(Vector3.UP, rot_y).scaled(scale_vec), Vector3(x, 0.0, z)
 			)
 
-			var s_x := "West" if x < 45.0 else "East"
 			var dx_box := maxf(0.0, maxf(-100.0 - x, x - 168.0))
 			var dz_box := maxf(0.0, maxf(-60.0 - z, z - 64.0))
 			var dist := sqrt(dx_box * dx_box + dz_box * dz_box)
-			var s_dist := "Near" if dist <= shadow_tree_distance else "Far"
-			var gname := "%s_%s" % [s_x, s_dist]
-
-			groups[gname][tree_type].append(tree_xform)
+			var near := 1 if dist <= shadow_tree_distance else 0
+			var tile_key := Vector3i(
+				int(floor(x / forest_tile_size)), int(floor(z / forest_tile_size)), near
+			)
+			if not groups.has(tile_key):
+				groups[tile_key] = {}
+			var bucket: Dictionary = groups[tile_key]
+			if not bucket.has(tree_type):
+				bucket[tree_type] = [] as Array[Transform3D]
+			bucket[tree_type].append(tree_xform)
 
 	_build_multimeshes(groups)
 
@@ -236,24 +242,32 @@ func _build_multimeshes(groups: Dictionary) -> void:
 	mm_container.name = "TreeMultiMeshes"
 	add_child(mm_container)
 
-	for gname: String in groups:
-		var is_near: bool = gname.ends_with("_Near")
-		var variant_transforms: Dictionary = groups[gname]
+	for key: Vector3i in groups:
+		var is_near := key.z == 1
+		var variant_transforms: Dictionary = groups[key]
 		for tree_type in variant_transforms:
 			var xforms: Array = variant_transforms[tree_type]
-			if xforms.is_empty():
-				continue
 			var count: int = xforms.size()
 			var v_parts: Array = parts[tree_type]
 			for part_idx in range(v_parts.size()):
 				var part: Dictionary = v_parts[part_idx]
 				var mmi := MultiMeshInstance3D.new()
 				mmi.name = (
-					"TreeMultiMesh_%s_%s_%d"
-					% [gname, StreetTree.TreeType.keys()[tree_type], part_idx]
+					"TreeMultiMesh_%d_%d_%s_%s_%d"
+					% [
+						key.x,
+						key.y,
+						"Near" if is_near else "Far",
+						StreetTree.TreeType.keys()[tree_type],
+						part_idx
+					]
 				)
 				if forest_visibility_range_end > 0.0:
-					mmi.visibility_range_end = forest_visibility_range_end
+					# Godot measures the range to the tile's AABB center. Pad by the tile
+					# half-diagonal so tiling never hides a tree a per-tree range would keep.
+					mmi.visibility_range_end = (
+						forest_visibility_range_end + forest_tile_size * sqrt(0.5)
+					)
 					mmi.visibility_range_end_margin = forest_visibility_range_end_margin
 					mmi.visibility_range_fade_mode = (GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF)
 				mmi.cast_shadow = (
@@ -478,7 +492,25 @@ static func _get_variant_mesh_parts() -> Dictionary:
 
 	t1.free()
 	t2.free()
+	# Primitive meshes carry no LODs (the .blend trees import with them). Rebuild the
+	# cylinders and spheres as ArrayMeshes so distant tiles draw simplified geometry.
+	# The web template strips ImporterMesh, so web keeps the plain primitives.
+	if ClassDB.class_exists(&"ImporterMesh"):
+		for v_parts: Array in _variant_parts_cache.values():
+			for part: Dictionary in v_parts:
+				if part.mesh is PrimitiveMesh:
+					part.mesh = _with_lods(part.mesh)
 	return _variant_parts_cache
+
+
+static func _with_lods(mesh: PrimitiveMesh) -> ArrayMesh:
+	# Untyped and created by name: a typed ImporterMesh reference would not compile
+	# on the web template, where the class is disabled.
+	var importer = ClassDB.instantiate(&"ImporterMesh")
+	importer.add_surface(Mesh.PRIMITIVE_TRIANGLES, mesh.get_mesh_arrays(), [], {}, mesh.material)
+	# Same angles as the scene importer's defaults.
+	importer.generate_lods(60.0, 25.0, [])
+	return importer.get_mesh()
 
 
 func _build_fence() -> void:

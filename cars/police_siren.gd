@@ -32,7 +32,7 @@ func _ready() -> void:
 	_collect_lenses(get_node_or_null("SirenBlue"), _blue_materials)
 	_audio = AudioStreamPlayer3D.new()
 	_audio.name = "SirenAudio"
-	_audio.stream = _get_wail_stream()
+	_audio.stream = get_wail_stream()
 	_audio.volume_db = -15.0
 	_audio.max_db = -9.0
 	_audio.unit_size = 8.0
@@ -94,7 +94,7 @@ func _collect_lenses(node: Node, materials: Array[StandardMaterial3D]) -> void:
 		_collect_lenses(child, materials)
 
 
-static func _get_wail_stream() -> AudioStreamWAV:
+static func get_wail_stream() -> AudioStreamWAV:
 	if _wail_stream != null:
 		return _wail_stream
 	var sample_count := SAMPLE_RATE * WAIL_SECONDS
