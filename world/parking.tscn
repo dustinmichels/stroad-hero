@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Shader" uid="uid://8j2ppnyxf3xo" path="res://shaders/pavement.gdshader" id="1_pavement_shader"]
+[ext_resource type="Script" path="res://props/shortcut_ruts.gd" id="2_shortcut_ruts"]
 
 [sub_resource type="ShaderMaterial" id="Mat_Asphalt"]
 render_priority = 0
@@ -59,22 +60,6 @@ size = Vector3(44, 0.1, 21.3)
 
 [sub_resource type="BoxShape3D" id="Shape_DorfParkingApron"]
 size = Vector3(44, 0.1, 21.3)
-
-[sub_resource type="StandardMaterial3D" id="Mat_WornGrass"]
-albedo_color = Color(0.38, 0.42, 0.22, 1)
-roughness = 0.95
-
-[sub_resource type="StandardMaterial3D" id="Mat_TireRut"]
-albedo_color = Color(0.28, 0.24, 0.17, 1)
-roughness = 0.9
-
-[sub_resource type="BoxMesh" id="Mesh_ShortcutDesirePath"]
-material = SubResource("Mat_WornGrass")
-size = Vector3(5.2, 0.02, 2.6)
-
-[sub_resource type="BoxMesh" id="Mesh_ShortcutTireRut"]
-material = SubResource("Mat_TireRut")
-size = Vector3(5.2, 0.025, 0.35)
 
 
 [node name="Parking" type="Node3D"]
@@ -334,48 +319,5 @@ cast_shadow = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 112, 0.06, -29.5)
 mesh = SubResource("Mesh_ParkingStripe")
 
-
-[node name="ShortcutDesirePath" type="MeshInstance3D" parent="."]
-cast_shadow = 0
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.5, 0.052, 24.8)
-mesh = SubResource("Mesh_ShortcutDesirePath")
-
-[node name="ShortcutRutNorth" type="MeshInstance3D" parent="."]
-cast_shadow = 0
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.5, 0.055, 24.025)
-mesh = SubResource("Mesh_ShortcutTireRut")
-
-[node name="ShortcutRutSouth" type="MeshInstance3D" parent="."]
-cast_shadow = 0
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.5, 0.055, 25.575)
-mesh = SubResource("Mesh_ShortcutTireRut")
-
-[node name="ShortcutDesirePathSmellWalgroins" type="MeshInstance3D" parent="."]
-cast_shadow = 0
-transform = Transform3D(2.3846, 0, 0, 0, 1, 0, 0, 0, 1, -35, 0.052, -30)
-mesh = SubResource("Mesh_ShortcutDesirePath")
-
-[node name="ShortcutRutNorthSmellWalgroins" type="MeshInstance3D" parent="."]
-cast_shadow = 0
-transform = Transform3D(2.3846, 0, 0, 0, 1, 0, 0, 0, 1, -35, 0.055, -30.775)
-mesh = SubResource("Mesh_ShortcutTireRut")
-
-[node name="ShortcutRutSouthSmellWalgroins" type="MeshInstance3D" parent="."]
-cast_shadow = 0
-transform = Transform3D(2.3846, 0, 0, 0, 1, 0, 0, 0, 1, -35, 0.055, -29.225)
-mesh = SubResource("Mesh_ShortcutTireRut")
-
-[node name="ShortcutDesirePathInnLeaders" type="MeshInstance3D" parent="."]
-cast_shadow = 0
-transform = Transform3D(2.3846, 0, 0, 0, 1, 0, 0, 0, 1, 68.2, 0.052, 33.5)
-mesh = SubResource("Mesh_ShortcutDesirePath")
-
-[node name="ShortcutRutNorthInnLeaders" type="MeshInstance3D" parent="."]
-cast_shadow = 0
-transform = Transform3D(2.3846, 0, 0, 0, 1, 0, 0, 0, 1, 68.2, 0.055, 32.725)
-mesh = SubResource("Mesh_ShortcutTireRut")
-
-[node name="ShortcutRutSouthInnLeaders" type="MeshInstance3D" parent="."]
-cast_shadow = 0
-transform = Transform3D(2.3846, 0, 0, 0, 1, 0, 0, 0, 1, 68.2, 0.055, 34.275)
-mesh = SubResource("Mesh_ShortcutTireRut")
+[node name="ShortcutRuts" type="Node3D" parent="."]
+script = ExtResource("2_shortcut_ruts")

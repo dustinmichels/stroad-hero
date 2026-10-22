@@ -71,6 +71,7 @@ func matches_args() -> bool:
 				"--test-cramped-inn-dropoff",
 				"--test-frontage",
 				"--test-grass-shortcut",
+				"--test-sidewalk-shortcut",
 				"--test-traffic-stop",
 				"--test-bus-stop",
 			]
@@ -216,6 +217,8 @@ func setup_ready() -> void:
 		_run_test_cramped_inn_dropoff()
 	if "--test-grass-shortcut" in user_args:
 		_run_test_grass_shortcut()
+	if "--test-sidewalk-shortcut" in user_args:
+		_run_test_sidewalk_shortcut()
 	if "--test-traffic-stop" in user_args:
 		_run_test_traffic_stop()
 	if "--test-bus-stop" in user_args:
@@ -1372,46 +1375,14 @@ func _run_test_grass_shortcut() -> void:
 					if car.desired_speed <= TrafficManager.V_GRASS + 0.1:
 						saw_grass_speed_drop = true
 					# Verify car clears all scenery colliders (buildings, trees, props) during grass traversal
-					var space_state := car.get_world_3d().direct_space_state
-					var query := PhysicsShapeQueryParameters3D.new()
-					var col_shape := car.get_node_or_null("CollisionShape3D") as CollisionShape3D
-					if col_shape != null and col_shape.shape != null:
-						query.shape = col_shape.shape
-						query.transform = car.global_transform * col_shape.transform
-						query.collision_mask = 1
-						var hits := space_state.intersect_shape(query, 8)
-						for hit in hits:
-							var collider = hit.get("collider")
-							if collider != null and is_instance_valid(collider):
-								var col_name: String = str(collider.name)
-								var parent_name: String = (
-									str(collider.get_parent().name)
-									if collider.get_parent() != null
-									else ""
-								)
-								var p_lower := parent_name.to_lower()
-								var is_ground := (
-									col_name == "Forecourt"
-									or (
-										col_name == "StaticBody3D"
-										and (
-											p_lower.contains("ground")
-											or p_lower.contains("parking")
-											or p_lower.contains("asphalt")
-											or p_lower.contains("driveway")
-											or p_lower.contains("road")
-											or p_lower.contains("sidewalk")
-											or p_lower.contains("apron")
-										)
-									)
-								)
-								assert(
-									is_ground,
-									(
-										"Car in grass shortcut must clear scenery (intersected %s in %s at pos %s)"
-										% [col_name, parent_name, str(car.global_position)]
-									)
-								)
+					var hit := _scenery_hit(car)
+					assert(
+						hit == "",
+						(
+							"Car in grass shortcut must clear scenery (intersected %s at pos %s)"
+							% [hit, str(car.global_position)]
+						)
+					)
 			# Stage C: Arrival at destination spot -> occupied, parked, dwell starts
 			if car.state == Car.State.PARKED and saw_shortcut_active and not saw_dest_arrival:
 				saw_dest_arrival = true
@@ -1564,6 +1535,158 @@ func _run_test_grass_shortcut() -> void:
 		"GRASS_SHORTCUT_TEST: SUCCESS - Verified every shortcut link: source release, destination reservation/occupancy, grass route traversal, and eventual normal exit!"
 	)
 	main.get_tree().quit(0)
+
+
+## Name of a non-ground scenery collider (building, tree, pole, prop) overlapping `car`, or "".
+func _scenery_hit(car: Car) -> String:
+	var col_shape := car.get_node_or_null("CollisionShape3D") as CollisionShape3D
+	if col_shape == null or col_shape.shape == null:
+		return ""
+	var query := PhysicsShapeQueryParameters3D.new()
+	query.shape = col_shape.shape
+	query.transform = car.global_transform * col_shape.transform
+	query.collision_mask = 1
+	for hit in car.get_world_3d().direct_space_state.intersect_shape(query, 8):
+		var collider = hit.get("collider")
+		if collider == null or not is_instance_valid(collider) or collider is CharacterBody3D:
+			continue
+		var col_name: String = str(collider.name)
+		var parent_name: String = (
+			str(collider.get_parent().name) if collider.get_parent() != null else ""
+		)
+		var p_lower := parent_name.to_lower()
+		var is_ground := (
+			col_name == "Forecourt"
+			or (
+				col_name == "StaticBody3D"
+				and (
+					p_lower.contains("ground")
+					or p_lower.contains("parking")
+					or p_lower.contains("asphalt")
+					or p_lower.contains("driveway")
+					or p_lower.contains("road")
+					or p_lower.contains("sidewalk")
+					or p_lower.contains("apron")
+					or p_lower.contains("grassgap")
+					or p_lower.contains("shoulder")
+				)
+			)
+		)
+		if not is_ground:
+			return "%s in %s" % [col_name, parent_name]
+	return ""
+
+
+## For every stall with a sidewalk crossing: a parked car rolling the sidewalk shortcut backs
+## out, drives over the sidewalk clear of scenery and of other stalls, waits at the curb of the
+## crossing, and merges into its site's curb lane. Every authored crossing must be reachable.
+func _run_test_sidewalk_shortcut() -> void:
+	seed(42)
+	var tm = main.get_node_or_null("TrafficManager") as TrafficManager
+	assert(tm != null and tm.lot != null, "TrafficManager with a lot must exist")
+
+	var used_crossings := {}
+	for spot: ParkingSpot in tm.lot.spots.duplicate():
+		var crossing_x := ParkingLot.sidewalk_crossing_x(spot)
+		if is_nan(crossing_x):
+			continue
+		var site_id := ParkingLot.lot_group(spot)
+		used_crossings["%s@%.1f" % [site_id, crossing_x]] = true
+		var lane_id: int = ParkingLot.get_site_cfg(site_id).get("lane_id", 0)
+		var label := "%s stall x=%.1f @ x=%.1f" % [site_id, spot.x, crossing_x]
+		for c in tm.lot_cars:
+			if is_instance_valid(c):
+				c.queue_free()
+		tm.lot_cars.clear()
+		for lane in tm.lanes:
+			for c in lane.cars:
+				if is_instance_valid(c):
+					c.queue_free()
+			lane.cars.clear()
+			lane.spawn_timer = 9999.0
+		for s in tm.lot.spots:
+			tm.lot.release(s)
+		await main.get_tree().physics_frame
+
+		var car: Car = tm.PassengerCarScene.instantiate()
+		tm.add_child(car)
+		car.setup(0, 0.0, 1.0, 0.0, 100.0, 10.0, Car.CarType.SEDAN)
+		car.state = Car.State.PARKED
+		car.merge_target_lane = lane_id
+		tm.lot.reserve(spot, car)
+		tm.lot.occupy(spot)
+		car.global_transform = spot.transform
+		car.reset_physics_interpolation()
+		tm.lot_cars.append(car)
+		car.force_sidewalk_shortcut = true
+		car.dwell_left = 0.1
+
+		var wait_z := -ParkingLot.CURB_WAIT_Z if lane_id == 0 else ParkingLot.CURB_WAIT_Z
+		var saw_waiting := false
+		var saw_cruising := false
+		for tick in 3000:
+			tm._update_lot_cars(0.05)
+			for lane in tm.lanes:
+				tm._update_lane_traffic(lane, 0.05)
+			if car.state == Car.State.TO_EXIT or car.state == Car.State.MERGING:
+				var hit := _scenery_hit(car)
+				if hit == "" and car.state == Car.State.TO_EXIT:
+					hit = _stall_hit(car, spot, tm.lot.spots)
+				assert(
+					hit == "",
+					"Crossing %s must stay clear (hit %s at %s)" % [label, hit, car.global_position]
+				)
+			if car.state == Car.State.WAITING_TO_MERGE and not saw_waiting:
+				saw_waiting = true
+				assert(
+					(
+						absf(car.global_position.x - crossing_x) < 0.1
+						and absf(car.global_position.z - wait_z) < 0.1
+					),
+					(
+						"Car must wait at the curb of crossing %s, was %s"
+						% [label, car.global_position]
+					)
+				)
+			if car.state == Car.State.CRUISING:
+				saw_cruising = true
+				assert(car.lane_id == lane_id, "Car must join lane %d at %s" % [lane_id, label])
+				assert(is_nan(car.sidewalk_crossing_x), "Crossing must clear once merged")
+				break
+		assert(saw_waiting, "Car must wait at the curb of crossing %s" % label)
+		assert(saw_cruising, "Car must merge into traffic from crossing %s" % label)
+		assert(tm.lot.check_invariants() == 0, "No spot leaks after crossing %s" % label)
+		print("SIDEWALK_SHORTCUT_TEST: %s verified" % label)
+
+	for site_id in ParkingLot.SIDEWALK_CROSSINGS:
+		for crossing_x: float in ParkingLot.SIDEWALK_CROSSINGS[site_id]["x"]:
+			assert(
+				used_crossings.has("%s@%.1f" % [site_id, crossing_x]),
+				"Some stall must lead to crossing %s @ x=%.1f" % [site_id, crossing_x]
+			)
+	print("SIDEWALK_SHORTCUT_TEST: SUCCESS")
+	main.get_tree().quit(0)
+
+
+## Another stall whose parked-car footprint `car` overlaps, as "x,z", or "".
+func _stall_hit(car: Car, own: ParkingSpot, spots: Array[ParkingSpot]) -> String:
+	var half_w := car.car_width * 0.5
+	var half_l := car.car_length * 0.5
+	var corners := [
+		Vector3(half_w, 0, half_l),
+		Vector3(-half_w, 0, half_l),
+		Vector3(half_w, 0, -half_l),
+		Vector3(-half_w, 0, -half_l),
+	]
+	for s in spots:
+		if s == own:
+			continue
+		var to_stall := s.transform.affine_inverse()
+		for corner: Vector3 in corners:
+			var local := to_stall * (car.global_transform * corner)
+			if absf(local.x) < half_w and absf(local.z) < half_l:
+				return "stall %.1f,%.1f" % [s.x, s.transform.origin.z]
+	return ""
 
 
 ## Patrol police light up behind a car, both pull onto the shoulder clear of street furniture,

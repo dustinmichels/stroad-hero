@@ -102,6 +102,8 @@ func setup_ready() -> void:
 			as ShoppingCart
 		)
 		assert(_cart_test_cart != null, "ShoppingCart not found in scene")
+		# The cart sits on the Walgroins apron; keep lot and road traffic from hitting it.
+		_clear_traffic()
 		_cart_test_cart.global_position = Vector3(9.0, 0.0, -15.0)
 		_cart_test_cart.global_basis = Basis()
 		_cart_test_cart._current_speed = 0.0
@@ -120,18 +122,29 @@ func setup_ready() -> void:
 		var hud_node: HUD = main.get_tree().get_first_node_in_group("hud") as HUD
 		if hud_node:
 			_col_test_initial_spd = hud_node.spd_count
-		var tm = main.get_node_or_null("TrafficManager") as TrafficManager
-		if tm:
-			for lane in tm.lanes:
-				lane.spawn_timer = 999.0
-				for c in lane.cars:
-					if is_instance_valid(c):
-						c.queue_free()
-				lane.cars.clear()
+		_clear_traffic()
 		_col_test_stage = 0
 		_test_frames = 0
 		main.mats.global_position = Vector3(16.0, 0.10, 12.6)
 		main.mats.velocity = Vector3(0.0, 0.0, 4.0)
+
+
+func _clear_traffic() -> void:
+	var tm := main.get_node_or_null("TrafficManager") as TrafficManager
+	if tm == null:
+		return
+	for lane in tm.lanes:
+		lane.spawn_timer = 999.0
+		for c in lane.cars:
+			if is_instance_valid(c):
+				c.queue_free()
+		lane.cars.clear()
+	for c in tm.lot_cars:
+		if is_instance_valid(c):
+			if c.spot != null:
+				tm.lot.release(c.spot)
+			c.queue_free()
+	tm.lot_cars.clear()
 
 
 func on_physics_process(_delta: float) -> void:

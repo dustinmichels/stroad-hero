@@ -840,11 +840,12 @@ func _run_test_car_headlights() -> void:
 
 	# 2. Night: moving cars turn headlights on (staggered switch-over)
 	GameState.set_time_of_day(GameState.TimeOfDay.NIGHT)
-	var deadline := Time.get_ticks_msec() + 1500
-	while Time.get_ticks_msec() < deadline:
+	var waited := 0.0
+	while waited < 1.5:
 		if pcar.headlamp.visible and truck.headlamp.visible:
 			break
 		await main.get_tree().process_frame
+		waited += main.get_process_delta_time()
 	assert(pcar.headlamp.visible == true, "Passenger car headlamp should be on at night")
 	assert(truck.headlamp.visible == true, "Truck headlamp should be on at night")
 	for m in pcar._headlight_meshes:

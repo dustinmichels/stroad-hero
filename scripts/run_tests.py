@@ -59,6 +59,7 @@ EXTENDED_TESTS = [
     "--test-retro-filter",
     "--test-lane-wander",
     "--test-grass-shortcut",
+    "--test-sidewalk-shortcut",
     "--test-traffic-stop",
     "--test-bus-stop",
 ]

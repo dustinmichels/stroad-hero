@@ -22,6 +22,7 @@ func _configure_test_fixtures() -> void:
 	if tm:
 		if not is_startup_test:
 			tm.staged_initial_spawn = false
+			tm.parking_fill_floor = 0.0
 		for arg in args:
 			if arg.begins_with("--seed="):
 				tm.set_random_seed(int(arg.substr(7)))

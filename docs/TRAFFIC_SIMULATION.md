@@ -224,9 +224,10 @@ Eligible vehicles may bypass road traffic by taking authored shortcuts across gr
   - Strip Mall `strip_mall` $\leftrightarrow$ Cramped Inn `cramped_inn` at $z = 24.8\text{ m}$, $x \in [13, 18]\text{ m}$.
   - Smell `smell` $\leftrightarrow$ Walgroins (`north` site) at $z = -30\text{ m}$, $x \in [-41, -29]\text{ m}$, north of the trees between the lots. Walgroins drivers only cut over to the gas pumps (`destination_serves`); Taco Hell stalls in the same site have no link.
   - Cramped Inn $\leftrightarrow$ Leaders (`frontage_retail` stalls of the `frontage` site), past the inn's east stalls and across the lawn under the frontage road bend at $z = 33.5\text{ m}$, $x \in [62, 74]\text{ m}$.
-- **Link Data:** Each link lists `waypoints` from source aisle to destination aisle (lot-side waypoints already behind the car or past the destination stall are skipped), the `grass` rectangle driven at grass speed, optional `source_serves`/`destination_serves` business filters, and optional `departure_aisle_z`/`arrival_aisle_z` overrides to follow aisle traffic.
-- **Corridor Clearance:** Every source/destination stall pair must clear buildings, canopy columns, signs, trees, props, and other stalls; corridors are marked with worn-grass desire paths and tire ruts in `world/parking.tscn`.
-- **Eligibility & Evaluation:** Upon completing parking dwell (`dwell_left <= 0.0`), an eligible car at a linked stall rolls once (`SHORTCUT_DEPARTURE_PROBABILITY`, 25%). Ineligible vehicles (buses, trucks, drive-thru patrons, or cars that already took a shortcut) and failed rolls proceed to normal road exits.
+  - Leaders $\leftrightarrow$ Consumer Car Care across the seam where the lots adjoin ($x \approx 101\text{ m}$), and Consumer Car Care $\leftrightarrow$ Checkers across the seam at the east end of the car care pad ($x \approx 137\text{ m}$). Both are paved (`"ruts": false`) and filtered by business within the single `frontage` site.
+- **Link Data:** Each link lists `waypoints` from source aisle to destination aisle (lot-side waypoints already behind the car or past the destination stall are skipped), the `grass` rectangle driven at grass speed, optional `source_serves`/`destination_serves` business filters, optional `departure_aisle_z`/`arrival_aisle_z` overrides to follow aisle traffic, and optional `"ruts": false` for paved seams.
+- **Corridor Clearance:** Every source/destination stall pair must clear buildings, canopy columns, signs, trees, props, and other stalls. `ShortcutRuts` (`props/shortcut_ruts.gd`, under `world/parking.tscn`) generates dirt tire ruts along each grass corridor (between `grass_entry` and `grass_exit`) and across the verge and lawn at every sidewalk crossing.
+- **Eligibility & Evaluation:** When a parked car is cleared to leave (see [Lot Occupancy and Departures](#lot-occupancy-and-departures)), an eligible car at a linked stall rolls once (`SHORTCUT_DEPARTURE_PROBABILITY`, 25%). Ineligible vehicles (buses, trucks, drive-thru patrons, or cars that already took a shortcut) and failed rolls proceed to normal road exits.
 - **Reservation Lifecycle:**
   1. _Pre-reservation:_ The candidate destination stall is reserved (`ParkingSpot.State.RESERVED`) in `car.pending_destination_spot`.
   2. _Reverse-out:_ The vehicle reverses out of its stall (`State.REVERSING_OUT`) along `ParkingLot.shortcut_reverse_route()`, backing away from the shortcut into its departure aisle so the car faces along it. The source spot remains `OCCUPIED` and the destination remains `RESERVED`.
@@ -235,6 +236,14 @@ Eligible vehicles may bypass road traffic by taking authored shortcuts across gr
   5. _Arrival & Dwell:_ Reaching the destination stall transitions the vehicle to `State.PARKED` with a brief dwell (4.0–8.0 s), setting `has_taken_shortcut = true` to prohibit shortcut chaining.
   6. _Normal Exit:_ After dwell, the car reverses out and departs via the destination lot's standard apron exit onto the stroad.
 - **Cancellation Safety:** If aborted, cancelled, or despawned, both `spot` and `pending_destination_spot` are released immediately to prevent allocation leaks.
+
+## Sidewalk Shortcuts Onto the Stroad
+
+Instead of using its driveway, a departing car may jump the curb across the sidewalk:
+
+- **Crossings:** `SIDEWALK_CROSSINGS` in `traffic/parking_lot.gd` lists clear crossing centerlines per site: `north` $x = 19.5$ (between the driveway and the Taco Hell row), `strip_mall` $x = -13$, `cramped_inn` $x \in \{31.5, 45.5\}$ (the inn also has a lawn strip behind the sidewalk, `lawn_edge_z`). Each avoids stalls, signs, poles, trees, driveways, and the player's spawn on the strip mall sidewalk ($x = 0$; cars kill on contact).
+- **Evaluation:** When a parked car is cleared to leave and does not take a lot shortcut, it rolls `SIDEWALK_SHORTCUT_PROBABILITY` (15%; buses and trucks never do). `ParkingLot.sidewalk_crossing_x()` picks the nearest crossing at least `SIDEWALK_MIN_RUN` ahead of its back-out point and short of its own driveway; none means a normal exit. The choice is stored in `car.sidewalk_crossing_x` and cleared once the car is cruising.
+- **Route:** After the normal reverse-out, `ParkingLot.sidewalk_exit_route()` drives along the aisle to the crossing and over the sidewalk to the curb wait point ($|z| = 13.375$). The car then gap-merges like any driveway exit: `ParkingLot.merge_x()`/`merge_path()` recognize a crossing wait point and turn into the curb lane from there.
 
 ## 2D Logic and 3D Geometry
 
@@ -314,3 +323,15 @@ A stop is complete when the vehicle:
 4. Remains for the required dwell duration.
 
 The itinerary then advances to the next stop or lot exit.
+
+## Lot Occupancy and Departures
+
+Parked cars have no errand timer. Lots stay semi-full and churn instead:
+
+- **Seeding:** Each site starts 60–85% full (`SEED_FILL_MIN`/`MAX`), leaving at least one stall free.
+- **Minimum stay:** A car that parks waits 3–8 s (`PARK_DWELL_MIN`/`MAX`; seeded cars 0–8 s), then considers leaving every tick.
+- **Leave gate (`_may_leave`):** It backs out only while
+  - at most `leave_tolerance` cars are already leaving its site (`REVERSING_OUT` → `MERGING`); each car rolls a tolerance of 0–3 when it parks, and
+  - the site stays at or above `PARKING_TARGET_FILL` (50%) of its stalls once it goes, counting inbound reservations and excluding cars already leaving.
+- **Inflow:** Curb lanes 0 and 3 spawn every 1.8–3.4 s and 90% of eligible cars roll an errand (`P_ERRAND`). Each arrival above the floor frees a parked car, so lot traffic tracks arrivals.
+- Test fixtures set `parking_fill_floor = 0` so a lone test car can leave an otherwise empty lot.

@@ -173,6 +173,10 @@ var pending_spot: ParkingSpot:
 	set(value):
 		pending_destination_spot = value
 var dwell_left: float = 0.0
+## Parked cars leave only while at most this many cars are already leaving their site.
+var leave_tolerance: int = 0
+## Site this car last backed out of; meaningful only while it is leaving (see TrafficManager).
+var departing_site: StringName = &""
 var merge_wait_time: float = 0.0
 var errand: Errand = null
 var had_errand: bool = false
@@ -200,6 +204,9 @@ var force_risky_pass: bool = false
 var force_shortcut: bool = false
 var has_taken_shortcut: bool = false
 var shortcut_evaluated: bool = false
+var force_sidewalk_shortcut: bool = false
+## Sidewalk crossing this car will drive over when it leaves its stall, or NAN.
+var sidewalk_crossing_x: float = NAN
 const RISK_COMMIT_DURATION: float = 1.0
 
 var risk_commit_timer: float = 0.0
@@ -627,6 +634,8 @@ func setup(
 	force_shortcut = false
 	has_taken_shortcut = false
 	shortcut_evaluated = false
+	force_sidewalk_shortcut = false
+	sidewalk_crossing_x = NAN
 	pending_destination_spot = null
 	_apply_visual_type()
 	_init_lane_wander()

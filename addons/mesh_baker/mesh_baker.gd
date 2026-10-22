@@ -1247,6 +1247,9 @@ static func bake_main_scene(root: Node3D) -> Node3D:
 			baked_road.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	var parking := root.get_node_or_null("Parking") as Node3D
 	if parking != null:
+		var ruts := parking.get_node_or_null("ShortcutRuts")
+		if ruts != null and ruts.has_method("build_mesh"):
+			ruts.build_mesh()
 		bake_static_scene(parking, root)
 		var baked_parking := parking.get_node_or_null("BakedStaticMesh") as MeshInstance3D
 		if baked_parking != null:

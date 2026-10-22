@@ -2,6 +2,7 @@ class_name Errand
 extends RefCounted
 
 var destination: StringName
+## Stop time at drive-thru windows and hotel drop-off; parked stays are set by TrafficManager.
 var dwell_time: float
 
 
@@ -45,10 +46,10 @@ func is_frontage() -> bool:
 static func random() -> Errand:
 	var roll := randf()
 	if roll < 0.50:
-		return new(&"walgroins", randf_range(12.0, 24.0))
+		return new(&"walgroins")
 	elif roll < 0.70:
-		return new(&"taco_hell", randf_range(10.0, 20.0))
+		return new(&"taco_hell")
 	elif roll < 0.85:
-		return new(&"smell_store", randf_range(8.0, 18.0))
+		return new(&"smell_store")
 	else:
-		return new(&"smell_gas", randf_range(8.0, 16.0))
+		return new(&"smell_gas")

@@ -1325,19 +1325,29 @@ func _run_test_retro_filter() -> void:
 		"Active preset must render 3D at one sample per block (1 / pixel_size)"
 	)
 
-	# Cycle to Game Boy mode (preset 5)
-	retro_filter.call("cycle_preset")  # 2: 16-Bit Retro
-	retro_filter.call("cycle_preset")  # 3: Chunky
-	retro_filter.call("cycle_preset")  # 4: 8-Bit Arcade
-	p = retro_filter.call("cycle_preset")  # 5: Game Boy
-	assert(p == 5, "Must reach Game Boy mode")
-	assert(mat.get_shader_parameter("palette_mode") == 1, "Game Boy palette mode must be 1")
-
-	# Cycle through remaining presets back to OFF
-	retro_filter.call("cycle_preset")  # 6: Amber CRT
-	retro_filter.call("cycle_preset")  # 7: CGA Cyber
-	p = retro_filter.call("cycle_preset")  # 0: OFF
+	# Walk every remaining preset; each must drive the low-res 3D render and
+	# reset effects set by the previous one (e.g. CRT curvature).
+	var preset_count: int = RetroFilter.Preset.size()
+	for i in range(2, preset_count):
+		p = retro_filter.call("cycle_preset")
+		assert(p == i, "Cycle must advance one preset at a time")
+		assert(
+			is_equal_approx(vp.scaling_3d_scale, 1.0 / mat.get_shader_parameter("pixel_size")),
+			"Preset %d must render 3D at 1 / pixel_size" % i
+		)
+		if p != RetroFilter.Preset.ARCADE_CRT:
+			assert(
+				is_zero_approx(mat.get_shader_parameter("curvature")),
+				"Preset %d must not inherit CRT curvature" % i
+			)
+	p = retro_filter.call("cycle_preset")
 	assert(p == 0, "Must wrap back to Preset.OFF")
+	assert(
+		retro_filter.call("cycle_preset", -1) == preset_count - 1,
+		"Stepping back from OFF must wrap to the last preset"
+	)
+	p = retro_filter.call("cycle_preset")
+	assert(p == 0, "Stepping forward from the last preset must return to OFF")
 	assert(not effect_rect.visible, "EffectRect must be hidden when OFF")
 	assert(
 		is_equal_approx(vp.scaling_3d_scale, orig_scale),

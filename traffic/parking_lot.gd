@@ -278,6 +278,8 @@ const SITES: Dictionary[StringName, Dictionary] = {
 ##   aisle; "grass_entry"/"grass_exit" must be among them. Lot-side waypoints already behind the
 ##   car, or past the destination stall, are skipped.
 ## - "grass": XZ bounds of the off-pavement stretch, driven at grass speed.
+## - "ruts" (optional, default true): lay dirt tire ruts along the grass stretch. Links that only
+##   hop the seam between two adjoining paved lots set it false.
 ## - "source_serves"/"destination_serves" (optional): only stalls serving these businesses use
 ##   the link, keeping each shortcut between the two businesses it actually connects.
 ## - "arrival_aisle_z" (optional): aisle used to reach the destination stall, when the lot's
@@ -383,7 +385,86 @@ const SHORTCUT_LINKS: Array[Dictionary] = [
 		"grass_exit": Vector3(61.5, 0.0, 30.5),
 		"grass": Rect2(62.0, 30.0, 12.0, 5.5),
 	},
+	# Leaders <-> Consumer Car Care: straight across the seam where the two lots adjoin.
+	{
+		"source_site_id": &"frontage",
+		"destination_site_id": &"frontage",
+		"source_serves": [&"frontage_retail"],
+		"destination_serves": [&"consumer_car_care"],
+		"waypoints":
+		[
+			Vector3(99.0, 0.0, 33.5),
+			Vector3(101.0, 0.0, 35.0),
+			Vector3(103.0, 0.0, 36.5),
+		],
+		"grass_entry": Vector3(101.0, 0.0, 35.0),
+		"grass_exit": Vector3(103.0, 0.0, 36.5),
+		"grass": Rect2(100.0, 34.0, 4.0, 3.5),
+		"ruts": false,
+	},
+	{
+		"source_site_id": &"frontage",
+		"destination_site_id": &"frontage",
+		"source_serves": [&"consumer_car_care"],
+		"destination_serves": [&"frontage_retail"],
+		"waypoints":
+		[
+			Vector3(103.0, 0.0, 36.5),
+			Vector3(101.0, 0.0, 35.0),
+			Vector3(99.0, 0.0, 33.5),
+		],
+		"grass_entry": Vector3(103.0, 0.0, 36.5),
+		"grass_exit": Vector3(101.0, 0.0, 35.0),
+		"grass": Rect2(100.0, 34.0, 4.0, 3.5),
+		"ruts": false,
+	},
+	# Consumer Car Care <-> Checkers: across the seam at the east end of the car care pad.
+	{
+		"source_site_id": &"frontage",
+		"destination_site_id": &"frontage",
+		"source_serves": [&"consumer_car_care"],
+		"destination_serves": [&"frontage_commercial"],
+		"waypoints":
+		[
+			Vector3(135.0, 0.0, 36.5),
+			Vector3(138.5, 0.0, 33.5),
+		],
+		"grass_entry": Vector3(135.0, 0.0, 36.5),
+		"grass_exit": Vector3(138.5, 0.0, 33.5),
+		"grass": Rect2(134.5, 33.0, 4.5, 4.0),
+		"ruts": false,
+	},
+	{
+		"source_site_id": &"frontage",
+		"destination_site_id": &"frontage",
+		"source_serves": [&"frontage_commercial"],
+		"destination_serves": [&"consumer_car_care"],
+		"waypoints":
+		[
+			Vector3(138.5, 0.0, 33.5),
+			Vector3(135.0, 0.0, 36.5),
+		],
+		"grass_entry": Vector3(138.5, 0.0, 33.5),
+		"grass_exit": Vector3(135.0, 0.0, 36.5),
+		"grass": Rect2(134.5, 33.0, 4.5, 4.0),
+		"ruts": false,
+	},
 ]
+## Sidewalk shortcuts: instead of using its driveway, a departing car may drive across the
+## sidewalk at one of its site's crossings and merge into the curb lane from there.
+## - "x": crossing centerlines, clear of stalls, signs, poles, and trees.
+## - "lawn_edge_z" (optional): |z| where the lot pavement starts behind a lawn strip; ruts are
+##   laid on that lawn as well as on the verge between sidewalk and road.
+const SIDEWALK_CROSSINGS: Dictionary[StringName, Dictionary] = {
+	&"north": {"x": [19.5]},
+	# No crossing east of the driveway: Mats spawns on that sidewalk at x = 0.
+	&"strip_mall": {"x": [-13.0]},
+	&"cramped_inn": {"x": [31.5, 45.5], "lawn_edge_z": 17.0},
+}
+## A crossing must lie at least this far ahead of where the car finishes backing out.
+const SIDEWALK_MIN_RUN := 3.0
+const CURB_WAIT_Z := 13.375
+const CURB_LANE_Z := 9.375
 
 
 static func get_shortcut_links() -> Array[Dictionary]:
@@ -468,6 +549,49 @@ static func get_shortcut_candidate_spots(
 	return results
 
 
+## Sidewalk crossing a car backing out of `spot` would take: the nearest crossing ahead of it
+## and short of its driveway, or NAN when there is none.
+static func sidewalk_crossing_x(spot: ParkingSpot) -> float:
+	var site_id := lot_group(spot)
+	var crossings: Array = SIDEWALK_CROSSINGS.get(site_id, {}).get("x", [])
+	if crossings.is_empty():
+		return NAN
+	var start := reverse_route(spot).get_point_position(0)
+	var travel := signf(_spot_position(spot).x - start.x)
+	var exit_x: float = get_site_cfg(site_id).get("exit_x", start.x)
+	var best := NAN
+	for c: float in crossings:
+		var ahead := (c - start.x) * travel
+		if ahead < SIDEWALK_MIN_RUN or (c - exit_x) * travel > 0.0:
+			continue
+		if is_nan(best) or ahead < (best - start.x) * travel:
+			best = c
+	return best
+
+
+## Drive on from the back-out point, along the aisle to the crossing, over the sidewalk to the
+## curb, where the car waits to merge.
+static func sidewalk_exit_route(spot: ParkingSpot, crossing_x: float, radius := 2.5) -> Curve3D:
+	var start := reverse_route(spot).get_point_position(0)
+	var lane_id: int = get_site_cfg(lot_group(spot)).get("lane_id", 0)
+	var wait_z := -CURB_WAIT_Z if lane_id == 0 else CURB_WAIT_Z
+	var pts := PackedVector3Array(
+		[start, Vector3(crossing_x, 0.0, start.z), Vector3(crossing_x, 0.0, wait_z)]
+	)
+	return PathBuilder.build(pts, radius)
+
+
+## The crossing on `lane_id`'s curb whose wait point sits at `x`, or NAN.
+static func _sidewalk_crossing_at(lane_id: int, x: float) -> float:
+	for site_id in SIDEWALK_CROSSINGS:
+		if get_site_cfg(site_id).get("lane_id", -1) != lane_id:
+			continue
+		for c: float in SIDEWALK_CROSSINGS[site_id]["x"]:
+			if absf(c - x) < 0.5:
+				return c
+	return NAN
+
+
 static func get_site_for_destination(dest: StringName) -> StringName:
 	for site_id in SITES:
 		var site_cfg: Dictionary = SITES[site_id]
@@ -530,6 +654,19 @@ static func get_site_for_wait_point(lane_id: int, x: float) -> StringName:
 
 
 static func merge_path(lane_id: int, x: float, radius: float = 4.0) -> Curve3D:
+	var crossing_x := _sidewalk_crossing_at(lane_id, x)
+	if not is_nan(crossing_x):
+		var wait_z := -CURB_WAIT_Z if lane_id == 0 else CURB_WAIT_Z
+		var lane_z := -CURB_LANE_Z if lane_id == 0 else CURB_LANE_Z
+		var travel := -1.0 if lane_id == 0 else 1.0
+		var pts := PackedVector3Array(
+			[
+				Vector3(crossing_x, 0.0, wait_z),
+				Vector3(crossing_x, 0.0, lane_z),
+				Vector3(crossing_x + travel * 4.0, 0.0, lane_z),
+			]
+		)
+		return PathBuilder.build(pts, radius)
 	var site_id := get_site_for_wait_point(lane_id, x)
 	if site_id != &"":
 		return site_merge_route(site_id, radius)
@@ -537,6 +674,9 @@ static func merge_path(lane_id: int, x: float, radius: float = 4.0) -> Curve3D:
 
 
 static func merge_x(lane_id: int, x: float) -> float:
+	var crossing_x := _sidewalk_crossing_at(lane_id, x)
+	if not is_nan(crossing_x):
+		return crossing_x
 	var site_id := get_site_for_wait_point(lane_id, x)
 	if site_id != &"":
 		var cfg: Dictionary = SITES[site_id]

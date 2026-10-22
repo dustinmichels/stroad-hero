@@ -185,7 +185,8 @@ var stats: Dictionary = {
 	"reach_passed": 0,
 	"conflicts_evaluated": 0,
 }
-const P_ERRAND := 0.50
+const P_ERRAND := 0.90
+const P_FRONTAGE_ERRAND := 0.3  # extra frontage-shop roll for lane-3 cars without an errand
 const DECISION_D := 18.0
 const TURN_D := 53.0
 const V_TURN := 6.5
@@ -194,6 +195,7 @@ const MIN_SPAWN_HEADWAY := 14.0  # meters needed before spawning another car in 
 const SAFE_FOLLOWING_GAP := 6.0  # meters
 const RISKY_PASS_PROBABILITY := 0.05
 const SHORTCUT_DEPARTURE_PROBABILITY := 0.25
+const SIDEWALK_SHORTCUT_PROBABILITY := 0.15
 const SHORTCUT_DWELL_MIN := 4.0
 const SHORTCUT_DWELL_MAX := 8.0
 const SWERVE_MIN_GAP_AHEAD := 16.0
@@ -245,8 +247,23 @@ const V_PASS_STOP := 9.0  # speed when passing a traffic stop in its lane
 const BUS_STOP_GROUP := &"bus_stops"
 const BUS_STOP_ZONE_BEHIND := 30.0  # curb kept clear behind a stop pole for a bus pulling in
 const BUS_STOP_ZONE_AHEAD := 6.0
+## Parked cars leave only while their site stays at least this full (incoming reservations count).
+const PARKING_TARGET_FILL := 0.5
+const SEED_FILL_MIN := 0.6
+const SEED_FILL_MAX := 0.85
+## Minimum stay after parking before a car considers leaving.
+const PARK_DWELL_MIN := 3.0
+const PARK_DWELL_MAX := 8.0
+## A parked car leaves only while at most 0..this many cars are already leaving its site.
+const MAX_LEAVE_TOLERANCE := 3
 
 var staged_initial_spawn: bool = true
+## Occupancy floor for parked departures; test fixtures zero it so lone cars can leave.
+var parking_fill_floor: float = PARKING_TARGET_FILL
+## Per-site counts refreshed each lot tick: spots, cars staying parked, cars leaving.
+var _site_spots: Dictionary = {}
+var _site_staying: Dictionary = {}
+var _site_leaving: Dictionary = {}
 
 
 func set_random_seed(seed_val: int) -> void:
@@ -308,13 +325,13 @@ func _setup_lanes() -> void:
 	var eb_len: float = 270.0 if test_mode else 295.0
 	# 6 lanes matching the stroad markings; lanes run into tunnels at each edge
 	# Lane 0: Westbound outer (driveway turns & merges)
-	lanes.append(Lane.new(0, -9.375, -1.0, wb_start_x, wb_len, 16.0, 21.0, 2.6, 5.0))
+	lanes.append(Lane.new(0, -9.375, -1.0, wb_start_x, wb_len, 16.0, 21.0, 1.8, 3.4))
 	# Lane 1: Westbound middle (fast through-traffic)
 	lanes.append(Lane.new(1, -5.625, -1.0, wb_start_x, wb_len, 21.0, 27.0, 1.4, 2.6))
 	# Lane 2: Westbound inner (express speedway)
 	lanes.append(Lane.new(2, -1.875, -1.0, wb_start_x, wb_len, 25.0, 32.0, 1.0, 2.0))
 	# Lane 3: Eastbound outer (driveway turns & merges)
-	lanes.append(Lane.new(3, 9.375, 1.0, eb_start_x, eb_len, 16.0, 21.0, 2.6, 5.0))
+	lanes.append(Lane.new(3, 9.375, 1.0, eb_start_x, eb_len, 16.0, 21.0, 1.8, 3.4))
 	# Lane 4: Eastbound middle (fast through-traffic)
 	lanes.append(Lane.new(4, 5.625, 1.0, eb_start_x, eb_len, 21.0, 27.0, 1.4, 2.6))
 	# Lane 5: Eastbound inner (express speedway)
@@ -357,50 +374,83 @@ func _get_spots_by_lot() -> Dictionary:
 	return groups
 
 
-func _pick_seeded_spots_with_dwell() -> Array[Dictionary]:
-	var result: Array[Dictionary] = []
+func _pick_seeded_spots() -> Array[ParkingSpot]:
+	var result: Array[ParkingSpot] = []
 	var groups := _get_spots_by_lot()
 	for lot_key in groups:
 		var spots_in_lot: Array = groups[lot_key]
 		if spots_in_lot.is_empty():
 			continue
 		var n: int = spots_in_lot.size()
-		var count: int
-		if n <= 2:
-			count = 1
-		elif n <= 5:
-			count = randi_range(maxi(1, int(floor(n * 0.4))), maxi(1, int(ceil(n * 0.6))))
-		else:
-			count = randi_range(maxi(1, int(floor(n * 0.45))), mini(n - 1, int(ceil(n * 0.65))))
-		count = clampi(count, 1, maxi(1, n - 1))
-
+		var count := clampi(
+			roundi(n * randf_range(SEED_FILL_MIN, SEED_FILL_MAX)), 1, maxi(1, n - 1)
+		)
 		var candidates: Array = spots_in_lot.duplicate()
 		candidates.shuffle()
-		var chosen: Array = candidates.slice(0, count)
-
-		var gap: float = minf(7.0, 28.0 / maxf(1.0, float(count - 1))) if count > 1 else 0.0
-		for j in range(count):
-			var spot: ParkingSpot = chosen[j]
-			var dwell: float = randf_range(8.0, 16.0) + j * gap + randf_range(-1.5, 1.5)
-			dwell = maxf(5.0, dwell)
-			result.append({"spot": spot, "dwell": dwell})
+		for spot in candidates.slice(0, count):
+			result.append(spot)
 	return result
 
 
-func _pick_seeded_spots() -> Array[ParkingSpot]:
-	var spots: Array[ParkingSpot] = []
-	for item in _pick_seeded_spots_with_dwell():
-		spots.append(item["spot"])
-	return spots
-
-
 func _seed_parked_cars() -> void:
-	var seeded := _pick_seeded_spots_with_dwell()
-	for item in seeded:
-		_seed_parked_car_at(item["spot"], item["dwell"])
+	for spot in _pick_seeded_spots():
+		_seed_parked_car_at(spot)
 
 
-func _seed_parked_car_at(spot: ParkingSpot, custom_dwell: float = -1.0) -> void:
+## Starts a parked car's stay: a short minimum dwell, then it leaves when its site allows.
+func _begin_parked_stay(car: Car, dwell: float) -> void:
+	car.state = Car.State.PARKED
+	car.dwell_left = dwell
+	car.leave_tolerance = randi_range(0, MAX_LEAVE_TOLERANCE)
+
+
+func _is_leaving_lot(car: Car) -> bool:
+	return (
+		car.state == Car.State.REVERSING_OUT
+		or car.state == Car.State.TO_EXIT
+		or car.state == Car.State.WAITING_TO_MERGE
+		or car.state == Car.State.MERGING
+	)
+
+
+## Tallies each site's spots, cars staying (parked or inbound), and cars on their way out.
+func _refresh_site_occupancy() -> void:
+	_site_spots.clear()
+	_site_staying.clear()
+	_site_leaving.clear()
+	if lot == null:
+		return
+	for spot in lot.spots:
+		var site := ParkingLot.lot_group(spot)
+		_site_spots[site] = _site_spots.get(site, 0) + 1
+		var holder: Car = spot.car if is_instance_valid(spot.car) else null
+		var leaving := holder != null and holder.spot == spot and _is_leaving_lot(holder)
+		if not spot.is_free() and not leaving:
+			_site_staying[site] = _site_staying.get(site, 0) + 1
+	for car in lot_cars:
+		if is_instance_valid(car) and _is_leaving_lot(car):
+			_site_leaving[car.departing_site] = _site_leaving.get(car.departing_site, 0) + 1
+
+
+## A parked car leaves only if few cars are already leaving its site and the site stays full enough.
+func _may_leave(car: Car) -> bool:
+	if car.spot == null:
+		return true
+	var site := ParkingLot.lot_group(car.spot)
+	if _site_leaving.get(site, 0) > car.leave_tolerance:
+		return false
+	var floor_count := floori(_site_spots.get(site, 0) * parking_fill_floor)
+	return _site_staying.get(site, 0) - 1 >= floor_count
+
+
+func _count_departure(car: Car) -> void:
+	var site := ParkingLot.lot_group(car.spot) if car.spot != null else &""
+	car.departing_site = site
+	_site_leaving[site] = _site_leaving.get(site, 0) + 1
+	_site_staying[site] = _site_staying.get(site, 0) - 1
+
+
+func _seed_parked_car_at(spot: ParkingSpot) -> void:
 	var site_id := ParkingLot.lot_group(spot)
 	var allow_sports: bool = site_id != &"dorf"
 	var car: Car = PassengerCarScene.instantiate()
@@ -413,15 +463,13 @@ func _seed_parked_car_at(spot: ParkingSpot, custom_dwell: float = -1.0) -> void:
 	car.motion = Car.Motion.PATH
 	var site_cfg := ParkingLot.get_site_cfg(site_id)
 	car.merge_target_lane = site_cfg.get("lane_id", 0)
-	car.state = Car.State.PARKED
+	_begin_parked_stay(car, randf_range(0.0, PARK_DWELL_MAX))
 	car.global_transform = spot.transform
 	car.reset_physics_interpolation()
 	lot.reserve(spot, car)
 	lot.occupy(spot)
-	var dwell: float = custom_dwell if custom_dwell > 0.0 else randf_range(8.0, 24.0)
-	car.dwell_left = dwell
 	var dest: StringName = spot.serves[0] if not spot.serves.is_empty() else site_id
-	car.errand = Errand.new(dest, dwell)
+	car.errand = Errand.new(dest)
 	car.had_errand = true
 	lot_cars.append(car)
 	stats["cars_spawned"] += 1
@@ -454,9 +502,8 @@ func _spawn_initial_traffic_staged() -> void:
 					return
 			d += randf_range(28.0, 42.0)
 
-	var seeded := _pick_seeded_spots_with_dwell()
-	for item in seeded:
-		_seed_parked_car_at(item["spot"], item["dwell"])
+	for spot in _pick_seeded_spots():
+		_seed_parked_car_at(spot)
 		count += 1
 		if count >= BATCH_SIZE:
 			count = 0
@@ -500,26 +547,47 @@ func _evaluate_shortcut_departure(car: Car) -> void:
 	if car.shortcut_evaluated:
 		return
 	car.shortcut_evaluated = true
-	if not car.is_eligible_for_shortcut() or car.spot == null:
+	if car.spot == null:
 		return
+	if not _try_grass_shortcut(car):
+		_try_sidewalk_shortcut(car)
+
+
+func _try_grass_shortcut(car: Car) -> bool:
+	if not car.is_eligible_for_shortcut():
+		return false
 	var roll: bool = (
 		car.force_shortcut or (not _is_test_mode() and randf() < SHORTCUT_DEPARTURE_PROBABILITY)
 	)
 	if not roll:
-		return
-	var parking_lot: ParkingLot = (
-		lot if lot != null else (car.spot.lot if car.spot != null else null)
-	)
+		return false
+	var parking_lot: ParkingLot = lot if lot != null else car.spot.lot
 	if parking_lot == null:
-		return
+		return false
 	var candidates := ParkingLot.get_shortcut_candidate_spots(car.spot, parking_lot.spots)
 	if candidates.is_empty():
-		return
+		return false
 	var target_spot: ParkingSpot = (
 		candidates[0] if car.force_shortcut else candidates[randi() % candidates.size()]
 	)
 	parking_lot.reserve_destination(target_spot, car)
 	car.has_taken_shortcut = true
+	return true
+
+
+func _try_sidewalk_shortcut(car: Car) -> void:
+	if (
+		car.car_type == Car.CarType.BUS
+		or car.car_type == Car.CarType.SHIPPING_TRUCK
+		or car.car_type == Car.CarType.TRUCK
+	):
+		return
+	var roll: bool = (
+		car.force_sidewalk_shortcut
+		or (not _is_test_mode() and randf() < SIDEWALK_SHORTCUT_PROBABILITY)
+	)
+	if roll:
+		car.sidewalk_crossing_x = ParkingLot.sidewalk_crossing_x(car.spot)
 
 
 func _update_lot_cars(delta: float) -> void:
@@ -540,6 +608,7 @@ func _update_lot_cars(delta: float) -> void:
 	for cid in expired_ignores:
 		_watchdog_ignores.erase(cid)
 
+	_refresh_site_occupancy()
 	var surviving_cars: Array[Car] = []
 	for car in lot_cars:
 		if not is_instance_valid(car):
@@ -582,12 +651,8 @@ func _update_lot_cars(delta: float) -> void:
 						lot.occupy(car.spot)
 					elif car.spot.lot != null:
 						car.spot.lot.occupy(car.spot)
-				car.state = Car.State.PARKED
+				_begin_parked_stay(car, randf_range(PARK_DWELL_MIN, PARK_DWELL_MAX))
 				car.lane_id = -1
-				if car.errand != null:
-					car.dwell_left = car.errand.dwell_time
-				else:
-					car.dwell_left = randf_range(10.0, 24.0)
 				car.update_presentation()
 				car.reset_physics_interpolation()
 				car._update_blocker_layer()
@@ -682,11 +747,12 @@ func _update_lot_cars(delta: float) -> void:
 			car.current_blocker = null
 			car.blocked_time = 0.0
 			car.dwell_left -= delta
-			if car.dwell_left <= 0.0:
+			if car.dwell_left <= 0.0 and _may_leave(car):
 				_evaluate_shortcut_departure(car)
 				if can_reverse_out(car):
 					var rev_route := _reverse_out_route(car)
 					if rev_route != null:
+						_count_departure(car)
 						car.state = Car.State.REVERSING_OUT
 						car.follow_path(rev_route, true)
 						car.speed = -V_PARK
@@ -771,9 +837,11 @@ func _update_lot_cars(delta: float) -> void:
 							push_error("TrafficManager: Missing exit route on cancelled shortcut")
 				else:
 					var exit_path: Curve3D = null
-					if lot != null and car.spot != null:
-						exit_path = ParkingLot.exit_route(car.spot)
-					elif car.spot != null and car.spot.lot != null:
+					if car.spot != null and not is_nan(car.sidewalk_crossing_x):
+						exit_path = ParkingLot.sidewalk_exit_route(
+							car.spot, car.sidewalk_crossing_x
+						)
+					elif car.spot != null and (lot != null or car.spot.lot != null):
 						exit_path = ParkingLot.exit_route(car.spot)
 					if car.spot != null:
 						if lot != null:
@@ -831,9 +899,8 @@ func _update_lot_cars(delta: float) -> void:
 					var dest_site := ParkingLot.lot_group(car.spot)
 					var site_cfg := ParkingLot.get_site_cfg(dest_site)
 					car.merge_target_lane = site_cfg.get("lane_id", 0)
-				car.state = Car.State.PARKED
+				_begin_parked_stay(car, randf_range(SHORTCUT_DWELL_MIN, SHORTCUT_DWELL_MAX))
 				car.lane_id = -1
-				car.dwell_left = randf_range(SHORTCUT_DWELL_MIN, SHORTCUT_DWELL_MAX)
 				car.has_taken_shortcut = true
 				car.shortcut_evaluated = true
 				car.update_presentation()
@@ -936,6 +1003,7 @@ func _update_lot_cars(delta: float) -> void:
 				car.state = Car.State.CRUISING
 				car.has_taken_shortcut = false
 				car.shortcut_evaluated = false
+				car.sidewalk_crossing_x = NAN
 				car.path = null
 				car.current_blocker = null
 				car.blocked_time = 0.0
@@ -1488,15 +1556,15 @@ func spawn_debug_car() -> Car:
 	var site_cfg := ParkingLot.get_site_cfg(spot_site)
 	car.merge_target_lane = site_cfg.get("lane_id", 0)
 	if spot_site == &"strip_mall" or spot_site == &"cramped_inn":
-		car.errand = Errand.new(spot_site, randf_range(12.0, 24.0))
+		car.errand = Errand.new(spot_site)
 	elif spot_site == &"smell":
 		var dest := chosen_spot.serves[0] if not chosen_spot.serves.is_empty() else &"smell_store"
-		car.errand = Errand.new(dest, randf_range(8.0, 18.0))
+		car.errand = Errand.new(dest)
 	elif spot_site == &"frontage":
 		var dest := (
 			chosen_spot.serves[0] if not chosen_spot.serves.is_empty() else &"consumer_car_care"
 		)
-		car.errand = Errand.new(dest, randf_range(12.0, 24.0))
+		car.errand = Errand.new(dest)
 	else:
 		car.errand = Errand.random()
 	car.had_errand = true
@@ -1531,7 +1599,7 @@ func spawn_south_lot_car(site: StringName) -> Car:
 		if site != &"frontage"
 		else (chosen_spot.serves[0] if not chosen_spot.serves.is_empty() else &"consumer_car_care")
 	)
-	car.errand = Errand.new(errand_dest, randf_range(12.0, 24.0))
+	car.errand = Errand.new(errand_dest)
 	car.had_errand = true
 	car.merge_target_lane = 3
 	add_child(car)
@@ -1564,8 +1632,7 @@ func spawn_smell_car(dest: StringName = &"smell_gas") -> Car:
 	var car: Car = PassengerCarScene.instantiate()
 	var chosen_type: Car.CarType = PassengerCar.pick_passenger_car_type(true)
 	car.car_type = chosen_type
-	var dwell := randf_range(8.0, 16.0) if dest == &"smell_gas" else randf_range(8.0, 18.0)
-	car.errand = Errand.new(dest, dwell)
+	car.errand = Errand.new(dest)
 	car.had_errand = true
 	car.merge_target_lane = 0
 	add_child(car)
@@ -1687,9 +1754,9 @@ func _spawn_car_at(lane: Lane, initial_distance: float, scene: PackedScene = nul
 				elif initial_distance < DECISION_D_SMELL:
 					var roll := randf()
 					if roll < 0.45:
-						car.errand = Errand.new(&"smell_store", randf_range(8.0, 18.0))
+						car.errand = Errand.new(&"smell_store")
 					else:
-						car.errand = Errand.new(&"smell_gas", randf_range(8.0, 16.0))
+						car.errand = Errand.new(&"smell_gas")
 					car.had_errand = true
 					stats["errands_assigned"] += 1
 	elif lane.id == 3 and takes_errands:
@@ -1713,56 +1780,50 @@ func _spawn_car_at(lane: Lane, initial_distance: float, scene: PackedScene = nul
 				elif car.can_park():
 					if initial_distance < DECISION_D_SM:
 						if roll < 0.30:
-							car.errand = Errand.new(&"strip_mall", randf_range(12.0, 24.0))
+							car.errand = Errand.new(&"strip_mall")
 						elif roll < 0.55:
-							car.errand = Errand.new(&"cramped_inn", randf_range(12.0, 24.0))
+							car.errand = Errand.new(&"cramped_inn")
 						elif roll < 0.70:
 							var dest := (
 								&"cramped_inn_dropoff" if randf() < 0.5 else &"cramped_inn_pickup"
 							)
 							car.errand = Errand.new(dest, randf_range(3.0, 8.0))
 						else:
-							var f_roll := randf()
-							var f_dest: StringName = (
-								&"consumer_car_care"
-								if f_roll < 0.4
-								else (
-									&"frontage_retail" if f_roll < 0.8 else &"frontage_commercial"
-								)
-							)
-							car.errand = Errand.new(f_dest, randf_range(12.0, 24.0))
+							car.errand = Errand.new(_random_frontage_destination())
 					elif initial_distance < DECISION_D_CI:
 						if roll < 0.45:
-							car.errand = Errand.new(&"cramped_inn", randf_range(12.0, 24.0))
+							car.errand = Errand.new(&"cramped_inn")
 						elif roll < 0.65:
 							var dest := (
 								&"cramped_inn_dropoff" if randf() < 0.5 else &"cramped_inn_pickup"
 							)
 							car.errand = Errand.new(dest, randf_range(3.0, 8.0))
 						else:
-							var f_roll := randf()
-							var f_dest: StringName = (
-								&"consumer_car_care"
-								if f_roll < 0.4
-								else (
-									&"frontage_retail" if f_roll < 0.8 else &"frontage_commercial"
-								)
-							)
-							car.errand = Errand.new(f_dest, randf_range(12.0, 24.0))
+							car.errand = Errand.new(_random_frontage_destination())
 					elif initial_distance < DECISION_D_FRONTAGE:
-						var f_roll := randf()
-						var f_dest: StringName = (
-							&"consumer_car_care"
-							if f_roll < 0.4
-							else (&"frontage_retail" if f_roll < 0.8 else &"frontage_commercial")
-						)
-						car.errand = Errand.new(f_dest, randf_range(12.0, 24.0))
-			if car.errand != null:
-				car.had_errand = true
-				stats["errands_assigned"] += 1
+						car.errand = Errand.new(_random_frontage_destination())
+		# Extra pull toward the frontage shops for lane-3 cars that rolled no errand.
+		if (
+			car.errand == null
+			and car.car_type != Car.CarType.TAXI
+			and car.can_park()
+			and initial_distance < DECISION_D_FRONTAGE
+			and randf() < P_FRONTAGE_ERRAND
+		):
+			car.errand = Errand.new(_random_frontage_destination())
+		if car.errand != null:
+			car.had_errand = true
+			stats["errands_assigned"] += 1
 	lane.cars.append(car)
 	stats["cars_spawned"] += 1
 	return car
+
+
+func _random_frontage_destination() -> StringName:
+	var roll := randf()
+	if roll < 0.4:
+		return &"consumer_car_care"
+	return &"frontage_retail" if roll < 0.8 else &"frontage_commercial"
 
 
 func _is_lane_obstacle(car: Car) -> bool:
