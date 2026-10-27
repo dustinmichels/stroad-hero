@@ -20,7 +20,7 @@ size = Vector3(6.5, 9.2, 5)
 size = Vector3(18, 5.4, 18)
 
 [sub_resource type="BoxShape3D" id="Shape_ServiceCanopy"]
-size = Vector3(14, 0.4, 4.5)
+size = Vector3(16, 0.4, 4.5)
 
 [sub_resource type="BoxShape3D" id="Shape_PylonBase"]
 size = Vector3(3.4, 12, 1.8)
@@ -258,11 +258,11 @@ radial_segments = 16
 
 [sub_resource type="BoxMesh" id="Mesh_ServiceCanopy"]
 material = SubResource("Mat_ShowroomSilver")
-size = Vector3(14, 0.35, 4.5)
+size = Vector3(16, 0.35, 4.5)
 
 [sub_resource type="BoxMesh" id="Mesh_ServiceCanopyFascia"]
 material = SubResource("Mat_QuickPainOrange")
-size = Vector3(14.05, 0.35, 0.1)
+size = Vector3(16.05, 0.35, 0.1)
 
 [sub_resource type="CylinderMesh" id="Mesh_ServiceCanopyPost"]
 material = SubResource("Mat_DarkTrim")
@@ -444,7 +444,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 2.7, -2)
 shape = SubResource("Shape_Service")
 
 [node name="CollisionServiceCanopy" type="CollisionShape3D" parent="Building"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11, 4.4, 9.25)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 4.4, 9.25)
 shape = SubResource("Shape_ServiceCanopy")
 
 [node name="Showroom" type="Node3D" parent="Building"]
@@ -714,19 +714,19 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0.5, 9.3)
 mesh = SubResource("Mesh_Bollard")
 
 [node name="ServiceCanopy" type="MeshInstance3D" parent="Building/ServiceDepartment"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 4.4, 11.25)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.4, 11.25)
 mesh = SubResource("Mesh_ServiceCanopy")
 
 [node name="ServiceCanopyFascia" type="MeshInstance3D" parent="Building/ServiceDepartment"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 4.4, 13.52)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.4, 13.52)
 mesh = SubResource("Mesh_ServiceCanopyFascia")
 
 [node name="ServicePostL" type="MeshInstance3D" parent="Building/ServiceDepartment"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.5, 2.1, 13.2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 2.1, 13.2)
 mesh = SubResource("Mesh_ServiceCanopyPost")
 
 [node name="ServicePostWrapL" type="MeshInstance3D" parent="Building/ServiceDepartment"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.5, 0.5, 13.2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 0.5, 13.2)
 mesh = SubResource("Mesh_ServicePostWrap")
 
 [node name="ServicePostR" type="MeshInstance3D" parent="Building/ServiceDepartment"]
@@ -740,7 +740,7 @@ mesh = SubResource("Mesh_ServicePostWrap")
 [node name="QuickPainSign" type="Label3D" parent="Building/ServiceDepartment"]
 cast_shadow = 0
 visibility_range_end = 70.0
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 4.4, 13.62)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.4, 13.62)
 pixel_size = 0.014
 modulate = Color(1, 1, 1, 1)
 outline_modulate = Color(0.85, 0.35, 0, 1)
@@ -752,7 +752,7 @@ outline_size = 8
 [node name="ServicePartsLabel" type="Label3D" parent="Building/ServiceDepartment"]
 cast_shadow = 0
 visibility_range_end = 60.0
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 4.95, 9.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.95, 9.1)
 pixel_size = 0.013
 modulate = Color(0.9, 0.92, 0.95, 1)
 outline_modulate = Color(0.1, 0.15, 0.2, 1)
@@ -1192,7 +1192,7 @@ material_override = SubResource("Mat_CarPaintYellow")
 material_override = SubResource("Mat_CarPaintYellow")
 
 [node name="FrontCar_0" type="StaticBody3D" parent="ParkedCars"]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -18.5, 0.05, 20.5)
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -18.5, 0.05, 20.5)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="ParkedCars/FrontCar_0"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
@@ -1201,7 +1201,7 @@ shape = SubResource("Shape_CarSUV")
 [node name="Model" parent="ParkedCars/FrontCar_0" instance=ExtResource("5_suv")]
 
 [node name="FrontCar_1" type="StaticBody3D" parent="ParkedCars"]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -15.9, 0.05, 20.5)
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -15.9, 0.05, 20.5)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="ParkedCars/FrontCar_1"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
@@ -1213,7 +1213,7 @@ shape = SubResource("Shape_CarSedan")
 material_override = SubResource("Mat_CarPaintSilver")
 
 [node name="FrontCar_2" type="StaticBody3D" parent="ParkedCars"]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -13.3, 0.05, 20.5)
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -13.3, 0.05, 20.5)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="ParkedCars/FrontCar_2"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
@@ -1222,7 +1222,7 @@ shape = SubResource("Shape_CarPickup")
 [node name="Model" parent="ParkedCars/FrontCar_2" instance=ExtResource("4_pickup")]
 
 [node name="FrontCar_3" type="StaticBody3D" parent="ParkedCars"]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -10.7, 0.05, 20.5)
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -10.7, 0.05, 20.5)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="ParkedCars/FrontCar_3"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
@@ -1231,7 +1231,7 @@ shape = SubResource("Shape_CarF150")
 [node name="Model" parent="ParkedCars/FrontCar_3" instance=ExtResource("9_f150")]
 
 [node name="FrontCar_4" type="StaticBody3D" parent="ParkedCars"]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -8.1, 0.05, 20.5)
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -8.1, 0.05, 20.5)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="ParkedCars/FrontCar_4"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
@@ -1240,7 +1240,7 @@ shape = SubResource("Shape_CarHatchback")
 [node name="Model" parent="ParkedCars/FrontCar_4" instance=ExtResource("8_hatchback")]
 
 [node name="FrontCar_5" type="StaticBody3D" parent="ParkedCars"]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -5.5, 0.05, 20.5)
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -5.5, 0.05, 20.5)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="ParkedCars/FrontCar_5"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, 0)
@@ -1249,7 +1249,7 @@ shape = SubResource("Shape_CarMinivan")
 [node name="Model" parent="ParkedCars/FrontCar_5" instance=ExtResource("7_minivan")]
 
 [node name="ServiceCar_0" type="StaticBody3D" parent="ParkedCars"]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -2.5, 0.05, 20.5)
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -2.5, 0.05, 20.5)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="ParkedCars/ServiceCar_0"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
@@ -1258,7 +1258,7 @@ shape = SubResource("Shape_CarSedan")
 [node name="Model" parent="ParkedCars/ServiceCar_0" instance=ExtResource("6_sedan")]
 
 [node name="ServiceCar_1" type="StaticBody3D" parent="ParkedCars"]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0.1, 0.05, 20.5)
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 0.1, 0.05, 20.5)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="ParkedCars/ServiceCar_1"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
@@ -1279,7 +1279,7 @@ material_override = SubResource("Mat_CarPaintNavy")
 material_override = SubResource("Mat_CarPaintNavy")
 
 [node name="ServiceCar_2" type="StaticBody3D" parent="ParkedCars"]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 2.8, 0.05, 20.5)
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 2.8, 0.05, 20.5)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="ParkedCars/ServiceCar_2"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
@@ -1291,7 +1291,7 @@ shape = SubResource("Shape_CarPickup")
 material_override = SubResource("Mat_CarPaintSilver")
 
 [node name="ServiceCar_3" type="StaticBody3D" parent="ParkedCars"]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 5.5, 0.05, 20.5)
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 5.5, 0.05, 20.5)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="ParkedCars/ServiceCar_3"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, 0)
@@ -1303,7 +1303,7 @@ shape = SubResource("Shape_CarMinivan")
 material_override = SubResource("Mat_CarPaintSand")
 
 [node name="ShowroomCar_0" type="StaticBody3D" parent="ParkedCars"]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 14.5, 0.05, 20.5)
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 14.5, 0.05, 20.5)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="ParkedCars/ShowroomCar_0"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
@@ -1324,7 +1324,7 @@ material_override = SubResource("Mat_CarPaintRed")
 material_override = SubResource("Mat_CarPaintRed")
 
 [node name="ShowroomCar_1" type="StaticBody3D" parent="ParkedCars"]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 17.5, 0.05, 20.5)
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 17.5, 0.05, 20.5)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="ParkedCars/ShowroomCar_1"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
@@ -1333,7 +1333,7 @@ shape = SubResource("Shape_CarSedan")
 [node name="Model" parent="ParkedCars/ShowroomCar_1" instance=ExtResource("6_sedan")]
 
 [node name="ShowroomCar_2" type="StaticBody3D" parent="ParkedCars"]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 20.5, 0.05, 20.5)
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 20.5, 0.05, 20.5)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="ParkedCars/ShowroomCar_2"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)

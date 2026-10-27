@@ -13,6 +13,8 @@ func _configure_test_fixtures() -> void:
 		if not args.has(a):
 			args.append(a)
 
+	# Frogger mode replaces walking near the stroad; suites drive Mats directly.
+	frogger_mode_enabled = false
 	var is_startup_test := "--test-startup" in args
 	var start_scr = get_node_or_null("StartScreen")
 	if start_scr:

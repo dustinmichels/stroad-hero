@@ -43,16 +43,18 @@ var _ci_saw_merge: bool = false
 var _ci_saw_rejoin: bool = false
 var _ci_site: StringName = &"cramped_inn"
 
-var _smell_saw_cruise: bool = false
-var _smell_saw_decision: bool = false
-var _smell_saw_turn: bool = false
-var _smell_saw_park: bool = false
-var _smell_saw_reverse: bool = false
-var _smell_saw_exit: bool = false
-var _smell_saw_wait: bool = false
-var _smell_saw_merge: bool = false
-var _smell_saw_rejoin: bool = false
-var _smell_dest: StringName = &"smell_gas"
+var _side_lot_saw_cruise: bool = false
+var _side_lot_saw_decision: bool = false
+var _side_lot_saw_turn: bool = false
+var _side_lot_saw_park: bool = false
+var _side_lot_saw_reverse: bool = false
+var _side_lot_saw_exit: bool = false
+var _side_lot_saw_wait: bool = false
+var _side_lot_saw_merge: bool = false
+var _side_lot_saw_rejoin: bool = false
+## Lane-0 destination with its own driveway (Smell store/gas, Dorf service).
+var _side_lot_dest: StringName = &"smell_gas"
+var _side_lot_held_spots: Array[ParkingSpot] = []
 
 
 func matches_args() -> bool:
@@ -66,6 +68,7 @@ func matches_args() -> bool:
 				"--test-strip-mall",
 				"--test-smell-store",
 				"--test-smell-gas",
+				"--test-dorf-service",
 				"--test-right-turn-following",
 				"--test-drive-thru",
 				"--test-cramped-inn-dropoff",
@@ -163,8 +166,12 @@ func setup_ready() -> void:
 		_test_car.desired_speed = 12.0
 		_test_car.speed = 12.0
 
-	if "--test-smell-store" in user_args or "--test-smell-gas" in user_args:
-		_smell_dest = &"smell_gas" if "--test-smell-gas" in user_args else &"smell_store"
+	if _is_side_lot_test():
+		_side_lot_dest = (
+			&"smell_gas"
+			if "--test-smell-gas" in user_args
+			else (&"dorf_service" if "--test-dorf-service" in user_args else &"smell_store")
+		)
 		var traffic_mgr = main.get_node_or_null("TrafficManager") as TrafficManager
 		assert(traffic_mgr != null, "TrafficManager must exist")
 		var lane0 = traffic_mgr.lanes[0]
@@ -174,16 +181,30 @@ func setup_ready() -> void:
 		lane0.spawn_timer = 9999.0
 		if traffic_mgr.lot != null:
 			for spot in traffic_mgr.lot.spots:
-				if spot.serves.has(_smell_dest) and not spot.is_free():
+				if spot.serves.has(_side_lot_dest) and not spot.is_free():
 					for c in traffic_mgr.lot_cars.duplicate():
 						if is_instance_valid(c) and c.spot == spot:
 							traffic_mgr.lot_cars.erase(c)
 							c.queue_free()
 					traffic_mgr.lot.release(spot)
-		var start_d: float = traffic_mgr.DECISION_D_SMELL - 14.0
+			# Hold every Dorf bay but the farthest, so the run drives the longest entry and the
+			# tightest back-out (past the canopy post and floodlight).
+			if _side_lot_dest == &"dorf_service":
+				var far_spot: ParkingSpot = null
+				for spot in traffic_mgr.lot.spots:
+					if spot.site_id == &"dorf" and (far_spot == null or spot.x > far_spot.x):
+						far_spot = spot
+				for spot in traffic_mgr.lot.spots:
+					if spot.site_id == &"dorf" and spot != far_spot:
+						spot.state = ParkingSpot.State.OCCUPIED
+						_side_lot_held_spots.append(spot)
+		# Start 14 m before the site's decision point (35 m before its turn-in). The Dorf
+		# turn-in lies east of the test lane start, so this distance can be negative.
+		var site_cfg := ParkingLot.get_site_cfg(ParkingLot.get_site_for_destination(_side_lot_dest))
+		var start_d: float = lane0.distance_at(site_cfg["turn_in"].x) - 35.0 - 14.0
 		_test_car = traffic_mgr._spawn_car_at(lane0, start_d, traffic_mgr.PassengerCarScene)
 		_test_car.car_type = Car.CarType.SEDAN
-		_test_car.errand = Errand.new(_smell_dest, 1.0)
+		_test_car.errand = Errand.new(_side_lot_dest, 1.0)
 		_test_car.had_errand = true
 		_test_car.desired_speed = 12.0
 		_test_car.speed = 12.0
@@ -701,17 +722,17 @@ func on_physics_process(_delta: float) -> void:
 		if _test_frames > 4000:
 			assert(false, "Timeout waiting for %s test completion!" % _ci_site)
 
-	if "--test-smell-store" in user_args or "--test-smell-gas" in user_args:
-		var tag := String(_smell_dest).to_upper()
+	if _is_side_lot_test():
+		var tag := String(_side_lot_dest).to_upper()
 		_test_frames += 1
 		if _test_car != null and is_instance_valid(_test_car):
 			if (
 				_test_car.state == Car.State.CRUISING
 				and _test_car.lane_id == 0
-				and not _smell_saw_merge
+				and not _side_lot_saw_merge
 			):
-				if not _smell_saw_cruise:
-					_smell_saw_cruise = true
+				if not _side_lot_saw_cruise:
+					_side_lot_saw_cruise = true
 					print(
 						(
 							"%s [1/8]: cruising west in lane 0 (pos=%s)"
@@ -719,11 +740,12 @@ func on_physics_process(_delta: float) -> void:
 						)
 					)
 			elif _test_car.state == Car.State.APPROACHING:
-				if not _smell_saw_decision:
-					_smell_saw_decision = true
+				if not _side_lot_saw_decision:
+					_side_lot_saw_decision = true
 					assert(_test_car.spot != null, "Must have reserved a spot")
 					assert(
-						_test_car.spot.serves.has(_smell_dest), "Spot must serve %s" % _smell_dest
+						_test_car.spot.serves.has(_side_lot_dest),
+						"Spot must serve %s" % _side_lot_dest
 					)
 					assert(
 						_test_car.turn_signal == Car.TurnSignal.RIGHT, "Turn signal must be RIGHT"
@@ -735,8 +757,8 @@ func on_physics_process(_delta: float) -> void:
 						)
 					)
 			elif _test_car.state == Car.State.TO_SPOT:
-				if not _smell_saw_turn:
-					_smell_saw_turn = true
+				if not _side_lot_saw_turn:
+					_side_lot_saw_turn = true
 					assert(_test_car.merge_target_lane == 0, "merge_target_lane must be 0")
 					print(
 						(
@@ -745,9 +767,13 @@ func on_physics_process(_delta: float) -> void:
 						)
 					)
 			elif _test_car.state == Car.State.PARKED:
-				if not _smell_saw_park:
-					_smell_saw_park = true
+				if not _side_lot_saw_park:
+					_side_lot_saw_park = true
 					_test_car.dwell_left = minf(_test_car.dwell_left, 0.5)
+					var tm := main.get_node("TrafficManager") as TrafficManager
+					for held in _side_lot_held_spots:
+						tm.lot.release(held)
+					_side_lot_held_spots.clear()
 					assert(
 						_test_car.spot.state == ParkingSpot.State.OCCUPIED, "Spot must be OCCUPIED"
 					)
@@ -758,24 +784,25 @@ func on_physics_process(_delta: float) -> void:
 						)
 					)
 			elif _test_car.state == Car.State.REVERSING_OUT:
-				if not _smell_saw_reverse:
-					_smell_saw_reverse = true
+				if not _side_lot_saw_reverse:
+					_side_lot_saw_reverse = true
 					print(
 						"%s [5/8]: reversing out (pos=%s)" % [tag, str(_test_car.global_position)]
 					)
 			elif _test_car.state == Car.State.TO_EXIT:
-				if not _smell_saw_exit:
-					_smell_saw_exit = true
+				if not _side_lot_saw_exit:
+					_side_lot_saw_exit = true
 					print(
 						"%s [6/8]: driving to exit (pos=%s)" % [tag, str(_test_car.global_position)]
 					)
 			elif _test_car.state == Car.State.WAITING_TO_MERGE:
-				if not _smell_saw_wait:
-					_smell_saw_wait = true
-					var wait_point: Vector3 = ParkingLot.SMELL_WAIT_POINT
+				if not _side_lot_saw_wait:
+					_side_lot_saw_wait = true
+					var site_id := ParkingLot.get_site_for_destination(_side_lot_dest)
+					var wait_point: Vector3 = ParkingLot.get_site_cfg(site_id)["wait"]
 					assert(
 						_test_car.global_position.distance_to(wait_point) < 1.0,
-						"Must be at the smell wait point"
+						"Must be at the %s wait point" % site_id
 					)
 					print(
 						(
@@ -784,8 +811,8 @@ func on_physics_process(_delta: float) -> void:
 						)
 					)
 			elif _test_car.state == Car.State.MERGING:
-				if not _smell_saw_merge:
-					_smell_saw_merge = true
+				if not _side_lot_saw_merge:
+					_side_lot_saw_merge = true
 					print(
 						(
 							"%s [8/8]: merging into lane 0 (pos=%s)"
@@ -795,10 +822,10 @@ func on_physics_process(_delta: float) -> void:
 			elif (
 				_test_car.state == Car.State.CRUISING
 				and _test_car.lane_id == 0
-				and _smell_saw_merge
+				and _side_lot_saw_merge
 			):
-				if not _smell_saw_rejoin:
-					_smell_saw_rejoin = true
+				if not _side_lot_saw_rejoin:
+					_side_lot_saw_rejoin = true
 					assert(
 						absf(_test_car.global_position.z - (-9.375)) < 0.5,
 						"Car must be in Lane 0 (z=-9.375)"
@@ -807,7 +834,15 @@ func on_physics_process(_delta: float) -> void:
 					main.get_tree().quit(0)
 					return
 		if _test_frames > 3600:
-			assert(false, "Timeout waiting for %s test completion!" % _smell_dest)
+			assert(false, "Timeout waiting for %s test completion!" % _side_lot_dest)
+
+
+func _is_side_lot_test() -> bool:
+	return (
+		"--test-smell-store" in user_args
+		or "--test-smell-gas" in user_args
+		or "--test-dorf-service" in user_args
+	)
 
 
 func _run_test_drive_thru() -> void:

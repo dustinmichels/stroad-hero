@@ -17,9 +17,12 @@ var _nearby_mats: Mats = null
 var _rider: Mats = null
 var _pusher: Mats = null
 var _last_was_behind := false
+var _spawn_transform: Transform3D
 
 
 func _ready() -> void:
+	add_to_group(&"shopping_carts")
+	_spawn_transform = global_transform
 	if _hud == null:
 		if hud != null:
 			_hud = hud
@@ -42,6 +45,14 @@ func _exit_tree() -> void:
 		_rider.died.disconnect(_on_rider_died)
 	if is_instance_valid(_hud):
 		_hud.set_action_prompt(self, false)
+
+
+## Rolls the cart back to its scene position, as at the start of a day. Riders and pushers must
+## already be released (Mats.reset_to_start does this).
+func reset_to_start() -> void:
+	_current_speed = 0.0
+	global_transform = _spawn_transform
+	reset_physics_interpolation()
 
 
 func _physics_process(delta: float) -> void:

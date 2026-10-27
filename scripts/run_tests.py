@@ -41,6 +41,7 @@ EXTENDED_TESTS = [
     "--test-strip-mall",
     "--test-smell-store",
     "--test-smell-gas",
+    "--test-dorf-service",
     "--test-frontage",
     "--test-objective-manager",
     "--test-mats-cart",

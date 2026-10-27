@@ -61,6 +61,13 @@ size = Vector3(44, 0.1, 21.3)
 [sub_resource type="BoxShape3D" id="Shape_DorfParkingApron"]
 size = Vector3(44, 0.1, 21.3)
 
+[sub_resource type="BoxMesh" id="Mesh_DorfDriveway"]
+material = SubResource("Mat_ParkingAsphalt")
+size = Vector3(6.5, 0.1, 12.8)
+
+[sub_resource type="BoxShape3D" id="Shape_DorfDriveway"]
+size = Vector3(6.5, 0.1, 12.8)
+
 
 [node name="Parking" type="Node3D"]
 
@@ -274,29 +281,34 @@ mesh = SubResource("Mesh_DorfParkingApron")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="DorfParkingLot/StaticBody3D" unique_id=1038735607]
 shape = SubResource("Shape_DorfParkingApron")
 
-[node name="ParkingStall_Dorf_S_49" type="MeshInstance3D" parent="." unique_id=1178704985]
+[node name="DorfDriveway" type="MeshInstance3D" parent="."]
 cast_shadow = 0
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 80, 0.06, -26.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 75.75, 0.05, -21.1)
+mesh = SubResource("Mesh_DorfDriveway")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="DorfDriveway"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DorfDriveway/StaticBody3D"]
+shape = SubResource("Shape_DorfDriveway")
+
+[node name="ParkingStall_DorfBay_0" type="MeshInstance3D" parent="." unique_id=1178704985]
+cast_shadow = 0
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 80.5, 0.06, -30.75)
 mesh = SubResource("Mesh_ParkingStripe")
 
-[node name="ParkingStall_Dorf_S_53" type="MeshInstance3D" parent="." unique_id=1238133007]
+[node name="ParkingStall_DorfBay_1" type="MeshInstance3D" parent="." unique_id=1238133007]
 cast_shadow = 0
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 84, 0.06, -26.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 85.5, 0.06, -30.75)
 mesh = SubResource("Mesh_ParkingStripe")
 
-[node name="ParkingStall_Dorf_S_57" type="MeshInstance3D" parent="." unique_id=1907571470]
+[node name="ParkingStall_DorfBay_2" type="MeshInstance3D" parent="." unique_id=1907571470]
 cast_shadow = 0
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 88, 0.06, -26.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 90.5, 0.06, -30.75)
 mesh = SubResource("Mesh_ParkingStripe")
 
-[node name="ParkingStall_Dorf_S_61" type="MeshInstance3D" parent="." unique_id=2139682935]
+[node name="ParkingStall_DorfBay_3" type="MeshInstance3D" parent="." unique_id=2139682935]
 cast_shadow = 0
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 92, 0.06, -26.5)
-mesh = SubResource("Mesh_ParkingStripe")
-
-[node name="ParkingStall_Dorf_S_65" type="MeshInstance3D" parent="." unique_id=1680940991]
-cast_shadow = 0
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 96, 0.06, -26.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 95.5, 0.06, -30.75)
 mesh = SubResource("Mesh_ParkingStripe")
 
 [node name="ParkingStall_Dorf_R_69" type="MeshInstance3D" parent="." unique_id=1745979692]

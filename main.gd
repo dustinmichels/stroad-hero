@@ -14,6 +14,8 @@ const LABEL_FADE_MARGIN_METERS := 12.0
 @export var props_container: Node3D = null
 @export var environment_controller_node: EnvironmentController = null
 @export var retro_filter_node: CanvasLayer = null
+## Experimental: grid-hopping "frogger mode" near the stroad (frogger/frogger_mode.gd).
+@export var frogger_mode_enabled := false
 @onready var mats: Mats = mats_node if mats_node else get_node_or_null("Mats") as Mats
 @onready var hud: HUD = hud_node if hud_node else get_node_or_null("HUD") as HUD
 @onready var objective_manager: ObjectiveManager = (
@@ -55,6 +57,7 @@ var props: Node3D = props_container if props_container else get_node_or_null("Pr
 )
 @onready var streetlights_node: Node3D = get_node_or_null("Props/Streetlights")
 var world_warmup: WorldWarmup = null
+var frogger_mode: FroggerMode = null
 var _user_args: PackedStringArray = []
 var _js_callbacks: Array = []
 
@@ -82,6 +85,7 @@ func _ready() -> void:
 	get_tree().node_added.connect(_configure_label_fade)
 	_configure_label_fades(self)
 	_wire_composition()
+	_init_frogger_mode()
 	_init_world_warmup()
 	if not environment_controller:
 		environment_controller = EnvironmentController.new()
@@ -90,6 +94,8 @@ func _ready() -> void:
 		environment_controller.setup(world_env, sun_light, streetlights_node)
 	if mats:
 		mats.died.connect(_on_player_died)
+	if GameState.instance:
+		GameState.instance.day_advanced.connect(_on_day_advanced)
 	if OS.has_feature("web"):
 		_setup_web_bridge()
 
@@ -115,6 +121,22 @@ func _configure_label_fade(node: Node) -> void:
 func _on_player_died(pos: Vector3) -> void:
 	if blood_splats and mats:
 		BloodSplat.spawn(pos, blood_splats, [mats.get_rid()])
+
+
+## A new day starts fresh: Mats and the carts back at their spawn points, blood splats cleared,
+## and traffic repopulated.
+func _on_day_advanced(_day_number: int) -> void:
+	if mats:
+		mats.reset_to_start()
+		if camera_3d is FollowCamera:
+			(camera_3d as FollowCamera).snap_to_target()
+	for cart in get_tree().get_nodes_in_group(&"shopping_carts"):
+		(cart as ShoppingCart).reset_to_start()
+	if blood_splats:
+		for splat in blood_splats.get_children():
+			splat.queue_free()
+	if traffic_manager:
+		traffic_manager.reset_for_new_day()
 
 
 func _wire_composition() -> void:
@@ -154,6 +176,15 @@ func _wire_composition() -> void:
 		environment_controller.setup(world_env, sun_light, streetlights_node)
 
 
+func _init_frogger_mode() -> void:
+	if not frogger_mode_enabled or not mats or camera_3d is not FollowCamera:
+		return
+	frogger_mode = FroggerMode.new()
+	frogger_mode.name = "FroggerMode"
+	add_child(frogger_mode)
+	frogger_mode.setup(mats, camera_3d as FollowCamera, traffic_manager)
+
+
 func _init_world_warmup() -> void:
 	if world_warmup == null:
 		world_warmup = WorldWarmup.new()
@@ -168,6 +199,8 @@ func _exit_tree() -> void:
 	if mats and is_instance_valid(mats):
 		if mats.died.is_connected(_on_player_died):
 			mats.died.disconnect(_on_player_died)
+	if GameState.instance and GameState.instance.day_advanced.is_connected(_on_day_advanced):
+		GameState.instance.day_advanced.disconnect(_on_day_advanced)
 	if start_screen and objective_manager:
 		if start_screen.started.is_connected(objective_manager.start_objective_flow):
 			start_screen.started.disconnect(objective_manager.start_objective_flow)

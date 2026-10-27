@@ -317,10 +317,12 @@ func apply_time_hours(hours: float, _immediate: bool = true) -> void:
 	var target_sun_energy: float
 	var target_sun_rot: Vector3
 
-	var t := clampf(hours, GameState.START_HOUR, GameState.END_HOUR)
-	if t < 17.5:
+	var t := clampf(hours, GameState.START_HOUR, GameState.NIGHT_HOUR)
+	if t < GameState.SUNSET_HOUR:
 		# Afternoon daylight
-		var p := clampf((t - GameState.START_HOUR) / (17.5 - GameState.START_HOUR), 0.0, 1.0)
+		var p := clampf(
+			(t - GameState.START_HOUR) / (GameState.SUNSET_HOUR - GameState.START_HOUR), 0.0, 1.0
+		)
 		target_sky_top = _day_sky_top.lerp(DAY_SKY_TOP, p)
 		target_sky_horizon = _day_sky_horizon.lerp(DAY_SKY_HORIZON, p)
 		target_ground_bottom = _day_ground_bottom
@@ -331,9 +333,13 @@ func apply_time_hours(hours: float, _immediate: bool = true) -> void:
 		target_sun_color = _day_sun_color
 		target_sun_energy = _day_sun_energy
 		target_sun_rot = _day_sun_rotation
-	elif t < 18.5:
-		# Afternoon to Golden Hour / Sunset
-		var p := clampf((t - 17.5) / (18.5 - 17.5), 0.0, 1.0)
+	elif t < GameState.TWILIGHT_HOUR:
+		# Sunset
+		var p := clampf(
+			(t - GameState.SUNSET_HOUR) / (GameState.TWILIGHT_HOUR - GameState.SUNSET_HOUR),
+			0.0,
+			1.0
+		)
 		var s := p * p * (3.0 - 2.0 * p)
 		target_sky_top = DAY_SKY_TOP.lerp(EVENING_SKY_TOP, s)
 		target_sky_horizon = DAY_SKY_HORIZON.lerp(EVENING_SKY_HORIZON, s)
@@ -346,8 +352,12 @@ func apply_time_hours(hours: float, _immediate: bool = true) -> void:
 		target_sun_energy = lerpf(DAY_SUN_ENERGY, EVENING_SUN_ENERGY, s)
 		target_sun_rot = _day_sun_rotation.lerp(EVENING_SUN_ROTATION, s)
 	elif t < GameState.NIGHT_HOUR:
-		# Sunset to Night / Twilight
-		var p := clampf((t - 18.5) / (GameState.NIGHT_HOUR - 18.5), 0.0, 1.0)
+		# Twilight to night (the day ends early in this ramp, as it starts getting dark)
+		var p := clampf(
+			(t - GameState.TWILIGHT_HOUR) / (GameState.NIGHT_HOUR - GameState.TWILIGHT_HOUR),
+			0.0,
+			1.0
+		)
 		var s := p * p * (3.0 - 2.0 * p)
 		target_sky_top = EVENING_SKY_TOP.lerp(NIGHT_SKY_TOP, s)
 		target_sky_horizon = EVENING_SKY_HORIZON.lerp(NIGHT_SKY_HORIZON, s)

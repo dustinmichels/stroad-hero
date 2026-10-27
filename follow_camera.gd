@@ -1,7 +1,8 @@
 class_name FollowCamera
 extends Camera3D
 ## Tracks `target`; A/D steps yaw, W/S tilts up/down, and R resets behind Mats.
-## Death returns the camera to its starting view.
+## Death returns the camera to its starting view. A view override (set_view_override) locks yaw,
+## pitch, and distance and ignores manual input until cleared.
 
 @export var target: Mats
 @export var smoothing := 5.0
@@ -22,6 +23,12 @@ var _camera_pitch: float
 var _target_pitch: float
 var _pitch_framing_offset: float
 var _is_swinging := false
+## Current orbit distance; eases toward the override or default distance.
+var _view_distance: float
+var _has_view_override := false
+var _override_yaw := 0.0
+var _override_pitch := 0.0
+var _override_distance := 0.0
 
 
 func _ready() -> void:
@@ -75,7 +82,7 @@ func _process(delta: float) -> void:
 		return
 	var target_position := target.get_global_transform_interpolated().origin
 	var is_target_dead: bool = target.is_dead
-	if not is_target_dead:
+	if not is_target_dead and not _has_view_override:
 		var yaw_step := (
 			int(Input.is_action_just_pressed("camera_left"))
 			- int(Input.is_action_just_pressed("camera_right"))
@@ -103,15 +110,17 @@ func _process(delta: float) -> void:
 			_camera_yaw = _target_yaw
 			_camera_pitch = _target_pitch
 			_is_swinging = false
+	var goal_distance := _override_distance if _has_view_override else _distance
+	_view_distance = lerpf(_view_distance, goal_distance, 1.0 - exp(-swing_smoothing * delta))
 
 	var cos_pitch := cos(_camera_pitch)
 	var sin_pitch := sin(_camera_pitch)
 	var goal := (
 		target_position
 		+ Vector3(
-			-sin(_camera_yaw) * cos_pitch * _distance,
-			sin_pitch * _distance,
-			-cos(_camera_yaw) * cos_pitch * _distance
+			-sin(_camera_yaw) * cos_pitch * _view_distance,
+			sin_pitch * _view_distance,
+			-cos(_camera_yaw) * cos_pitch * _view_distance
 		)
 	)
 	global_position = global_position.lerp(goal, 1.0 - exp(-smoothing * delta))
@@ -132,13 +141,35 @@ func reset_view() -> void:
 	_is_swinging = true
 
 
+## Swings to `yaw`/`pitch` (radians, same convention as the default view) at `distance` meters and
+## holds there, ignoring manual camera input, until clear_view_override().
+func set_view_override(yaw: float, pitch: float, distance: float) -> void:
+	_has_view_override = true
+	_override_yaw = yaw
+	_override_pitch = pitch
+	_override_distance = distance
+	_target_yaw = _camera_yaw + angle_difference(_camera_yaw, yaw)
+	_target_pitch = pitch
+	_is_swinging = true
+
+
+## Releases a view override; keeps the current yaw and swings back to the default pitch/distance.
+func clear_view_override() -> void:
+	if not _has_view_override:
+		return
+	_has_view_override = false
+	_target_pitch = _default_pitch
+	_is_swinging = true
+
+
 func snap_to_target() -> void:
 	if not target:
 		return
-	_camera_yaw = _default_yaw
-	_target_yaw = _default_yaw
-	_camera_pitch = _default_pitch
-	_target_pitch = _default_pitch
+	_camera_yaw = _override_yaw if _has_view_override else _default_yaw
+	_target_yaw = _camera_yaw
+	_camera_pitch = _override_pitch if _has_view_override else _default_pitch
+	_target_pitch = _camera_pitch
+	_view_distance = _override_distance if _has_view_override else _distance
 	_is_swinging = false
 	var target_position := (
 		target.get_global_transform_interpolated().origin
@@ -150,9 +181,9 @@ func snap_to_target() -> void:
 	global_position = (
 		target_position
 		+ Vector3(
-			-sin(_camera_yaw) * cos_pitch * _distance,
-			sin_pitch * _distance,
-			-cos(_camera_yaw) * cos_pitch * _distance
+			-sin(_camera_yaw) * cos_pitch * _view_distance,
+			sin_pitch * _view_distance,
+			-cos(_camera_yaw) * cos_pitch * _view_distance
 		)
 	)
 	var target_direction := target_position - global_position

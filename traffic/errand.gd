@@ -45,11 +45,13 @@ func is_frontage() -> bool:
 
 static func random() -> Errand:
 	var roll := randf()
-	if roll < 0.50:
+	if roll < 0.45:
 		return new(&"walgroins")
-	elif roll < 0.70:
+	elif roll < 0.63:
 		return new(&"taco_hell")
-	elif roll < 0.85:
+	elif roll < 0.77:
 		return new(&"smell_store")
-	else:
+	elif roll < 0.90:
 		return new(&"smell_gas")
+	else:
+		return new(&"dorf_service")

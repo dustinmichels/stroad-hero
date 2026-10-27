@@ -160,7 +160,13 @@ class Lane:
 
 
 signal initial_traffic_ready
+## Emitted around every simulation tick, so a presenter (e.g. FroggerTraffic) can draw cars away
+## from their simulated pose between ticks and restore it before the next one.
+signal sim_step_started
+signal sim_step_finished
 
+## Simulated seconds per real second (FroggerMode slows traffic to 0.5).
+var sim_time_scale := 1.0
 var is_initial_traffic_ready: bool = false
 var lanes: Array[Lane] = []
 var lot: ParkingLot = null
@@ -334,6 +340,41 @@ func populate_immediately() -> void:
 	_seed_parked_cars()
 	is_initial_traffic_ready = true
 	initial_traffic_ready.emit()
+
+
+## Removes every car, traffic stop, and lot reservation, then repopulates the stroad and lots
+## as at startup, so a new day begins with fresh traffic.
+func reset_for_new_day() -> void:
+	traffic_stops.clear()
+	if lot != null:
+		for spot in lot.spots:
+			lot.release(spot)
+	for child in get_children():
+		if child is Car:
+			remove_child(child)
+			child.queue_free()
+	lot_cars.clear()
+	for lane in lanes:
+		lane.cars.clear()
+		lane.lot_path_cars.clear()
+		lane.valid_cars.clear()
+		lane.shouldered_cars.clear()
+		lane.spare_cars.clear()
+		lane.spawn_timer = randf_range(0.2, 1.0)
+	_watchdog_ignores.clear()
+	_sweep_cache.clear()
+	_pair_cache.clear()
+	_reach_cache.clear()
+	_indexed_candidates.clear()
+	_cand_x.clear()
+	_cand_order.clear()
+	_cand_max_reach = 0.0
+	_pending_transfers.clear()
+	_site_spots.clear()
+	_site_staying.clear()
+	_site_leaving.clear()
+	_pre_populate_traffic()
+	_seed_parked_cars()
 
 
 func _ready() -> void:
@@ -578,9 +619,15 @@ func _spawn_initial_traffic_staged() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	sim_step_started.emit()
 	if profile_find_blocker:
-		_physics_process_profiled(delta)
-		return
+		_physics_process_profiled(delta * sim_time_scale)
+	else:
+		_simulate(delta * sim_time_scale)
+	sim_step_finished.emit()
+
+
+func _simulate(delta: float) -> void:
 	_update_traffic_stops(delta)
 	_bucket_lot_cars_by_lane()
 	for lane in lanes:
@@ -1795,6 +1842,8 @@ func spawn_debug_car() -> Car:
 	elif spot_site == &"smell":
 		var dest := chosen_spot.serves[0] if not chosen_spot.serves.is_empty() else &"smell_store"
 		car.errand = Errand.new(dest)
+	elif spot_site == &"dorf":
+		car.errand = Errand.new(&"dorf_service")
 	elif spot_site == &"frontage":
 		var dest := (
 			chosen_spot.serves[0] if not chosen_spot.serves.is_empty() else &"consumer_car_care"
@@ -2072,8 +2121,12 @@ func _spawn_car_at(lane: Lane, initial_distance: float, scene: PackedScene = nul
 			elif car.can_park():
 				if initial_distance < DECISION_D:
 					car.errand = Errand.random()
-					car.had_errand = true
-					stats["errands_assigned"] += 1
+					# Test lanes start west of the Dorf driveway; skip a turn already behind us.
+					if initial_distance < _decision_d(lane.id, car):
+						car.had_errand = true
+						stats["errands_assigned"] += 1
+					else:
+						car.errand = null
 				elif initial_distance < DECISION_D_SMELL:
 					var roll := randf()
 					if roll < 0.45:

@@ -67,6 +67,15 @@ const ROWS := [
 		"serves": &"frontage_commercial",
 		"site": &"frontage",
 	},  # Frontage Commercial (Checkers), nose +Z
+	{
+		"z": -30.4,
+		"x0": 83.0,
+		"count": 3,
+		"spacing": 5.0,
+		"nose": -1.0,
+		"serves": &"dorf_service",
+		"site": &"dorf",
+	},  # Dorf service bays under the Quick Pain canopy, nose -Z into the bay doors
 ]
 const ENTRANCES: Dictionary[StringName, Vector3] = {
 	&"walgroins": Vector3(-3, 0, -36),
@@ -82,6 +91,7 @@ const ENTRANCES: Dictionary[StringName, Vector3] = {
 	&"car_care": Vector3(123.2, 0.0, 45.0),
 	&"frontage_commercial": Vector3(147.5, 0.0, 43.5),
 	&"checkers": Vector3(147.5, 0.0, 43.5),
+	&"dorf_service": Vector3(88.0, 0.0, -33.0),
 }
 const TURN_IN_START := Vector3(17.0, 0.0, -9.375)
 const ENTRY_X := 13.0
@@ -128,6 +138,18 @@ const SMELL_EXIT_X := -61.0
 const SMELL_WAIT_POINT := Vector3(-61.0, 0.0, -13.375)
 const SMELL_MERGE_END := Vector3(-65.0, 0.0, -9.375)
 const SMELL_AISLE_Z := -19.0
+## Dorf service drive: a two-way driveway west of the service building. Cars enter on its
+## east side, run east along the entry aisle to the bays, back out into the exit aisle, and
+## leave down the driveway's west side. The aisles stay apart so the two flows never cross.
+const DORF_TURN_IN_START := Vector3(81.5, 0.0, -9.375)
+const DORF_ENTRY_X := 77.5
+const DORF_EXIT_X := 74.5
+const DORF_WAIT_POINT := Vector3(74.5, 0.0, -13.375)
+const DORF_MERGE_END := Vector3(70.5, 0.0, -9.375)
+const DORF_ENTRY_AISLE_Z := -24.0
+const DORF_EXIT_AISLE_Z := -26.2
+## Tight lot: corners must stay under half the 5.5 m run from the driveway to the first bay.
+const DORF_ROUTE_RADIUS := 2.5
 ## Lots south of the road, entered from and exited to eastbound Lane 3 through a
 ## two-way driveway: enter at entry_x, leave at exit_x. Aisle z values are
 ## Vector2(west of the driveway column, east of it); entry and exit aisles differ so
@@ -270,6 +292,20 @@ const SITES: Dictionary[StringName, Dictionary] = {
 		"wait": FRONTAGE_WAIT_POINT,
 		"merge_end": FRONTAGE_MERGE_END,
 		"reverse_run": SOUTH_REVERSE_RUN,
+	},
+	&"dorf":
+	{
+		"kind": ParkingSite.Kind.PARKING_LOT,
+		"served_destinations": [&"dorf_service"],
+		"lane_id": 0,
+		"turn_in": DORF_TURN_IN_START,
+		"entry_x": DORF_ENTRY_X,
+		"exit_x": DORF_EXIT_X,
+		"wait": DORF_WAIT_POINT,
+		"merge_end": DORF_MERGE_END,
+		"entry_aisle": Vector2(DORF_ENTRY_AISLE_Z, DORF_ENTRY_AISLE_Z),
+		"exit_aisle": Vector2(DORF_EXIT_AISLE_Z, DORF_EXIT_AISLE_Z),
+		"reverse_run": -3.0,
 	},
 }
 ## Authored shortcut links between adjacent lots across grass.
@@ -738,6 +774,10 @@ static func is_frontage(spot) -> bool:
 	return false
 
 
+static func is_dorf(spot) -> bool:
+	return spot is ParkingSpot and (spot.site_id == &"dorf" or spot.serves.has(&"dorf_service"))
+
+
 static func _frontage_business_params(spot) -> Dictionary:
 	if spot is ParkingSpot:
 		for s in spot.serves:
@@ -765,6 +805,8 @@ static func lot_group(spot) -> StringName:
 			return s_lot
 		if is_frontage(spot):
 			return &"frontage"
+		if is_dorf(spot):
+			return &"dorf"
 		if is_smell(spot):
 			return &"smell"
 	return &"north"
@@ -893,6 +935,8 @@ static func entry_route(spot, radius := 4.0) -> Curve3D:
 		return south_entry_route(site, spot, radius)
 	if is_smell(spot):
 		return smell_entry_route(spot, radius)
+	if is_dorf(spot):
+		return dorf_entry_route(spot)
 	var sx: float = 0.0
 	var spot_pos := Vector3.ZERO
 	if spot is ParkingSpot:
@@ -972,6 +1016,8 @@ static func reverse_route(spot, radius := 4.0) -> Curve3D:
 		return south_reverse_route(site, spot, radius)
 	if is_smell(spot):
 		return smell_reverse_route(spot, radius)
+	if is_dorf(spot):
+		return dorf_reverse_route(spot)
 	var sx: float = 0.0
 	var spot_pos := Vector3.ZERO
 	if spot is ParkingSpot:
@@ -1045,6 +1091,8 @@ static func exit_route(spot, radius := 4.0) -> Curve3D:
 		return south_exit_route(site, spot, radius)
 	if is_smell(spot):
 		return smell_exit_route(spot, radius)
+	if is_dorf(spot):
+		return dorf_exit_route(spot)
 	var sx: float = 0.0
 	if spot is ParkingSpot:
 		sx = spot.transform.origin.x
@@ -1096,6 +1144,45 @@ static func smell_exit_route(spot, radius := 4.0) -> Curve3D:
 		]
 	)
 	return PathBuilder.build(pts, radius)
+
+
+static func dorf_entry_route(spot) -> Curve3D:
+	var spot_pos := _spot_position(spot)
+	var pts := PackedVector3Array(
+		[
+			DORF_TURN_IN_START,
+			Vector3(DORF_ENTRY_X, 0.0, -CURB_WAIT_Z),
+			Vector3(DORF_ENTRY_X, 0.0, DORF_ENTRY_AISLE_Z),
+			Vector3(spot_pos.x, 0.0, DORF_ENTRY_AISLE_Z),
+			spot_pos,
+		]
+	)
+	return PathBuilder.build(pts, DORF_ROUTE_RADIUS)
+
+
+## Back out of the bay with the tail swinging east, so the car faces the driveway.
+static func dorf_reverse_route(spot) -> Curve3D:
+	var spot_pos := _spot_position(spot)
+	var pts := PackedVector3Array(
+		[
+			Vector3(spot_pos.x + 3.0, 0.0, DORF_EXIT_AISLE_Z),
+			Vector3(spot_pos.x, 0.0, DORF_EXIT_AISLE_Z),
+			spot_pos,
+		]
+	)
+	return PathBuilder.build(pts, DORF_ROUTE_RADIUS)
+
+
+static func dorf_exit_route(spot) -> Curve3D:
+	var sx := _spot_position(spot).x
+	var pts := PackedVector3Array(
+		[
+			Vector3(sx + 3.0, 0.0, DORF_EXIT_AISLE_Z),
+			Vector3(DORF_EXIT_X, 0.0, DORF_EXIT_AISLE_Z),
+			DORF_WAIT_POINT,
+		]
+	)
+	return PathBuilder.build(pts, DORF_ROUTE_RADIUS)
 
 
 static func smell_merge_route(radius := 4.0) -> Curve3D:
@@ -1398,7 +1485,7 @@ func request_spot(car: Car, errand) -> ParkingSpot:
 			continue
 		if target_group == &"smell" and not (dest in spot.serves):
 			continue
-		if &"dorf" in spot.serves and not is_car_allowed_in_dorf_lot(car):
+		if target_group == &"dorf" and not is_car_allowed_in_dorf_lot(car):
 			continue
 		var spot_2d := Vector2(spot.transform.origin.x, spot.transform.origin.z)
 		var dist := spot_2d.distance_to(entrance_2d)

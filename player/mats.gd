@@ -112,6 +112,8 @@ var _spawn_transform: Transform3D
 var _last_death_position := Vector3.ZERO
 var _has_death_position := false
 var _is_dead := false
+## Bumped on each death and day reset so a stale death sequence can tell it was superseded.
+var _life_id := 0
 ## True if Mats is currently dead and waiting to respawn.
 var is_dead: bool:
 	get:
@@ -124,6 +126,9 @@ var _pushing_cart: ShoppingCart = null
 var _world_parent: Node = null
 var _mount_tween: Tween = null
 
+## Replaces walking while valid (experimental modes such as FroggerMode). Called each physics tick
+## as `(delta) -> float`: it moves Mats itself and returns the yaw to face (NAN keeps facing).
+var locomotion_override := Callable()
 ## True if Mats is currently pushing a shopping cart.
 var is_pushing_cart: bool:
 	get:
@@ -181,6 +186,12 @@ func _physics_process(delta: float) -> void:
 		_animate(delta, true)
 		return
 	if _is_dead:
+		return
+	if locomotion_override.is_valid():
+		_update_sprint_and_stamina(delta, Vector2.ZERO, Vector3.ZERO)
+		var override_yaw: float = locomotion_override.call(delta)
+		update_stroad_side()
+		_animate(delta, false, override_yaw)
 		return
 	var input := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	var direction := _movement_direction(input)
@@ -589,6 +600,8 @@ func die() -> void:
 	if _is_dead:
 		return
 	_is_dead = true
+	_life_id += 1
+	var life := _life_id
 	_has_control_basis = false
 	velocity = Vector3.ZERO
 	if is_sprinting:
@@ -617,7 +630,7 @@ func die() -> void:
 
 	# Linger for a moment showing the blood spot
 	await tree.create_timer(blood_linger_delay).timeout
-	if not is_inside_tree():
+	if not is_inside_tree() or life != _life_id:
 		return
 
 	# Screen goes dark and emphasize SPD counter
@@ -634,17 +647,36 @@ func die() -> void:
 		if not is_inside_tree():
 			return
 
-	respawn()
+	# A new day may have reset Mats while the screen was dark: skip the respawn but still fade
+	# back in, unless a newer death now owns the screen.
+	if life == _life_id:
+		respawn()
+	elif _is_dead:
+		return
 
 	if hud and hud.has_method("fade_from_black"):
 		await hud.fade_from_black(fade_duration)
 		if not is_inside_tree():
 			return
 
-	_is_dead = false
+	if life == _life_id:
+		_is_dead = false
 
 
 func respawn() -> void:
+	var target_transform := _spawn_transform
+	target_transform.origin = get_respawn_position()
+	_place_with_fresh_state(target_transform)
+
+
+## Returns Mats to his scene spawn point with fresh state, as at the start of a day.
+func reset_to_start() -> void:
+	_has_death_position = false
+	_life_id += 1
+	_place_with_fresh_state(_spawn_transform)
+
+
+func _place_with_fresh_state(target_transform: Transform3D) -> void:
 	if _pushing_cart:
 		var pc := _pushing_cart
 		_pushing_cart = null
@@ -653,8 +685,6 @@ func respawn() -> void:
 	_dismount_cart()
 	velocity = Vector3.ZERO
 	set_physics_process(true)
-	var target_transform := _spawn_transform
-	target_transform.origin = get_respawn_position()
 	global_transform = target_transform
 	reset_physics_interpolation()
 	_step_offset = 0.0

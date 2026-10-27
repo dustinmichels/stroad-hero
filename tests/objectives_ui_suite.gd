@@ -62,19 +62,33 @@ func _run_test_day_weather() -> void:
 			lamp_mesh0.material_override == null,
 			"Streetlight luminaire material override must be null at 3:30 PM"
 		)
-	GameState.set_time_hours(18.5)
-	assert(GameState.are_lights_on() == true, "Lights should be on at 6:30 PM")
-	assert(spot0 != null and spot0.visible, "Streetlight SpotLight3D must be on at 6:30 PM")
+	GameState.set_time_hours(GameState.DUSK_HOUR - 0.05)
+	assert(not GameState.are_lights_on(), "Lights should stay off until dusk")
+	GameState.set_time_hours(GameState.DUSK_HOUR)
+	assert(GameState.are_lights_on() == true, "Lights should be on at dusk")
+	assert(spot0 != null and spot0.visible, "Streetlight SpotLight3D must be on at dusk")
 	if lamp_mesh0:
 		var mat: StandardMaterial3D = lamp_mesh0.material_override as StandardMaterial3D
 		assert(
 			mat != null and mat.emission_enabled,
-			"Streetlight luminaire material must be emissive at 6:30 PM"
+			"Streetlight luminaire material must be emissive at dusk"
 		)
-	GameState.set_time_hours(19.75)
-	assert(GameState.are_lights_on() == true, "Lights should be on at night")
-	assert(spot0 != null and spot0.visible, "Streetlight SpotLight3D must be on at night")
 	# Day end: clock stops at 8:00 PM, summary pauses, button starts the next day
+	var tm: TrafficManager = main.traffic_manager
+	if not tm.is_initial_traffic_ready:
+		await tm.initial_traffic_ready
+	var day1_cars: Array[Car] = tm.lot_cars.duplicate()
+	for lane in tm.lanes:
+		day1_cars.append_array(lane.cars)
+	assert(not day1_cars.is_empty(), "Day 1 must have traffic")
+	var spawn_pos: Vector3 = main.mats._spawn_transform.origin
+	main.mats.global_position = spawn_pos + Vector3(20.0, 0.0, -25.0)
+	var cart := main.get_tree().get_first_node_in_group(&"shopping_carts") as ShoppingCart
+	var cart_spawn: Vector3 = cart.global_position
+	cart.global_position = cart_spawn + Vector3(5.0, 0.0, 0.0)
+	# Die just before the day ends so the new day resets Mats while the screen is fading to black.
+	main.mats.die()
+	await main.get_tree().create_timer(main.mats.blood_linger_delay + 0.2).timeout
 	GameState.current_day = 1
 	GameState.set_time_hours(19.9)
 	GameState.advance_time(0.2)
@@ -103,6 +117,36 @@ func _run_test_day_weather() -> void:
 			lamp_mesh0.material_override == null,
 			"Streetlight luminaire material override must clear when the next day starts"
 		)
+	assert(
+		main.mats.global_position.is_equal_approx(spawn_pos),
+		"New day must put Mats back at his spawn point"
+	)
+	assert(not main.mats.is_dead, "New day must revive Mats")
+	assert(
+		cart.global_position.is_equal_approx(cart_spawn),
+		"New day must put shopping carts back at their spawn points"
+	)
+	await main.get_tree().physics_frame
+	assert(main.blood_splats.get_child_count() == 0, "New day must clear blood splats")
+	for car in day1_cars:
+		assert(
+			not is_instance_valid(car) or not car.is_inside_tree(),
+			"New day must remove the previous day's cars"
+		)
+	var lane_cars := 0
+	for lane in tm.lanes:
+		lane_cars += lane.cars.size()
+	assert(lane_cars > 0, "New day must repopulate the stroad")
+	assert(not tm.lot_cars.is_empty(), "New day must reseed parked cars")
+	assert(tm.lot.check_invariants() == 0, "New day must leave no leaked lot reservations")
+	# Let the interrupted death sequence finish: it must not move Mats or leave the screen black.
+	await main.get_tree().create_timer(4.0).timeout
+	assert(
+		main.mats.global_position.distance_to(spawn_pos) < 0.5,
+		"A stale death sequence must not respawn Mats after the new day reset"
+	)
+	assert(not main.mats.is_dead, "Mats must stay alive after the stale death sequence ends")
+	assert(is_zero_approx(main.hud.fade_overlay.color.a), "Screen must fade back in on the new day")
 	print("DAY_WEATHER_TEST: SUCCESS - --test-day-weather passed cleanly!")
 	main.get_tree().quit(0)
 

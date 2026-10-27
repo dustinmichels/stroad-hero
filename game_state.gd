@@ -21,9 +21,13 @@ signal day_ended(day_number: int)
 signal day_advanced(day_number: int)
 
 const START_HOUR: float = 15.5  # 3:30 PM
-const END_HOUR: float = 20.0  # 8:00 PM
-const DUSK_HOUR: float = 18.25  # ~6:15 PM (streetlights and headlights turn on)
-const NIGHT_HOUR: float = 19.5  # 7:30 PM (full night)
+const END_HOUR: float = 20.0  # 8:00 PM (day ends just as it starts getting dark)
+const GOLDEN_HOUR: float = 18.5  # 6:30 PM (warm afternoon light, still full daylight)
+const SUNSET_HOUR: float = 19.0  # 7:00 PM (sky starts turning orange)
+const DUSK_HOUR: float = 19.25  # 7:15 PM (streetlights and headlights turn on)
+const EVENING_HOUR: float = 19.5  # 7:30 PM (sunset preset for the time-of-day toggle)
+const TWILIGHT_HOUR: float = 19.75  # 7:45 PM (sunset complete, darkening begins)
+const NIGHT_HOUR: float = 20.5  # 8:30 PM (full night; past END_HOUR, preview-only)
 
 const CARDINALS_16: Array[String] = [
 	"N",
@@ -123,13 +127,13 @@ func _ready() -> void:
 	if "--night-mode" in user_args:
 		set_time_hours(NIGHT_HOUR)
 	elif "--evening-mode" in user_args or "--sunset-mode" in user_args:
-		set_time_hours(18.5)
+		set_time_hours(EVENING_HOUR)
 	else:
 		match initial_time_of_day:
 			TimeOfDay.DAY:
 				set_time_hours(START_HOUR)
 			TimeOfDay.EVENING:
-				set_time_hours(18.5)
+				set_time_hours(EVENING_HOUR)
 			TimeOfDay.NIGHT:
 				set_time_hours(NIGHT_HOUR)
 	if time_of_day != TimeOfDay.DAY and instance:
@@ -232,11 +236,11 @@ static func get_time_string() -> String:
 
 ## Returns a descriptive name for the current period of the day.
 static func get_period_name() -> String:
-	if current_time_hours < 17.5:
+	if current_time_hours < GOLDEN_HOUR:
 		return "AFTERNOON"
-	elif current_time_hours < DUSK_HOUR:
+	elif current_time_hours < SUNSET_HOUR:
 		return "GOLDEN HOUR"
-	elif current_time_hours < 18.75:
+	elif current_time_hours < TWILIGHT_HOUR:
 		return "SUNSET"
 	elif current_time_hours < NIGHT_HOUR:
 		return "TWILIGHT"
@@ -254,8 +258,9 @@ static func get_cardinal_direction_name(dir: Vector3) -> String:
 
 
 ## Advances the game time by a given number of hours. Ends the day at END_HOUR.
+## A clock set past END_HOUR (night preview) holds still instead of ending the day.
 static func advance_time(hours_delta: float) -> void:
-	if day_over:
+	if day_over or current_time_hours > END_HOUR:
 		return
 	current_time_hours = minf(current_time_hours + hours_delta, END_HOUR)
 	_sync_time_mode()
@@ -276,9 +281,9 @@ static func start_next_day() -> void:
 		instance.day_advanced.emit(current_day)
 
 
-## Explicitly set the current time in decimal hours (15.5 to 20.0).
+## Explicitly set the current time in decimal hours (START_HOUR to NIGHT_HOUR).
 static func set_time_hours(hours: float) -> void:
-	current_time_hours = clampf(hours, START_HOUR, END_HOUR)
+	current_time_hours = clampf(hours, START_HOUR, NIGHT_HOUR)
 	_sync_time_mode()
 	if instance:
 		instance.time_changed.emit(current_time_hours, get_time_string())
@@ -304,7 +309,7 @@ static func set_time_of_day(mode: TimeOfDay) -> void:
 		TimeOfDay.DAY:
 			set_time_hours(START_HOUR)
 		TimeOfDay.EVENING:
-			set_time_hours(18.5)
+			set_time_hours(EVENING_HOUR)
 		TimeOfDay.NIGHT:
 			set_time_hours(NIGHT_HOUR)
 
@@ -313,7 +318,7 @@ static func set_time_of_day(mode: TimeOfDay) -> void:
 static func cycle_time_of_day() -> TimeOfDay:
 	match time_of_day:
 		TimeOfDay.DAY:
-			set_time_hours(18.5)
+			set_time_hours(EVENING_HOUR)
 		TimeOfDay.EVENING:
 			set_time_hours(NIGHT_HOUR)
 		TimeOfDay.NIGHT:
