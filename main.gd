@@ -1,6 +1,5 @@
 class_name Main
 extends Node3D
-const RetroFilterScript = preload("res://ui/retro_filter.gd")
 const LABEL_FADE_MARGIN_METERS := 12.0
 
 @export var mats_node: Mats = null
