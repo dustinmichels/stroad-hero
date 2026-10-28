@@ -1,12 +1,12 @@
 # Performance Optimizations and Profiling Findings
 
-Technical record of profiling discoveries, architectural bottlenecks, and optimization implementations across desktop (Forward+) and web (Compatibility) renderers.
+Technical record of profiling discoveries, architectural bottlenecks, and optimization implementations for the desktop (Forward+) renderer. Compatibility measurements below were the proxy for the Web build, which was dropped on Oct 28, 2026, along with `--bench-gameplay-compat` and the web-only shadow overrides.
 
 ---
 
 ## 1. Summary of Results
 
-Measured on Apple M2 (2940×1782 window, Godot 4.7.2) via standardized 20-second phase gameplay benchmarks (`--bench-gameplay` and `--bench-gameplay-compat`).
+Measured on Apple M2 (2940×1782 window, Godot 4.7.2) via standardized 20-second phase gameplay benchmarks (`--bench-gameplay` and the since-removed `--bench-gameplay-compat`).
 
 | Metric / Scenario                        | Baseline (Before)                 | Optimized (After)                       | Impact / Delta                                   |
 | ---------------------------------------- | --------------------------------- | --------------------------------------- | ------------------------------------------------ |
@@ -93,9 +93,6 @@ Measured on Apple M2 (2940×1782 window, Godot 4.7.2) via standardized 20-second
     - Flat signage borders, logo trims, and billboards (`props/overhead_road_sign.tscn`, `booger_king_sign.tscn`, `booger_king_logo.tscn`, `smell_logo.tscn`, `abominos_logo.tscn`, `dorf_logo.tscn`, `props/billboard.tscn`).
     - Chainlink fence fabric mesh in `props/chainlink_fence.gd` (retaining solid post and top-rail shadows).
     - Van wheel hubcaps and beauty rings in `cars/van.tscn`.
-- **Web Shadow Overrides** (`world/environment_controller.gd`):
-  - When running under Web (`OS.has_feature("web")`) or `--force-web-shadows`, `EnvironmentController.apply_web_shadow_overrides()` switches directional sunlight to 1-split orthogonal shadows (`DirectionalLight3D.SHADOW_ORTHOGONAL`) and caps max shadow distance to 45.0 m.
-  - Slashes Compatibility draw calls from ~3,300 to ~2,212 without degrading character or vehicle contact shadows.
 
 ### 3.5 Procedural Forest & Geometry Consolidation
 
@@ -169,12 +166,9 @@ Measured on Apple M2 (2940×1782 window, Godot 4.7.2) via standardized 20-second
 - **TrafficManager Section Timers** (`--profile-traffic`):
   - Prints `TM_PROFILE:` every 600 ticks with avg/max ms for each `_physics_process` section (stops, lane traffic, lane spawning, transfers, lot cars, despawn) and per-tick `find_blocker` cost. Production ticks take the untimed path.
 - **Windowed Realtime Gameplay Benchmark**:
-  - `mise run bench -- --bench-gameplay` (Forward+) and `mise run bench -- --bench-gameplay-compat` (Compatibility):
+  - `mise run bench -- --bench-gameplay`:
     - Executes 20 s day phase, transitions time to dusk (19.9 h), and executes 20 s night phase with an active camera follow.
     - Records frame time distributions (avg, p50, p95, p99, max), spike counts (>20 ms, >33 ms), draw calls, and rendered object counts.
-- **Web Export Headless Automation** (`scripts/smoke_check_web.js`):
-  - Uses Chrome DevTools Protocol (CDP) to drive the exported WebAssembly build headlessly.
-  - Bypasses the start screen via bridge hook `window.godotStartGame()`, programmatically sets time of day via `window.godotSetTimeHours()`, and samples `requestAnimationFrame` intervals to verify browser performance without manual interaction.
 
 ---
 

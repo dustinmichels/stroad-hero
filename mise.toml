@@ -1,6 +1,19 @@
+# =============================================================================
+# TOOLS & ENVIRONMENT
+# =============================================================================
+
 [tools]
 uv = "latest"
 oxfmt = "latest"
+# The release zip drops the executable bit.
+"github:itchio/butler" = { version = "latest", postinstall = "chmod +x \"$MISE_TOOL_INSTALL_PATH/butler\"" }
+
+[env]
+ITCH_TARGET = "dustinmichels/stroad-hero"
+
+# =============================================================================
+# DEVELOPMENT
+# =============================================================================
 
 [tasks.dev]
 description = "Launch the game's main scene in a Godot window (extra args pass through, e.g. --verbose)"
@@ -11,6 +24,14 @@ run = '/Applications/Godot.app/Contents/MacOS/Godot --path . "$@"'
 description = "Format GDScript (gdformat) and Markdown (oxfmt) files"
 run = ['uvx --from "gdtoolkit==4.*" gdformat .', 'oxfmt "**/*.md"']
 
+[tasks.mats-preview]
+description = "Render Mats character preview views (front, side, back, walk, kneel) to /tmp"
+run = 'python3 scripts/render_mats_preview.py "$@"'
+
+# =============================================================================
+# TESTING & BENCHMARKS
+# =============================================================================
+
 [tasks.test]
 description = "Run the lean Godot test suite, extended tests, or specific flags"
 run = 'python3 scripts/run_tests.py "$@"'
@@ -19,9 +40,9 @@ run = 'python3 scripts/run_tests.py "$@"'
 description = "Run manual Godot benchmarks (gameplay benchmarks open a window)"
 run = 'python3 scripts/run_tests.py --bench "$@"'
 
-[tasks.mats-preview]
-description = "Render Mats character preview views (front, side, back, walk, kneel) to /tmp"
-run = 'python3 scripts/render_mats_preview.py "$@"'
+# =============================================================================
+# DESKTOP EXPORT
+# =============================================================================
 
 [tasks.export-mac-pack]
 description = "Export a baked macOS .pck to /tmp/stroad_mac.pck for benchmarking the shipped build (mise run bench --main-pack=/tmp/stroad_mac.pck)"
@@ -45,27 +66,22 @@ for target in "macOS:macos/Stroad Hero.zip" "Windows Desktop:windows/StroadHero.
 done
 '''
 
-# ----- WEB -----
-[tasks.export-web]
-description = "Export the Web preset to build/web (from a /tmp copy, so the open editor's .godot/ is untouched)"
-run = '''
-set -eu
-if [ ! -f "templates/web_release.zip" ]; then
-    echo "Custom web template templates/web_release.zip not found; building..."
-    bash scripts/build_custom_template.sh templates/web_release.zip
-fi
-work=/tmp/stroad-hero-export
-bash scripts/prepare_export_copy.sh "$work"
-mkdir -p build/web
-/Applications/Godot.app/Contents/MacOS/Godot --headless --path "$work" --export-release "Web" "$PWD/build/web/index.html"
-'''
+# =============================================================================
+# ITCH.IO & RELEASE
+# =============================================================================
 
-[tasks.web]
-description = "Build the Web export and serve locally at http://localhost:8080"
-depends = ["export-web"]
+[tasks.itch-setup]
+description = "Prompt for your itch.io API key and save it to mise.local.toml (git-ignored)"
+dir = "{{config_root}}"
 raw = true
-run = "python3 scripts/serve_web.py 8080 --directory build/web"
+file = "scripts/itch_setup.sh"
 
-[tasks.smoke-web]
-description = "Run headless browser smoke check on exported web build"
-run = 'node scripts/smoke_check_web.js "${@:-build/web}"'
+[tasks.itch]
+description = "Export desktop builds and push them to itch.io (channels mac, windows, linux); --skip-export pushes existing builds"
+dir = "{{config_root}}"
+file = "scripts/itch.sh"
+
+[tasks.release]
+description = "Check main is pushed, export all platforms, tag HEAD with the next version (patch/minor/major or vX.Y.Z), push the tag and push to itch.io"
+dir = "{{config_root}}"
+file = "scripts/release.sh"

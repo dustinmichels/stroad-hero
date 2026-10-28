@@ -38,3 +38,11 @@ Traffic includes sedans, SUVs, taxis, delivery vans, pickup trucks, buses, shipp
 Vehicles in the westbound curb lane can run errands to Walgroins and Taco Hell. When assigned an errand, a car reserves a suitable stall, decelerates and turns into the shared parking lot driveway across the sidewalk apron, parks and dwells for a visit, reverses out into the aisle, proceeds to the exit wait point, yields for an acceptable gap in westbound traffic, and merges back into flow.
 
 Vehicles in the eastbound curb lane can visit the Booger King drive-thru or park at the Colonial Plaza strip mall or Cramped Inn. Each south-side lot has its own two-way driveway with separate entry and exit columns, and cars only take stalls reachable through the driveway of their errand.
+
+## Publishing to itch.io
+
+Builds go to [dustinmichels.itch.io/stroad-hero](https://dustinmichels.itch.io/stroad-hero) through [butler](https://itch.io/docs/butler/), which mise installs.
+
+1. `mise run itch-setup`: paste an [itch.io API key](https://itch.io/user/settings/api-keys). It is saved to `mise.local.toml`, which git ignores.
+2. `mise run itch [v1.2.3]`: exports the desktop builds and pushes them to the `mac`, `windows`, and `linux` channels. The version defaults to `git describe`. Add `--skip-export` to push the builds already in `build/`.
+3. `mise run release [patch|minor|major|v1.2.3]`: for a tagged release. It checks that you're on `main`, that tracked files are committed, and that `main` matches `origin/main`. Then it exports, tags HEAD with the next version (default: bump the patch number), pushes the tag, and pushes the builds to itch.io with that tag as the version.

@@ -56,9 +56,6 @@ const NIGHT_AMBIENT_SKY_CONTRIB := 0.25
 const NIGHT_SUN_COLOR := Color(0.45, 0.55, 0.78, 1.0)
 const NIGHT_SUN_ENERGY := 0.15
 
-const WEB_DIRECTIONAL_SHADOW_MODE := DirectionalLight3D.SHADOW_ORTHOGONAL
-const WEB_DIRECTIONAL_SHADOW_MAX_DISTANCE := 45.0
-
 static var _lamp_bulb_on_mat: StandardMaterial3D = null
 
 
@@ -88,7 +85,6 @@ func setup(
 	if p_streetlights:
 		streetlights = p_streetlights
 	_capture_day_settings()
-	apply_web_shadow_overrides()
 	apply_time_hours(GameState.current_time_hours, true)
 
 
@@ -107,22 +103,8 @@ func _resolve_targets() -> void:
 			streetlights = get_parent().get_node_or_null("Props/Streetlights") as Node3D
 
 
-static func _has_cmdline_arg(arg: String) -> bool:
-	return arg in OS.get_cmdline_user_args() or arg in OS.get_cmdline_args()
-
-
-func apply_web_shadow_overrides(force: bool = false) -> void:
-	if not force and not OS.has_feature("web") and not _has_cmdline_arg("--force-web-shadows"):
-		return
-	_resolve_targets()
-	if sun_light:
-		sun_light.directional_shadow_mode = WEB_DIRECTIONAL_SHADOW_MODE
-		sun_light.directional_shadow_max_distance = WEB_DIRECTIONAL_SHADOW_MAX_DISTANCE
-
-
 func _ready() -> void:
 	_resolve_targets()
-	apply_web_shadow_overrides()
 	_capture_day_settings()
 	if GameState.instance:
 		if not GameState.instance.time_of_day_changed.is_connected(_on_time_of_day_changed):

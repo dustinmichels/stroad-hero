@@ -523,7 +523,7 @@ func _restore_3d_render() -> void:
 	_saved_3d_scale = -1.0
 
 
-# Only Forward+ has the normal-roughness buffer. Mobile and Compatibility (web)
+# Only Forward+ has the normal-roughness buffer. Mobile and Compatibility
 # keep the color-based edge test in pixel_art.gdshader.
 func _uses_depth_outlines() -> bool:
 	return RenderingServer.get_current_rendering_method() == "forward_plus"

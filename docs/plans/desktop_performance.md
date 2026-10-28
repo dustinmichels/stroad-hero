@@ -1,6 +1,6 @@
 # Desktop Performance Plan
 
-Goal: no lag on desktop/laptop (Forward+), with no visible loss of quality. Web is covered in `web_optimization.md`.
+Goal: no lag on desktop/laptop (Forward+), with no visible loss of quality.
 
 Prior work: `docs/optimizations.md`. Items marked **`[HUMAN REVIEW NEEDED]`** need a design or visual decision.
 

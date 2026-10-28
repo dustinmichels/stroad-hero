@@ -119,7 +119,6 @@ func matches_args() -> bool:
 				"--bench-physics-walk",
 				"--bench-render",
 				"--bench-gameplay",
-				"--bench-gameplay-compat",
 				"--bench-tour",
 				"--test-render",
 				"--test-render-stats",
@@ -179,7 +178,7 @@ func setup_ready() -> void:
 				mb.bake_main_scene(main)
 		RenderingServer.frame_post_draw.connect(_on_render_frame_post_draw)
 
-	if "--bench-gameplay" in user_args or "--bench-gameplay-compat" in user_args:
+	if "--bench-gameplay" in user_args:
 		_gameplay_bench_active = true
 		main.set_physics_process(true)
 		main.get_tree().paused = false
@@ -212,7 +211,7 @@ func setup_ready() -> void:
 		main.add_child(probe)
 		main.get_tree().physics_frame.connect(_on_physics_frame_stamp)
 		main.get_tree().process_frame.connect(_on_process_frame_stamp)
-		if "--bake" in user_args or "--bench-gameplay-compat" in user_args:
+		if "--bake" in user_args:
 			var mb = load("res://addons/mesh_baker/mesh_baker.gd")
 			if mb:
 				mb.bake_main_scene(main)

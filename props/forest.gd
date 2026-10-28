@@ -494,19 +494,15 @@ static func _get_variant_mesh_parts() -> Dictionary:
 	t2.free()
 	# Primitive meshes carry no LODs (the .blend trees import with them). Rebuild the
 	# cylinders and spheres as ArrayMeshes so distant tiles draw simplified geometry.
-	# The web template strips ImporterMesh, so web keeps the plain primitives.
-	if ClassDB.class_exists(&"ImporterMesh"):
-		for v_parts: Array in _variant_parts_cache.values():
-			for part: Dictionary in v_parts:
-				if part.mesh is PrimitiveMesh:
-					part.mesh = _with_lods(part.mesh)
+	for v_parts: Array in _variant_parts_cache.values():
+		for part: Dictionary in v_parts:
+			if part.mesh is PrimitiveMesh:
+				part.mesh = _with_lods(part.mesh)
 	return _variant_parts_cache
 
 
 static func _with_lods(mesh: PrimitiveMesh) -> ArrayMesh:
-	# Untyped and created by name: a typed ImporterMesh reference would not compile
-	# on the web template, where the class is disabled.
-	var importer = ClassDB.instantiate(&"ImporterMesh")
+	var importer := ImporterMesh.new()
 	importer.add_surface(Mesh.PRIMITIVE_TRIANGLES, mesh.get_mesh_arrays(), [], {}, mesh.material)
 	# Same angles as the scene importer's defaults.
 	importer.generate_lods(60.0, 25.0, [])

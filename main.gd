@@ -58,7 +58,6 @@ var props: Node3D = props_container if props_container else get_node_or_null("Pr
 var world_warmup: WorldWarmup = null
 var frogger_mode: FroggerMode = null
 var _user_args: PackedStringArray = []
-var _js_callbacks: Array = []
 
 
 func _init() -> void:
@@ -95,8 +94,6 @@ func _ready() -> void:
 		mats.died.connect(_on_player_died)
 	if GameState.instance:
 		GameState.instance.day_advanced.connect(_on_day_advanced)
-	if OS.has_feature("web"):
-		_setup_web_bridge()
 
 
 func _configure_label_fades(node: Node) -> void:
@@ -203,33 +200,3 @@ func _exit_tree() -> void:
 	if start_screen and objective_manager:
 		if start_screen.started.is_connected(objective_manager.start_objective_flow):
 			start_screen.started.disconnect(objective_manager.start_objective_flow)
-
-
-func _setup_web_bridge() -> void:
-	var window = JavaScriptBridge.get_interface("window")
-	if not window:
-		return
-	var start_cb = JavaScriptBridge.create_callback(_on_js_start_game)
-	var set_time_cb = JavaScriptBridge.create_callback(_on_js_set_time_hours)
-	var get_time_cb = JavaScriptBridge.create_callback(_on_js_get_time_hours)
-	_js_callbacks.append(start_cb)
-	_js_callbacks.append(set_time_cb)
-	_js_callbacks.append(get_time_cb)
-	window.godotStartGame = start_cb
-	window.godotSetTimeHours = set_time_cb
-	window.godotGetTimeHours = get_time_cb
-
-
-func _on_js_start_game(_args: Array) -> void:
-	if start_screen and is_instance_valid(start_screen) and start_screen.visible:
-		start_screen.dismiss_immediately()
-
-
-func _on_js_set_time_hours(args: Array) -> void:
-	if args.size() > 0:
-		var hours: float = float(args[0])
-		GameState.set_time_hours(hours)
-
-
-func _on_js_get_time_hours(_args: Array) -> float:
-	return GameState.current_time_hours

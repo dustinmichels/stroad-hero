@@ -575,13 +575,11 @@ static func merge_by_render_key(items: Array[Dictionary], cell_size: float) -> A
 
 
 ## Rebuilds `mesh` with generated LODs: SurfaceTool merges drop the source meshes'
-## LODs. Returns `mesh` unchanged where ImporterMesh is stripped (web template).
+## LODs.
 static func with_lods(mesh: ArrayMesh) -> ArrayMesh:
-	if mesh.get_surface_count() == 0 or not ClassDB.class_exists(&"ImporterMesh"):
+	if mesh.get_surface_count() == 0:
 		return mesh
-	# Untyped and created by name: a typed ImporterMesh reference would not compile
-	# on the web template, where the class is disabled.
-	var importer = ClassDB.instantiate(&"ImporterMesh")
+	var importer := ImporterMesh.new()
 	for s in range(mesh.get_surface_count()):
 		var arrays := mesh.surface_get_arrays(s)
 		if arrays[Mesh.ARRAY_INDEX] == null:

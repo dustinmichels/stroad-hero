@@ -79,8 +79,8 @@ func start_warmup(
 				child.visible = false
 
 	_report_progress(85, "Warming up shaders...")
-	# Frame 1: major Props building groups start hidden so WebGL2 compiles base
-	# shaders (terrain, road, mats) without a huge Frame 1 spike.
+	# Frame 1: major Props building groups start hidden so the base shaders
+	# (terrain, road, mats) compile without a huge Frame 1 spike.
 	await tree.process_frame
 	if not tree:
 		return
@@ -132,13 +132,6 @@ func start_warmup(
 
 func _report_progress(pct: int, text: String) -> void:
 	progress_reported.emit(pct, text)
-	if OS.has_feature("web"):
-		JavaScriptBridge.eval(
-			(
-				"if (window.godotProgress) { window.godotProgress(%d, %s); }"
-				% [pct, JSON.stringify(text)]
-			)
-		)
 
 
 func _find_warmup_car(traffic_manager: Node) -> Car:

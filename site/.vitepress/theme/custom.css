@@ -1,0 +1,134 @@
+/* Overpass descends from Highway Gothic, the US road-sign face. Colors are road paint and sign sheeting. */
+:root {
+  --asphalt: #2b2e35;
+  --asphalt-light: #3a3e47;
+  --paint: #f4f5f7;
+  --sign-green: #00704a;
+  --warning: #ffc72c;
+
+  --vp-font-family-base: "Overpass Variable", "Overpass", system-ui, sans-serif;
+
+  --vp-c-brand-1: #00704a;
+  --vp-c-brand-2: #005a3b;
+  --vp-c-brand-3: #00704a;
+  --vp-c-brand-soft: rgb(0 112 74 / 14%);
+
+  --vp-c-bg-alt: #eceef1;
+
+  --vp-button-brand-border: var(--warning);
+  --vp-button-brand-text: var(--asphalt);
+  --vp-button-brand-bg: var(--warning);
+  --vp-button-brand-hover-border: #ffd659;
+  --vp-button-brand-hover-text: var(--asphalt);
+  --vp-button-brand-hover-bg: #ffd659;
+  --vp-button-brand-active-border: #ffd659;
+  --vp-button-brand-active-text: var(--asphalt);
+  --vp-button-brand-active-bg: #ffd659;
+
+  --vp-home-hero-name-color: #fff;
+  --vp-home-hero-image-background-image: none;
+}
+
+/* Dark mode is the road itself. */
+.dark {
+  --vp-c-bg: #26292f;
+  --vp-c-bg-alt: #2b2e35;
+  --vp-c-bg-elv: #30343b;
+  --vp-c-bg-soft: #30343b;
+
+  --vp-c-brand-1: #5fd09b;
+  --vp-c-brand-2: #45b884;
+  --vp-c-brand-3: #00704a;
+  --vp-c-brand-soft: rgb(95 208 155 / 16%);
+}
+
+/* ---------- Green guide sign: MUTCD signs carry an inset white border ---------- */
+
+.guide-sign {
+  background: var(--sign-green);
+  color: #fff;
+  border-radius: 0.9rem;
+  box-shadow:
+    inset 0 0 0 6px var(--sign-green),
+    inset 0 0 0 9px #fff;
+}
+
+/* ---------- Home hero: a stretch of asphalt with the title on a guide sign ---------- */
+
+.VPHome .VPHero {
+  /* The hero extends under the nav bar; keep that strip page-colored so nav text stays readable.
+     Layers: dashed lane line under the nav, double-yellow centerline at the bottom, asphalt. */
+  background:
+    repeating-linear-gradient(90deg, var(--paint) 0 3.5rem, transparent 3.5rem 7.5rem) left top
+      calc(var(--vp-nav-height) + var(--vp-layout-top-height, 0px) + 20px) / 100% 6px no-repeat,
+    linear-gradient(var(--warning), var(--warning)) left bottom 22px / 100% 5px no-repeat,
+    linear-gradient(var(--warning), var(--warning)) left bottom 10px / 100% 5px no-repeat,
+    linear-gradient(
+      to bottom,
+      var(--vp-c-bg) calc(var(--vp-nav-height) + var(--vp-layout-top-height, 0px)),
+      var(--asphalt) 0
+    );
+  padding-bottom: 96px !important;
+}
+
+.VPHome .VPHero .name {
+  display: inline-block;
+  padding: 0.2em 0.45em 0.08em;
+  margin-bottom: 0.25em;
+  background: var(--sign-green);
+  border-radius: 0.9rem;
+  box-shadow:
+    inset 0 0 0 6px var(--sign-green),
+    inset 0 0 0 9px #fff;
+  letter-spacing: -0.01em;
+}
+
+.VPHome .VPHero .text {
+  color: var(--paint);
+}
+
+.VPHome .VPHero .tagline {
+  color: #c3c7cf;
+}
+
+.VPHome .VPHero .VPButton.alt {
+  border-color: var(--paint);
+  color: var(--paint);
+  background: transparent;
+}
+
+.VPHome .VPHero .VPButton.alt:hover {
+  background: var(--asphalt-light);
+}
+
+.VPHome .VPFeatures {
+  padding-top: 40px;
+}
+
+/* VitePress stacks the hero image above the title and pulls it under the nav on narrow screens. */
+@media (max-width: 959px) {
+  .VPHome .VPHero .image {
+    display: none;
+  }
+}
+
+/* ---------- Docs ---------- */
+
+.vp-doc kbd {
+  display: inline-block;
+  min-width: 1.8em;
+  padding: 0.15em 0.45em 0;
+  border: 1px solid var(--vp-c-divider);
+  border-bottom-width: 3px;
+  border-radius: 0.3em;
+  background: var(--vp-c-bg);
+  font-family: var(--vp-font-family-base);
+  font-size: 0.9em;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.vp-doc img {
+  border-radius: 0.3rem;
+}

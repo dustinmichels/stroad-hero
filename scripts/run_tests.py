@@ -62,13 +62,11 @@ BENCHMARKS = [
     "--bench-physics",
     "--bench-physics-walk",
     "--bench-gameplay",
-    "--bench-gameplay-compat",
     "--bench-tour",
 ]
 # Benchmarks that open a window for realtime graphical capture
 WINDOWED_TESTS = {
     "--bench-gameplay",
-    "--bench-gameplay-compat",
     "--bench-tour",
 }
 # --bench-tour: 6 s boot + warmup + day/night (3 s settle + 11 waypoints x 4 s) + dusk (3 s + 10 s sweep)
@@ -97,10 +95,8 @@ def run_single_test(
     cmd = [
         GODOT_BIN,
     ]
-    if test_flag not in WINDOWED_TESTS and not test_flag.startswith("--bench-gameplay"):
+    if test_flag not in WINDOWED_TESTS:
         cmd.append("--headless")
-    if test_flag == "--bench-gameplay-compat":
-        cmd.extend(["--rendering-method", "gl_compatibility", "--force-web-shadows"])
     if fixed_fps is not None:
         cmd.extend(["--fixed-fps", str(fixed_fps)])
     if gpu_profile:

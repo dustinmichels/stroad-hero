@@ -52,7 +52,6 @@ __pycache__/
 .Python
 build/*
 !build/.gdignore
-templates/*.zip
 develop-eggs/
 dist/
 downloads/
@@ -165,6 +164,7 @@ celerybeat.pid
 
 # Environments
 .env
+mise.local.toml
 .venv
 env/
 venv/
@@ -178,9 +178,6 @@ venv.bak/
 
 # Rope project settings
 .ropeproject
-
-# mkdocs documentation
-/site
 
 # mypy
 .mypy_cache/

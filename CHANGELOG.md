@@ -1,5 +1,11 @@
 # Changelog
 
+## Oct 28, 2026
+
+- **Desktop only**: Dropped the Web build; it wasn't performant enough. Removed the Web export preset, custom web template and shell (`web/`, `web.gdbuild`, `scripts/build_custom_template.sh`), the GitHub Pages deploy workflow, `mise run export-web`/`web`/`smoke-web`, the JavaScript bridge, web-only project/shadow overrides (`--force-web-shadows`), and the `--bench-gameplay-compat` bench.
+- **itch.io deploy & release**: `mise run itch [version]` exports the desktop builds and pushes them with butler to the `mac`, `windows`, and `linux` channels of `dustinmichels/stroad-hero`. `mise run release [patch|minor|major|vX.Y.Z]` checks that `main` is committed and pushed, tags the next version, pushes the tag, and publishes it to itch.io. `mise run itch-setup` saves the butler API key to the git-ignored `mise.local.toml`.
+- **Website & manual**: `site/` is a VitePress site with a landing page and a player manual (controls, errands, neighborhood, traffic, retro styles, building from source). It uses the game's `screenshots/` and draws Mom's calls from `objectives/mats_objectives.json`. `cd site && npm install && npm run dev`. A `.gdignore` keeps Godot out of it, and export copies skip it.
+
 ## Oct 25, 2026
 
 - **Day pacing & fresh days**: The day is now mostly daylight (3:30–7:00 PM). The sunset runs 7:00–7:45, streetlights come on at 7:15, and the day ends at 8:00 PM, just as it starts getting dark. Full night (8:30 PM) only appears in the N-key night preview. Starting a new day puts Mats and the shopping carts back at their spawn points, clears blood splats, and resets traffic to its startup state: lane and parked cars are re-seeded, and traffic stops and lot reservations are cleared (`TrafficManager.reset_for_new_day`, `Mats.reset_to_start`).

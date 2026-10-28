@@ -58,24 +58,13 @@ func set_warmup(warmup: WorldWarmup) -> void:
 			set_loading(true)
 
 
-func _on_warmup_progress(pct: int, text: String) -> void:
-	_report_web_progress(pct, text)
+func _on_warmup_progress(_pct: int, text: String) -> void:
+	if loading_label:
+		loading_label.text = text
 
 
 func _on_warmup_completed() -> void:
 	_mark_loaded()
-
-
-func _report_web_progress(pct: int, text: String) -> void:
-	if loading_label:
-		loading_label.text = text
-	if OS.has_feature("web"):
-		JavaScriptBridge.eval(
-			(
-				"if (window.godotProgress) { window.godotProgress(%d, %s); }"
-				% [pct, JSON.stringify(text)]
-			)
-		)
 
 
 var skip_start_screen: bool = false
@@ -100,8 +89,6 @@ func _ready() -> void:
 	if skip_start_screen:
 		dismiss_immediately()
 		return
-	if quit_button and OS.has_feature("web"):
-		quit_button.visible = false
 	_setup_focus_navigation()
 
 	if start_button:
@@ -175,8 +162,6 @@ func set_loading(loading: bool) -> void:
 func _mark_loaded() -> void:
 	_is_loaded = true
 	set_loading(false)
-	if OS.has_feature("web"):
-		JavaScriptBridge.eval("if (window.godotReady) { window.godotReady(); }")
 
 
 func show_page(page: Page) -> void:
